@@ -9,6 +9,9 @@ let currentHeaderSortKey = 'code';
 let currentHeaderSortDir = 'asc';
 
 // Trimester Date Ranges for 2026
+// 1º Trimestre: 11/02/2026 a 22/05/2026
+// 2º Trimestre: 26/05/2026 a 04/09/2026 (Período Atual!)
+// 3º Trimestre: 09/09/2026 a 15/12/2026
 const trimesterRanges = {
     'T1': { start: new Date('2026-02-11T00:00:00'), end: new Date('2026-05-22T23:59:59') },
     'T2': { start: new Date('2026-05-26T00:00:00'), end: new Date('2026-09-04T23:59:59') },
@@ -160,7 +163,7 @@ function processFilteredRows() {
             const range = trimesterRanges[currentTrimesterFilter];
             filteredRows = filteredRows.filter(row => {
                 const dateVal = parseDateStr(row[dateColIdx]);
-                if (!dateVal) return true;
+                if (!dateVal) return currentTrimesterFilter === 'T2'; // Default to 2nd trimester if unparsed
                 return dateVal >= range.start && dateVal <= range.end;
             });
         }

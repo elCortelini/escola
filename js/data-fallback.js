@@ -31,6 +31,7 @@ const fallbackStats = {
     topWorst: "Banheiros (34.2%)"
 };
 
+// 03 de Setembro de 2026 está no 2º Trimestre (26/05 a 04/09/26)!
 const trimesterFallbackData = {
     'ALL': {
         totalResponses: 183,
@@ -40,18 +41,18 @@ const trimesterFallbackData = {
         questions: fallbackQuestions
     },
     'T1': {
-        totalResponses: 183,
-        satisfactionGlobal: "71.4%",
-        topBest: "Professores (86.4%)",
-        topWorst: "Banheiros (34.2%)",
-        questions: fallbackQuestions
-    },
-    'T2': {
         totalResponses: 0,
         satisfactionGlobal: "--",
         topBest: "--",
         topWorst: "--",
         questions: fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }))
+    },
+    'T2': {
+        totalResponses: 183,
+        satisfactionGlobal: "71.4%",
+        topBest: "Professores (86.4%)",
+        topWorst: "Banheiros (34.2%)",
+        questions: fallbackQuestions
     },
     'T3': {
         totalResponses: 0,
