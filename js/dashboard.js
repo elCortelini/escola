@@ -96,6 +96,41 @@ function updateStatusText(text) {
     if (el) el.innerText = text;
 }
 
+function updateActiveFilterBadges() {
+    const triBadge = document.getElementById('activeFilterBadge_Tri');
+    const turnoBadge = document.getElementById('activeFilterBadge_Turno');
+    const turmaBadge = document.getElementById('activeFilterBadge_Turma');
+
+    if (triBadge) {
+        const triMap = {
+            'ALL': 'Geral / Ano Completo',
+            'T1': '1º Trimestre (11/02 a 22/05)',
+            'T2': '2º Trimestre (26/05 a 04/09)',
+            'T3': '3º Trimestre (09/09 a 15/12)'
+        };
+        triBadge.innerText = triMap[currentTrimesterFilter] || 'Geral';
+    }
+
+    if (turnoBadge) {
+        const turnoMap = {
+            'ALL': 'Todos os Turnos',
+            'MATUTINO': '🌅 Turno Matutino (Manhã)',
+            'VESPERTINO': '🌇 Turno Vespertino (Tarde)'
+        };
+        turnoBadge.innerText = turnoMap[currentTurnoFilter] || 'Todos os Turnos';
+    }
+
+    if (turmaBadge) {
+        const turmaMap = {
+            'ALL': 'Todas as Turmas',
+            '6': '🎓 6º Ano',
+            '7': '🎓 7º Ano',
+            '8': '🎓 8º Ano'
+        };
+        turmaBadge.innerText = turmaMap[currentTurmaFilter] || 'Todas as Turmas';
+    }
+}
+
 function setTrimesterFilter(triKey) {
     currentTrimesterFilter = triKey;
 
@@ -107,6 +142,8 @@ function setTrimesterFilter(triKey) {
         }
     });
 
+    updateActiveFilterBadges();
+
     if (rawCsvRows.length > 0) {
         processFilteredRows();
     } else {
@@ -116,6 +153,7 @@ function setTrimesterFilter(triKey) {
 
 function setTurmaFilter(turmaKey) {
     currentTurmaFilter = turmaKey;
+    updateActiveFilterBadges();
     if (rawCsvRows.length > 0) {
         processFilteredRows();
     } else {
@@ -125,6 +163,7 @@ function setTurmaFilter(turmaKey) {
 
 function setTurnoFilter(turnoKey) {
     currentTurnoFilter = turnoKey;
+    updateActiveFilterBadges();
     if (rawCsvRows.length > 0) {
         processFilteredRows();
     } else {
