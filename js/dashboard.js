@@ -13,11 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function useFallbackData() {
-    document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#fff9c4; color:#836000;">🟡 Modo Demonstrativo (Local)</span>';
-    document.getElementById('lastSyncTime').innerText = `Atualizado: ${new Date().toLocaleTimeString()}`;
+    document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#f1f3f4; color:#5f6368;">⚪ Aguardando Conexão da Planilha Google (Tempo Real)</span>';
+    document.getElementById('lastSyncTime').innerText = `Sem planilha conectada`;
     
     currentQuestionsData = [...fallbackQuestions];
     renderDashboard(currentQuestionsData, fallbackStats);
+
+    // Empty list items
+    document.getElementById('bestAspectsList').innerHTML = '<li><em>Insira o link da planilha Google acima para carregar os pontos fortes ao vivo.</em></li>';
+    document.getElementById('worstAspectsList').innerHTML = '<li><em>Insira o link da planilha Google acima para carregar as defasagens ao vivo.</em></li>';
 }
 
 function connectGoogleSheet(overrideUrl = null) {
@@ -52,8 +56,8 @@ function connectGoogleSheet(overrideUrl = null) {
             document.getElementById('lastSyncTime').innerText = `Última sincronização: ${new Date().toLocaleTimeString()}`;
         })
         .catch(err => {
-            console.warn('Erro ao conectar planilha live. Usando dados locais.', err);
-            document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#ffebee; color:#b71c1c;">⚠️ Erro na Planilha (Usando Dados Locais)</span>';
+            console.warn('Erro ao conectar planilha live. Usando modo de aguardo.', err);
+            document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#ffebee; color:#b71c1c;">⚠️ Link da Planilha Inválido / Não Publicado</span>';
             useFallbackData();
         });
 }
@@ -88,14 +92,13 @@ function parseAndRenderCSV(csvText) {
 
     const totalResponses = dataRows.length;
 
-    // If CSV matches Google Form structure, aggregate numeric scores
+    // Calculate dynamic scores from real rows
     let aggregated = fallbackQuestions.map(q => {
         let scores = [];
         let scores6 = [];
         let scores7 = [];
         let scores8 = [];
 
-        // Look for matching column index in headers
         let colIdx = headers.findIndex(h => h.includes(q.id) || h.toLowerCase().includes(q.title.substring(0, 15).toLowerCase()));
         let anoIdx = headers.findIndex(h => h.toLowerCase().includes('ano'));
 
@@ -112,10 +115,10 @@ function parseAndRenderCSV(csvText) {
             });
         }
 
-        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : q.score;
-        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : q.p6;
-        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : q.p7;
-        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : q.p8;
+        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : 0;
+        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : 0;
+        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : 0;
 
         return {
             ...q,
@@ -134,11 +137,33 @@ function parseAndRenderCSV(csvText) {
     const stats = {
         totalResponses: totalResponses,
         satisfactionGlobal: avgGlobal,
-        topBest: `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)`,
-        topWorst: `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)`
+        topBest: sorted[0] && sorted[0].score > 0 ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : 'N/A',
+        topWorst: sorted[sorted.length-1] && sorted[sorted.length-1].score > 0 ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : 'N/A'
     };
 
     renderDashboard(aggregated, stats);
+
+    // Render Qualitative Best/Worst lists dynamically
+    renderQualitativeLists(sorted);
+}
+
+function renderQualitativeLists(sortedQuestions) {
+    const bestList = document.getElementById('bestAspectsList');
+    const worstList = document.getElementById('worstAspectsList');
+
+    if (bestList) {
+        bestList.innerHTML = '';
+        sortedQuestions.slice(0, 5).forEach(q => {
+            bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com excelente/boa satisfação nas respostas.</li>`;
+        });
+    }
+
+    if (worstList) {
+        worstList.innerHTML = '';
+        [...sortedQuestions].reverse().slice(0, 5).forEach(q => {
+            worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado pelos respondentes.</li>`;
+        });
+    }
 }
 
 function mapTextToScore(text) {
@@ -152,16 +177,12 @@ function mapTextToScore(text) {
 }
 
 function renderDashboard(questions, stats) {
-    // Update KPI Cards
     document.getElementById('kpiTotal').innerText = stats.totalResponses;
     document.getElementById('kpiSatisfaction').innerText = `${stats.satisfactionGlobal}%`;
     document.getElementById('kpiBest').innerText = stats.topBest;
     document.getElementById('kpiWorst').innerText = stats.topWorst;
 
-    // Render Charts
     renderCharts(questions);
-
-    // Render Table
     renderTable(questions);
 }
 
@@ -172,7 +193,6 @@ function renderCharts(questions) {
     const p7 = questions.map(q => q.p7);
     const p8 = questions.map(q => q.p8);
 
-    // Global Chart
     const ctxGlobal = document.getElementById('chartGlobal').getContext('2d');
     if (chartGlobalInstance) chartGlobalInstance.destroy();
 
@@ -196,7 +216,6 @@ function renderCharts(questions) {
         }
     });
 
-    // Turmas Chart
     const ctxTurmas = document.getElementById('chartTurmas').getContext('2d');
     if (chartTurmasInstance) chartTurmasInstance.destroy();
 
@@ -227,18 +246,21 @@ function renderTable(questions) {
     questions.forEach(q => {
         const tr = document.createElement('tr');
 
-        let statusText = 'EXCELENTE';
-        let badgeClass = 'b-excellent';
+        let statusText = 'AGUARDANDO';
+        let badgeClass = 'b-warning';
 
-        if (q.score < 50) {
-            statusText = 'CRÍTICO';
-            badgeClass = 'b-critical';
-        } else if (q.score < 65) {
-            statusText = 'ATENÇÃO';
-            badgeClass = 'b-warning';
-        } else if (q.score < 80) {
+        if (q.score >= 80) {
+            statusText = 'EXCELENTE';
+            badgeClass = 'b-excellent';
+        } else if (q.score >= 65) {
             statusText = 'BOM';
             badgeClass = 'b-good';
+        } else if (q.score >= 50) {
+            statusText = 'ATENÇÃO';
+            badgeClass = 'b-warning';
+        } else if (q.score > 0) {
+            statusText = 'CRÍTICO';
+            badgeClass = 'b-critical';
         }
 
         tr.innerHTML = `

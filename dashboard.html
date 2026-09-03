@@ -144,20 +144,19 @@
         <div class="sync-panel">
             <div class="sync-header">
                 <div class="sync-status" id="syncStatusBadge">
-                    <span class="badge-live" style="background:#fff9c4; color:#f57f17;">🟡 Carregando Conexão...</span>
+                    <span class="badge-live" style="background:#f1f3f4; color:#5f6368;">⚪ Aguardando Conexão da Planilha Google...</span>
                 </div>
                 <div style="font-size:0.85rem; color:var(--text-muted);" id="lastSyncTime">
-                    Última sincronização: --:--:--
+                    Sem planilha conectada
                 </div>
             </div>
 
             <div class="sync-input-group">
                 <input type="text" id="sheetUrlInput" class="sync-input" placeholder="Cole aqui o Link da Planilha do Google (CSV ou ID) para Sincronização em Tempo Real">
-                <button class="btn btn-primary" onclick="connectGoogleSheet()">🔄 Atualizar Dados Agora</button>
-                <button class="btn btn-secondary" onclick="useFallbackData()">📊 Usar Dados Padrão</button>
+                <button class="btn btn-primary" onclick="connectGoogleSheet()">🔄 Conectar & Carregar Dados Ao Vivo</button>
             </div>
             <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">
-                💡 <strong>Como conectar:</strong> No Google Sheets com as respostas do Forms, vá em <em>Arquivo &gt; Compartilhar &gt; Publicar na Web</em>, escolha formato <strong>CSV</strong> e cole o link acima.
+                💡 <strong>Como conectar a sua planilha oficial:</strong> No Google Sheets com as respostas do Forms, vá em <em>Arquivo &gt; Compartilhar &gt; Publicar na Web</em>, escolha formato <strong>CSV</strong> e cole o link no campo acima.
             </p>
         </div>
 
@@ -165,46 +164,38 @@
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-title">Total de Respondentes</div>
-                <div class="kpi-value" id="kpiTotal">183</div>
+                <div class="kpi-value" id="kpiTotal">0</div>
                 <div class="kpi-sub">Estudantes (6º ao 8º Ano)</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-title">Índice Global de Satisfação</div>
-                <div class="kpi-value" id="kpiSatisfaction">71.4%</div>
+                <div class="kpi-value" id="kpiSatisfaction">0%</div>
                 <div class="kpi-sub">Média Geral da Escola</div>
             </div>
             <div class="kpi-card green">
                 <div class="kpi-title">Maior Destaque (Ponto Forte)</div>
-                <div class="kpi-value" style="font-size:1.2rem; margin-top:6px;" id="kpiBest">Professores (86.4%)</div>
-                <div class="kpi-sub">Q05 - Qualidade e Apoio</div>
+                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiBest">Aguardando Conexão...</div>
+                <div class="kpi-sub">Aspecto com maior aprovação</div>
             </div>
             <div class="kpi-card red">
                 <div class="kpi-title">Maior Defasagem (Ponto Crítico)</div>
-                <div class="kpi-value" style="font-size:1.2rem; margin-top:6px;" id="kpiWorst">Banheiros (34.2%)</div>
-                <div class="kpi-sub">Q16 - Limpeza e Estado</div>
+                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiWorst">Aguardando Conexão...</div>
+                <div class="kpi-sub">Aspecto com maior atenção</div>
             </div>
         </div>
 
         <!-- Qualitative Analysis Section -->
         <div class="analysis-section">
             <div class="box-green">
-                <div class="box-title">🟢 Boas Notas (Destaques da Escola)</div>
+                <div class="box-title">🟢 Destaques Positivos (Boas Notas)</div>
                 <ul class="box-list" id="bestAspectsList">
-                    <li><strong>Professores (86.4%):</strong> Avaliados como didáticos, capacitados e solícitos.</li>
-                    <li><strong>Respeito em Sala (84.1%):</strong> Clima de respeito entre corpo docente e alunos.</li>
-                    <li><strong>Qualidade das Aulas (82.3%):</strong> Alto aprendizado e interesse percebido.</li>
-                    <li><strong>Escuta pela Direção (78.0%):</strong> Acolhimento e facilidade de diálogo.</li>
-                    <li><strong>Merenda Escolar (77.2%):</strong> Aprovação da alimentação servida.</li>
+                    <li><em>Insira o link da planilha Google acima para carregar os pontos fortes ao vivo.</em></li>
                 </ul>
             </div>
             <div class="box-red">
                 <div class="box-title">🔴 Aspectos Defasados (Pontos Críticos)</div>
                 <ul class="box-list" id="worstAspectsList">
-                    <li><strong>Estado dos Banheiros (34.2%):</strong> Limpeza precária, falta de sabão e manutenção.</li>
-                    <li><strong>Limpeza Geral (42.1%):</strong> Acúmulo de sujeira pós-recreio e entre turnos.</li>
-                    <li><strong>Combate ao Bullying (46.5%):</strong> Percepção de pouca efetividade em brigas.</li>
-                    <li><strong>Espaços de Recreio (51.2%):</strong> Falta de bancos, sombra e área de jogos.</li>
-                    <li><strong>Sensação de Segurança (52.4%):</strong> Apreensão no portão e entorno na saída.</li>
+                    <li><em>Insira o link da planilha Google acima para carregar as defasagens ao vivo.</em></li>
                 </ul>
             </div>
         </div>
