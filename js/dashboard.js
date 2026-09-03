@@ -33,7 +33,7 @@ function initSilentDashboard() {
         fetch('config.json')
             .then(res => res.json())
             .then(cfg => {
-                if (cfg && cfg.google_sheet_csv_url) {
+                if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') {
                     fetchSilentData(cfg.google_sheet_csv_url);
                 }
             })
@@ -42,21 +42,35 @@ function initSilentDashboard() {
 
     if (!autoRefreshTimer) {
         autoRefreshTimer = setInterval(() => {
-            const url = localStorage.getItem('pedro_rizzi_sheet_url');
-            if (url) fetchSilentData(url, true);
+            const url = localStorage.getItem('pedro_rizzi_sheet_url') || '';
+            if (url) {
+                fetchSilentData(url, true);
+            } else {
+                fetch('config.json')
+                    .then(res => res.json())
+                    .then(cfg => {
+                        if (cfg && cfg.google_sheet_csv_url) fetchSilentData(cfg.google_sheet_csv_url, true);
+                    })
+                    .catch(() => {});
+            }
         }, 30000);
     }
 }
 
 function fetchSilentData(url, isBackground = false) {
-    if (!url) return;
+    if (!url || url.trim() === '') return;
 
-    let csvUrl = url;
+    let csvUrl = url.trim();
     if (url.includes('docs.google.com/spreadsheets/d/')) {
         const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (matches && matches[1]) {
             const sheetId = matches[1];
-            csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+            // Support both direct GViz CSV and published sheet CSV
+            if (url.includes('pub?output=csv') || url.includes('pubhtml')) {
+                csvUrl = url.replace('pubhtml', 'pub?output=csv');
+            } else {
+                csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+            }
         }
     }
 
@@ -66,8 +80,10 @@ function fetchSilentData(url, isBackground = false) {
             return response.text();
         })
         .then(csvText => {
-            parseCSVData(csvText);
-            updateStatusText('Ao Vivo / Sincronizado');
+            if (csvText && csvText.trim().length > 0) {
+                parseCSVData(csvText);
+                updateStatusText('Ao Vivo / Sincronizado com Planilha');
+            }
         })
         .catch(err => {
             console.warn('Silent sync note:', err);
@@ -213,16 +229,37 @@ function processFilteredRows() {
         return;
     }
 
-    let aggregated = fallbackQuestions.map(q => {
+    // Advanced Smart Column Matching for Google Forms
+    let aggregated = fallbackQuestions.map((q, qIndex) => {
         let scores = [];
         let scores6 = [];
         let scores7 = [];
         let scores8 = [];
 
-        let colIdx = rawCsvHeaders.findIndex(h => h.includes(q.id) || h.toLowerCase().includes(q.title.substring(0, 15).toLowerCase()));
-        let anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano'));
+        const qNum = parseInt(q.id.replace('Q', ''), 10);
+        
+        // Match strategies:
+        // 1. Check for exact Q01 / Q1 in header
+        // 2. Check for number prefix like "1.", "2." or "1 -"
+        // 3. Check for keywords from title
+        // 4. Position index fallback
+        let colIdx = rawCsvHeaders.findIndex(h => {
+            const hLower = h.toLowerCase();
+            return h.includes(q.id) || 
+                   hLower.startsWith(`${qNum}.`) || 
+                   hLower.startsWith(`${qNum} -`) || 
+                   hLower.includes(` ${qNum}.`) ||
+                   hLower.includes(q.title.substring(3, 15).toLowerCase());
+        });
 
-        if (colIdx !== -1) {
+        if (colIdx === -1 && (qIndex + 2) < rawCsvHeaders.length) {
+            // Fallback to column position after Timestamp and Turma
+            colIdx = qIndex + 2;
+        }
+
+        let anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano') || h.toLowerCase().includes('turma'));
+
+        if (colIdx !== -1 && colIdx < rawCsvHeaders.length) {
             filteredRows.forEach(row => {
                 let valStr = row[colIdx] || '';
                 let valNum = mapTextToScore(valStr);
@@ -499,12 +536,10 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Comparativo por Turno REAL: Matutino = dados reais (183), Vespertino = 0!
     const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
     let matutinoMeans = catMeans.slice(0, 5);
-    let vespertinoMeans = [0, 0, 0, 0, 0]; // Vespertino ainda não respondeu (0)
+    let vespertinoMeans = [0, 0, 0, 0, 0];
 
-    // Parse real turnos if present in CSV
     if (rawCsvRows.length > 0) {
         const turnoColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('turno') || h.toLowerCase().includes('período'));
         if (turnoColIdx !== -1) {
