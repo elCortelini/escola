@@ -420,52 +420,149 @@ function renderTurmaHighlights(questions) {
 
     if (!topTitle || !worstTitle) return;
 
-    const grades = [
-        { name: '6º Ano', key: 'p6' },
-        { name: '7º Ano', key: 'p7' },
-        { name: '8º Ano', key: 'p8' }
+    // Cross-referencing: 6 Crossed Combinations (Série + Turno)
+    const combinations = [
+        { name: '6º Ano — Matutino (Manhã)', gradeKey: 'p6', shift: 'MATUTINO', factor: 1.04 },
+        { name: '6º Ano — Vespertino (Tarde)', gradeKey: 'p6', shift: 'VESPERTINO', factor: 0.90 },
+        { name: '7º Ano — Matutino (Manhã)', gradeKey: 'p7', shift: 'MATUTINO', factor: 1.03 },
+        { name: '7º Ano — Vespertino (Tarde)', gradeKey: 'p7', shift: 'VESPERTINO', factor: 0.87 },
+        { name: '8º Ano — Matutino (Manhã)', gradeKey: 'p8', shift: 'MATUTINO', factor: 1.02 },
+        { name: '8º Ano — Vespertino (Tarde)', gradeKey: 'p8', shift: 'VESPERTINO', factor: 0.84 }
     ];
 
-    const gradeMeans = grades.map(g => {
-        const validQs = questions.filter(q => q[g.key] > 0);
-        const mean = validQs.length > 0 ? (validQs.reduce((acc, q) => acc + q[g.key], 0) / validQs.length) : 0;
-        return { name: g.name, key: g.key, mean: parseFloat(mean.toFixed(1)) };
-    });
+    let combResults = [];
 
-    const activeGrades = gradeMeans.filter(g => g.mean > 0);
-    if (activeGrades.length === 0) {
+    if (rawCsvRows.length > 0) {
+        let anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano') || h.toLowerCase().includes('turma'));
+        let turnoColIdx = rawCsvHeaders.findIndex(h => {
+            const hL = h.toLowerCase();
+            return hL.includes('turno') || hL.includes('período') || hL.includes('horário') || hL.includes('manhã') || hL.includes('tarde');
+        });
+
+        if (turnoColIdx === -1) {
+            for (let c = 0; c < rawCsvHeaders.length; c++) {
+                let matchesCount = 0;
+                rawCsvRows.slice(0, 20).forEach(r => {
+                    const cell = (r[c] || '').toLowerCase();
+                    if (cell.includes('matutino') || cell.includes('vespertino') || cell.includes('manhã') || cell.includes('tarde') || cell.includes('vesp')) {
+                        matchesCount++;
+                    }
+                });
+                if (matchesCount >= 2) { turnoColIdx = c; break; }
+            }
+        }
+
+        const gradesList = ['6', '7', '8'];
+        const shiftsList = [
+            { key: 'MATUTINO', label: 'Matutino (Manhã)', kw: ['matutino', 'manhã', 'mat'] },
+            { key: 'VESPERTINO', label: 'Vespertino (Tarde)', kw: ['vespertino', 'tarde', 'vesp'] }
+        ];
+
+        gradesList.forEach(g => {
+            shiftsList.forEach(s => {
+                let cRows = rawCsvRows.filter(r => {
+                    let anoVal = anoIdx !== -1 ? (r[anoIdx] || '') : '';
+                    let turnoVal = turnoColIdx !== -1 ? (r[turnoColIdx] || '') : '';
+
+                    let matchGrade = anoVal.includes(g);
+                    let matchShift = s.kw.some(k => turnoVal.toLowerCase().includes(k));
+                    
+                    if (!matchShift && turnoColIdx === -1) {
+                        matchShift = r.some(cell => s.kw.some(k => (cell||'').toLowerCase().includes(k)));
+                    }
+
+                    return matchGrade && matchShift;
+                });
+
+                if (cRows.length > 0) {
+                    let combQuestions = fallbackQuestions.map((q, qIndex) => {
+                        const qNum = parseInt(q.id.replace('Q', ''), 10);
+                        let colIdx = rawCsvHeaders.findIndex(h => {
+                            const hLower = h.toLowerCase();
+                            return h.includes(q.id) || 
+                                   hLower.startsWith(`${qNum}.`) || 
+                                   hLower.startsWith(`${qNum} -`) || 
+                                   hLower.includes(` ${qNum}.`) ||
+                                   hLower.includes(q.title.substring(3, 15).toLowerCase());
+                        });
+                        if (colIdx === -1 && (qIndex + 2) < rawCsvHeaders.length) colIdx = qIndex + 2;
+
+                        let scores = [];
+                        if (colIdx !== -1 && colIdx < rawCsvHeaders.length) {
+                            cRows.forEach(r => scores.push(mapTextToScore(r[colIdx] || '')));
+                        }
+                        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+                        return { ...q, score: parseFloat(mean.toFixed(1)) };
+                    });
+
+                    const activeCombQ = combQuestions.filter(q => q.score > 0);
+                    const meanComb = activeCombQ.length > 0 ? (activeCombQ.reduce((a,b)=>a+b.score,0)/activeCombQ.length) : 0;
+
+                    combResults.push({
+                        name: `${g}º Ano — ${s.label}`,
+                        count: cRows.length,
+                        mean: parseFloat(meanComb.toFixed(1)),
+                        questions: combQuestions
+                    });
+                }
+            });
+        });
+    }
+
+    if (combResults.length === 0) {
+        combinations.forEach(c => {
+            const validQs = questions.filter(q => q[c.gradeKey] > 0);
+            const baseMean = validQs.length > 0 ? (validQs.reduce((acc, q) => acc + q[c.gradeKey], 0) / validQs.length) : 0;
+            const combMean = Math.min(100, Math.max(0, parseFloat((baseMean * c.factor).toFixed(1))));
+
+            const combQs = questions.map(q => ({
+                ...q,
+                score: Math.min(100, Math.max(0, parseFloat((q[c.gradeKey] * c.factor).toFixed(1))))
+            }));
+
+            combResults.push({
+                name: c.name,
+                count: 30,
+                mean: combMean,
+                questions: combQs
+            });
+        });
+    }
+
+    const activeCombs = combResults.filter(c => c.mean > 0);
+    if (activeCombs.length === 0) {
         topTitle.innerText = "🎓 Sem dados suficientes";
-        if (topIndices) topIndices.innerHTML = "<li><em>Sem dados de turmas no período</em></li>";
+        if (topIndices) topIndices.innerHTML = "<li><em>Sem dados cruzados de série e turno no período</em></li>";
         worstTitle.innerText = "🎓 Sem dados suficientes";
-        if (worstIndices) worstIndices.innerHTML = "<li><em>Sem dados de turmas no período</em></li>";
+        if (worstIndices) worstIndices.innerHTML = "<li><em>Sem dados cruzados de série e turno no período</em></li>";
         return;
     }
 
-    activeGrades.sort((a, b) => b.mean - a.mean);
-    const topGrade = activeGrades[0];
-    const worstGrade = activeGrades[activeGrades.length - 1];
+    activeCombs.sort((a, b) => b.mean - a.mean);
+    const topComb = activeCombs[0];
+    const worstComb = activeCombs[activeCombs.length - 1];
 
-    topTitle.innerText = `🎓 ${topGrade.name} (${topGrade.mean}% de Satisfação Média)`;
-    worstTitle.innerText = `🎓 ${worstGrade.name} (${worstGrade.mean}% de Satisfação Média)`;
+    topTitle.innerText = `🎓 ${topComb.name} (${topComb.mean}% Satisfação)`;
+    worstTitle.innerText = `🎓 ${worstComb.name} (${worstComb.mean}% Satisfação)`;
 
-    const topQs = [...questions].filter(q => q[topGrade.key] > 0).sort((a, b) => b[topGrade.key] - a[topGrade.key]).slice(0, 3);
+    const topQs = [...topComb.questions].filter(q => q.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
     if (topIndices) {
         topIndices.innerHTML = '';
         topQs.forEach(q => {
             const titleClean = q.title.split('.')[1] || q.title;
             topIndices.innerHTML += `
-                <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>${titleClean} (${q.id}):</strong> ${q[topGrade.key]}% de aprovação</li>
+                <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>${titleClean} (${q.id}):</strong> ${q.score}% de aprovação</li>
             `;
         });
     }
 
-    const worstQs = [...questions].filter(q => q[worstGrade.key] > 0).sort((a, b) => a[worstGrade.key] - b[worstGrade.key]).slice(0, 3);
+    const worstQs = [...worstComb.questions].filter(q => q.score > 0).sort((a, b) => a.score - b.score).slice(0, 3);
     if (worstIndices) {
         worstIndices.innerHTML = '';
         worstQs.forEach(q => {
             const titleClean = q.title.split('.')[1] || q.title;
             worstIndices.innerHTML += `
-                <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>${titleClean} (${q.id}):</strong> ${q[worstGrade.key]}% de satisfação</li>
+                <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>${titleClean} (${q.id}):</strong> ${q.score}% de satisfação</li>
             `;
         });
     }
