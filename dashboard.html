@@ -116,6 +116,26 @@
         .b-good { background: #e3f2fd; color: #0d47a1; }
         .b-warning { background: #fff9c4; color: #f57f17; }
         .b-critical { background: #ffcdd2; color: #b71c1c; }
+        
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #2e7d32;
+            background: #e8f5e9;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #2e7d32;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body>
@@ -127,7 +147,7 @@
                 <div class="brand-logo">PR</div>
                 <div class="brand-text">
                     <h1>Centro Educacional Pedro Rizzi</h1>
-                    <p>Dashboard de Avaliação Escolar (Tempo Real)</p>
+                    <p>Dashboard de Avaliação Escolar</p>
                 </div>
             </a>
             <ul class="nav-links">
@@ -140,46 +160,37 @@
 
     <main class="container">
         
-        <!-- Live Connection & Sync Panel -->
-        <div class="sync-panel">
-            <div class="sync-header">
-                <div class="sync-status" id="syncStatusBadge">
-                    <span class="badge-live" style="background:#f1f3f4; color:#5f6368;">⚪ Aguardando Conexão da Planilha Google...</span>
-                </div>
-                <div style="font-size:0.85rem; color:var(--text-muted);" id="lastSyncTime">
-                    Sem planilha conectada
-                </div>
+        <!-- Subtle Subheader Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1.5rem; background:white; padding:1rem 1.5rem; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border-color);">
+            <div>
+                <h3 style="color:var(--primary); font-size:1.2rem; margin:0;">Resultados em Tempo Real — Pesquisa de Avaliação (6º ao 8º Ano)</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Dados atualizados automaticamente com as respostas do formulário da escola.</p>
             </div>
-
-            <div class="sync-input-group">
-                <input type="text" id="sheetUrlInput" class="sync-input" placeholder="Cole aqui o Link da Planilha do Google (CSV ou ID) para Sincronização em Tempo Real">
-                <button class="btn btn-primary" onclick="connectGoogleSheet()">🔄 Conectar & Carregar Dados Ao Vivo</button>
+            <div class="live-indicator">
+                <span class="live-dot"></span> <span id="syncStatusText">Sincronizado Ao Vivo</span>
             </div>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">
-                💡 <strong>Como conectar a sua planilha oficial:</strong> No Google Sheets com as respostas do Forms, vá em <em>Arquivo &gt; Compartilhar &gt; Publicar na Web</em>, escolha formato <strong>CSV</strong> e cole o link no campo acima.
-            </p>
         </div>
 
         <!-- KPI Cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-title">Total de Respondentes</div>
-                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-value" id="kpiTotal">...</div>
                 <div class="kpi-sub">Estudantes (6º ao 8º Ano)</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-title">Índice Global de Satisfação</div>
-                <div class="kpi-value" id="kpiSatisfaction">0%</div>
+                <div class="kpi-value" id="kpiSatisfaction">...</div>
                 <div class="kpi-sub">Média Geral da Escola</div>
             </div>
             <div class="kpi-card green">
                 <div class="kpi-title">Maior Destaque (Ponto Forte)</div>
-                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiBest">Aguardando Conexão...</div>
+                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiBest">...</div>
                 <div class="kpi-sub">Aspecto com maior aprovação</div>
             </div>
             <div class="kpi-card red">
                 <div class="kpi-title">Maior Defasagem (Ponto Crítico)</div>
-                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiWorst">Aguardando Conexão...</div>
+                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiWorst">...</div>
                 <div class="kpi-sub">Aspecto com maior atenção</div>
             </div>
         </div>
@@ -189,13 +200,13 @@
             <div class="box-green">
                 <div class="box-title">🟢 Destaques Positivos (Boas Notas)</div>
                 <ul class="box-list" id="bestAspectsList">
-                    <li><em>Insira o link da planilha Google acima para carregar os pontos fortes ao vivo.</em></li>
+                    <li><em>Carregando destaques ao vivo...</em></li>
                 </ul>
             </div>
             <div class="box-red">
                 <div class="box-title">🔴 Aspectos Defasados (Pontos Críticos)</div>
                 <ul class="box-list" id="worstAspectsList">
-                    <li><em>Insira o link da planilha Google acima para carregar as defasagens ao vivo.</em></li>
+                    <li><em>Carregando defasagens ao vivo...</em></li>
                 </ul>
             </div>
         </div>
@@ -247,7 +258,7 @@
     <!-- Footer -->
     <footer>
         <p><strong>Centro Educacional Pedro Rizzi</strong> — Dashboard Analítico da Pesquisa Escolar</p>
-        <p style="font-size:0.8rem; margin-top:4px; opacity:0.8;">Atualização automática em tempo real via Google Sheets CSV API.</p>
+        <p style="font-size:0.8rem; margin-top:4px; opacity:0.8;">Atualização automática contínua em tempo real.</p>
         <p style="font-size:0.85rem; margin-top:8px; color:var(--secondary); font-weight:600;">Desenvolvido por Elevi Cortelini - 2026</p>
     </footer>
 

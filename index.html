@@ -23,7 +23,7 @@
                 <li><a href="index.html" class="active">Início</a></li>
                 <li><a href="dashboard.html">Dashboard Avaliação</a></li>
                 <li><a href="#sistemas">Sistemas</a></li>
-                <li><a href="#config" onclick="openConfigModal()">⚙️ Configurar Links</a></li>
+                <li><a href="#config" onclick="openConfigModal()">⚙️ Configurações</a></li>
             </ul>
         </div>
     </header>
@@ -52,10 +52,14 @@
     <!-- Config Modal -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
         <div style="background:white; padding:2rem; border-radius:12px; max-width:550px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
-            <h3 style="margin-bottom:1rem; color:var(--primary);">⚙️ Configurar Links dos Sistemas</h3>
-            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">Insira ou altere os URLs dos sistemas da escola (salvo no navegador):</p>
+            <h3 style="margin-bottom:1rem; color:var(--primary);">⚙️ Configuração dos Sistemas & Planilha</h3>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">Insira os links dos sistemas e da planilha do Google para sincronização silenciosa:</p>
             
             <form id="configForm" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem;">📊 Planilha de Respostas (Google Sheets CSV):</label>
+                    <input type="url" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="sync-input" style="width:100%; margin-top:4px;">
+                </div>
                 <div>
                     <label style="font-weight:600; font-size:0.85rem;">💰 Sistema Contábil:</label>
                     <input type="url" id="url_contabil" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
@@ -75,7 +79,7 @@
                 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
                     <button type="button" onclick="closeConfigModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Links</button>
+                    <button type="submit" class="btn btn-primary">Salvar Configurações</button>
                 </div>
             </form>
         </div>

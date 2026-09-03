@@ -2,6 +2,7 @@
   "school_name": "Centro Educacional Pedro Rizzi",
   "subtitle": "Portal Integrado de Sistemas e Gestão Escolar",
   "google_sheet_csv_url": "",
+  "auto_refresh_seconds": 30,
   "systems": [
     {
       "id": "dashboard",

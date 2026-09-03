@@ -7,7 +7,7 @@ const defaultSystems = [
         id: "dashboard",
         title: "Dashboard de Avaliação Escolar",
         icon: "📊",
-        description: "Análise gráfica e estática/dinâmica em tempo real do questionário de avaliação dos estudantes (6º ao 8º Ano).",
+        description: "Análise gráfica e estatística em tempo real do questionário de avaliação dos estudantes (6º ao 8º Ano).",
         url: "dashboard.html",
         status: "online",
         badge: "AO VIVO / DINÂMICO",
@@ -93,10 +93,13 @@ function openConfigModal() {
     if (!modal) return;
 
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
-    document.getElementById('url_contabil').value = savedUrls['contabil'] || '';
-    document.getElementById('url_recursos').value = savedUrls['recursos'] || '';
-    document.getElementById('url_biblioteca').value = savedUrls['biblioteca'] || '';
-    document.getElementById('url_patrimonio').value = savedUrls['patrimonio'] || '';
+    const savedSheetUrl = localStorage.getItem('pedro_rizzi_sheet_url') || '';
+
+    if (document.getElementById('url_sheet')) document.getElementById('url_sheet').value = savedSheetUrl;
+    if (document.getElementById('url_contabil')) document.getElementById('url_contabil').value = savedUrls['contabil'] || '';
+    if (document.getElementById('url_recursos')) document.getElementById('url_recursos').value = savedUrls['recursos'] || '';
+    if (document.getElementById('url_biblioteca')) document.getElementById('url_biblioteca').value = savedUrls['biblioteca'] || '';
+    if (document.getElementById('url_patrimonio')) document.getElementById('url_patrimonio').value = savedUrls['patrimonio'] || '';
 
     modal.style.display = 'flex';
 }
@@ -110,15 +113,20 @@ const configForm = document.getElementById('configForm');
 if (configForm) {
     configForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const sheetUrl = document.getElementById('url_sheet') ? document.getElementById('url_sheet').value.trim() : '';
+        if (sheetUrl) {
+            localStorage.setItem('pedro_rizzi_sheet_url', sheetUrl);
+        }
+
         const savedUrls = {
-            contabil: document.getElementById('url_contabil').value.trim(),
-            recursos: document.getElementById('url_recursos').value.trim(),
-            biblioteca: document.getElementById('url_biblioteca').value.trim(),
-            patrimonio: document.getElementById('url_patrimonio').value.trim()
+            contabil: document.getElementById('url_contabil') ? document.getElementById('url_contabil').value.trim() : '',
+            recursos: document.getElementById('url_recursos') ? document.getElementById('url_recursos').value.trim() : '',
+            biblioteca: document.getElementById('url_biblioteca') ? document.getElementById('url_biblioteca').value.trim() : '',
+            patrimonio: document.getElementById('url_patrimonio') ? document.getElementById('url_patrimonio').value.trim() : ''
         };
         localStorage.setItem('pedro_rizzi_urls', JSON.stringify(savedUrls));
         closeConfigModal();
         loadSystems();
-        alert('Links dos sistemas atualizados com sucesso!');
+        alert('Configurações e planilha salvos com sucesso!');
     });
 }

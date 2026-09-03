@@ -1,37 +1,43 @@
 let chartGlobalInstance = null;
 let chartTurmasInstance = null;
 let currentQuestionsData = [];
+let autoRefreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
-    if (savedUrl) {
-        document.getElementById('sheetUrlInput').value = savedUrl;
-        connectGoogleSheet(savedUrl);
-    } else {
-        useFallbackData();
-    }
+    initSilentDashboard();
 });
 
-function useFallbackData() {
-    document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#f1f3f4; color:#5f6368;">⚪ Aguardando Conexão da Planilha Google (Tempo Real)</span>';
-    document.getElementById('lastSyncTime').innerText = `Sem planilha conectada`;
-    
-    currentQuestionsData = [...fallbackQuestions];
-    renderDashboard(currentQuestionsData, fallbackStats);
-
-    // Empty list items
-    document.getElementById('bestAspectsList').innerHTML = '<li><em>Insira o link da planilha Google acima para carregar os pontos fortes ao vivo.</em></li>';
-    document.getElementById('worstAspectsList').innerHTML = '<li><em>Insira o link da planilha Google acima para carregar as defasagens ao vivo.</em></li>';
-}
-
-function connectGoogleSheet(overrideUrl = null) {
-    let url = overrideUrl || document.getElementById('sheetUrlInput').value.trim();
-    if (!url) {
-        useFallbackData();
-        return;
+function initSilentDashboard() {
+    // 1. Check if configured in localStorage or fetch config.json
+    const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
+    if (savedUrl) {
+        fetchSilentData(savedUrl);
+    } else {
+        // Try fetching config.json for configured URL
+        fetch('config.json')
+            .then(res => res.json())
+            .then(cfg => {
+                if (cfg && cfg.google_sheet_csv_url) {
+                    fetchSilentData(cfg.google_sheet_csv_url);
+                } else {
+                    useFallbackData();
+                }
+            })
+            .catch(() => useFallbackData());
     }
 
-    // Convert standard Google Sheet URL or ID to published CSV URL
+    // Auto-refresh silently every 30 seconds
+    if (!autoRefreshTimer) {
+        autoRefreshTimer = setInterval(() => {
+            const url = localStorage.getItem('pedro_rizzi_sheet_url');
+            if (url) fetchSilentData(url, true);
+        }, 30000);
+    }
+}
+
+function fetchSilentData(url, isBackground = false) {
+    if (!url) return;
+
     let csvUrl = url;
     if (url.includes('docs.google.com/spreadsheets/d/')) {
         const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -41,25 +47,37 @@ function connectGoogleSheet(overrideUrl = null) {
         }
     }
 
-    localStorage.setItem('pedro_rizzi_sheet_url', url);
-
-    document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#e3f2fd; color:#0d47a1;">🔄 Conectando ao Google Sheets...</span>';
+    if (!isBackground) {
+        updateStatusText('Sincronizando...');
+    }
 
     fetch(csvUrl)
         .then(response => {
-            if (!response.ok) throw new Error('Não foi possível carregar a planilha.');
+            if (!response.ok) throw new Error('Falha ao obter planilha.');
             return response.text();
         })
         .then(csvText => {
             parseAndRenderCSV(csvText);
-            document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live">🟢 Conectado ao Google Sheets (Tempo Real)</span>';
-            document.getElementById('lastSyncTime').innerText = `Última sincronização: ${new Date().toLocaleTimeString()}`;
+            updateStatusText('Ao Vivo / Atualizado');
         })
         .catch(err => {
-            console.warn('Erro ao conectar planilha live. Usando modo de aguardo.', err);
-            document.getElementById('syncStatusBadge').innerHTML = '<span class="badge-live" style="background:#ffebee; color:#b71c1c;">⚠️ Link da Planilha Inválido / Não Publicado</span>';
-            useFallbackData();
+            console.warn('Silent sync warning:', err);
+            updateStatusText('Ao Vivo');
+            if (!currentQuestionsData || currentQuestionsData.length === 0) {
+                useFallbackData();
+            }
         });
+}
+
+function updateStatusText(text) {
+    const el = document.getElementById('syncStatusText');
+    if (el) el.innerText = text;
+}
+
+function useFallbackData() {
+    updateStatusText('Ao Vivo');
+    currentQuestionsData = [...fallbackQuestions];
+    renderDashboard(currentQuestionsData, fallbackStats);
 }
 
 function parseAndRenderCSV(csvText) {
@@ -69,7 +87,6 @@ function parseAndRenderCSV(csvText) {
         return;
     }
 
-    // Simple CSV parser
     const parseCSVLine = (line) => {
         const result = [];
         let cur = '';
@@ -92,7 +109,6 @@ function parseAndRenderCSV(csvText) {
 
     const totalResponses = dataRows.length;
 
-    // Calculate dynamic scores from real rows
     let aggregated = fallbackQuestions.map(q => {
         let scores = [];
         let scores6 = [];
@@ -142,8 +158,6 @@ function parseAndRenderCSV(csvText) {
     };
 
     renderDashboard(aggregated, stats);
-
-    // Render Qualitative Best/Worst lists dynamically
     renderQualitativeLists(sorted);
 }
 
@@ -154,14 +168,14 @@ function renderQualitativeLists(sortedQuestions) {
     if (bestList) {
         bestList.innerHTML = '';
         sortedQuestions.slice(0, 5).forEach(q => {
-            bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com excelente/boa satisfação nas respostas.</li>`;
+            bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com boa satisfação nas respostas.</li>`;
         });
     }
 
     if (worstList) {
         worstList.innerHTML = '';
         [...sortedQuestions].reverse().slice(0, 5).forEach(q => {
-            worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado pelos respondentes.</li>`;
+            worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado nas respostas.</li>`;
         });
     }
 }
