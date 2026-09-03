@@ -1,12 +1,21 @@
 let chartGlobalInstance = null;
 let chartTurmasInstance = null;
 let currentQuestionsData = [];
+let rawCsvRows = [];
+let rawCsvHeaders = [];
+let currentTrimesterFilter = 'ALL';
 let autoRefreshTimer = null;
 let currentHeaderSortKey = 'code';
-let currentHeaderSortDir = 'asc'; // 'asc' or 'desc'
+let currentHeaderSortDir = 'asc';
+
+// Trimester Date Ranges for 2026
+const trimesterRanges = {
+    'T1': { start: new Date('2026-02-11T00:00:00'), end: new Date('2026-05-22T23:59:59') },
+    'T2': { start: new Date('2026-05-26T00:00:00'), end: new Date('2026-09-04T23:59:59') },
+    'T3': { start: new Date('2026-09-09T00:00:00'), end: new Date('2026-12-15T23:59:59') }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Render INSTANTLY on page load (0.01s speed!)
     useFallbackData();
     initSilentDashboard();
 });
@@ -52,7 +61,7 @@ function fetchSilentData(url, isBackground = false) {
             return response.text();
         })
         .then(csvText => {
-            parseAndRenderCSV(csvText);
+            parseCSVData(csvText);
             updateStatusText('Ao Vivo / Sincronizado');
         })
         .catch(err => {
@@ -66,13 +75,32 @@ function updateStatusText(text) {
     if (el) el.innerText = text;
 }
 
+function setTrimesterFilter(triKey) {
+    currentTrimesterFilter = triKey;
+
+    // Highlight active button
+    ['ALL', 'T1', 'T2', 'T3'].forEach(k => {
+        const btn = document.getElementById(`btnTri_${k}`);
+        if (btn) {
+            if (k === triKey) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    });
+
+    if (rawCsvRows.length > 0) {
+        processFilteredRows();
+    } else {
+        useFallbackData();
+    }
+}
+
 function useFallbackData() {
     updateStatusText('Ao Vivo');
     currentQuestionsData = [...fallbackQuestions];
     renderDashboard(currentQuestionsData, fallbackStats);
 }
 
-function parseAndRenderCSV(csvText) {
+function parseCSVData(csvText) {
     const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lines.length <= 1) return;
 
@@ -93,9 +121,43 @@ function parseAndRenderCSV(csvText) {
     };
 
     const rows = lines.map(parseCSVLine);
-    const headers = rows[0];
-    const dataRows = rows.slice(1);
-    const totalResponses = dataRows.length;
+    rawCsvHeaders = rows[0];
+    rawCsvRows = rows.slice(1);
+
+    processFilteredRows();
+}
+
+function parseDateStr(str) {
+    if (!str) return null;
+    // Common formats: '2026-03-15 10:20:00' or '15/03/2026 10:20:00'
+    if (str.includes('/')) {
+        const parts = str.split(' ')[0].split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function processFilteredRows() {
+    let filteredRows = [...rawCsvRows];
+
+    // Filter by Trimester Date Range if applicable
+    if (currentTrimesterFilter !== 'ALL' && trimesterRanges[currentTrimesterFilter]) {
+        const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
+        
+        if (dateColIdx !== -1) {
+            const range = trimesterRanges[currentTrimesterFilter];
+            filteredRows = filteredRows.filter(row => {
+                const dateVal = parseDateStr(row[dateColIdx]);
+                if (!dateVal) return true; // if date unparseable, include
+                return dateVal >= range.start && dateVal <= range.end;
+            });
+        }
+    }
+
+    const totalResponses = filteredRows.length;
 
     let aggregated = fallbackQuestions.map(q => {
         let scores = [];
@@ -103,11 +165,11 @@ function parseAndRenderCSV(csvText) {
         let scores7 = [];
         let scores8 = [];
 
-        let colIdx = headers.findIndex(h => h.includes(q.id) || h.toLowerCase().includes(q.title.substring(0, 15).toLowerCase()));
-        let anoIdx = headers.findIndex(h => h.toLowerCase().includes('ano'));
+        let colIdx = rawCsvHeaders.findIndex(h => h.includes(q.id) || h.toLowerCase().includes(q.title.substring(0, 15).toLowerCase()));
+        let anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano'));
 
         if (colIdx !== -1) {
-            dataRows.forEach(row => {
+            filteredRows.forEach(row => {
                 let valStr = row[colIdx] || '';
                 let valNum = mapTextToScore(valStr);
                 let anoStr = anoIdx !== -1 ? (row[anoIdx] || '') : '';
@@ -251,7 +313,6 @@ function toggleHeaderSort(key) {
         currentHeaderSortDir = (key === 'score' || key === 'p6' || key === 'p7' || key === 'p8') ? 'desc' : 'asc';
     }
 
-    // Sync select box if matched
     const sortSelect = document.getElementById('tableSortSelect');
     if (sortSelect) {
         if (key === 'code') sortSelect.value = currentHeaderSortDir === 'asc' ? 'code_asc' : 'code_desc';
@@ -289,14 +350,12 @@ function filterAndSortTable() {
 
     let result = [...currentQuestionsData];
 
-    // 1. Category Filter
     const catSelect = document.getElementById('tableCategorySelect');
     if (catSelect && catSelect.value !== 'ALL') {
         const catVal = catSelect.value;
         result = result.filter(q => q.cat === catVal);
     }
 
-    // 2. Search Text Filter
     const searchInput = document.getElementById('tableSearch');
     if (searchInput && searchInput.value.trim() !== '') {
         const term = searchInput.value.toLowerCase().trim();
@@ -307,7 +366,6 @@ function filterAndSortTable() {
         );
     }
 
-    // 3. Apply Select Sort if select value has changed
     const sortSelect = document.getElementById('tableSortSelect');
     if (sortSelect) {
         const sVal = sortSelect.value;
@@ -319,17 +377,6 @@ function filterAndSortTable() {
         else if (sVal === 'p7_desc') { result.sort((a,b) => b.p7 - a.p7); }
         else if (sVal === 'p8_desc') { result.sort((a,b) => b.p8 - a.p8); }
         else if (sVal === 'title_asc') { result.sort((a,b) => a.title.localeCompare(b.title)); }
-    } else {
-        // Fallback to currentHeaderSortKey
-        result.sort((a,b) => {
-            let valA = a[currentHeaderSortKey];
-            let valB = b[currentHeaderSortKey];
-            if (typeof valA === 'string') {
-                return currentHeaderSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            } else {
-                return currentHeaderSortDir === 'asc' ? valA - valB : valB - valA;
-            }
-        });
     }
 
     renderTable(result);

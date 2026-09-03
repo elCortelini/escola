@@ -215,7 +215,7 @@
     <main class="container">
         
         <!-- Subheader Banner with Form Button & Live Badge -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:1.8rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:1.5rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
             <div>
                 <h3 style="color:var(--primary-dark); font-size:1.25rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-square-poll-vertical" style="color:var(--primary-light);"></i> Resultados em Tempo Real — Pesquisa de Avaliação (6º ao 8º Ano)
@@ -233,6 +233,15 @@
             </div>
         </div>
 
+        <!-- Trimester Selector Bar -->
+        <div class="trimester-bar">
+            <span class="trimester-label"><i class="fa-solid fa-calendar-days" style="color:var(--primary-light);"></i> Período do Ano:</span>
+            <button id="btnTri_ALL" class="btn-tri active" onclick="setTrimesterFilter('ALL')"><i class="fa-solid fa-globe"></i> Geral / Ano Completo</button>
+            <button id="btnTri_T1" class="btn-tri" onclick="setTrimesterFilter('T1')"><i class="fa-solid fa-seedling"></i> 1º Trimestre (11/02 a 22/05/26)</button>
+            <button id="btnTri_T2" class="btn-tri" onclick="setTrimesterFilter('T2')"><i class="fa-solid fa-sun"></i> 2º Trimestre (26/05 a 04/09/26)</button>
+            <button id="btnTri_T3" class="btn-tri" onclick="setTrimesterFilter('T3')"><i class="fa-solid fa-leaf"></i> 3º Trimestre (09/09 a 15/12/26)</button>
+        </div>
+
         <!-- KPI Cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -241,7 +250,7 @@
                     <div class="kpi-icon icon-blue"><i class="fa-solid fa-users"></i></div>
                 </div>
                 <div class="kpi-value" id="kpiTotal">183</div>
-                <div class="kpi-sub">Estudantes (6º ao 8º Ano)</div>
+                <div class="kpi-sub" id="kpiTotalSub">Estudantes (6º ao 8º Ano)</div>
             </div>
             
             <div class="kpi-card">
@@ -250,7 +259,7 @@
                     <div class="kpi-icon icon-purple"><i class="fa-solid fa-chart-line"></i></div>
                 </div>
                 <div class="kpi-value" id="kpiSatisfaction">71.4%</div>
-                <div class="kpi-sub">Média Geral da Escola</div>
+                <div class="kpi-sub" id="kpiSatisfactionSub">Média do Período</div>
             </div>
             
             <div class="kpi-card green">
