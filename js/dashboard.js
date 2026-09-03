@@ -499,9 +499,21 @@ function renderAllCharts(questions) {
         }
     });
 
+    // Comparativo por Turno REAL: Matutino = dados reais (183), Vespertino = 0!
     const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
-    const matutinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v + 1.8).toFixed(1)) : 0);
-    const vespertinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v - 2.1).toFixed(1)) : 0);
+    let matutinoMeans = catMeans.slice(0, 5);
+    let vespertinoMeans = [0, 0, 0, 0, 0]; // Vespertino ainda não respondeu (0)
+
+    // Parse real turnos if present in CSV
+    if (rawCsvRows.length > 0) {
+        const turnoColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('turno') || h.toLowerCase().includes('período'));
+        if (turnoColIdx !== -1) {
+            let vRows = rawCsvRows.filter(r => (r[turnoColIdx]||'').toLowerCase().includes('vesp') || (r[turnoColIdx]||'').toLowerCase().includes('tarde'));
+            if (vRows.length === 0) {
+                vespertinoMeans = [0, 0, 0, 0, 0];
+            }
+        }
+    }
 
     const ctxTurno = document.getElementById('chartTurno').getContext('2d');
     if (chartTurnoInstance) chartTurnoInstance.destroy();
@@ -512,7 +524,7 @@ function renderAllCharts(questions) {
             labels: turnoCats,
             datasets: [
                 { label: 'Matutino (Manhã)', data: matutinoMeans, backgroundColor: '#0284c7' },
-                { label: 'Vespertino (Tarde)', data: vespertinoMeans, backgroundColor: '#d97706' }
+                { label: 'Vespertino (Tarde - Sem dados)', data: vespertinoMeans, backgroundColor: '#cbd5e1' }
             ]
         },
         options: {
