@@ -25,7 +25,7 @@ const fallbackQuestions = [
 ];
 
 const fallbackStats = {
-    totalResponses: 280,
+    totalResponses: 183,
     satisfactionGlobal: 71.4,
     topBest: "Professores (86.4%)",
     topWorst: "Banheiros (34.2%)"
