@@ -1,0 +1,52 @@
+{
+  "school_name": "Centro Educacional Pedro Rizzi",
+  "subtitle": "Portal Integrado de Sistemas e Gestão Escolar",
+  "google_sheet_csv_url": "",
+  "systems": [
+    {
+      "id": "dashboard",
+      "title": "Dashboard de Avaliação Escolar",
+      "icon": "📊",
+      "description": "Análise analítica e gráfica em tempo real da pesquisa de satisfação dos estudantes (6º ao 8º Ano).",
+      "url": "dashboard.html",
+      "status": "online",
+      "badge": "AO VIVO / DINÂMICO"
+    },
+    {
+      "id": "contabil",
+      "title": "Sistema Contábil",
+      "icon": "💰",
+      "description": "Gestão de receitas, despesas, prestação de contas da APMF e fluxo financeiro escolar.",
+      "url": "#",
+      "status": "placeholder",
+      "badge": "EM BREVE / CONFIGURÁVEL"
+    },
+    {
+      "id": "recursos",
+      "title": "Sistema de Agendamento de Recursos",
+      "icon": "📅",
+      "description": "Reserva de laboratórios, projetores, quadra de esportes e auditório.",
+      "url": "#",
+      "status": "placeholder",
+      "badge": "EM BREVE / CONFIGURÁVEL"
+    },
+    {
+      "id": "biblioteca",
+      "title": "Sistema da Biblioteca",
+      "icon": "📚",
+      "description": "Acervo de livros, empréstimos, renovações e catálogo de leitura escolar.",
+      "url": "#",
+      "status": "placeholder",
+      "badge": "EM BREVE / CONFIGURÁVEL"
+    },
+    {
+      "id": "patrimonio",
+      "title": "Sistema de Patrimônio",
+      "icon": "🏛️",
+      "description": "Inventário de móveis, equipamentos eletrônicos, tombamento e controle de bens.",
+      "url": "#",
+      "status": "placeholder",
+      "badge": "EM BREVE / CONFIGURÁVEL"
+    }
+  ]
+}

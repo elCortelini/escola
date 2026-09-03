@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Sistemas - Centro Educacional Pedro Rizzi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="header-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-logo">PR</div>
+                <div class="brand-text">
+                    <h1>Centro Educacional Pedro Rizzi</h1>
+                    <p>Portal de Sistemas & Gestão Escolar</p>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Início</a></li>
+                <li><a href="dashboard.html">Dashboard Avaliação</a></li>
+                <li><a href="#sistemas">Sistemas</a></li>
+                <li><a href="#config" onclick="openConfigModal()">⚙️ Configurar Links</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="badge-tag">Gestão Educacional Integrada</span>
+            <h2>Bem-vindo ao Portal de Sistemas</h2>
+            <p>Acesse as plataformas digitais, relatórios analíticos em tempo real e ferramentas de apoio à comunidade escolar do Centro Educacional Pedro Rizzi.</p>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <main class="container">
+        <div class="section-header" id="sistemas">
+            <h3>Sistemas e Plataformas Escolares</h3>
+            <p>Selecione o sistema desejado para acessar seus recursos e funcionalidades.</p>
+        </div>
+
+        <div class="systems-grid" id="systemsGrid">
+            <!-- Systems rendered dynamically via main.js -->
+        </div>
+    </main>
+
+    <!-- Config Modal -->
+    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:12px; max-width:550px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:1rem; color:var(--primary);">⚙️ Configurar Links dos Sistemas</h3>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">Insira ou altere os URLs dos sistemas da escola (salvo no navegador):</p>
+            
+            <form id="configForm" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem;">💰 Sistema Contábil:</label>
+                    <input type="url" id="url_contabil" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem;">📅 Agendamento de Recursos:</label>
+                    <input type="url" id="url_recursos" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem;">📚 Sistema da Biblioteca:</label>
+                    <input type="url" id="url_biblioteca" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem;">🏛️ Sistema de Patrimônio:</label>
+                    <input type="url" id="url_patrimonio" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeConfigModal()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Links</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
+        <p style="font-size:0.8rem; margin-top:4px; opacity:0.8;">Portal desenvolvido para gestão e acompanhamento da comunidade escolar.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
