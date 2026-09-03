@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal de Sistemas - Centro Educacional Pedro Rizzi</title>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 </head>
@@ -13,17 +15,17 @@
     <header class="header-nav">
         <div class="nav-container">
             <a href="index.html" class="brand">
-                <div class="brand-logo">PR</div>
+                <div class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="brand-text">
                     <h1>Centro Educacional Pedro Rizzi</h1>
-                    <p>Portal de Sistemas & Gestão Escolar</p>
+                    <p>Portal Integrado de Gestão & Sistemas</p>
                 </div>
             </a>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Início</a></li>
-                <li><a href="dashboard.html">Dashboard Avaliação</a></li>
-                <li><a href="#sistemas">Sistemas</a></li>
-                <li><a href="#config" onclick="openConfigModal()">⚙️ Configurações</a></li>
+                <li><a href="index.html" class="active"><i class="fa-solid fa-house"></i> Início</a></li>
+                <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Avaliação</a></li>
+                <li><a href="#sistemas"><i class="fa-solid fa-cubes"></i> Sistemas</a></li>
+                <li><a href="#config" onclick="openConfigModal()" class="btn-config"><i class="fa-solid fa-gear"></i> Configurações</a></li>
             </ul>
         </div>
     </header>
@@ -31,17 +33,32 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <span class="badge-tag">Gestão Educacional Integrada</span>
-            <h2>Bem-vindo ao Portal de Sistemas</h2>
-            <p>Acesse as plataformas digitais, relatórios analíticos em tempo real e ferramentas de apoio à comunidade escolar do Centro Educacional Pedro Rizzi.</p>
+            <div class="badge-tag"><i class="fa-solid fa-shield-halved"></i> Gestão Educacional Integrada</div>
+            <h2>Portal de Sistemas Escolares</h2>
+            <p>Acesse plataformas digitais, dashboards analíticos em tempo real e ferramentas de gestão do Centro Educacional Pedro Rizzi.</p>
+            
+            <div class="stats-banner">
+                <div class="stat-item">
+                    <div class="stat-num">183+</div>
+                    <div class="stat-desc">Estudantes Avaliados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">5</div>
+                    <div class="stat-desc">Sistemas Integrados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">100%</div>
+                    <div class="stat-desc">Gestão Transparente</div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Main Container -->
     <main class="container">
         <div class="section-header" id="sistemas">
-            <h3>Sistemas e Plataformas Escolares</h3>
-            <p>Selecione o sistema desejado para acessar seus recursos e funcionalidades.</p>
+            <h3>Plataformas Digitais</h3>
+            <p>Selecione abaixo o sistema desejado para acessar suas funcionalidades e relatórios.</p>
         </div>
 
         <div class="systems-grid" id="systemsGrid">
@@ -50,36 +67,42 @@
     </main>
 
     <!-- Config Modal -->
-    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
-        <div style="background:white; padding:2rem; border-radius:12px; max-width:550px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
-            <h3 style="margin-bottom:1rem; color:var(--primary);">⚙️ Configuração dos Sistemas & Planilha</h3>
-            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">Insira os links dos sistemas e da planilha do Google para sincronização silenciosa:</p>
+    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2.2rem; border-radius:18px; max-width:560px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:var(--primary-dark); font-size:1.3rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-sliders" style="color:var(--accent);"></i> Configuração de Links dos Sistemas
+                </h3>
+                <button type="button" onclick="closeConfigModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             
-            <form id="configForm" style="display:flex; flex-direction:column; gap:12px;">
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">Insira os links oficiais dos sistemas da escola (salvo no navegador):</p>
+            
+            <form id="configForm" style="display:flex; flex-direction:column; gap:14px;">
                 <div>
-                    <label style="font-weight:600; font-size:0.85rem;">📊 Planilha de Respostas (Google Sheets CSV):</label>
-                    <input type="url" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="sync-input" style="width:100%; margin-top:4px;">
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-file-csv" style="color:var(--success);"></i> Planilha de Respostas (Google Sheets CSV):</label>
+                    <input type="url" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:600; font-size:0.85rem;">💰 Sistema Contábil:</label>
-                    <input type="url" id="url_contabil" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil:</label>
+                    <input type="url" id="url_contabil" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:600; font-size:0.85rem;">📅 Agendamento de Recursos:</label>
-                    <input type="url" id="url_recursos" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-calendar-check" style="color:#d97706;"></i> Agendamento de Recursos:</label>
+                    <input type="url" id="url_recursos" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:600; font-size:0.85rem;">📚 Sistema da Biblioteca:</label>
-                    <input type="url" id="url_biblioteca" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Sistema da Biblioteca:</label>
+                    <input type="url" id="url_biblioteca" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:600; font-size:0.85rem;">🏛️ Sistema de Patrimônio:</label>
-                    <input type="url" id="url_patrimonio" placeholder="https://..." class="sync-input" style="width:100%; margin-top:4px;">
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-boxes-stacked" style="color:#e11d48;"></i> Sistema de Patrimônio:</label>
+                    <input type="url" id="url_patrimonio" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
-                    <button type="button" onclick="closeConfigModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:1.2rem;">
+                    <button type="button" onclick="closeConfigModal()" class="btn btn-secondary" style="width:auto;"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;"><i class="fa-solid fa-floppy-disk"></i> Salvar Links</button>
                 </div>
             </form>
         </div>
@@ -88,8 +111,8 @@
     <!-- Footer -->
     <footer>
         <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
-        <p style="font-size:0.8rem; margin-top:4px; opacity:0.8;">Portal desenvolvido para gestão e acompanhamento da comunidade escolar.</p>
-        <p style="font-size:0.85rem; margin-top:8px; color:var(--secondary); font-weight:600;">Desenvolvido por Elevi Cortelini - 2026</p>
+        <p style="font-size:0.82rem; margin-top:4px; opacity:0.8;">Portal desenvolvido para gestão e acompanhamento da comunidade escolar.</p>
+        <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
     <script src="js/main.js"></script>

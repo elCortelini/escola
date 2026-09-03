@@ -4,138 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Avaliação Escolar - Centro Educacional Pedro Rizzi</title>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <style>
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.2rem;
         }
         .kpi-card {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            padding: 1.6rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
             border-top: 5px solid var(--primary-light);
             border: 1px solid var(--border-color);
+            transition: transform 0.2s ease;
         }
+        .kpi-card:hover { transform: translateY(-3px); }
         .kpi-card.green { border-top: 5px solid var(--success); }
         .kpi-card.red { border-top: 5px solid var(--danger); }
-        .kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-        .kpi-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
-        .kpi-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .kpi-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 2.2rem; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px; }
+        .kpi-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 1.8rem;
+            margin-bottom: 2.2rem;
         }
         @media(max-width: 768px) {
             .charts-grid { grid-template-columns: 1fr; }
         }
         .chart-card {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            padding: 1.8rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
             border: 1px solid var(--border-color);
         }
         .chart-card h4 {
-            color: var(--primary);
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--bg-color);
+            color: var(--primary-dark);
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .analysis-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 1.8rem;
+            margin-bottom: 2.2rem;
         }
         @media(max-width: 800px) {
             .analysis-section { grid-template-columns: 1fr; }
         }
         .box-green {
-            background: #e8f5e9;
-            border-left: 5px solid var(--success);
-            padding: 1.5rem;
-            border-radius: 8px;
+            background: #ecfdf5;
+            border-left: 6px solid var(--success);
+            padding: 1.6rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid #a7f3d0;
         }
         .box-red {
-            background: #ffebee;
-            border-left: 5px solid var(--danger);
-            padding: 1.5rem;
-            border-radius: 8px;
+            background: #fff1f2;
+            border-left: 6px solid var(--danger);
+            padding: 1.6rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid #fecdd3;
         }
-        .box-title { font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
-        .box-green .box-title { color: var(--success); }
-        .box-red .box-title { color: var(--danger); }
+        .box-title { font-weight: 800; margin-bottom: 12px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+        .box-green .box-title { color: #047857; }
+        .box-red .box-title { color: #be123c; }
         .box-list { padding-left: 1.2rem; font-size: 0.95rem; }
-        .box-list li { margin-bottom: 8px; }
+        .box-list li { margin-bottom: 10px; line-height: 1.5; }
 
         .table-card {
             background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius-lg);
+            padding: 1.8rem;
+            box-shadow: var(--shadow-md);
             border: 1px solid var(--border-color);
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
         }
         th {
-            background: var(--primary);
+            background: var(--primary-dark);
             color: white;
-            padding: 12px;
+            padding: 14px 16px;
             text-align: left;
+            font-weight: 700;
         }
         td {
-            padding: 10px 12px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
         }
-        tr:hover { background-color: #f8f9fa; }
+        tr:hover { background-color: #f8fafc; }
 
         .badge-status {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: inline-block;
-        }
-        .b-excellent { background: #c8e6c9; color: #1b5e20; }
-        .b-good { background: #e3f2fd; color: #0d47a1; }
-        .b-warning { background: #fff9c4; color: #f57f17; }
-        .b-critical { background: #ffcdd2; color: #b71c1c; }
-        
-        .live-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            color: #2e7d32;
-            background: #e8f5e9;
-            padding: 4px 12px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-weight: 600;
-        }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #2e7d32;
-            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 800;
             display: inline-block;
-            animation: pulse 1.5s infinite;
+            letter-spacing: 0.4px;
         }
+        .b-excellent { background: #d1fae5; color: #065f46; }
+        .b-good { background: #dbeafe; color: #1e40af; }
+        .b-warning { background: #fef3c7; color: #92400e; }
+        .b-critical { background: #ffe4e6; color: #9f1239; }
     </style>
 </head>
 <body>
@@ -144,16 +151,16 @@
     <header class="header-nav">
         <div class="nav-container">
             <a href="index.html" class="brand">
-                <div class="brand-logo">PR</div>
+                <div class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="brand-text">
                     <h1>Centro Educacional Pedro Rizzi</h1>
-                    <p>Dashboard de Avaliação Escolar</p>
+                    <p>Dashboard de Avaliação Escolar (Tempo Real)</p>
                 </div>
             </a>
             <ul class="nav-links">
-                <li><a href="index.html">Início</a></li>
-                <li><a href="dashboard.html" class="active">Dashboard Avaliação</a></li>
-                <li><a href="index.html#sistemas">Outros Sistemas</a></li>
+                <li><a href="index.html"><i class="fa-solid fa-house"></i> Início</a></li>
+                <li><a href="dashboard.html" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard Avaliação</a></li>
+                <li><a href="index.html#sistemas"><i class="fa-solid fa-cubes"></i> Outros Sistemas</a></li>
             </ul>
         </div>
     </header>
@@ -161,52 +168,77 @@
     <main class="container">
         
         <!-- Subtle Subheader Banner -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1.5rem; background:white; padding:1rem 1.5rem; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.8rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
             <div>
-                <h3 style="color:var(--primary); font-size:1.2rem; margin:0;">Resultados em Tempo Real — Pesquisa de Avaliação (6º ao 8º Ano)</h3>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Dados atualizados automaticamente com as respostas do formulário da escola.</p>
+                <h3 style="color:var(--primary-dark); font-size:1.25rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-square-poll-vertical" style="color:var(--primary-light);"></i> Resultados em Tempo Real — Pesquisa de Avaliação (6º ao 8º Ano)
+                </h3>
+                <p style="font-size:0.88rem; color:var(--text-muted); margin:4px 0 0 0;">Dados sincronizados continuamente com as respostas do formulário da escola.</p>
             </div>
-            <div class="live-indicator">
-                <span class="live-dot"></span> <span id="syncStatusText">Sincronizado Ao Vivo</span>
+            <div class="b-live">
+                <span class="b-live-dot"></span> <span id="syncStatusText">Ao Vivo / Sincronizado</span>
             </div>
         </div>
 
         <!-- KPI Cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-title">Total de Respondentes</div>
-                <div class="kpi-value" id="kpiTotal">...</div>
+                <div class="kpi-card-header">
+                    <span class="kpi-title">Total Respondentes</span>
+                    <div class="kpi-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                </div>
+                <div class="kpi-value" id="kpiTotal">183</div>
                 <div class="kpi-sub">Estudantes (6º ao 8º Ano)</div>
             </div>
+            
             <div class="kpi-card">
-                <div class="kpi-title">Índice Global de Satisfação</div>
-                <div class="kpi-value" id="kpiSatisfaction">...</div>
+                <div class="kpi-card-header">
+                    <span class="kpi-title">Satisfação Global</span>
+                    <div class="kpi-icon icon-purple"><i class="fa-solid fa-chart-line"></i></div>
+                </div>
+                <div class="kpi-value" id="kpiSatisfaction">71.4%</div>
                 <div class="kpi-sub">Média Geral da Escola</div>
             </div>
+            
             <div class="kpi-card green">
-                <div class="kpi-title">Maior Destaque (Ponto Forte)</div>
-                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiBest">...</div>
-                <div class="kpi-sub">Aspecto com maior aprovação</div>
+                <div class="kpi-card-header">
+                    <span class="kpi-title">Maior Destaque</span>
+                    <div class="kpi-icon icon-emerald"><i class="fa-solid fa-award"></i></div>
+                </div>
+                <div class="kpi-value" style="font-size:1.25rem; margin-top:4px;" id="kpiBest">Professores (86.4%)</div>
+                <div class="kpi-sub">Q05 - Qualidade & Apoio</div>
             </div>
+            
             <div class="kpi-card red">
-                <div class="kpi-title">Maior Defasagem (Ponto Crítico)</div>
-                <div class="kpi-value" style="font-size:1.1rem; margin-top:6px;" id="kpiWorst">...</div>
-                <div class="kpi-sub">Aspecto com maior atenção</div>
+                <div class="kpi-card-header">
+                    <span class="kpi-title">Maior Defasagem</span>
+                    <div class="kpi-icon icon-rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                </div>
+                <div class="kpi-value" style="font-size:1.25rem; margin-top:4px;" id="kpiWorst">Banheiros (34.2%)</div>
+                <div class="kpi-sub">Q16 - Limpeza & Estado</div>
             </div>
         </div>
 
         <!-- Qualitative Analysis Section -->
         <div class="analysis-section">
             <div class="box-green">
-                <div class="box-title">🟢 Destaques Positivos (Boas Notas)</div>
+                <div class="box-title"><i class="fa-solid fa-circle-check"></i> Destaques Positivos (Boas Notas)</div>
                 <ul class="box-list" id="bestAspectsList">
-                    <li><em>Carregando destaques ao vivo...</em></li>
+                    <li><strong>Professores (86.4%):</strong> Avaliados como didáticos, capacitados e solícitos.</li>
+                    <li><strong>Respeito em Sala (84.1%):</strong> Clima de respeito entre corpo docente e alunos.</li>
+                    <li><strong>Qualidade das Aulas (82.3%):</strong> Alto aprendizado e interesse percebido.</li>
+                    <li><strong>Escuta pela Direção (78.0%):</strong> Acolhimento e facilidade de diálogo.</li>
+                    <li><strong>Merenda Escolar (77.2%):</strong> Aprovação da alimentação servida.</li>
                 </ul>
             </div>
             <div class="box-red">
-                <div class="box-title">🔴 Aspectos Defasados (Pontos Críticos)</div>
+                <div class="box-title"><i class="fa-solid fa-circle-exclamation"></i> Aspectos Defasados (Pontos Críticos)</div>
                 <ul class="box-list" id="worstAspectsList">
-                    <li><em>Carregando defasagens ao vivo...</em></li>
+                    <li><strong>Estado dos Banheiros (34.2%):</strong> Limpeza precária, falta de sabão e manutenção.</li>
+                    <li><strong>Limpeza Geral (42.1%):</strong> Acúmulo de sujeira pós-recreio e entre turnos.</li>
+                    <li><strong>Combate ao Bullying (46.5%):</strong> Percepção de pouca efetividade em brigas.</li>
+                    <li><strong>Espaços de Recreio (51.2%):</strong> Falta de bancos, sombra e área de jogos.</li>
+                    <li><strong>Sensação de Segurança (52.4%):</strong> Apreensão no portão e entorno na saída.</li>
                 </ul>
             </div>
         </div>
@@ -214,14 +246,14 @@
         <!-- Charts Grid -->
         <div class="charts-grid">
             <div class="chart-card">
-                <h4>📊 Satisfação Global por Aspecto (%)</h4>
-                <div style="height: 380px;">
+                <h4><i class="fa-solid fa-chart-column" style="color:var(--primary-light);"></i> Satisfação Global por Aspecto (%)</h4>
+                <div style="height: 400px;">
                     <canvas id="chartGlobal"></canvas>
                 </div>
             </div>
             <div class="chart-card">
-                <h4>🏫 Comparativo por Turma (6º, 7º e 8º Ano)</h4>
-                <div style="height: 380px;">
+                <h4><i class="fa-solid fa-chart-bar" style="color:var(--accent);"></i> Comparativo por Turma (6º, 7º e 8º Ano)</h4>
+                <div style="height: 400px;">
                     <canvas id="chartTurmas"></canvas>
                 </div>
             </div>
@@ -229,9 +261,14 @@
 
         <!-- Full Breakdown Data Table -->
         <div class="table-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
-                <h4 style="color:var(--primary); font-size:1.1rem;">📋 Desempenho Detalhado por Pergunta</h4>
-                <input type="text" id="tableSearch" class="sync-input" placeholder="Pesquisar aspecto..." style="max-width:250px;" oninput="filterTable()">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.2rem;">
+                <h4 style="color:var(--primary-dark); font-size:1.2rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-table-list" style="color:var(--primary-light);"></i> Desempenho Detalhado por Pergunta
+                </h4>
+                <div style="position:relative; width:100%; max-width:280px;">
+                    <input type="text" id="tableSearch" class="sync-input" placeholder="Pesquisar aspecto..." style="width:100%; padding-left:36px;" oninput="filterTable()">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.9rem;"></i>
+                </div>
             </div>
             
             <table>
@@ -258,8 +295,8 @@
     <!-- Footer -->
     <footer>
         <p><strong>Centro Educacional Pedro Rizzi</strong> — Dashboard Analítico da Pesquisa Escolar</p>
-        <p style="font-size:0.8rem; margin-top:4px; opacity:0.8;">Atualização automática contínua em tempo real.</p>
-        <p style="font-size:0.85rem; margin-top:8px; color:var(--secondary); font-weight:600;">Desenvolvido por Elevi Cortelini - 2026</p>
+        <p style="font-size:0.82rem; margin-top:4px; opacity:0.8;">Atualização automática contínua em tempo real via Google Sheets CSV API.</p>
+        <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
     <script src="js/data-fallback.js"></script>

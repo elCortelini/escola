@@ -5,19 +5,23 @@ document.addEventListener('DOMContentLoaded', () => {
 const defaultSystems = [
     {
         id: "dashboard",
-        title: "Dashboard de Avaliação Escolar",
-        icon: "📊",
-        description: "Análise gráfica e estatística em tempo real do questionário de avaliação dos estudantes (6º ao 8º Ano).",
+        title: "Dashboard de Avaliação",
+        iconClass: "fa-solid fa-chart-line",
+        bgClass: "icon-emerald",
+        tag: "PESQUISA & DIAGNÓSTICO",
+        description: "Análise gráfica e estatística em tempo real da pesquisa de avaliação dos estudantes (6º ao 8º Ano).",
         url: "dashboard.html",
         status: "online",
-        badge: "AO VIVO / DINÂMICO",
+        badge: "AO VIVO / TEMPO REAL",
         isLive: true
     },
     {
         id: "contabil",
         title: "Sistema Contábil",
-        icon: "💰",
-        description: "Gestão de receitas, despesas, prestação de contas da APMF e controle financeiro escolar.",
+        iconClass: "fa-solid fa-calculator",
+        bgClass: "icon-blue",
+        tag: "GESTÃO FINANCEIRA",
+        description: "Controle de receitas, despesas, fluxo de caixa e prestação de contas da APMF da escola.",
         url: "#",
         status: "placeholder",
         badge: "CONFIGURÁVEL",
@@ -25,9 +29,11 @@ const defaultSystems = [
     },
     {
         id: "recursos",
-        title: "Sistema de Agendamento de Recursos",
-        icon: "📅",
-        description: "Reserva de laboratórios de informática, datashows, quadra poliesportiva e auditório.",
+        title: "Agendamento de Recursos",
+        iconClass: "fa-solid fa-calendar-check",
+        bgClass: "icon-amber",
+        tag: "RECURSOS & ESPAÇOS",
+        description: "Reserva de laboratórios de informática, projetores, quadra de esportes e auditório.",
         url: "#",
         status: "placeholder",
         badge: "CONFIGURÁVEL",
@@ -36,8 +42,10 @@ const defaultSystems = [
     {
         id: "biblioteca",
         title: "Sistema da Biblioteca",
-        icon: "📚",
-        description: "Acervo de livros da escola, controle de empréstimos, devoluções e pesquisas.",
+        iconClass: "fa-solid fa-book-bookmark",
+        bgClass: "icon-purple",
+        tag: "ACERVO DIGITAL",
+        description: "Gestão do acervo escolar, controle de empréstimos, devoluções e pesquisas acadêmicas.",
         url: "#",
         status: "placeholder",
         badge: "CONFIGURÁVEL",
@@ -46,8 +54,10 @@ const defaultSystems = [
     {
         id: "patrimonio",
         title: "Sistema de Patrimônio",
-        icon: "🏛️",
-        description: "Inventário de bens, móveis, equipamentos tecnológicos, tombamento e controle de patrimônio.",
+        iconClass: "fa-solid fa-boxes-stacked",
+        bgClass: "icon-rose",
+        tag: "CONTROLE PATRIMONIAL",
+        description: "Inventário de bens, móveis, equipamentos tecnológicos, tombamento e gestão de ativos.",
         url: "#",
         status: "placeholder",
         badge: "CONFIGURÁVEL",
@@ -72,14 +82,22 @@ function loadSystems() {
         
         card.innerHTML = `
             <div>
-                ${sys.isLive ? `<span class="badge-live">${sys.badge}</span>` : `<span class="badge-live" style="background:#f1f3f4; color:#5f6368;">${sys.badge}</span>`}
-                <div class="card-icon">${sys.icon}</div>
+                <div class="card-top">
+                    <div class="card-icon-wrapper ${sys.bgClass}">
+                        <i class="${sys.iconClass}"></i>
+                    </div>
+                    ${sys.isLive ? 
+                        `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>${sys.badge}</span>` : 
+                        (isConfigured ? `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>ATIVO</span>` : `<span class="badge-tag-card b-config">${sys.badge}</span>`)
+                    }
+                </div>
+                <div style="font-size: 0.75rem; font-weight:700; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px;">${sys.tag}</div>
                 <h4 class="card-title">${sys.title}</h4>
                 <p class="card-desc">${sys.description}</p>
             </div>
             <div>
                 <a href="${finalUrl}" ${isConfigured && !sys.isLive ? 'target="_blank"' : ''} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
-                    ${sys.isLive ? 'Acessar Dashboard Ao Vivo 📊' : (isConfigured ? 'Acessar Sistema ↗' : 'Em Breve (Configurar Link)')}
+                    ${sys.isLive ? 'Acessar Dashboard Ao Vivo <i class="fa-solid fa-arrow-right"></i>' : (isConfigured ? 'Acessar Sistema <i class="fa-solid fa-arrow-up-right-from-square"></i>' : 'Em Breve (Configurar Link)')}
                 </a>
             </div>
         `;
@@ -127,6 +145,6 @@ if (configForm) {
         localStorage.setItem('pedro_rizzi_urls', JSON.stringify(savedUrls));
         closeConfigModal();
         loadSystems();
-        alert('Configurações e planilha salvos com sucesso!');
+        alert('Configurações e links atualizados com sucesso!');
     });
 }
