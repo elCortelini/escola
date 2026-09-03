@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initSilentDashboard() {
     const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
-    if (savedUrl) {
+    if (savedUrl && savedUrl.trim() !== '') {
         fetchSilentData(savedUrl);
     } else {
         fetch('config.json')
@@ -43,13 +43,13 @@ function initSilentDashboard() {
     if (!autoRefreshTimer) {
         autoRefreshTimer = setInterval(() => {
             const url = localStorage.getItem('pedro_rizzi_sheet_url') || '';
-            if (url) {
+            if (url && url.trim() !== '') {
                 fetchSilentData(url, true);
             } else {
                 fetch('config.json')
                     .then(res => res.json())
                     .then(cfg => {
-                        if (cfg && cfg.google_sheet_csv_url) fetchSilentData(cfg.google_sheet_csv_url, true);
+                        if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') fetchSilentData(cfg.google_sheet_csv_url, true);
                     })
                     .catch(() => {});
             }
@@ -65,7 +65,6 @@ function fetchSilentData(url, isBackground = false) {
         const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (matches && matches[1]) {
             const sheetId = matches[1];
-            // Support both direct GViz CSV and published sheet CSV
             if (url.includes('pub?output=csv') || url.includes('pubhtml')) {
                 csvUrl = url.replace('pubhtml', 'pub?output=csv');
             } else {
@@ -229,7 +228,6 @@ function processFilteredRows() {
         return;
     }
 
-    // Advanced Smart Column Matching for Google Forms
     let aggregated = fallbackQuestions.map((q, qIndex) => {
         let scores = [];
         let scores6 = [];
@@ -238,11 +236,6 @@ function processFilteredRows() {
 
         const qNum = parseInt(q.id.replace('Q', ''), 10);
         
-        // Match strategies:
-        // 1. Check for exact Q01 / Q1 in header
-        // 2. Check for number prefix like "1.", "2." or "1 -"
-        // 3. Check for keywords from title
-        // 4. Position index fallback
         let colIdx = rawCsvHeaders.findIndex(h => {
             const hLower = h.toLowerCase();
             return h.includes(q.id) || 
@@ -253,7 +246,6 @@ function processFilteredRows() {
         });
 
         if (colIdx === -1 && (qIndex + 2) < rawCsvHeaders.length) {
-            // Fallback to column position after Timestamp and Turma
             colIdx = qIndex + 2;
         }
 
@@ -272,10 +264,11 @@ function processFilteredRows() {
             });
         }
 
-        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : q.score;
-        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : q.p6;
-        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : q.p7;
-        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : q.p8;
+        // Strictly compute from CSV row scores:
+        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : 0;
+        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : 0;
+        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : 0;
 
         return {
             ...q,
@@ -288,8 +281,9 @@ function processFilteredRows() {
 
     currentQuestionsData = aggregated;
 
-    const avgGlobal = parseFloat((aggregated.reduce((a,b)=>a+b.score,0) / aggregated.length).toFixed(1));
-    const sorted = [...aggregated].sort((a,b) => b.score - a.score);
+    const activeQ = aggregated.filter(q => q.score > 0);
+    const avgGlobal = activeQ.length > 0 ? parseFloat((activeQ.reduce((a,b)=>a+b.score,0) / activeQ.length).toFixed(1)) : 0;
+    const sorted = [...activeQ].sort((a,b) => b.score - a.score);
 
     const q25 = aggregated.find(q => q.id === 'Q25');
     let recVal = q25 && q25.score > 0 ? `${q25.score}%` : '--';
@@ -298,7 +292,7 @@ function processFilteredRows() {
 
     const stats = {
         totalResponses: totalResponses,
-        satisfactionGlobal: `${avgGlobal}%`,
+        satisfactionGlobal: avgGlobal > 0 ? `${avgGlobal}%` : '--',
         topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : '--',
         topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--',
         recommendVal: recVal,
@@ -312,7 +306,9 @@ function renderQualitativeLists(sortedQuestions) {
     const bestList = document.getElementById('bestAspectsList');
     const worstList = document.getElementById('worstAspectsList');
 
-    if (sortedQuestions.every(q => q.score === 0)) {
+    const active = sortedQuestions.filter(q => q.score > 0);
+
+    if (active.length === 0) {
         if (bestList) bestList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
         if (worstList) worstList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
         return;
@@ -320,14 +316,14 @@ function renderQualitativeLists(sortedQuestions) {
 
     if (bestList) {
         bestList.innerHTML = '';
-        sortedQuestions.slice(0, 5).forEach(q => {
+        active.slice(0, 5).forEach(q => {
             bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com excelente/boa satisfação nas respostas.</li>`;
         });
     }
 
     if (worstList) {
         worstList.innerHTML = '';
-        [...sortedQuestions].reverse().slice(0, 5).forEach(q => {
+        [...active].reverse().slice(0, 5).forEach(q => {
             worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado pelos respondentes.</li>`;
         });
     }
