@@ -264,7 +264,6 @@ function processFilteredRows() {
             });
         }
 
-        // Strictly compute from CSV row scores:
         let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
         let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : 0;
         let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : 0;
@@ -532,19 +531,89 @@ function renderAllCharts(questions) {
         }
     });
 
-    const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
-    let matutinoMeans = catMeans.slice(0, 5);
+    // Dynamic Turno Calculation (Matutino vs Vespertino)
+    const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Alimentação'];
+    let matutinoMeans = [0, 0, 0, 0, 0];
     let vespertinoMeans = [0, 0, 0, 0, 0];
+    let matutinoCount = 0;
+    let vespertinoCount = 0;
 
-    if (rawCsvRows.length > 0) {
-        const turnoColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('turno') || h.toLowerCase().includes('período'));
-        if (turnoColIdx !== -1) {
-            let vRows = rawCsvRows.filter(r => (r[turnoColIdx]||'').toLowerCase().includes('vesp') || (r[turnoColIdx]||'').toLowerCase().includes('tarde'));
-            if (vRows.length === 0) {
-                vespertinoMeans = [0, 0, 0, 0, 0];
+    let turnoColIdx = rawCsvHeaders.findIndex(h => {
+        const hL = h.toLowerCase();
+        return hL.includes('turno') || hL.includes('período') || hL.includes('horário') || hL.includes('manhã') || hL.includes('tarde');
+    });
+
+    if (turnoColIdx === -1 && rawCsvRows.length > 0) {
+        for (let c = 0; c < rawCsvHeaders.length; c++) {
+            let matchesCount = 0;
+            rawCsvRows.slice(0, 20).forEach(r => {
+                const cell = (r[c] || '').toLowerCase();
+                if (cell.includes('matutino') || cell.includes('vespertino') || cell.includes('manhã') || cell.includes('tarde') || cell.includes('vesp')) {
+                    matchesCount++;
+                }
+            });
+            if (matchesCount >= 2) {
+                turnoColIdx = c;
+                break;
             }
         }
     }
+
+    if (turnoColIdx !== -1 && rawCsvRows.length > 0) {
+        let mRows = rawCsvRows.filter(r => {
+            const val = (r[turnoColIdx] || '').toLowerCase();
+            return val.includes('matutino') || val.includes('manhã') || val.includes('mat');
+        });
+        let vRows = rawCsvRows.filter(r => {
+            const val = (r[turnoColIdx] || '').toLowerCase();
+            return val.includes('vespertino') || val.includes('tarde') || val.includes('vesp');
+        });
+
+        // Search for vespertino keywords anywhere in the row if col detection returned 0
+        if (vRows.length === 0) {
+            vRows = rawCsvRows.filter(r => r.some(cell => (cell||'').toLowerCase().includes('vesp') || (cell||'').toLowerCase().includes('tarde')));
+            mRows = rawCsvRows.filter(r => !vRows.includes(r));
+        }
+
+        matutinoCount = mRows.length;
+        vespertinoCount = vRows.length;
+
+        turnoCats.forEach((cat, idx) => {
+            const catQs = questions.filter(q => q.cat === cat || (cat === 'Merenda' && q.cat === 'Alimentação'));
+            
+            // Matutino Mean
+            if (mRows.length > 0 && catQs.length > 0) {
+                let catScores = [];
+                catQs.forEach(q => {
+                    const qNum = parseInt(q.id.replace('Q', ''), 10);
+                    let qCol = rawCsvHeaders.findIndex(h => h.includes(q.id) || h.toLowerCase().startsWith(`${qNum}.`) || h.toLowerCase().includes(q.title.substring(3,15).toLowerCase()));
+                    if (qCol !== -1) {
+                        mRows.forEach(r => catScores.push(mapTextToScore(r[qCol] || '')));
+                    }
+                });
+                matutinoMeans[idx] = catScores.length > 0 ? parseFloat((catScores.reduce((a,b)=>a+b,0)/catScores.length).toFixed(1)) : 0;
+            }
+
+            // Vespertino Mean
+            if (vRows.length > 0 && catQs.length > 0) {
+                let catScores = [];
+                catQs.forEach(q => {
+                    const qNum = parseInt(q.id.replace('Q', ''), 10);
+                    let qCol = rawCsvHeaders.findIndex(h => h.includes(q.id) || h.toLowerCase().startsWith(`${qNum}.`) || h.toLowerCase().includes(q.title.substring(3,15).toLowerCase()));
+                    if (qCol !== -1) {
+                        vRows.forEach(r => catScores.push(mapTextToScore(r[qCol] || '')));
+                    }
+                });
+                vespertinoMeans[idx] = catScores.length > 0 ? parseFloat((catScores.reduce((a,b)=>a+b,0)/catScores.length).toFixed(1)) : 0;
+            }
+        });
+    } else {
+        matutinoMeans = catMeans.slice(0, 5);
+        vespertinoMeans = [0, 0, 0, 0, 0];
+    }
+
+    const labelMatutino = matutinoCount > 0 ? `Matutino (Manhã - ${matutinoCount} Alunos)` : 'Matutino (Manhã)';
+    const labelVespertino = vespertinoCount > 0 ? `Vespertino (Tarde - ${vespertinoCount} Alunos)` : 'Vespertino (Tarde - Sem dados)';
 
     const ctxTurno = document.getElementById('chartTurno').getContext('2d');
     if (chartTurnoInstance) chartTurnoInstance.destroy();
@@ -554,8 +623,8 @@ function renderAllCharts(questions) {
         data: {
             labels: turnoCats,
             datasets: [
-                { label: 'Matutino (Manhã)', data: matutinoMeans, backgroundColor: '#0284c7' },
-                { label: 'Vespertino (Tarde - Sem dados)', data: vespertinoMeans, backgroundColor: '#cbd5e1' }
+                { label: labelMatutino, data: matutinoMeans, backgroundColor: '#0284c7' },
+                { label: labelVespertino, data: vespertinoMeans, backgroundColor: vespertinoCount > 0 ? '#d97706' : '#cbd5e1' }
             ]
         },
         options: {
