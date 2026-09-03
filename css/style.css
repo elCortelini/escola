@@ -30,6 +30,9 @@ body {
     background-color: var(--bg-light);
     color: var(--text-color);
     line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Header & Nav */
@@ -110,6 +113,7 @@ body {
     max-width: 1280px;
     margin: 2.2rem auto;
     padding: 0 1.5rem;
+    flex-grow: 1;
 }
 
 /* Filter Panel Highlight Card */
@@ -231,7 +235,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* Novo Botão Destacado de Imprimir PDF no Canto Direito */
 .btn-print-highlight {
     background: linear-gradient(135deg, #be123c 0%, #881337 100%);
     color: #ffffff;
@@ -541,9 +544,45 @@ body {
     gap: 6px;
 }
 
+/* Rodapé em Faixa Escura Idêntico ao Cabeçalho */
+footer {
+    background: var(--primary-dark);
+    color: white;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    margin-top: 3.5rem;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.15);
+    border-top: 4px solid var(--primary-light);
+    width: 100%;
+}
+
+footer p {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+footer p strong {
+    color: #ffffff;
+}
+
+.footer-author {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: #fbbf24;
+    font-weight: 700;
+}
+
 /* Print Styles */
 @media print {
-    .header-nav, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action { display: none !important; }
+    .header-nav, footer, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action { display: none !important; }
     body { background: white; }
     .container { max-width: 100%; margin: 0; padding: 0; }
     .chart-card, .table-card, .kpi-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
