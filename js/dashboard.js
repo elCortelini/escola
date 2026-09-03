@@ -78,7 +78,7 @@ function updateStatusText(text) {
 function setTrimesterFilter(triKey) {
     currentTrimesterFilter = triKey;
 
-    // Highlight active button
+    // Highlight active trimester button
     ['ALL', 'T1', 'T2', 'T3'].forEach(k => {
         const btn = document.getElementById(`btnTri_${k}`);
         if (btn) {
@@ -96,8 +96,18 @@ function setTrimesterFilter(triKey) {
 
 function useFallbackData() {
     updateStatusText('Ao Vivo');
-    currentQuestionsData = [...fallbackQuestions];
-    renderDashboard(currentQuestionsData, fallbackStats);
+    
+    const tData = trimesterFallbackData[currentTrimesterFilter] || trimesterFallbackData['ALL'];
+    currentQuestionsData = [...tData.questions];
+    
+    const stats = {
+        totalResponses: tData.totalResponses,
+        satisfactionGlobal: tData.satisfactionGlobal,
+        topBest: tData.topBest,
+        topWorst: tData.topWorst
+    };
+
+    renderDashboard(currentQuestionsData, stats);
 }
 
 function parseCSVData(csvText) {
@@ -129,7 +139,6 @@ function parseCSVData(csvText) {
 
 function parseDateStr(str) {
     if (!str) return null;
-    // Common formats: '2026-03-15 10:20:00' or '15/03/2026 10:20:00'
     if (str.includes('/')) {
         const parts = str.split(' ')[0].split('/');
         if (parts.length === 3) {
@@ -143,7 +152,7 @@ function parseDateStr(str) {
 function processFilteredRows() {
     let filteredRows = [...rawCsvRows];
 
-    // Filter by Trimester Date Range if applicable
+    // Filter by Trimester Date Range
     if (currentTrimesterFilter !== 'ALL' && trimesterRanges[currentTrimesterFilter]) {
         const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
         
@@ -151,13 +160,30 @@ function processFilteredRows() {
             const range = trimesterRanges[currentTrimesterFilter];
             filteredRows = filteredRows.filter(row => {
                 const dateVal = parseDateStr(row[dateColIdx]);
-                if (!dateVal) return true; // if date unparseable, include
+                if (!dateVal) return true;
                 return dateVal >= range.start && dateVal <= range.end;
             });
         }
     }
 
     const totalResponses = filteredRows.length;
+
+    // Leave BLANK / Empty when 0 responses exist for selected trimester
+    if (totalResponses === 0) {
+        const zeroQuestions = fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }));
+        currentQuestionsData = zeroQuestions;
+        
+        renderDashboard(zeroQuestions, {
+            totalResponses: 0,
+            satisfactionGlobal: "--",
+            topBest: "--",
+            topWorst: "--"
+        });
+
+        document.getElementById('bestAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        document.getElementById('worstAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        return;
+    }
 
     let aggregated = fallbackQuestions.map(q => {
         let scores = [];
@@ -202,9 +228,9 @@ function processFilteredRows() {
 
     const stats = {
         totalResponses: totalResponses,
-        satisfactionGlobal: avgGlobal,
-        topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : 'N/A',
-        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : 'N/A'
+        satisfactionGlobal: `${avgGlobal}%`,
+        topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : '--',
+        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--'
     };
 
     renderDashboard(aggregated, stats);
@@ -213,6 +239,12 @@ function processFilteredRows() {
 function renderQualitativeLists(sortedQuestions) {
     const bestList = document.getElementById('bestAspectsList');
     const worstList = document.getElementById('worstAspectsList');
+
+    if (sortedQuestions.every(q => q.score === 0)) {
+        if (bestList) bestList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        if (worstList) worstList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        return;
+    }
 
     if (bestList) {
         bestList.innerHTML = '';
@@ -241,7 +273,7 @@ function mapTextToScore(text) {
 
 function renderDashboard(questions, stats) {
     document.getElementById('kpiTotal').innerText = stats.totalResponses;
-    document.getElementById('kpiSatisfaction').innerText = `${stats.satisfactionGlobal}%`;
+    document.getElementById('kpiSatisfaction').innerText = stats.satisfactionGlobal;
     document.getElementById('kpiBest').innerText = stats.topBest;
     document.getElementById('kpiWorst').innerText = stats.topWorst;
 
@@ -270,7 +302,7 @@ function renderCharts(questions) {
             datasets: [{
                 label: 'Satisfação (%)',
                 data: scores,
-                backgroundColor: scores.map(s => s >= 75 ? '#2e7d32' : (s >= 60 ? '#2b579a' : (s >= 50 ? '#f57f17' : '#c62828'))),
+                backgroundColor: scores.map(s => s >= 75 ? '#2e7d32' : (s >= 60 ? '#2b579a' : (s >= 50 ? '#f57f17' : (s > 0 ? '#c62828' : '#e2e8f0')))),
                 borderRadius: 4
             }]
         },
@@ -394,7 +426,10 @@ function renderTable(questions) {
         let statusText = 'EXCELENTE';
         let badgeClass = 'b-excellent';
 
-        if (q.score < 50) {
+        if (q.score === 0) {
+            statusText = '--';
+            badgeClass = 'b-config';
+        } else if (q.score < 50) {
             statusText = 'CRÍTICO';
             badgeClass = 'b-critical';
         } else if (q.score < 65) {
@@ -409,10 +444,10 @@ function renderTable(questions) {
             <td><strong>${q.id}</strong></td>
             <td>${q.title}</td>
             <td><span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.8rem; color:#475569;">${q.cat}</span></td>
-            <td><strong style="color:var(--primary-dark);">${q.score}%</strong></td>
-            <td>${q.p6}%</td>
-            <td>${q.p7}%</td>
-            <td>${q.p8}%</td>
+            <td><strong style="color:var(--primary-dark);">${q.score > 0 ? q.score + '%' : '--'}</strong></td>
+            <td>${q.p6 > 0 ? q.p6 + '%' : '--'}</td>
+            <td>${q.p7 > 0 ? q.p7 + '%' : '--'}</td>
+            <td>${q.p8 > 0 ? q.p8 + '%' : '--'}</td>
             <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
         `;
 

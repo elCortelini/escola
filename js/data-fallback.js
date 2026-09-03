@@ -26,7 +26,38 @@ const fallbackQuestions = [
 
 const fallbackStats = {
     totalResponses: 183,
-    satisfactionGlobal: 71.4,
+    satisfactionGlobal: "71.4%",
     topBest: "Professores (86.4%)",
     topWorst: "Banheiros (34.2%)"
+};
+
+const trimesterFallbackData = {
+    'ALL': {
+        totalResponses: 183,
+        satisfactionGlobal: "71.4%",
+        topBest: "Professores (86.4%)",
+        topWorst: "Banheiros (34.2%)",
+        questions: fallbackQuestions
+    },
+    'T1': {
+        totalResponses: 183,
+        satisfactionGlobal: "71.4%",
+        topBest: "Professores (86.4%)",
+        topWorst: "Banheiros (34.2%)",
+        questions: fallbackQuestions
+    },
+    'T2': {
+        totalResponses: 0,
+        satisfactionGlobal: "--",
+        topBest: "--",
+        topWorst: "--",
+        questions: fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }))
+    },
+    'T3': {
+        totalResponses: 0,
+        satisfactionGlobal: "--",
+        topBest: "--",
+        topWorst: "--",
+        questions: fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }))
+    }
 };
