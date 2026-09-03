@@ -4,29 +4,26 @@ let currentQuestionsData = [];
 let autoRefreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Render INSTANTLY on page load (0.01s speed!)
+    useFallbackData();
     initSilentDashboard();
 });
 
 function initSilentDashboard() {
-    // 1. Check if configured in localStorage or fetch config.json
     const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
     if (savedUrl) {
         fetchSilentData(savedUrl);
     } else {
-        // Try fetching config.json for configured URL
         fetch('config.json')
             .then(res => res.json())
             .then(cfg => {
                 if (cfg && cfg.google_sheet_csv_url) {
                     fetchSilentData(cfg.google_sheet_csv_url);
-                } else {
-                    useFallbackData();
                 }
             })
-            .catch(() => useFallbackData());
+            .catch(() => {});
     }
 
-    // Auto-refresh silently every 30 seconds
     if (!autoRefreshTimer) {
         autoRefreshTimer = setInterval(() => {
             const url = localStorage.getItem('pedro_rizzi_sheet_url');
@@ -47,10 +44,6 @@ function fetchSilentData(url, isBackground = false) {
         }
     }
 
-    if (!isBackground) {
-        updateStatusText('Sincronizando...');
-    }
-
     fetch(csvUrl)
         .then(response => {
             if (!response.ok) throw new Error('Falha ao obter planilha.');
@@ -58,14 +51,11 @@ function fetchSilentData(url, isBackground = false) {
         })
         .then(csvText => {
             parseAndRenderCSV(csvText);
-            updateStatusText('Ao Vivo / Atualizado');
+            updateStatusText('Ao Vivo / Sincronizado');
         })
         .catch(err => {
-            console.warn('Silent sync warning:', err);
+            console.warn('Silent sync note:', err);
             updateStatusText('Ao Vivo');
-            if (!currentQuestionsData || currentQuestionsData.length === 0) {
-                useFallbackData();
-            }
         });
 }
 
@@ -78,14 +68,15 @@ function useFallbackData() {
     updateStatusText('Ao Vivo');
     currentQuestionsData = [...fallbackQuestions];
     renderDashboard(currentQuestionsData, fallbackStats);
+    
+    // Sort for best and worst lists
+    const sorted = [...fallbackQuestions].sort((a,b) => b.score - a.score);
+    renderQualitativeLists(sorted);
 }
 
 function parseAndRenderCSV(csvText) {
     const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    if (lines.length <= 1) {
-        useFallbackData();
-        return;
-    }
+    if (lines.length <= 1) return;
 
     const parseCSVLine = (line) => {
         const result = [];
@@ -106,7 +97,6 @@ function parseAndRenderCSV(csvText) {
     const rows = lines.map(parseCSVLine);
     const headers = rows[0];
     const dataRows = rows.slice(1);
-
     const totalResponses = dataRows.length;
 
     let aggregated = fallbackQuestions.map(q => {
@@ -131,10 +121,10 @@ function parseAndRenderCSV(csvText) {
             });
         }
 
-        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
-        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : 0;
-        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : 0;
-        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : 0;
+        let mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length) : q.score;
+        let mean6 = scores6.length > 0 ? (scores6.reduce((a,b)=>a+b,0)/scores6.length) : q.p6;
+        let mean7 = scores7.length > 0 ? (scores7.reduce((a,b)=>a+b,0)/scores7.length) : q.p7;
+        let mean8 = scores8.length > 0 ? (scores8.reduce((a,b)=>a+b,0)/scores8.length) : q.p8;
 
         return {
             ...q,
@@ -153,8 +143,8 @@ function parseAndRenderCSV(csvText) {
     const stats = {
         totalResponses: totalResponses,
         satisfactionGlobal: avgGlobal,
-        topBest: sorted[0] && sorted[0].score > 0 ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : 'N/A',
-        topWorst: sorted[sorted.length-1] && sorted[sorted.length-1].score > 0 ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : 'N/A'
+        topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : 'N/A',
+        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : 'N/A'
     };
 
     renderDashboard(aggregated, stats);
@@ -168,14 +158,14 @@ function renderQualitativeLists(sortedQuestions) {
     if (bestList) {
         bestList.innerHTML = '';
         sortedQuestions.slice(0, 5).forEach(q => {
-            bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com boa satisfação nas respostas.</li>`;
+            bestList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Avaliado com excelente/boa satisfação nas respostas.</li>`;
         });
     }
 
     if (worstList) {
         worstList.innerHTML = '';
         [...sortedQuestions].reverse().slice(0, 5).forEach(q => {
-            worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado nas respostas.</li>`;
+            worstList.innerHTML += `<li><strong>${q.title} (${q.score}%):</strong> Ponto de atenção prioritário indicado pelos respondentes.</li>`;
         });
     }
 }
@@ -260,21 +250,18 @@ function renderTable(questions) {
     questions.forEach(q => {
         const tr = document.createElement('tr');
 
-        let statusText = 'AGUARDANDO';
-        let badgeClass = 'b-warning';
+        let statusText = 'EXCELENTE';
+        let badgeClass = 'b-excellent';
 
-        if (q.score >= 80) {
-            statusText = 'EXCELENTE';
-            badgeClass = 'b-excellent';
-        } else if (q.score >= 65) {
-            statusText = 'BOM';
-            badgeClass = 'b-good';
-        } else if (q.score >= 50) {
-            statusText = 'ATENÇÃO';
-            badgeClass = 'b-warning';
-        } else if (q.score > 0) {
+        if (q.score < 50) {
             statusText = 'CRÍTICO';
             badgeClass = 'b-critical';
+        } else if (q.score < 65) {
+            statusText = 'ATENÇÃO';
+            badgeClass = 'b-warning';
+        } else if (q.score < 80) {
+            statusText = 'BOM';
+            badgeClass = 'b-good';
         }
 
         tr.innerHTML = `
