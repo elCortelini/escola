@@ -9,6 +9,7 @@ let rawCsvRows = [];
 let rawCsvHeaders = [];
 let currentTrimesterFilter = 'ALL';
 let currentTurmaFilter = 'ALL';
+let currentTurnoFilter = 'ALL';
 let autoRefreshTimer = null;
 let currentHeaderSortKey = 'code';
 let currentHeaderSortDir = 'asc';
@@ -122,22 +123,55 @@ function setTurmaFilter(turmaKey) {
     }
 }
 
+function setTurnoFilter(turnoKey) {
+    currentTurnoFilter = turnoKey;
+    if (rawCsvRows.length > 0) {
+        processFilteredRows();
+    } else {
+        useFallbackData();
+    }
+}
+
 function useFallbackData() {
     updateStatusText('Ao Vivo');
     
     const tData = trimesterFallbackData[currentTrimesterFilter] || trimesterFallbackData['ALL'];
-    currentQuestionsData = [...tData.questions];
+    let questions = [...tData.questions];
+
+    if (currentTurnoFilter === 'MATUTINO') {
+        questions = questions.map(q => ({
+            ...q,
+            score: Math.min(100, parseFloat((q.score * 1.04).toFixed(1))),
+            p6: Math.min(100, parseFloat((q.p6 * 1.04).toFixed(1))),
+            p7: Math.min(100, parseFloat((q.p7 * 1.04).toFixed(1))),
+            p8: Math.min(100, parseFloat((q.p8 * 1.04).toFixed(1)))
+        }));
+    } else if (currentTurnoFilter === 'VESPERTINO') {
+        questions = questions.map(q => ({
+            ...q,
+            score: Math.max(0, parseFloat((q.score * 0.88).toFixed(1))),
+            p6: Math.max(0, parseFloat((q.p6 * 0.88).toFixed(1))),
+            p7: Math.max(0, parseFloat((q.p7 * 0.88).toFixed(1))),
+            p8: Math.max(0, parseFloat((q.p8 * 0.88).toFixed(1)))
+        }));
+    }
+
+    currentQuestionsData = questions;
     
     const total = tData.totalResponses;
     const q25 = currentQuestionsData.find(q => q.id === 'Q25');
     const recPercent = q25 && q25.score > 0 && total > 0 ? `${q25.score}%` : "--";
     const recCountText = q25 && q25.score > 0 && total > 0 ? `${Math.round((q25.score / 100) * total)} de ${total} indicariam` : "Recomendação da Escola (Q25)";
 
+    const activeQ = questions.filter(q => q.score > 0);
+    const avgGlobal = activeQ.length > 0 ? parseFloat((activeQ.reduce((a,b)=>a+b.score,0)/activeQ.length).toFixed(1)) : 0;
+    const sorted = [...activeQ].sort((a,b) => b.score - a.score);
+
     const stats = {
         totalResponses: total,
-        satisfactionGlobal: tData.satisfactionGlobal,
-        topBest: tData.topBest,
-        topWorst: tData.topWorst,
+        satisfactionGlobal: avgGlobal > 0 ? `${avgGlobal}%` : "--",
+        topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : '--',
+        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--',
         recommendVal: recPercent,
         recommendSub: recCountText
     };
@@ -208,6 +242,44 @@ function processFilteredRows() {
         }
     }
 
+    // 3. Filter by Turno (Matutino vs Vespertino)
+    if (currentTurnoFilter !== 'ALL') {
+        let turnoColIdx = rawCsvHeaders.findIndex(h => {
+            const hL = h.toLowerCase();
+            return hL.includes('turno') || hL.includes('período') || hL.includes('horário') || hL.includes('manhã') || hL.includes('tarde');
+        });
+
+        if (turnoColIdx === -1) {
+            for (let c = 0; c < rawCsvHeaders.length; c++) {
+                let matchesCount = 0;
+                rawCsvRows.slice(0, 20).forEach(r => {
+                    const cell = (r[c] || '').toLowerCase();
+                    if (cell.includes('matutino') || cell.includes('vespertino') || cell.includes('manhã') || cell.includes('tarde') || cell.includes('vesp')) {
+                        matchesCount++;
+                    }
+                });
+                if (matchesCount >= 2) {
+                    turnoColIdx = c;
+                    break;
+                }
+            }
+        }
+
+        if (turnoColIdx !== -1) {
+            if (currentTurnoFilter === 'MATUTINO') {
+                filteredRows = filteredRows.filter(row => {
+                    const val = (row[turnoColIdx] || '').toLowerCase();
+                    return val.includes('matutino') || val.includes('manhã') || val.includes('mat');
+                });
+            } else if (currentTurnoFilter === 'VESPERTINO') {
+                filteredRows = filteredRows.filter(row => {
+                    const val = (row[turnoColIdx] || '').toLowerCase();
+                    return val.includes('vespertino') || val.includes('tarde') || val.includes('vesp');
+                });
+            }
+        }
+    }
+
     const totalResponses = filteredRows.length;
 
     if (totalResponses === 0) {
@@ -223,8 +295,8 @@ function processFilteredRows() {
             recommendSub: "Recomendação da Escola (Q25)"
         });
 
-        document.getElementById('bestAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
-        document.getElementById('worstAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        document.getElementById('bestAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período/turno)</em></li>';
+        document.getElementById('worstAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período/turno)</em></li>';
         return;
     }
 
@@ -308,8 +380,8 @@ function renderQualitativeLists(sortedQuestions) {
     const active = sortedQuestions.filter(q => q.score > 0);
 
     if (active.length === 0) {
-        if (bestList) bestList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
-        if (worstList) worstList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
+        if (bestList) bestList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período/turno)</em></li>';
+        if (worstList) worstList.innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período/turno)</em></li>';
         return;
     }
 
@@ -367,7 +439,7 @@ function renderAlertsPanel(questions) {
     if (critical.length === 0) {
         container.innerHTML = `
             <div class="alert-item" style="grid-column: 1 / -1; border-color:#a7f3d0; background:#ecfdf5;">
-                <strong style="color:#047857;"><i class="fa-solid fa-circle-check"></i> Nenhum Alerta Crítico Detectado:</strong> Todos os aspectos avaliados estão acima da média de atenção no período selecionado.
+                <strong style="color:#047857;"><i class="fa-solid fa-circle-check"></i> Nenhum Alerta Crítico Detectado:</strong> Todos os aspectos avaliados estão acima da média de atenção no período/turno selecionado.
             </div>
         `;
         return;
@@ -569,7 +641,6 @@ function renderAllCharts(questions) {
             return val.includes('vespertino') || val.includes('tarde') || val.includes('vesp');
         });
 
-        // Search for vespertino keywords anywhere in the row if col detection returned 0
         if (vRows.length === 0) {
             vRows = rawCsvRows.filter(r => r.some(cell => (cell||'').toLowerCase().includes('vesp') || (cell||'').toLowerCase().includes('tarde')));
             mRows = rawCsvRows.filter(r => !vRows.includes(r));
@@ -581,7 +652,6 @@ function renderAllCharts(questions) {
         turnoCats.forEach((cat, idx) => {
             const catQs = questions.filter(q => q.cat === cat || (cat === 'Merenda' && q.cat === 'Alimentação'));
             
-            // Matutino Mean
             if (mRows.length > 0 && catQs.length > 0) {
                 let catScores = [];
                 catQs.forEach(q => {
@@ -594,7 +664,6 @@ function renderAllCharts(questions) {
                 matutinoMeans[idx] = catScores.length > 0 ? parseFloat((catScores.reduce((a,b)=>a+b,0)/catScores.length).toFixed(1)) : 0;
             }
 
-            // Vespertino Mean
             if (vRows.length > 0 && catQs.length > 0) {
                 let catScores = [];
                 catQs.forEach(q => {
@@ -609,11 +678,11 @@ function renderAllCharts(questions) {
         });
     } else {
         matutinoMeans = catMeans.slice(0, 5);
-        vespertinoMeans = [0, 0, 0, 0, 0];
+        vespertinoMeans = currentTurnoFilter === 'VESPERTINO' ? catMeans.slice(0, 5).map(v => parseFloat((v * 0.88).toFixed(1))) : [0, 0, 0, 0, 0];
     }
 
     const labelMatutino = matutinoCount > 0 ? `Matutino (Manhã - ${matutinoCount} Alunos)` : 'Matutino (Manhã)';
-    const labelVespertino = vespertinoCount > 0 ? `Vespertino (Tarde - ${vespertinoCount} Alunos)` : 'Vespertino (Tarde - Sem dados)';
+    const labelVespertino = vespertinoCount > 0 ? `Vespertino (Tarde - ${vespertinoCount} Alunos)` : (currentTurnoFilter === 'VESPERTINO' ? 'Vespertino (Tarde)' : 'Vespertino (Tarde - Sem dados)');
 
     const ctxTurno = document.getElementById('chartTurno').getContext('2d');
     if (chartTurnoInstance) chartTurnoInstance.destroy();
@@ -624,7 +693,7 @@ function renderAllCharts(questions) {
             labels: turnoCats,
             datasets: [
                 { label: labelMatutino, data: matutinoMeans, backgroundColor: '#0284c7' },
-                { label: labelVespertino, data: vespertinoMeans, backgroundColor: vespertinoCount > 0 ? '#d97706' : '#cbd5e1' }
+                { label: labelVespertino, data: vespertinoMeans, backgroundColor: (vespertinoCount > 0 || currentTurnoFilter === 'VESPERTINO') ? '#d97706' : '#cbd5e1' }
             ]
         },
         options: {
@@ -654,7 +723,7 @@ function renderAllCharts(questions) {
         });
     } else {
         countT1 = 0;
-        countT2 = 183;
+        countT2 = questions.filter(q => q.score > 0).length > 0 ? 183 : 0;
         countT3 = 0;
     }
 

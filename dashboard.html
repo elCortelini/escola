@@ -263,7 +263,7 @@
             </div>
         </div>
 
-        <!-- Trimester & Turma Filter Control Bar -->
+        <!-- Trimester, Turno & Turma Filter Control Bar -->
         <div class="trimester-bar">
             <div class="filter-group">
                 <span class="trimester-label"><i class="fa-solid fa-calendar-days" style="color:var(--primary-light);"></i> Período:</span>
@@ -274,7 +274,14 @@
             </div>
 
             <div class="filter-group">
-                <span class="trimester-label"><i class="fa-solid fa-filter" style="color:var(--accent);"></i> Filtrar Turma:</span>
+                <span class="trimester-label"><i class="fa-solid fa-clock" style="color:#d97706;"></i> Turno:</span>
+                <select id="turnoFilterSelect" class="filter-select" onchange="setTurnoFilter(this.value)">
+                    <option value="ALL">☀️🌙 Todos os Turnos (Visão Geral)</option>
+                    <option value="MATUTINO">🌅 Turno Matutino (Manhã)</option>
+                    <option value="VESPERTINO">🌇 Turno Vespertino (Tarde)</option>
+                </select>
+
+                <span class="trimester-label"><i class="fa-solid fa-filter" style="color:var(--accent);"></i> Turma:</span>
                 <select id="turmaFilterSelect" class="filter-select" onchange="setTurmaFilter(this.value)">
                     <option value="ALL">🏫 Todas as Turmas (Visão Geral)</option>
                     <option value="6">🎓 6º Ano (Conselho de Classe)</option>
@@ -308,7 +315,7 @@
                 <div class="kpi-sub" id="kpiSatisfactionSub">Média Geral da Escola</div>
             </div>
 
-            <!-- Recomendação da Escola Card (Troca Clara do NPF) -->
+            <!-- Recomendação da Escola Card -->
             <div class="kpi-card gold">
                 <div class="kpi-card-header">
                     <span class="kpi-title">Recomendação da Escola</span>
@@ -458,11 +465,11 @@
                         <th onclick="toggleHeaderSort('code')">Código <i id="sortIcon_code" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('title')">Aspecto Avaliado <i id="sortIcon_title" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('cat')">Categoria <i id="sortIcon_cat" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('p7')">7º Ano <i id="sortIcon_p7" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('p8')">8º Ano <i id="sortIcon_p8" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('status')">Status <i id="sortIcon_status" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p7')">7º Ano <i id="sortIcon_p7" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p8')">8º Ano <i id="sortIcon_p8" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('status')">Status <i id="sortIcon_status" class="fa-sort sort-icon"></i></th>
                     </tr>
                 </thead>
                 <tbody id="questionsTableBody">
