@@ -2,6 +2,8 @@ let chartGlobalInstance = null;
 let chartTurmasInstance = null;
 let currentQuestionsData = [];
 let autoRefreshTimer = null;
+let currentHeaderSortKey = 'code';
+let currentHeaderSortDir = 'asc'; // 'asc' or 'desc'
 
 document.addEventListener('DOMContentLoaded', () => {
     // Render INSTANTLY on page load (0.01s speed!)
@@ -68,10 +70,6 @@ function useFallbackData() {
     updateStatusText('Ao Vivo');
     currentQuestionsData = [...fallbackQuestions];
     renderDashboard(currentQuestionsData, fallbackStats);
-    
-    // Sort for best and worst lists
-    const sorted = [...fallbackQuestions].sort((a,b) => b.score - a.score);
-    renderQualitativeLists(sorted);
 }
 
 function parseAndRenderCSV(csvText) {
@@ -148,7 +146,6 @@ function parseAndRenderCSV(csvText) {
     };
 
     renderDashboard(aggregated, stats);
-    renderQualitativeLists(sorted);
 }
 
 function renderQualitativeLists(sortedQuestions) {
@@ -187,7 +184,11 @@ function renderDashboard(questions, stats) {
     document.getElementById('kpiWorst').innerText = stats.topWorst;
 
     renderCharts(questions);
-    renderTable(questions);
+
+    const sortedBestWorst = [...questions].sort((a,b) => b.score - a.score);
+    renderQualitativeLists(sortedBestWorst);
+
+    filterAndSortTable();
 }
 
 function renderCharts(questions) {
@@ -241,6 +242,99 @@ function renderCharts(questions) {
     });
 }
 
+/* Sorting & Filtering Logic */
+function toggleHeaderSort(key) {
+    if (currentHeaderSortKey === key) {
+        currentHeaderSortDir = currentHeaderSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentHeaderSortKey = key;
+        currentHeaderSortDir = (key === 'score' || key === 'p6' || key === 'p7' || key === 'p8') ? 'desc' : 'asc';
+    }
+
+    // Sync select box if matched
+    const sortSelect = document.getElementById('tableSortSelect');
+    if (sortSelect) {
+        if (key === 'code') sortSelect.value = currentHeaderSortDir === 'asc' ? 'code_asc' : 'code_desc';
+        else if (key === 'score') sortSelect.value = currentHeaderSortDir === 'desc' ? 'score_desc' : 'score_asc';
+        else if (key === 'p6') sortSelect.value = 'p6_desc';
+        else if (key === 'p7') sortSelect.value = 'p7_desc';
+        else if (key === 'p8') sortSelect.value = 'p8_desc';
+        else if (key === 'title') sortSelect.value = 'title_asc';
+    }
+
+    updateSortIcons();
+    filterAndSortTable();
+}
+
+function updateSortIcons() {
+    const keys = ['code', 'title', 'cat', 'score', 'p6', 'p7', 'p8', 'status'];
+    keys.forEach(k => {
+        const icon = document.getElementById(`sortIcon_${k}`);
+        if (icon) {
+            if (k === currentHeaderSortKey) {
+                icon.className = `fa-solid ${currentHeaderSortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'} sort-icon`;
+                icon.style.opacity = '1';
+                icon.style.color = '#fbbf24';
+            } else {
+                icon.className = 'fa-solid fa-sort sort-icon';
+                icon.style.opacity = '0.4';
+                icon.style.color = 'white';
+            }
+        }
+    });
+}
+
+function filterAndSortTable() {
+    if (!currentQuestionsData || currentQuestionsData.length === 0) return;
+
+    let result = [...currentQuestionsData];
+
+    // 1. Category Filter
+    const catSelect = document.getElementById('tableCategorySelect');
+    if (catSelect && catSelect.value !== 'ALL') {
+        const catVal = catSelect.value;
+        result = result.filter(q => q.cat === catVal);
+    }
+
+    // 2. Search Text Filter
+    const searchInput = document.getElementById('tableSearch');
+    if (searchInput && searchInput.value.trim() !== '') {
+        const term = searchInput.value.toLowerCase().trim();
+        result = result.filter(q => 
+            q.title.toLowerCase().includes(term) || 
+            q.id.toLowerCase().includes(term) || 
+            q.cat.toLowerCase().includes(term)
+        );
+    }
+
+    // 3. Apply Select Sort if select value has changed
+    const sortSelect = document.getElementById('tableSortSelect');
+    if (sortSelect) {
+        const sVal = sortSelect.value;
+        if (sVal === 'code_asc') { result.sort((a,b) => a.id.localeCompare(b.id)); }
+        else if (sVal === 'code_desc') { result.sort((a,b) => b.id.localeCompare(a.id)); }
+        else if (sVal === 'score_desc') { result.sort((a,b) => b.score - a.score); }
+        else if (sVal === 'score_asc') { result.sort((a,b) => a.score - b.score); }
+        else if (sVal === 'p6_desc') { result.sort((a,b) => b.p6 - a.p6); }
+        else if (sVal === 'p7_desc') { result.sort((a,b) => b.p7 - a.p7); }
+        else if (sVal === 'p8_desc') { result.sort((a,b) => b.p8 - a.p8); }
+        else if (sVal === 'title_asc') { result.sort((a,b) => a.title.localeCompare(b.title)); }
+    } else {
+        // Fallback to currentHeaderSortKey
+        result.sort((a,b) => {
+            let valA = a[currentHeaderSortKey];
+            let valB = b[currentHeaderSortKey];
+            if (typeof valA === 'string') {
+                return currentHeaderSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else {
+                return currentHeaderSortDir === 'asc' ? valA - valB : valB - valA;
+            }
+        });
+    }
+
+    renderTable(result);
+}
+
 function renderTable(questions) {
     const tbody = document.getElementById('questionsTableBody');
     if (!tbody) return;
@@ -267,8 +361,8 @@ function renderTable(questions) {
         tr.innerHTML = `
             <td><strong>${q.id}</strong></td>
             <td>${q.title}</td>
-            <td>${q.cat}</td>
-            <td><strong>${q.score}%</strong></td>
+            <td><span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.8rem; color:#475569;">${q.cat}</span></td>
+            <td><strong style="color:var(--primary-dark);">${q.score}%</strong></td>
             <td>${q.p6}%</td>
             <td>${q.p7}%</td>
             <td>${q.p8}%</td>
@@ -277,14 +371,4 @@ function renderTable(questions) {
 
         tbody.appendChild(tr);
     });
-}
-
-function filterTable() {
-    const term = document.getElementById('tableSearch').value.toLowerCase();
-    const filtered = currentQuestionsData.filter(q => 
-        q.title.toLowerCase().includes(term) || 
-        q.id.toLowerCase().includes(term) || 
-        q.cat.toLowerCase().includes(term)
-    );
-    renderTable(filtered);
 }

@@ -124,6 +124,17 @@
             padding: 14px 16px;
             text-align: left;
             font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+        th:hover {
+            background: #1e3a8a;
+        }
+        th i.sort-icon {
+            margin-left: 6px;
+            font-size: 0.8rem;
+            opacity: 0.7;
         }
         td {
             padding: 12px 16px;
@@ -161,6 +172,22 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
             color: #000;
+        }
+
+        .filter-select {
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-family: inherit;
+            background: white;
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-light);
         }
     </style>
 </head>
@@ -287,27 +314,56 @@
 
         <!-- Full Breakdown Data Table -->
         <div class="table-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.4rem;">
                 <h4 style="color:var(--primary-dark); font-size:1.2rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-table-list" style="color:var(--primary-light);"></i> Desempenho Detalhado por Pergunta
                 </h4>
-                <div style="position:relative; width:100%; max-width:280px;">
-                    <input type="text" id="tableSearch" class="sync-input" placeholder="Pesquisar aspecto..." style="width:100%; padding-left:36px;" oninput="filterTable()">
-                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.9rem;"></i>
+                
+                <!-- Table Controls (Search, Sort, Category Filter) -->
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Category Filter -->
+                    <select id="tableCategorySelect" class="filter-select" onchange="filterAndSortTable()">
+                        <option value="ALL">📌 Todas as Categorias</option>
+                        <option value="Ensino">📚 Ensino & Aulas</option>
+                        <option value="Professores">👨‍🏫 Professores</option>
+                        <option value="Convivência">🤝 Convivência</option>
+                        <option value="Estrutura">🏛️ Estrutura & Limpeza</option>
+                        <option value="Segurança">🛡️ Segurança</option>
+                        <option value="Gestão">👔 Gestão & Direção</option>
+                        <option value="Alimentação">🍎 Merenda</option>
+                        <option value="Geral">⭐ Avaliação Geral</option>
+                    </select>
+
+                    <!-- Order Sort Selection -->
+                    <select id="tableSortSelect" class="filter-select" onchange="filterAndSortTable()">
+                        <option value="code_asc">🔢 Ordem das Perguntas (Q01-Q25)</option>
+                        <option value="score_desc">⬇️ Maior Satisfação (Melhores no topo)</option>
+                        <option value="score_asc">⬆️ Menor Satisfação (Defasados no topo)</option>
+                        <option value="p6_desc">🎓 Nota 6º Ano (Maior no topo)</option>
+                        <option value="p7_desc">🎓 Nota 7º Ano (Maior no topo)</option>
+                        <option value="p8_desc">🎓 Nota 8º Ano (Maior no topo)</option>
+                        <option value="title_asc">🔤 Nome do Aspecto (A - Z)</option>
+                    </select>
+
+                    <!-- Search Input -->
+                    <div style="position:relative; min-width:200px;">
+                        <input type="text" id="tableSearch" class="sync-input" placeholder="Pesquisar aspecto..." style="width:100%; padding-left:36px;" oninput="filterAndSortTable()">
+                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.9rem;"></i>
+                    </div>
                 </div>
             </div>
             
             <table>
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Aspecto Avaliado</th>
-                        <th>Categoria</th>
-                        <th>Global</th>
-                        <th>6º Ano</th>
-                        <th>7º Ano</th>
-                        <th>8º Ano</th>
-                        <th>Status</th>
+                        <th onclick="toggleHeaderSort('code')">Código <i id="sortIcon_code" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('title')">Aspecto Avaliado <i id="sortIcon_title" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('cat')">Categoria <i id="sortIcon_cat" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p7')">7º Ano <i id="sortIcon_p7" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p8')">8º Ano <i id="sortIcon_p8" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('status')">Status <i id="sortIcon_status" class="fa-solid fa-sort sort-icon"></i></th>
                     </tr>
                 </thead>
                 <tbody id="questionsTableBody">
