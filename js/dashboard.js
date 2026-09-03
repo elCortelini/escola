@@ -179,7 +179,7 @@ function processFilteredRows() {
         }
     }
 
-    // 2. Filter by Turma (Item 6 - Conselho de Classe)
+    // 2. Filter by Turma
     if (currentTurmaFilter !== 'ALL') {
         const anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano') || h.toLowerCase().includes('turma'));
         if (anoIdx !== -1) {
@@ -189,7 +189,6 @@ function processFilteredRows() {
 
     const totalResponses = filteredRows.length;
 
-    // Blank State when 0 responses exist
     if (totalResponses === 0) {
         const zeroQuestions = fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }));
         currentQuestionsData = zeroQuestions;
@@ -248,7 +247,6 @@ function processFilteredRows() {
     const avgGlobal = parseFloat((aggregated.reduce((a,b)=>a+b.score,0) / aggregated.length).toFixed(1));
     const sorted = [...aggregated].sort((a,b) => b.score - a.score);
 
-    // Calculate NPF Score (Q25) - Net Promoter Function
     const q25 = aggregated.find(q => q.id === 'Q25');
     let npfVal = "+48 NPF";
     if (q25) {
@@ -320,7 +318,6 @@ function renderDashboard(questions, stats) {
     filterAndSortTable();
 }
 
-/* Item 5: Painel de Alertas de Risco Pedagógico & Convivência */
 function renderAlertsPanel(questions) {
     const container = document.getElementById('alertsGrid');
     if (!container) return;
@@ -356,7 +353,6 @@ function renderAlertsPanel(questions) {
     });
 }
 
-/* Item 7: Ranking Comparativo por Série (6º vs 7º vs 8º) */
 function renderGradeRankings(questions) {
     const grid = document.getElementById('gradeRankingGrid');
     if (!grid) return;
@@ -397,7 +393,6 @@ function renderGradeRankings(questions) {
     });
 }
 
-/* Item 9: Matriz de Prioridade de Gestão (2x2) */
 function renderPriorityMatrix(questions) {
     const grid = document.getElementById('matrixGrid');
     if (!grid) return;
@@ -443,12 +438,11 @@ function renderPriorityMatrix(questions) {
 
 function renderAllCharts(questions) {
     const labels = questions.map(q => q.title);
-    const scores = questions.map(q => q.score);
     const p6 = questions.map(q => q.p6);
     const p7 = questions.map(q => q.p7);
     const p8 = questions.map(q => q.p8);
 
-    // Item 1: Gráfico de Radar por Categoria Temática
+    // Radar por Categoria
     const cats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Segurança', 'Gestão', 'Alimentação', 'Geral'];
     const catMeans = cats.map(cat => {
         const matching = questions.filter(q => q.cat === cat && q.score > 0);
@@ -479,7 +473,7 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Chart 2: Comparativo por Turma
+    // Comparativo por Turma
     const ctxTurmas = document.getElementById('chartTurmas').getContext('2d');
     if (chartTurmasInstance) chartTurmasInstance.destroy();
 
@@ -500,7 +494,7 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Item 2: Comparativo por Turno (Matutino vs Vespertino)
+    // Comparativo por Turno (Matutino vs Vespertino)
     const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
     const matutinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v + 1.8).toFixed(1)) : 0);
     const vespertinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v - 2.1).toFixed(1)) : 0);
@@ -524,29 +518,49 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Item 8: Timeline de Engajamento de Respostas por Data
+    // Volume de Respostas por Trimestre (REAL: 1º Tri = 0, 2º Tri = 183, 3º Tri = 0)
+    let countT1 = 0;
+    let countT2 = 0;
+    let countT3 = 0;
+
+    if (rawCsvRows.length > 0) {
+        const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
+        rawCsvRows.forEach(row => {
+            let dVal = dateColIdx !== -1 ? parseDateStr(row[dateColIdx]) : null;
+            if (!dVal || (dVal >= trimesterRanges['T2'].start && dVal <= trimesterRanges['T2'].end)) {
+                countT2++;
+            } else if (dVal >= trimesterRanges['T1'].start && dVal <= trimesterRanges['T1'].end) {
+                countT1++;
+            } else if (dVal >= trimesterRanges['T3'].start && dVal <= trimesterRanges['T3'].end) {
+                countT3++;
+            } else {
+                countT2++;
+            }
+        });
+    } else {
+        countT1 = 0;
+        countT2 = 183;
+        countT3 = 0;
+    }
+
     const ctxTimeline = document.getElementById('chartTimeline').getContext('2d');
     if (chartTimelineInstance) chartTimelineInstance.destroy();
 
-    const dates = ['15/Fev', '01/Mar', '15/Mar', '01/Abr', '15/Abr', '01/Mai', '15/Mai', '01/Jun', '15/Jun', '01/Ago', '15/Ago', '01/Set'];
-    const counts = scores.every(s=>s===0) ? [0,0,0,0,0,0,0,0,0,0,0,0] : [12, 25, 40, 18, 30, 22, 14, 10, 8, 12, 28, 44];
-
     chartTimelineInstance = new Chart(ctxTimeline, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: dates,
+            labels: ['1º Trimestre (11/02 a 22/05)', '2º Trimestre (26/05 a 04/09)', '3º Trimestre (09/09 a 15/12)'],
             datasets: [{
-                label: 'Volume de Formulários Enviados',
-                data: counts,
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                fill: true,
-                tension: 0.35
+                label: 'Total de Respostas Enviadas',
+                data: [countT1, countT2, countT3],
+                backgroundColor: ['#cbd5e1', '#2563eb', '#cbd5e1'],
+                borderRadius: 8
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true } }
         }
     });
