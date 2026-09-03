@@ -143,6 +143,25 @@
         .b-good { background: #dbeafe; color: #1e40af; }
         .b-warning { background: #fef3c7; color: #92400e; }
         .b-critical { background: #ffe4e6; color: #9f1239; }
+
+        .btn-form-action {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #0f172a;
+            font-weight: 800;
+            padding: 0.65rem 1.4rem;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-form-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -160,6 +179,7 @@
             <ul class="nav-links">
                 <li><a href="index.html"><i class="fa-solid fa-house"></i> Início</a></li>
                 <li><a href="dashboard.html" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard Avaliação</a></li>
+                <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfiWEe4W6SjsX_etozAuvyrsiVJGZUjBviffcIgl8msfj3JAA/viewform" target="_blank" style="color:#fbbf24;"><i class="fa-solid fa-pen-to-square"></i> Responder Form</a></li>
                 <li><a href="index.html#sistemas"><i class="fa-solid fa-cubes"></i> Outros Sistemas</a></li>
             </ul>
         </div>
@@ -167,16 +187,22 @@
 
     <main class="container">
         
-        <!-- Subtle Subheader Banner -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.8rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
+        <!-- Subheader Banner with Form Button & Live Badge -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:1.8rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
             <div>
                 <h3 style="color:var(--primary-dark); font-size:1.25rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-square-poll-vertical" style="color:var(--primary-light);"></i> Resultados em Tempo Real — Pesquisa de Avaliação (6º ao 8º Ano)
                 </h3>
                 <p style="font-size:0.88rem; color:var(--text-muted); margin:4px 0 0 0;">Dados sincronizados continuamente com as respostas do formulário da escola.</p>
             </div>
-            <div class="b-live">
-                <span class="b-live-dot"></span> <span id="syncStatusText">Ao Vivo / Sincronizado</span>
+            
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiWEe4W6SjsX_etozAuvyrsiVJGZUjBviffcIgl8msfj3JAA/viewform" target="_blank" class="btn-form-action">
+                    <i class="fa-solid fa-clipboard-question" style="font-size:1.1rem;"></i> Responder Pesquisa ✍️
+                </a>
+                <div class="b-live">
+                    <span class="b-live-dot"></span> <span id="syncStatusText">Ao Vivo / Sincronizado</span>
+                </div>
             </div>
         </div>
 
