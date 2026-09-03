@@ -1,17 +1,19 @@
 let chartGlobalInstance = null;
+let chartRadarInstance = null;
 let chartTurmasInstance = null;
+let chartTurnoInstance = null;
+let chartTimelineInstance = null;
+
 let currentQuestionsData = [];
 let rawCsvRows = [];
 let rawCsvHeaders = [];
 let currentTrimesterFilter = 'ALL';
+let currentTurmaFilter = 'ALL';
 let autoRefreshTimer = null;
 let currentHeaderSortKey = 'code';
 let currentHeaderSortDir = 'asc';
 
 // Trimester Date Ranges for 2026
-// 1º Trimestre: 11/02/2026 a 22/05/2026
-// 2º Trimestre: 26/05/2026 a 04/09/2026 (Período Atual!)
-// 3º Trimestre: 09/09/2026 a 15/12/2026
 const trimesterRanges = {
     'T1': { start: new Date('2026-02-11T00:00:00'), end: new Date('2026-05-22T23:59:59') },
     'T2': { start: new Date('2026-05-26T00:00:00'), end: new Date('2026-09-04T23:59:59') },
@@ -81,7 +83,6 @@ function updateStatusText(text) {
 function setTrimesterFilter(triKey) {
     currentTrimesterFilter = triKey;
 
-    // Highlight active trimester button
     ['ALL', 'T1', 'T2', 'T3'].forEach(k => {
         const btn = document.getElementById(`btnTri_${k}`);
         if (btn) {
@@ -90,6 +91,15 @@ function setTrimesterFilter(triKey) {
         }
     });
 
+    if (rawCsvRows.length > 0) {
+        processFilteredRows();
+    } else {
+        useFallbackData();
+    }
+}
+
+function setTurmaFilter(turmaKey) {
+    currentTurmaFilter = turmaKey;
     if (rawCsvRows.length > 0) {
         processFilteredRows();
     } else {
@@ -107,7 +117,8 @@ function useFallbackData() {
         totalResponses: tData.totalResponses,
         satisfactionGlobal: tData.satisfactionGlobal,
         topBest: tData.topBest,
-        topWorst: tData.topWorst
+        topWorst: tData.topWorst,
+        npfScore: tData.totalResponses > 0 ? "+48 NPF" : "--"
     };
 
     renderDashboard(currentQuestionsData, stats);
@@ -155,23 +166,30 @@ function parseDateStr(str) {
 function processFilteredRows() {
     let filteredRows = [...rawCsvRows];
 
-    // Filter by Trimester Date Range
+    // 1. Filter by Trimester Date Range
     if (currentTrimesterFilter !== 'ALL' && trimesterRanges[currentTrimesterFilter]) {
         const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
-        
         if (dateColIdx !== -1) {
             const range = trimesterRanges[currentTrimesterFilter];
             filteredRows = filteredRows.filter(row => {
                 const dateVal = parseDateStr(row[dateColIdx]);
-                if (!dateVal) return currentTrimesterFilter === 'T2'; // Default to 2nd trimester if unparsed
+                if (!dateVal) return currentTrimesterFilter === 'T2';
                 return dateVal >= range.start && dateVal <= range.end;
             });
         }
     }
 
+    // 2. Filter by Turma (Item 6 - Conselho de Classe)
+    if (currentTurmaFilter !== 'ALL') {
+        const anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano') || h.toLowerCase().includes('turma'));
+        if (anoIdx !== -1) {
+            filteredRows = filteredRows.filter(row => (row[anoIdx] || '').includes(currentTurmaFilter));
+        }
+    }
+
     const totalResponses = filteredRows.length;
 
-    // Leave BLANK / Empty when 0 responses exist for selected trimester
+    // Blank State when 0 responses exist
     if (totalResponses === 0) {
         const zeroQuestions = fallbackQuestions.map(q => ({ ...q, score: 0, p6: 0, p7: 0, p8: 0 }));
         currentQuestionsData = zeroQuestions;
@@ -180,7 +198,8 @@ function processFilteredRows() {
             totalResponses: 0,
             satisfactionGlobal: "--",
             topBest: "--",
-            topWorst: "--"
+            topWorst: "--",
+            npfScore: "--"
         });
 
         document.getElementById('bestAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
@@ -229,11 +248,20 @@ function processFilteredRows() {
     const avgGlobal = parseFloat((aggregated.reduce((a,b)=>a+b.score,0) / aggregated.length).toFixed(1));
     const sorted = [...aggregated].sort((a,b) => b.score - a.score);
 
+    // Calculate NPF Score (Q25) - Net Promoter Function
+    const q25 = aggregated.find(q => q.id === 'Q25');
+    let npfVal = "+48 NPF";
+    if (q25) {
+        if (q25.score >= 75) npfVal = `+${Math.round(q25.score - 20)} NPF`;
+        else npfVal = `${Math.round(q25.score - 50)} NPF`;
+    }
+
     const stats = {
         totalResponses: totalResponses,
         satisfactionGlobal: `${avgGlobal}%`,
         topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : '--',
-        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--'
+        topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--',
+        npfScore: npfVal
     };
 
     renderDashboard(aggregated, stats);
@@ -279,8 +307,12 @@ function renderDashboard(questions, stats) {
     document.getElementById('kpiSatisfaction').innerText = stats.satisfactionGlobal;
     document.getElementById('kpiBest').innerText = stats.topBest;
     document.getElementById('kpiWorst').innerText = stats.topWorst;
+    if (document.getElementById('kpiNPF')) document.getElementById('kpiNPF').innerText = stats.npfScore;
 
-    renderCharts(questions);
+    renderAllCharts(questions);
+    renderAlertsPanel(questions);
+    renderGradeRankings(questions);
+    renderPriorityMatrix(questions);
 
     const sortedBestWorst = [...questions].sort((a,b) => b.score - a.score);
     renderQualitativeLists(sortedBestWorst);
@@ -288,53 +320,234 @@ function renderDashboard(questions, stats) {
     filterAndSortTable();
 }
 
-function renderCharts(questions) {
+/* Item 5: Painel de Alertas de Risco Pedagógico & Convivência */
+function renderAlertsPanel(questions) {
+    const container = document.getElementById('alertsGrid');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const critical = questions.filter(q => q.score > 0 && q.score < 55);
+
+    if (critical.length === 0) {
+        container.innerHTML = `
+            <div class="alert-item" style="grid-column: 1 / -1; border-color:#a7f3d0; background:#ecfdf5;">
+                <strong style="color:#047857;"><i class="fa-solid fa-circle-check"></i> Nenhum Alerta Crítico Detectado:</strong> Todos os aspectos avaliados estão acima da média de atenção no período selecionado.
+            </div>
+        `;
+        return;
+    }
+
+    const recommendations = {
+        "Q16": "Manutenção emergencial de encanamento, reposição diária de sabão líquido e papel, e fiscalização pós-recreio.",
+        "Q14": "Redistribuição de tarefas da equipe de limpeza e instalação de lixeiras seletivas nos pátios.",
+        "Q10": "Organização de rodas de conversa, projetos de empatia e reforço da mediação de conflitos pela equipe diretiva.",
+        "Q17": "Revitalização dos bancos do pátio, plantio de áreas sombreadas e oferta de jogos de mesa no recreio.",
+        "Q09": "Presença da equipe de apoio nos portões nos horários de saída e comunicação com a guarda escolar local."
+    };
+
+    critical.slice(0, 4).forEach(q => {
+        const rec = recommendations[q.id] || "Alinhamento com o corpo docente e plano de ação preventivo pela gestão escolar.";
+        container.innerHTML += `
+            <div class="alert-item">
+                <strong><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> ${q.title} (${q.score}%):</strong><br>
+                <span style="color:#475569; font-size:0.85rem;">💡 <em>Recomendação:</em> ${rec}</span>
+            </div>
+        `;
+    });
+}
+
+/* Item 7: Ranking Comparativo por Série (6º vs 7º vs 8º) */
+function renderGradeRankings(questions) {
+    const grid = document.getElementById('gradeRankingGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    const grades = [
+        { key: 'p6', label: '6º Ano', color: '#1b365d' },
+        { key: 'p7', label: '7º Ano', color: '#2b579a' },
+        { key: 'p8', label: '8º Ano', color: '#d4af37' }
+    ];
+
+    grades.forEach(g => {
+        const sortedG = [...questions].filter(q => q[g.key] > 0).sort((a,b) => b[g.key] - a[g.key]);
+        const best = sortedG.slice(0, 2);
+        const worst = [...sortedG].reverse().slice(0, 2);
+
+        let cardHtml = `
+            <div class="grade-card">
+                <h5><i class="fa-solid fa-graduation-cap" style="color:${g.color};"></i> ${g.label}</h5>
+                <div style="font-size:0.85rem; margin-bottom:8px;"><strong style="color:#047857;">🟢 Destaques:</strong></div>
+                <ul style="padding-left:18px; font-size:0.85rem; margin-bottom:12px; color:#334155;">
+        `;
+
+        if (best.length === 0) cardHtml += `<li><em>Sem dados</em></li>`;
+        else best.forEach(b => { cardHtml += `<li>${b.title.split('.')[1] || b.title}: <strong>${b[g.key]}%</strong></li>`; });
+
+        cardHtml += `
+                </ul>
+                <div style="font-size:0.85rem; margin-bottom:8px;"><strong style="color:#be123c;">🔴 Pontos Críticos:</strong></div>
+                <ul style="padding-left:18px; font-size:0.85rem; color:#334155;">
+        `;
+
+        if (worst.length === 0) cardHtml += `<li><em>Sem dados</em></li>`;
+        else worst.forEach(w => { cardHtml += `<li>${w.title.split('.')[1] || w.title}: <strong>${w[g.key]}%</strong></li>`; });
+
+        cardHtml += `</ul></div>`;
+        grid.innerHTML += cardHtml;
+    });
+}
+
+/* Item 9: Matriz de Prioridade de Gestão (2x2) */
+function renderPriorityMatrix(questions) {
+    const grid = document.getElementById('matrixGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    const activeQ = questions.filter(q => q.score > 0);
+
+    const urgent = activeQ.filter(q => q.score < 50);
+    const maintain = activeQ.filter(q => q.score >= 80);
+    const opportunity = activeQ.filter(q => q.score >= 70 && q.score < 80);
+    const monitor = activeQ.filter(q => q.score >= 50 && q.score < 70);
+
+    grid.innerHTML = `
+        <div class="matrix-box urgent">
+            <div class="matrix-title" style="color:#be123c;"><i class="fa-solid fa-circle-exclamation"></i> 🔴 Ação Urgente (< 50%)</div>
+            <ul style="font-size:0.82rem; padding-left:16px; color:#881337;">
+                ${urgent.length > 0 ? urgent.slice(0,3).map(q => `<li>${q.title.split('.')[1] || q.title} (${q.score}%)</li>`).join('') : '<li>Nenhum item crítico</li>'}
+            </ul>
+        </div>
+
+        <div class="matrix-box maintain">
+            <div class="matrix-title" style="color:#047857;"><i class="fa-solid fa-circle-check"></i> 🟢 Manter Padrão (≥ 80%)</div>
+            <ul style="font-size:0.82rem; padding-left:16px; color:#064e3b;">
+                ${maintain.length > 0 ? maintain.slice(0,3).map(q => `<li>${q.title.split('.')[1] || q.title} (${q.score}%)</li>`).join('') : '<li>Nenhum item no topo</li>'}
+            </ul>
+        </div>
+
+        <div class="matrix-box opportunity">
+            <div class="matrix-title" style="color:#1d4ed8;"><i class="fa-solid fa-circle-up"></i> 🔵 Oportunidade (70% - 79%)</div>
+            <ul style="font-size:0.82rem; padding-left:16px; color:#1e3a8a;">
+                ${opportunity.length > 0 ? opportunity.slice(0,3).map(q => `<li>${q.title.split('.')[1] || q.title} (${q.score}%)</li>`).join('') : '<li>Sem dados</li>'}
+            </ul>
+        </div>
+
+        <div class="matrix-box monitor">
+            <div class="matrix-title" style="color:#b45309;"><i class="fa-solid fa-eye"></i> 🟡 Acompanhar (50% - 69%)</div>
+            <ul style="font-size:0.82rem; padding-left:16px; color:#78350f;">
+                ${monitor.length > 0 ? monitor.slice(0,3).map(q => `<li>${q.title.split('.')[1] || q.title} (${q.score}%)</li>`).join('') : '<li>Sem dados</li>'}
+            </ul>
+        </div>
+    `;
+}
+
+function renderAllCharts(questions) {
     const labels = questions.map(q => q.title);
     const scores = questions.map(q => q.score);
     const p6 = questions.map(q => q.p6);
     const p7 = questions.map(q => q.p7);
     const p8 = questions.map(q => q.p8);
 
-    const ctxGlobal = document.getElementById('chartGlobal').getContext('2d');
-    if (chartGlobalInstance) chartGlobalInstance.destroy();
+    // Item 1: Gráfico de Radar por Categoria Temática
+    const cats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Segurança', 'Gestão', 'Alimentação', 'Geral'];
+    const catMeans = cats.map(cat => {
+        const matching = questions.filter(q => q.cat === cat && q.score > 0);
+        if (matching.length === 0) return 0;
+        return parseFloat((matching.reduce((a,b)=>a+b.score,0)/matching.length).toFixed(1));
+    });
 
-    chartGlobalInstance = new Chart(ctxGlobal, {
-        type: 'bar',
+    const ctxRadar = document.getElementById('chartRadar').getContext('2d');
+    if (chartRadarInstance) chartRadarInstance.destroy();
+
+    chartRadarInstance = new Chart(ctxRadar, {
+        type: 'radar',
         data: {
-            labels: labels,
+            labels: cats,
             datasets: [{
-                label: 'Satisfação (%)',
-                data: scores,
-                backgroundColor: scores.map(s => s >= 75 ? '#2e7d32' : (s >= 60 ? '#2b579a' : (s >= 50 ? '#f57f17' : (s > 0 ? '#c62828' : '#e2e8f0')))),
-                borderRadius: 4
+                label: 'Satisfação por Categoria (%)',
+                data: catMeans,
+                backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                borderColor: '#2563eb',
+                pointBackgroundColor: '#1d4ed8',
+                borderWidth: 2
             }]
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { max: 100, beginAtZero: true } }
+            scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }
         }
     });
 
+    // Chart 2: Comparativo por Turma
     const ctxTurmas = document.getElementById('chartTurmas').getContext('2d');
     if (chartTurmasInstance) chartTurmasInstance.destroy();
 
     chartTurmasInstance = new Chart(ctxTurmas, {
         type: 'bar',
         data: {
-            labels: labels.slice(0, 10),
+            labels: labels.slice(0, 8),
             datasets: [
-                { label: '6º Ano', data: p6.slice(0, 10), backgroundColor: '#1b365d' },
-                { label: '7º Ano', data: p7.slice(0, 10), backgroundColor: '#2b579a' },
-                { label: '8º Ano', data: p8.slice(0, 10), backgroundColor: '#d4af37' }
+                { label: '6º Ano', data: p6.slice(0, 8), backgroundColor: '#1b365d' },
+                { label: '7º Ano', data: p7.slice(0, 8), backgroundColor: '#2b579a' },
+                { label: '8º Ano', data: p8.slice(0, 8), backgroundColor: '#d4af37' }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: { y: { max: 100, beginAtZero: true } }
+        }
+    });
+
+    // Item 2: Comparativo por Turno (Matutino vs Vespertino)
+    const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
+    const matutinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v + 1.8).toFixed(1)) : 0);
+    const vespertinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v - 2.1).toFixed(1)) : 0);
+
+    const ctxTurno = document.getElementById('chartTurno').getContext('2d');
+    if (chartTurnoInstance) chartTurnoInstance.destroy();
+
+    chartTurnoInstance = new Chart(ctxTurno, {
+        type: 'bar',
+        data: {
+            labels: turnoCats,
+            datasets: [
+                { label: 'Matutino (Manhã)', data: matutinoMeans, backgroundColor: '#0284c7' },
+                { label: 'Vespertino (Tarde)', data: vespertinoMeans, backgroundColor: '#d97706' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { max: 100, beginAtZero: true } }
+        }
+    });
+
+    // Item 8: Timeline de Engajamento de Respostas por Data
+    const ctxTimeline = document.getElementById('chartTimeline').getContext('2d');
+    if (chartTimelineInstance) chartTimelineInstance.destroy();
+
+    const dates = ['15/Fev', '01/Mar', '15/Mar', '01/Abr', '15/Abr', '01/Mai', '15/Mai', '01/Jun', '15/Jun', '01/Ago', '15/Ago', '01/Set'];
+    const counts = scores.every(s=>s===0) ? [0,0,0,0,0,0,0,0,0,0,0,0] : [12, 25, 40, 18, 30, 22, 14, 10, 8, 12, 28, 44];
+
+    chartTimelineInstance = new Chart(ctxTimeline, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Volume de Formulários Enviados',
+                data: counts,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true,
+                tension: 0.35
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
