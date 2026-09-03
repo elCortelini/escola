@@ -113,12 +113,18 @@ function useFallbackData() {
     const tData = trimesterFallbackData[currentTrimesterFilter] || trimesterFallbackData['ALL'];
     currentQuestionsData = [...tData.questions];
     
+    const total = tData.totalResponses;
+    const q25 = currentQuestionsData.find(q => q.id === 'Q25');
+    const recPercent = q25 && q25.score > 0 && total > 0 ? `${q25.score}%` : "--";
+    const recCountText = q25 && q25.score > 0 && total > 0 ? `${Math.round((q25.score / 100) * total)} de ${total} indicariam` : "Recomendação da Escola (Q25)";
+
     const stats = {
-        totalResponses: tData.totalResponses,
+        totalResponses: total,
         satisfactionGlobal: tData.satisfactionGlobal,
         topBest: tData.topBest,
         topWorst: tData.topWorst,
-        npfScore: tData.totalResponses > 0 ? "+48 NPF" : "--"
+        recommendVal: recPercent,
+        recommendSub: recCountText
     };
 
     renderDashboard(currentQuestionsData, stats);
@@ -198,7 +204,8 @@ function processFilteredRows() {
             satisfactionGlobal: "--",
             topBest: "--",
             topWorst: "--",
-            npfScore: "--"
+            recommendVal: "--",
+            recommendSub: "Recomendação da Escola (Q25)"
         });
 
         document.getElementById('bestAspectsList').innerHTML = '<li><em style="color:#94a3b8;">(Sem dados registrados neste período)</em></li>';
@@ -248,18 +255,17 @@ function processFilteredRows() {
     const sorted = [...aggregated].sort((a,b) => b.score - a.score);
 
     const q25 = aggregated.find(q => q.id === 'Q25');
-    let npfVal = "+48 NPF";
-    if (q25) {
-        if (q25.score >= 75) npfVal = `+${Math.round(q25.score - 20)} NPF`;
-        else npfVal = `${Math.round(q25.score - 50)} NPF`;
-    }
+    let recVal = q25 && q25.score > 0 ? `${q25.score}%` : '--';
+    let countWhoRecommend = q25 && q25.score > 0 ? Math.round((q25.score / 100) * totalResponses) : 0;
+    let recSub = totalResponses > 0 && q25 && q25.score > 0 ? `${countWhoRecommend} de ${totalResponses} indicariam a escola` : 'Recomendação da Escola (Q25)';
 
     const stats = {
         totalResponses: totalResponses,
         satisfactionGlobal: `${avgGlobal}%`,
         topBest: sorted[0] ? `${sorted[0].title.split('.')[1] || sorted[0].title} (${sorted[0].score}%)` : '--',
         topWorst: sorted[sorted.length-1] ? `${sorted[sorted.length-1].title.split('.')[1] || sorted[sorted.length-1].title} (${sorted[sorted.length-1].score}%)` : '--',
-        npfScore: npfVal
+        recommendVal: recVal,
+        recommendSub: recSub
     };
 
     renderDashboard(aggregated, stats);
@@ -305,7 +311,8 @@ function renderDashboard(questions, stats) {
     document.getElementById('kpiSatisfaction').innerText = stats.satisfactionGlobal;
     document.getElementById('kpiBest').innerText = stats.topBest;
     document.getElementById('kpiWorst').innerText = stats.topWorst;
-    if (document.getElementById('kpiNPF')) document.getElementById('kpiNPF').innerText = stats.npfScore;
+    if (document.getElementById('kpiNPF')) document.getElementById('kpiNPF').innerText = stats.recommendVal;
+    if (document.getElementById('kpiNPFSub')) document.getElementById('kpiNPFSub').innerText = stats.recommendSub;
 
     renderAllCharts(questions);
     renderAlertsPanel(questions);
@@ -442,7 +449,6 @@ function renderAllCharts(questions) {
     const p7 = questions.map(q => q.p7);
     const p8 = questions.map(q => q.p8);
 
-    // Radar por Categoria
     const cats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Segurança', 'Gestão', 'Alimentação', 'Geral'];
     const catMeans = cats.map(cat => {
         const matching = questions.filter(q => q.cat === cat && q.score > 0);
@@ -473,7 +479,6 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Comparativo por Turma
     const ctxTurmas = document.getElementById('chartTurmas').getContext('2d');
     if (chartTurmasInstance) chartTurmasInstance.destroy();
 
@@ -494,7 +499,6 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Comparativo por Turno (Matutino vs Vespertino)
     const turnoCats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Merenda'];
     const matutinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v + 1.8).toFixed(1)) : 0);
     const vespertinoMeans = catMeans.slice(0, 5).map(v => v > 0 ? parseFloat((v - 2.1).toFixed(1)) : 0);
@@ -518,7 +522,6 @@ function renderAllCharts(questions) {
         }
     });
 
-    // Volume de Respostas por Trimestre (REAL: 1º Tri = 0, 2º Tri = 183, 3º Tri = 0)
     let countT1 = 0;
     let countT2 = 0;
     let countT3 = 0;
