@@ -263,6 +263,46 @@
             </div>
         </div>
 
+        <!-- Painel de Comparativo de Turmas (Mais Satisfeita vs Mais Insatisfeita - Antes do Painel de Controle) -->
+        <div class="top-worst-panel-card">
+            <div class="panel-header-title">
+                <i class="fa-solid fa-trophy" style="color:var(--accent);"></i> PAINEL EXECUTIVO — TURMA MAIS SATISFEITA VS. TURMA COM MAIOR DEFASAGEM
+            </div>
+            <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
+                Comparativo direto (independente de turno) apontando a turma com maior nível de aprovação e a turma que necessita de intervenção pedagógica:
+            </div>
+
+            <div class="top-worst-grid">
+                <!-- Turma Mais Satisfeita -->
+                <div class="turma-highlight-box box-satisfied">
+                    <div class="turma-box-header">
+                        <div class="turma-box-badge badge-green"><i class="fa-solid fa-crown"></i> TURMA MAIS SATISFEITA</div>
+                        <h4 id="topTurmaTitle">🎓 6º Ano (76.5% de Satisfação Média)</h4>
+                    </div>
+                    <div class="turma-box-sub">3 Principais Indicadores que a Destacam:</div>
+                    <ul class="turma-indices-list" id="topTurmaIndices">
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Avaliação dos Professores (Q05):</strong> 89.1% de aprovação</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Qualidade das Aulas (Q01):</strong> 85.2% de aprovação</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Merenda Escolar (Q18):</strong> 81.0% de aprovação</li>
+                    </ul>
+                </div>
+
+                <!-- Turma Mais Insatisfeita -->
+                <div class="turma-highlight-box box-unsatisfied">
+                    <div class="turma-box-header">
+                        <div class="turma-box-badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> TURMA COM MAIOR DEFASAGEM</div>
+                        <h4 id="worstTurmaTitle">🎓 8º Ano (66.8% de Satisfação Média)</h4>
+                    </div>
+                    <div class="turma-box-sub">3 Principais Pontos Críticos de Atenção:</div>
+                    <ul class="turma-indices-list" id="worstTurmaIndices">
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Estado dos Banheiros (Q16):</strong> 29.5% de satisfação</li>
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Limpeza Geral (Q14):</strong> 38.4% de satisfação</li>
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Atuação contra Bullying (Q10):</strong> 42.0% de satisfação</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- Painel de Destaque para Seleção de Parâmetros e Filtros -->
         <div class="filter-panel-card">
             <div class="filter-panel-header">

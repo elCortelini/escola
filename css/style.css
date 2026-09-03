@@ -116,6 +116,107 @@ body {
     flex-grow: 1;
 }
 
+/* Top vs Worst Turma Highlight Panel */
+.top-worst-panel-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 1.6rem 1.8rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.panel-header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+}
+
+.top-worst-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media(max-width: 800px) {
+    .top-worst-grid { grid-template-columns: 1fr; }
+}
+
+.turma-highlight-box {
+    padding: 1.4rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.turma-highlight-box.box-satisfied {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    border-left: 6px solid #10b981;
+}
+
+.turma-highlight-box.box-unsatisfied {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    border-left: 6px solid #ef4444;
+}
+
+.turma-box-header {
+    margin-bottom: 10px;
+}
+
+.turma-box-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+}
+
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-red { background: #ffe4e6; color: #9f1239; }
+
+.turma-highlight-box h4 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+}
+
+.turma-box-sub {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.turma-indices-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.turma-indices-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 /* Filter Panel Highlight Card */
 .filter-panel-card {
     background: #ffffff;
@@ -582,7 +683,7 @@ footer p strong {
 
 /* Print Styles */
 @media print {
-    .header-nav, footer, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action { display: none !important; }
+    .header-nav, footer, .top-worst-panel-card, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action { display: none !important; }
     body { background: white; }
     .container { max-width: 100%; margin: 0; padding: 0; }
     .chart-card, .table-card, .kpi-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }

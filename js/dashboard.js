@@ -412,6 +412,65 @@ function processFilteredRows() {
     renderDashboard(aggregated, stats);
 }
 
+function renderTurmaHighlights(questions) {
+    const topTitle = document.getElementById('topTurmaTitle');
+    const topIndices = document.getElementById('topTurmaIndices');
+    const worstTitle = document.getElementById('worstTurmaTitle');
+    const worstIndices = document.getElementById('worstTurmaIndices');
+
+    if (!topTitle || !worstTitle) return;
+
+    const grades = [
+        { name: '6º Ano', key: 'p6' },
+        { name: '7º Ano', key: 'p7' },
+        { name: '8º Ano', key: 'p8' }
+    ];
+
+    const gradeMeans = grades.map(g => {
+        const validQs = questions.filter(q => q[g.key] > 0);
+        const mean = validQs.length > 0 ? (validQs.reduce((acc, q) => acc + q[g.key], 0) / validQs.length) : 0;
+        return { name: g.name, key: g.key, mean: parseFloat(mean.toFixed(1)) };
+    });
+
+    const activeGrades = gradeMeans.filter(g => g.mean > 0);
+    if (activeGrades.length === 0) {
+        topTitle.innerText = "🎓 Sem dados suficientes";
+        if (topIndices) topIndices.innerHTML = "<li><em>Sem dados de turmas no período</em></li>";
+        worstTitle.innerText = "🎓 Sem dados suficientes";
+        if (worstIndices) worstIndices.innerHTML = "<li><em>Sem dados de turmas no período</em></li>";
+        return;
+    }
+
+    activeGrades.sort((a, b) => b.mean - a.mean);
+    const topGrade = activeGrades[0];
+    const worstGrade = activeGrades[activeGrades.length - 1];
+
+    topTitle.innerText = `🎓 ${topGrade.name} (${topGrade.mean}% de Satisfação Média)`;
+    worstTitle.innerText = `🎓 ${worstGrade.name} (${worstGrade.mean}% de Satisfação Média)`;
+
+    const topQs = [...questions].filter(q => q[topGrade.key] > 0).sort((a, b) => b[topGrade.key] - a[topGrade.key]).slice(0, 3);
+    if (topIndices) {
+        topIndices.innerHTML = '';
+        topQs.forEach(q => {
+            const titleClean = q.title.split('.')[1] || q.title;
+            topIndices.innerHTML += `
+                <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>${titleClean} (${q.id}):</strong> ${q[topGrade.key]}% de aprovação</li>
+            `;
+        });
+    }
+
+    const worstQs = [...questions].filter(q => q[worstGrade.key] > 0).sort((a, b) => a[worstGrade.key] - b[worstGrade.key]).slice(0, 3);
+    if (worstIndices) {
+        worstIndices.innerHTML = '';
+        worstQs.forEach(q => {
+            const titleClean = q.title.split('.')[1] || q.title;
+            worstIndices.innerHTML += `
+                <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>${titleClean} (${q.id}):</strong> ${q[worstGrade.key]}% de satisfação</li>
+            `;
+        });
+    }
+}
+
 function renderQualitativeLists(sortedQuestions) {
     const bestList = document.getElementById('bestAspectsList');
     const worstList = document.getElementById('worstAspectsList');
@@ -457,6 +516,7 @@ function renderDashboard(questions, stats) {
     if (document.getElementById('kpiNPF')) document.getElementById('kpiNPF').innerText = stats.recommendVal;
     if (document.getElementById('kpiNPFSub')) document.getElementById('kpiNPFSub').innerText = stats.recommendSub;
 
+    renderTurmaHighlights(questions);
     renderAllCharts(questions);
     renderAlertsPanel(questions);
     renderGradeRankings(questions);
