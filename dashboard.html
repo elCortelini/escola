@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Anti-Cache Meta Tags: Prevents browser from caching old data & scripts -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard de Avaliação Escolar - Centro Educacional Pedro Rizzi</title>
     <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260906">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <style>
@@ -219,6 +223,26 @@
             align-items: center;
             gap: 8px;
         }
+
+        .btn-refresh-sync {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-refresh-sync:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(2, 132, 199, 0.45);
+        }
     </style>
 </head>
 <body>
@@ -244,7 +268,7 @@
 
     <main class="container">
         
-        <!-- Subheader Banner with Form Button & Live Badge -->
+        <!-- Subheader Banner with Form Button, Live Badge & Instant Refresh Button -->
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:1.5rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
             <div>
                 <h3 style="color:var(--primary-dark); font-size:1.25rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
@@ -257,6 +281,11 @@
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiWEe4W6SjsX_etozAuvyrsiVJGZUjBviffcIgl8msfj3JAA/viewform" target="_blank" class="btn-form-action">
                     <i class="fa-solid fa-clipboard-question" style="font-size:1.1rem;"></i> Responder Pesquisa ✍️
                 </a>
+                
+                <button type="button" onclick="forceSyncData()" class="btn-refresh-sync" title="Clique para buscar instantaneamente os novos dados da planilha do Google Sheets sem usar cachê do navegador">
+                    <i class="fa-solid fa-rotate-right"></i> 🔄 Atualizar Dados Agora
+                </button>
+
                 <div class="b-live">
                     <span class="b-live-dot"></span> <span id="syncStatusText">Ao Vivo / Sincronizado</span>
                 </div>
@@ -534,8 +563,8 @@
                         <th onclick="toggleHeaderSort('code')">Código <i id="sortIcon_code" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('title')">Aspecto Avaliado <i id="sortIcon_title" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('cat')">Categoria <i id="sortIcon_cat" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-solid fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('p7')">7º Ano <i id="sortIcon_p7" class="fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('p8')">8º Ano <i id="sortIcon_p8" class="fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('status')">Status <i id="sortIcon_status" class="fa-sort sort-icon"></i></th>
@@ -556,7 +585,7 @@
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
-    <script src="js/data-fallback.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/data-fallback.js?v=20260906"></script>
+    <script src="js/dashboard.js?v=20260906"></script>
 </body>
 </html>

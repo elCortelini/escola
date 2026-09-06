@@ -27,34 +27,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initSilentDashboard() {
-    const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
-    if (savedUrl && savedUrl.trim() !== '') {
-        fetchSilentData(savedUrl);
-    } else {
-        fetch('config.json')
-            .then(res => res.json())
-            .then(cfg => {
-                if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') {
-                    fetchSilentData(cfg.google_sheet_csv_url);
-                }
-            })
-            .catch(() => {});
-    }
+    forceSyncData(false);
 
     if (!autoRefreshTimer) {
         autoRefreshTimer = setInterval(() => {
-            const url = localStorage.getItem('pedro_rizzi_sheet_url') || '';
-            if (url && url.trim() !== '') {
-                fetchSilentData(url, true);
-            } else {
-                fetch('config.json')
-                    .then(res => res.json())
-                    .then(cfg => {
-                        if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') fetchSilentData(cfg.google_sheet_csv_url, true);
-                    })
-                    .catch(() => {});
+            forceSyncData(true);
+        }, 15000); // 15 seconds auto-refresh interval
+    }
+}
+
+function forceSyncData(isBackground = false) {
+    if (!isBackground) {
+        updateStatusText('Sincronizando dados... 🔄');
+    }
+
+    const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
+    if (savedUrl && savedUrl.trim() !== '') {
+        fetchSilentData(savedUrl, isBackground);
+    } else {
+        // Cache-busting query parameter for config.json
+        fetch(`config.json?_nc=${Date.now()}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
             }
-        }, 30000);
+        })
+            .then(res => res.json())
+            .then(cfg => {
+                if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') {
+                    fetchSilentData(cfg.google_sheet_csv_url, isBackground);
+                } else {
+                    updateStatusText('Ao Vivo (URL no menu Configurações)');
+                }
+            })
+            .catch(() => {
+                updateStatusText('Ao Vivo');
+            });
     }
 }
 
@@ -74,7 +83,17 @@ function fetchSilentData(url, isBackground = false) {
         }
     }
 
-    fetch(csvUrl)
+    // Force browser to bypass HTTP cache by appending unique timestamp parameter _nc=${Date.now()}
+    const cacheBuster = `_nc=${Date.now()}`;
+    const finalUrl = csvUrl.includes('?') ? `${csvUrl}&${cacheBuster}` : `${csvUrl}?${cacheBuster}`;
+
+    fetch(finalUrl, {
+        cache: 'no-store',
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+        }
+    })
         .then(response => {
             if (!response.ok) throw new Error('Falha ao obter planilha.');
             return response.text();
@@ -82,7 +101,8 @@ function fetchSilentData(url, isBackground = false) {
         .then(csvText => {
             if (csvText && csvText.trim().length > 0) {
                 parseCSVData(csvText);
-                updateStatusText('Ao Vivo / Sincronizado com Planilha');
+                const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                updateStatusText(`Ao Vivo / Sincronizado às ${timeStr}`);
             }
         })
         .catch(err => {
@@ -172,8 +192,6 @@ function setTurnoFilter(turnoKey) {
 }
 
 function useFallbackData() {
-    updateStatusText('Ao Vivo');
-    
     const tData = trimesterFallbackData[currentTrimesterFilter] || trimesterFallbackData['ALL'];
     let questions = [...tData.questions];
 
