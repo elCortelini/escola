@@ -14,6 +14,8 @@ let autoRefreshTimer = null;
 let currentHeaderSortKey = 'code';
 let currentHeaderSortDir = 'asc';
 
+const DEFAULT_GLOBAL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1o8OkfoLBY3u-TB0SbtBPWGyR7EMoZNam4DSBlqlzDzs/export?format=csv&gid=1664997461';
+
 // Trimester Date Ranges for 2026
 const trimesterRanges = {
     'T1': { start: new Date('2026-02-11T00:00:00'), end: new Date('2026-05-22T23:59:59') },
@@ -56,17 +58,13 @@ function forceSyncData(isBackground = false) {
         })
             .then(res => res.json())
             .then(cfg => {
-                if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') {
-                    hideSheetUrlNotice();
-                    fetchSilentData(cfg.google_sheet_csv_url, isBackground);
-                } else {
-                    updateStatusText('Ao Vivo (Amostragem Padrão)');
-                    showSheetUrlNotice();
-                }
+                const sheetUrl = (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') ? cfg.google_sheet_csv_url : DEFAULT_GLOBAL_SHEET_URL;
+                hideSheetUrlNotice();
+                fetchSilentData(sheetUrl, isBackground);
             })
             .catch(() => {
-                updateStatusText('Ao Vivo');
-                showSheetUrlNotice();
+                hideSheetUrlNotice();
+                fetchSilentData(DEFAULT_GLOBAL_SHEET_URL, isBackground);
             });
     }
 }
@@ -103,11 +101,12 @@ function fetchSilentData(url, isBackground = false) {
         const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (matches && matches[1]) {
             const sheetId = matches[1];
-            if (url.includes('pub?output=csv') || url.includes('pubhtml')) {
-                csvUrl = url.replace('pubhtml', 'pub?output=csv');
-            } else {
-                csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+            let gidParam = '';
+            if (url.includes('gid=')) {
+                const gidMatch = url.match(/gid=([0-9]+)/);
+                if (gidMatch && gidMatch[1]) gidParam = `&gid=${gidMatch[1]}`;
             }
+            csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gidParam}`;
         }
     }
 
