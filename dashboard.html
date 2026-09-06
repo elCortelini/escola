@@ -304,6 +304,16 @@
             </div>
         </div>
 
+        <!-- Aviso para quando a URL da planilha não estiver no navegador local -->
+        <div id="missingSheetNotice" style="display:none; margin-bottom:1.5rem; background:#fffbeb; border:1px solid #fef3c7; border-left:6px solid #d97706; padding:1.2rem 1.6rem; border-radius:var(--radius-lg); font-size:0.9rem; color:#78350f;">
+            <strong style="font-size:0.95rem; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> Link da Planilha não configurado neste dispositivo!</strong>
+            <p style="margin:4px 0 10px 0;">Você está visualizando os dados de amostragem padrão. Cole o link da planilha abaixo para conectar os dados em tempo real neste navegador:</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="url" id="quick_sheet_url" placeholder="Cole a URL da planilha (Google Sheets CSV) aqui..." style="flex-grow:1; min-width:280px; padding:0.6rem 0.9rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.88rem;">
+                <button onclick="saveQuickSheetUrl()" class="btn btn-primary" style="width:auto; padding:0.6rem 1.2rem; font-size:0.85rem;"><i class="fa-solid fa-floppy-disk"></i> Conectar Planilha</button>
+            </div>
+        </div>
+
         <!-- Painel Executivo: Cruzamento Preciso por Série + Turno (Antes do Painel de Controle) -->
         <div class="top-worst-panel-card">
             <div class="panel-header-title">

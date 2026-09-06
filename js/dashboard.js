@@ -43,6 +43,7 @@ function forceSyncData(isBackground = false) {
 
     const savedUrl = localStorage.getItem('pedro_rizzi_sheet_url');
     if (savedUrl && savedUrl.trim() !== '') {
+        hideSheetUrlNotice();
         fetchSilentData(savedUrl, isBackground);
     } else {
         // Cache-busting query parameter for config.json
@@ -56,15 +57,42 @@ function forceSyncData(isBackground = false) {
             .then(res => res.json())
             .then(cfg => {
                 if (cfg && cfg.google_sheet_csv_url && cfg.google_sheet_csv_url.trim() !== '') {
+                    hideSheetUrlNotice();
                     fetchSilentData(cfg.google_sheet_csv_url, isBackground);
                 } else {
-                    updateStatusText('Ao Vivo (URL no menu Configurações)');
+                    updateStatusText('Ao Vivo (Amostragem Padrão)');
+                    showSheetUrlNotice();
                 }
             })
             .catch(() => {
                 updateStatusText('Ao Vivo');
+                showSheetUrlNotice();
             });
     }
+}
+
+function showSheetUrlNotice() {
+    const el = document.getElementById('missingSheetNotice');
+    if (el) el.style.display = 'block';
+}
+
+function hideSheetUrlNotice() {
+    const el = document.getElementById('missingSheetNotice');
+    if (el) el.style.display = 'none';
+}
+
+function saveQuickSheetUrl() {
+    const input = document.getElementById('quick_sheet_url');
+    if (!input || !input.value.trim()) {
+        alert('Por favor, cole a URL da planilha do Google Sheets!');
+        return;
+    }
+
+    const url = input.value.trim();
+    localStorage.setItem('pedro_rizzi_sheet_url', url);
+    hideSheetUrlNotice();
+    forceSyncData(false);
+    alert('Planilha conectada com sucesso a este navegador!');
 }
 
 function fetchSilentData(url, isBackground = false) {
@@ -101,6 +129,7 @@ function fetchSilentData(url, isBackground = false) {
         .then(csvText => {
             if (csvText && csvText.trim().length > 0) {
                 parseCSVData(csvText);
+                hideSheetUrlNotice();
                 const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 updateStatusText(`Ao Vivo / Sincronizado às ${timeStr}`);
             }
