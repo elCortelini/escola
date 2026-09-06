@@ -121,33 +121,38 @@ function updateActiveFilterBadges() {
     const turnoBadge = document.getElementById('activeFilterBadge_Turno');
     const turmaBadge = document.getElementById('activeFilterBadge_Turma');
 
-    if (triBadge) {
-        const triMap = {
-            'ALL': 'Geral / Ano Completo',
-            'T1': '1º Trimestre (11/02 a 22/05)',
-            'T2': '2º Trimestre (26/05 a 04/09)',
-            'T3': '3º Trimestre (09/09 a 15/12)'
-        };
-        triBadge.innerText = triMap[currentTrimesterFilter] || 'Geral';
+    const triMap = {
+        'ALL': 'Geral / Ano Completo',
+        'T1': '1º Trimestre (11/02 a 22/05)',
+        'T2': '2º Trimestre (26/05 a 04/09)',
+        'T3': '3º Trimestre (09/09 a 15/12)'
+    };
+
+    const turnoMap = {
+        'ALL': 'Todos os Turnos',
+        'MATUTINO': '🌅 Turno Matutino (Manhã)',
+        'VESPERTINO': '🌇 Turno Vespertino (Tarde)'
+    };
+
+    const turmaMap = {
+        'ALL': 'Todas as Turmas',
+        '6': '🎓 6º Ano',
+        '7': '🎓 7º Ano',
+        '8': '🎓 8º Ano'
+    };
+
+    if (triBadge) triBadge.innerText = triMap[currentTrimesterFilter] || 'Geral';
+    if (turnoBadge) turnoBadge.innerText = turnoMap[currentTurnoFilter] || 'Todos os Turnos';
+    if (turmaBadge) turmaBadge.innerText = turmaMap[currentTurmaFilter] || 'Todas as Turmas';
+
+    const printSummaryEl = document.getElementById('printFilterSummary');
+    if (printSummaryEl) {
+        printSummaryEl.innerText = `${triMap[currentTrimesterFilter] || 'Geral'} | ${turnoMap[currentTurnoFilter] || 'Todos os Turnos'} | ${turmaMap[currentTurmaFilter] || 'Todas as Turmas'}`;
     }
 
-    if (turnoBadge) {
-        const turnoMap = {
-            'ALL': 'Todos os Turnos',
-            'MATUTINO': '🌅 Turno Matutino (Manhã)',
-            'VESPERTINO': '🌇 Turno Vespertino (Tarde)'
-        };
-        turnoBadge.innerText = turnoMap[currentTurnoFilter] || 'Todos os Turnos';
-    }
-
-    if (turmaBadge) {
-        const turmaMap = {
-            'ALL': 'Todas as Turmas',
-            '6': '🎓 6º Ano',
-            '7': '🎓 7º Ano',
-            '8': '🎓 8º Ano'
-        };
-        turmaBadge.innerText = turmaMap[currentTurmaFilter] || 'Todas as Turmas';
+    const printDateEl = document.getElementById('printDateStr');
+    if (printDateEl) {
+        printDateEl.innerText = `Emitido em: ${new Date().toLocaleDateString('pt-BR')}`;
     }
 }
 

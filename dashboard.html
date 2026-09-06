@@ -268,6 +268,18 @@
 
     <main class="container">
         
+        <!-- Print-Only Header Banner (Visível apenas na impressão/salvamento em PDF) -->
+        <div class="print-only-banner">
+            <div style="border-bottom: 2.5px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 18px;">
+                <h2 style="color: #0f172a; margin: 0; font-size: 1.6rem; font-weight: 800;">Centro Educacional Pedro Rizzi</h2>
+                <h4 style="color: #2563eb; margin: 4px 0 0 0; font-size: 1.15rem; font-weight: 700;">Relatório Analítico de Avaliação Escolar</h4>
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #1e293b; font-weight: 700; background: #f1f5f9; padding: 8px 14px; border-radius: 8px; border-left: 5px solid #d97706; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📌 <strong>Parâmetros Selecionados:</strong> <span id="printFilterSummary" style="color: #1e3a8a;">Geral / Ano Completo | Todos os Turnos | Todas as Turmas</span></span>
+                    <span style="font-weight: 600; color: #475569;" id="printDateStr">Emitido em: --/--/----</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Subheader Banner with Form Button, Live Badge & Instant Refresh Button -->
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:1.5rem; background:white; padding:1.2rem 1.8rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-color);">
             <div>
@@ -563,7 +575,7 @@
                         <th onclick="toggleHeaderSort('code')">Código <i id="sortIcon_code" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('title')">Aspecto Avaliado <i id="sortIcon_title" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('cat')">Categoria <i id="sortIcon_cat" class="fa-solid fa-sort sort-icon"></i></th>
-                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-sort sort-icon"></i></th>
+                        <th onclick="toggleHeaderSort('score')">Global <i id="sortIcon_score" class="fa-solid fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('p6')">6º Ano <i id="sortIcon_p6" class="fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('p7')">7º Ano <i id="sortIcon_p7" class="fa-sort sort-icon"></i></th>
                         <th onclick="toggleHeaderSort('p8')">8º Ano <i id="sortIcon_p8" class="fa-sort sort-icon"></i></th>

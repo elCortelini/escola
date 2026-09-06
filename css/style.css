@@ -681,10 +681,21 @@ footer p strong {
     font-weight: 700;
 }
 
+/* Banner de Cabeçalho Visível apenas no PDF Impresso */
+.print-only-banner {
+    display: none;
+}
+
 /* Print Styles */
 @media print {
-    .header-nav, footer, .top-worst-panel-card, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action { display: none !important; }
-    body { background: white; }
+    .print-only-banner { 
+        display: block !important;
+        margin-bottom: 20px;
+    }
+    .header-nav, footer, .top-worst-panel-card, .filter-panel-card, .btn-print-highlight, .b-live, .btn-form-action, .btn-refresh-sync { 
+        display: none !important; 
+    }
+    body { background: white; color: black; }
     .container { max-width: 100%; margin: 0; padding: 0; }
-    .chart-card, .table-card, .kpi-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+    .chart-card, .table-card, .kpi-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
 }
