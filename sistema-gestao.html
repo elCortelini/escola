@@ -274,10 +274,10 @@
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Quadro Semanal & Demandas da Supervisão Pedagógica
+                        <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Supervisão Pedagógica: Projetos, Cobrança Docente & Agenda
                     </h3>
                     <p style="font-size:0.85rem; color:#64748b;">
-                        Acompanhamento docente, conselhos de classe, capacitações e eventos de múltiplos dias.
+                        Acompanhamento de etapas de projetos, cobrança em 1-clique via WhatsApp, saídas de campo e agenda semanal.
                     </p>
                 </div>
 
@@ -289,23 +289,37 @@
                         <option value="Supervisora 2">💙 Supervisora 2</option>
                     </select>
 
-                    <!-- Alternador de Visão Semanal / Kanban -->
-                    <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
+                    <!-- Alternador de Visões da Supervisão -->
+                    <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1; flex-wrap:wrap;">
                         <button onclick="setSupViewMode('semanal')" class="view-toggle-btn sup-toggle-btn active" data-mode="semanal">
-                            <i class="fa-solid fa-calendar-week"></i> Quadro da Semana
+                            <i class="fa-solid fa-calendar-week"></i> Quadro Semanal
+                        </button>
+                        <button onclick="setSupViewMode('projetos')" class="view-toggle-btn sup-toggle-btn" data-mode="projetos">
+                            <i class="fa-solid fa-rocket" style="color:#8b5cf6;"></i> Projetos & Marcos
+                        </button>
+                        <button onclick="setSupViewMode('cobrancas')" class="view-toggle-btn sup-toggle-btn" data-mode="cobrancas">
+                            <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Central de Cobranças
+                        </button>
+                        <button onclick="setSupViewMode('eventos')" class="view-toggle-btn sup-toggle-btn" data-mode="eventos">
+                            <i class="fa-solid fa-bus" style="color:#059669;"></i> Saídas & Reuniões
                         </button>
                         <button onclick="setSupViewMode('kanban')" class="view-toggle-btn sup-toggle-btn" data-mode="kanban">
-                            <i class="fa-solid fa-bars-staggered"></i> Kanban de Status
+                            <i class="fa-solid fa-bars-staggered"></i> Kanban
                         </button>
                     </div>
 
-                    <button onclick="openDemandaSupervisaoModal()" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);">
-                        <i class="fa-solid fa-plus"></i> Novo Evento / Demanda
-                    </button>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="openDemandaSupervisaoModal()" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);" title="Novo Evento / Demanda">
+                            <i class="fa-solid fa-plus"></i> Novo Evento
+                        </button>
+                        <button onclick="openNovoProjetoModal()" class="btn btn-primary" style="width:auto; background:#7c3aed; border-color:#7c3aed;" title="Cadastrar Projeto Institucional">
+                            <i class="fa-solid fa-folder-plus"></i> + Projeto
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- CONTAINER VISÃO 1: QUADRO DA SEMANA DA SUPERVISÃO (Matutino & Vespertino, Multi-dias) -->
+            <!-- CONTAINER VISÃO 1: QUADRO DA SEMANA DA SUPERVISÃO -->
             <div id="supWeeklyViewContainer">
                 <div class="agenda-semanal-container" style="border-top:4px solid var(--supervisao-color);">
                     <div class="agenda-toolbar-header" style="background:linear-gradient(135deg, #475569 0%, #1e293b 100%);">
@@ -339,7 +353,83 @@
                 </div>
             </div>
 
-            <!-- CONTAINER VISÃO 2: KANBAN DE COLUNAS DE STATUS -->
+            <!-- CONTAINER VISÃO 2: GESTÃO DE PROJETOS INSTITUCIONAIS COM ETAPAS E MARCOS -->
+            <div id="supProjetosViewContainer" style="display:none; margin-top:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-rocket" style="color:#7c3aed;"></i> Projetos Institucionais & Marcos de Entregas</h4>
+                        <p style="font-size:0.82rem; color:#64748b;">Acompanhe sub-etapas, farol de status, responsável e checklist pré-evento.</p>
+                    </div>
+                    <button onclick="openNovoProjetoModal()" class="btn btn-primary" style="width:auto; background:#7c3aed; border-color:#7c3aed;">
+                        <i class="fa-solid fa-plus"></i> Criar Novo Projeto
+                    </button>
+                </div>
+                <div id="supProjetosListContainer" style="display:flex; flex-direction:column; gap:1.2rem;">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            <!-- CONTAINER VISÃO 3: CENTRAL DE COBRANÇA DOCENTE (WHATSAPP 1-CLIQUE) -->
+            <div id="supCobrancasViewContainer" style="display:none; margin-top:1rem;">
+                <div style="background:white; border-radius:16px; padding:1.5rem; border:1px solid #cbd5e1; box-shadow:var(--shadow-sm); margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
+                        <div>
+                            <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Central de Cobranças Docentes & Lembretes WhatsApp</h4>
+                            <p style="font-size:0.82rem; color:#64748b;">Dispare avisos e cobranças diretas aos professores responsáveis em 1-clique.</p>
+                        </div>
+                    </div>
+
+                    <!-- KPIs de Cobrança -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:1.5rem;">
+                        <div style="background:#fef2f2; border:1px solid #fecdd3; padding:1rem; border-radius:14px;">
+                            <div style="font-size:0.75rem; font-weight:700; color:#be123c;">ETAPAS ATRASADAS</div>
+                            <div id="kpiCobrancasAtrasadas" style="font-size:1.8rem; font-weight:900; color:#991b1b; margin-top:4px;">0</div>
+                        </div>
+                        <div style="background:#fffbeb; border:1px solid #fde68a; padding:1rem; border-radius:14px;">
+                            <div style="font-size:0.75rem; font-weight:700; color:#b45309;">VENCENDO EM 3 DIAS</div>
+                            <div id="kpiCobrancasProximas" style="font-size:1.8rem; font-weight:900; color:#92400e; margin-top:4px;">0</div>
+                        </div>
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:1rem; border-radius:14px;">
+                            <div style="font-size:0.75rem; font-weight:700; color:#15803d;">ENTREGAS CONCLUÍDAS</div>
+                            <div id="kpiCobrancasConcluidas" style="font-size:1.8rem; font-weight:900; color:#166534; margin-top:4px;">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Tarefas Docentes a Cobrar -->
+                    <div id="supCobrancasTableContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER VISÃO 4: SAÍDAS DE CAMPO & REUNIÕES PEDAGÓGICAS -->
+            <div id="supEventosViewContainer" style="display:none; margin-top:1rem;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                    <!-- Coluna 1: Aulas Passeio / Saídas de Campo -->
+                    <div style="background:white; border-radius:16px; padding:1.5rem; border:1px solid #cbd5e1; box-shadow:var(--shadow-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h4 style="font-size:1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-bus" style="color:#059669;"></i> Saídas de Campo & Aulas Passeio</h4>
+                            <button onclick="openNovaAtividadeExternaModal()" class="btn-sec" style="background:#059669; color:white; font-size:0.78rem; padding:4px 10px;">+ Saída</button>
+                        </div>
+                        <div id="supSaidasCampoListContainer" style="display:flex; flex-direction:column; gap:10px;">
+                            <!-- Rendered via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Coluna 2: Reuniões Pedagógicas & HATP -->
+                    <div style="background:white; border-radius:16px; padding:1.5rem; border:1px solid #cbd5e1; box-shadow:var(--shadow-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h4 style="font-size:1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-users-gear" style="color:#2563eb;"></i> Reuniões Pedagógicas & HATP</h4>
+                            <button onclick="openNovaReuniaoModal()" class="btn-sec" style="background:#2563eb; color:white; font-size:0.78rem; padding:4px 10px;">+ Reunião</button>
+                        </div>
+                        <div id="supReunioesListContainer" style="display:flex; flex-direction:column; gap:10px;">
+                            <!-- Rendered via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER VISÃO 5: KANBAN DE COLUNAS DE STATUS -->
             <div id="supListViewContainer" style="display:none; margin-top:1rem;">
                 <div class="demandas-columns" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
                     <div class="demanda-column">
@@ -1071,6 +1161,208 @@
             <div style="display:flex; justify-content:flex-end;">
                 <button type="button" onclick="closeDetalhesDemandaSupervisaoModal()" class="btn btn-secondary" style="width:auto;">Fechar Detalhes</button>
             </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL: CRIAR NOVO PROJETO INSTITUCIONAL -->
+    <!-- ========================================== -->
+    <div id="modalNovoProjetoSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-rocket" style="color:#7c3aed;"></i> Cadastrar Projeto Institucional
+                </h3>
+                <button onclick="closeNovoProjetoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitNovoProjetoSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome / Título do Projeto:</label>
+                    <input type="text" id="projInputTitulo" required placeholder="Ex: 1ª Feira de Ciências e Robótica" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria / Tipo:</label>
+                        <select id="projInputCategoria" class="search-input" style="width:100%;">
+                            <option value="Feira de Ciências">🔬 Feira de Ciências / Tecnologia</option>
+                            <option value="Projeto Leitura">📖 Projeto Leitura / Literatura</option>
+                            <option value="Feira Cultural / Artes">🎨 Feira Cultural / Artes</option>
+                            <option value="Jogos Escolares / Educação Física">🏆 Jogos Escolares / Esportes</option>
+                            <option value="Meio Ambiente & Sustentabilidade">🌱 Meio Ambiente / Horta</option>
+                            <option value="Projeto Interdisciplinar">🌐 Projeto Interdisciplinar Geral</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisora Líder:</label>
+                        <select id="projInputLider" class="search-input" style="width:100%; font-weight:700;">
+                            <option value="Supervisora 1">💙 Supervisora 1</option>
+                            <option value="Supervisora 2">💙 Supervisora 2</option>
+                            <option value="Equipe Supervisão">🌐 Equipe Supervisão</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Início:</label>
+                        <input type="date" id="projInputDataInicio" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data do Evento Final / Entrega:</label>
+                        <input type="date" id="projInputDataFim" required class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores Envolvidos (Separados por vírgula):</label>
+                    <input type="text" id="projInputProfessores" required placeholder="Ex: Prof. Ricardo (Ciências), Profª Maria (Artes)" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Objetivo & Descrição Geral:</label>
+                    <textarea id="projInputDescricao" required rows="3" placeholder="Descreva os objetivos principais do projeto..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeNovoProjetoModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#7c3aed; border-color:#7c3aed;">Cadastrar Projeto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL: CADASTRAR NOVA ATIVIDADE EXTERNA / SAÍDA DE CAMPO -->
+    <!-- ========================================== -->
+    <div id="modalNovaAtividadeExternaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:580px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-bus" style="color:#059669;"></i> Nova Saída de Campo / Aula Passeio
+                </h3>
+                <button onclick="closeNovaAtividadeExternaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitNovaAtividadeExternaSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome da Atividade Externa:</label>
+                    <input type="text" id="extInputTitulo" required placeholder="Ex: Visita ao Museu Oceanográfico" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Destino / Local:</label>
+                    <input type="text" id="extInputDestino" required placeholder="Ex: Museu Oceanográfico Univali - Piçarras" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
+                        <input type="date" id="extInputData" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Saída:</label>
+                        <input type="time" id="extInputHorarioSaida" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Retorno:</label>
+                        <input type="time" id="extInputHorarioRetorno" required class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas Envolvidas:</label>
+                        <input type="text" id="extInputTurmas" required placeholder="Ex: 7º Anos A e B" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Total de Alunos:</label>
+                        <input type="number" id="extInputTotalAlunos" required placeholder="50" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores Acompanhantes:</label>
+                    <input type="text" id="extInputProfessores" required placeholder="Ex: Prof. Ricardo, Profª Carla" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Transporte Contratado / Apoio Logístico:</label>
+                    <input type="text" id="extInputTransporte" placeholder="Ex: 2 Ônibus de Turismo da Empresa X" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeNovaAtividadeExternaModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#059669; border-color:#059669;">Salvar Saída de Campo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL: AGENDAR NOVA REUNIÃO PEDAGÓGICA -->
+    <!-- ========================================== -->
+    <div id="modalNovaReuniaoPedagogica" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:550px; width:92%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-users-gear" style="color:#2563eb;"></i> Agendar Reunião Pedagógica / HATP
+                </h3>
+                <button onclick="closeNovaReuniaoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitNovaReuniaoPedagogica(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Reunião / Pauta Principal:</label>
+                    <input type="text" id="reunInputTitulo" required placeholder="Ex: HATP - Alinhamento Trimestral de Notas" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Tipo de Reunião:</label>
+                        <select id="reunInputTipo" class="search-input" style="width:100%;">
+                            <option value="HATP / Formação">HATP / Formação Docente</option>
+                            <option value="Reunião de Área">Reunião de Área / Disciplinas</option>
+                            <option value="Alinhamento Individual">Alinhamento Individual Docente</option>
+                            <option value="Conselho Preparatório">Conselho Preparatório</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Local:</label>
+                        <input type="text" id="reunInputLocal" required placeholder="Ex: Auditório / Sala de Reuniões" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data da Reunião:</label>
+                        <input type="date" id="reunInputData" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
+                        <input type="time" id="reunInputHorario" required class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores / Participantes Convocados:</label>
+                    <input type="text" id="reunInputParticipantes" required placeholder="Ex: Todos os Professores de Ciências e Exatas" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Pauta & Assuntos:</label>
+                    <textarea id="reunInputPauta" required rows="3" placeholder="Descreva os tópicos que serão abordados..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeNovaReuniaoModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#2563eb; border-color:#2563eb;">Salvar Reunião</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -131,6 +131,89 @@ const defaultSigeData = {
         }
     ],
 
+    projetosSupervisao: [
+        {
+            id: "proj-101",
+            titulo: "🔬 1ª Feira de Ciências e Inovação Rizzi",
+            categoria: "Feira de Ciências",
+            descricao: "Apresentação de trabalhos científicos e experimentos práticos dos alunos do 6º ao 9º ano.",
+            dataInicio: "2026-09-01",
+            dataFim: "2026-10-15",
+            responsavelLider: "Supervisora 1",
+            professoresEnvolvidos: "Prof. Ricardo (Ciências), Profª Maria (Física), Prof. Lucas (Robótica)",
+            status: "atencao", // em_dia, atencao, atrasado, concluido
+            etapas: [
+                { id: "e-1", titulo: "Definição dos temas pelas turmas", dataLimite: "2026-09-10", responsavel: "Prof. Ricardo", concluido: true },
+                { id: "e-2", titulo: "Entrega da lista de materiais de consumo para a Secretaria", dataLimite: "2026-09-15", responsavel: "Profª Maria", concluido: false },
+                { id: "e-3", titulo: "Ensaio geral de apresentação nos estandes", dataLimite: "2026-10-08", responsavel: "Prof. Lucas", concluido: false }
+            ],
+            checklistPreEvento: [
+                { item: "Som e Microfones testados na Quadra", concluido: false },
+                { item: "Mesas e bancadas organizadas por turma", concluido: true },
+                { item: "Convite aos pais enviado no WhatsApp", concluido: true },
+                { item: "Certificados impressos para premiação", concluido: false }
+            ]
+        },
+        {
+            id: "proj-102",
+            titulo: "📖 Projeto Maratona de Leitura & Poesia",
+            categoria: "Projeto Leitura",
+            descricao: "Incentivo à leitura literária com feira do livro e récitas de poesia.",
+            dataInicio: "2026-09-05",
+            dataFim: "2026-09-30",
+            responsavelLider: "Supervisora 2",
+            professoresEnvolvidos: "Profª Carmen (Português), Profª Juliana (Artes)",
+            status: "em_dia",
+            etapas: [
+                { id: "e-21", titulo: "Seleção do acervo literário com os alunos", dataLimite: "2026-09-12", responsavel: "Profª Carmen", concluido: true },
+                { id: "e-22", titulo: "Confecção dos cenários no Ateliê de Artes", dataLimite: "2026-09-22", responsavel: "Profª Juliana", concluido: false }
+            ],
+            checklistPreEvento: [
+                { item: "Livros expostos no pátio central", concluido: true },
+                { item: "Roteiro das apresentações poéticas finalizado", concluido: false }
+            ]
+        }
+    ],
+
+    atividadesExternasSupervisao: [
+        {
+            id: "ext-301",
+            titulo: "🚌 Aula Passeio ao Museu Oceanográfico de Piçarras",
+            destino: "Museu Oceanográfico Univali - Balneário Piçarras / SC",
+            data: "2026-09-25",
+            horarioSaida: "07:30",
+            horarioRetorno: "12:00",
+            responsavel: "Supervisora 1",
+            professoresAcompanhantes: "Prof. Ricardo (Ciências), Profª Carla (Geografia)",
+            turmasEnvolvidas: "7º Ano A e 7º Ano B",
+            transporteContratado: "Viação Catarinense - 2 Ônibus Executivos",
+            autorizacoesAssinadas: 48,
+            totalAlunos: 52,
+            checklistLogistica: [
+                { item: "Contrato de Ônibus Assinado e Pago", concluido: true },
+                { item: "Autorização dos Pais Coletada (Recepção)", concluido: true },
+                { item: "Kit Primeiros Socorros Preparado", concluido: false },
+                { item: "Lanche de Campo Embalado pela Cozinha", concluido: false }
+            ]
+        }
+    ],
+
+    reunioesPedagogicasSupervisao: [
+        {
+            id: "reun-401",
+            titulo: "📌 HATP: Alinhamento de Avaliações do 3º Trimestre",
+            tipo: "HATP / Formação",
+            data: "2026-09-17",
+            horario: "18:00",
+            local: "Auditório Principal",
+            pauta: "Discutir critérios de elaboração de provas, prazos de digitação e recuperação paralela.",
+            responsavel: "Supervisora 1 & Supervisora 2",
+            participantes: "Todos os Professores do Fundamental II",
+            confirmadosCount: 14,
+            totalConvocados: 18
+        }
+    ],
+
     demandasAdmin: [
         {
             id: "adm-301",
@@ -493,6 +576,86 @@ class SigeDatabase {
             d.status = status;
             this.saveData(this.data);
         }
+    }
+
+    // Projetos Institucionais da Supervisão
+    getProjetosSupervisao() {
+        if (!this.data.projetosSupervisao || !Array.isArray(this.data.projetosSupervisao)) {
+            this.data.projetosSupervisao = defaultSigeData.projetosSupervisao || [];
+            this.saveData(this.data);
+        }
+        return this.data.projetosSupervisao;
+    }
+
+    addProjetoSupervisao(proj) {
+        proj.id = "proj-" + Date.now();
+        if (!proj.etapas) proj.etapas = [];
+        if (!proj.checklistPreEvento) proj.checklistPreEvento = [];
+        if (!proj.status) proj.status = "em_dia";
+        if (!this.data.projetosSupervisao) this.data.projetosSupervisao = [];
+        this.data.projetosSupervisao.unshift(proj);
+        this.saveData(this.data);
+        return proj;
+    }
+
+    toggleEtapaProjetoSupervisao(projId, etapaId) {
+        const p = (this.getProjetosSupervisao()).find(item => item.id === projId);
+        if (p && p.etapas) {
+            const et = p.etapas.find(e => e.id === etapaId);
+            if (et) et.concluido = !et.concluido;
+            this.saveData(this.data);
+        }
+    }
+
+    toggleChecklistProjetoSupervisao(projId, index) {
+        const p = (this.getProjetosSupervisao()).find(item => item.id === projId);
+        if (p && p.checklistPreEvento && p.checklistPreEvento[index]) {
+            p.checklistPreEvento[index].concluido = !p.checklistPreEvento[index].concluido;
+            this.saveData(this.data);
+        }
+    }
+
+    // Atividades Externas / Aulas Passeio
+    getAtividadesExternasSupervisao() {
+        if (!this.data.atividadesExternasSupervisao || !Array.isArray(this.data.atividadesExternasSupervisao)) {
+            this.data.atividadesExternasSupervisao = defaultSigeData.atividadesExternasSupervisao || [];
+            this.saveData(this.data);
+        }
+        return this.data.atividadesExternasSupervisao;
+    }
+
+    addAtividadeExternaSupervisao(act) {
+        act.id = "ext-" + Date.now();
+        if (!act.checklistLogistica) act.checklistLogistica = [];
+        if (!this.data.atividadesExternasSupervisao) this.data.atividadesExternasSupervisao = [];
+        this.data.atividadesExternasSupervisao.unshift(act);
+        this.saveData(this.data);
+        return act;
+    }
+
+    toggleChecklistAtividadeExterna(actId, index) {
+        const a = (this.getAtividadesExternasSupervisao()).find(item => item.id === actId);
+        if (a && a.checklistLogistica && a.checklistLogistica[index]) {
+            a.checklistLogistica[index].concluido = !a.checklistLogistica[index].concluido;
+            this.saveData(this.data);
+        }
+    }
+
+    // Reuniões Pedagógicas & HATP
+    getReunioesPedagogicasSupervisao() {
+        if (!this.data.reunioesPedagogicasSupervisao || !Array.isArray(this.data.reunioesPedagogicasSupervisao)) {
+            this.data.reunioesPedagogicasSupervisao = defaultSigeData.reunioesPedagogicasSupervisao || [];
+            this.saveData(this.data);
+        }
+        return this.data.reunioesPedagogicasSupervisao;
+    }
+
+    addReuniaoPedagogicaSupervisao(reun) {
+        reun.id = "reun-" + Date.now();
+        if (!this.data.reunioesPedagogicasSupervisao) this.data.reunioesPedagogicasSupervisao = [];
+        this.data.reunioesPedagogicasSupervisao.unshift(reun);
+        this.saveData(this.data);
+        return reun;
     }
 
     // Demandas Administração
