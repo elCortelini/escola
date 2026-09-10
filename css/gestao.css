@@ -440,6 +440,7 @@
 }
 
 .status-pendente { background: #fef3c7; color: #92400e; }
+.status-aguardando { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; font-weight: 900; animation: pulse 2s infinite; }
 .status-realizado { background: #dcfce7; color: #166534; }
 .status-ausente { background: #fee2e2; color: #991b1b; }
 .status-cancelado { background: #e2e8f0; color: #475569; }

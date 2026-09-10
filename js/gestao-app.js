@@ -348,7 +348,16 @@ function updateModalWhatsAppPreview() {
 }
 
 function renderModuleOrientacaoPedagogica() {
-    const todosAtendimentos = sigeDB.getAgendamentosOP();
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
+
+    const todosAtendimentos = sigeDB.getAgendamentosOP().filter(a => {
+        if (filterOrientadora !== "todas" && a.orientadora && a.orientadora !== filterOrientadora) {
+            return false;
+        }
+        return true;
+    });
+
     const weekDays = getWeekDays(currentWeekRefDate);
 
     // Atualiza contadores para o dia de hoje
@@ -431,13 +440,13 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                         const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                         return `
                             <td class="${d.isToday ? 'today-column-cell' : ''}">
-                                <div class="weekly-slot-card ${item.tipo}">
+                                <div class="weekly-slot-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos">
                                     <div class="weekly-slot-header">
                                         <span class="weekly-student-name">${item.aluno}</span>
                                         <span class="weekly-class-badge">${item.turma}</span>
                                     </div>
-                                    <div style="font-size:0.75rem; color:#64748b;">
-                                        <i class="fa-regular fa-user"></i> ${item.responsavel}
+                                    <div style="font-size:0.73rem; color:#1e3a8a; font-weight:700;">
+                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || 'OP'}
                                     </div>
                                     <div class="weekly-motive" title="${item.motivo}">
                                         "${item.motivo}"
@@ -450,7 +459,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                     </div>
 
                                     <!-- Botão WhatsApp Direto no Card -->
-                                    <a href="${waUrl}" target="_blank" class="btn-wa-compact">
+                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
                                         <i class="fa-brands fa-whatsapp"></i> Chamar WhatsApp
                                     </a>
                                 </div>
@@ -494,18 +503,22 @@ function renderCardsView(todosAtendimentos) {
     }
 
     const role = sigeDB.getRole();
-    const canSecretariaValidate = ["secretaria", "admin", "direcao", "orientacao"].includes(role);
+    const isSecretaria = ["secretaria", "admin", "direcao"].includes(role);
+    const isOrientadora = ["orientacao", "admin", "direcao"].includes(role);
 
     container.innerHTML = filtrados.map(a => {
         const waUrl = getWhatsAppUrl(a.telefone, a.aluno, a.responsavel, a.data, a.horario);
 
         return `
-            <div class="op-card">
+            <div class="op-card" onclick="openDetalhesModal('${a.id}')" style="cursor:pointer;">
                 <div>
                     <div class="op-card-header">
                         <div>
                             <div class="op-patient-name">${a.aluno}</div>
-                            <div class="op-meta-sub"><i class="fa-solid fa-graduation-cap"></i> ${a.turma} • <i class="fa-regular fa-user"></i> ${a.responsavel}</div>
+                            <div class="op-meta-sub">
+                                <i class="fa-solid fa-graduation-cap"></i> ${a.turma} • <i class="fa-regular fa-user"></i> ${a.responsavel}
+                                <br><strong style="color:#1e3a8a;"><i class="fa-solid fa-user-gear"></i> ${a.orientadora || 'Orientação'}</strong>
+                            </div>
                         </div>
                         <span class="op-type-tag ${a.tipo}">${a.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>
                     </div>
@@ -517,17 +530,17 @@ function renderCardsView(todosAtendimentos) {
                         </div>
                         
                         ${a.telefone ? `
-                            <a href="${waUrl}" target="_blank" class="btn-whatsapp-direct">
+                            <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-whatsapp-direct">
                                 <i class="fa-brands fa-whatsapp"></i> 💬 Abrir WhatsApp do Responsável (${a.telefone})
                             </a>
                         ` : ''}
                     </div>
                 </div>
 
-                <!-- Painel da Secretaria para confirmação -->
-                <div class="op-secretaria-box">
+                <!-- Painel da Secretaria & Orientadoras para confirmação -->
+                <div class="op-secretaria-box" onclick="event.stopPropagation();">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem; font-weight:700; color:#475569;"><i class="fa-solid fa-user-check"></i> Controle Secretaria:</span>
+                        <span style="font-size:0.75rem; font-weight:700; color:#475569;"><i class="fa-solid fa-user-check"></i> Status Recepção:</span>
                         <span class="secretaria-status-badge status-${a.statusSecretaria}">
                             ${getSecretariaBadgeText(a.statusSecretaria)}
                         </span>
@@ -539,16 +552,22 @@ function renderCardsView(todosAtendimentos) {
                         </div>
                     ` : ''}
 
-                    ${canSecretariaValidate ? `
-                        <div class="secretaria-action-btns">
-                            <button onclick="updateSecretariaOK('${a.id}', 'realizado')" class="btn-sec btn-sec-ok">
-                                <i class="fa-solid fa-check"></i> OK Realizado
+                    <div class="secretaria-action-btns" style="flex-wrap:wrap; margin-top:8px;">
+                        ${isSecretaria ? `
+                            <button onclick="detalhesMudarStatus('aguardando', '${a.id}')" class="btn-sec" style="background:#f59e0b; color:white;">
+                                ⏳ Chegou / Aguardando
                             </button>
-                            <button onclick="updateSecretariaOK('${a.id}', 'ausente')" class="btn-sec btn-sec-fail">
-                                <i class="fa-solid fa-xmark"></i> Não Veio
+                        ` : ''}
+
+                        ${isOrientadora ? `
+                            <button onclick="detalhesMudarStatus('realizado', '${a.id}')" class="btn-sec btn-sec-ok">
+                                ✅ Atendido
                             </button>
-                        </div>
-                    ` : ''}
+                            <button onclick="detalhesMudarStatus('ausente', '${a.id}')" class="btn-sec btn-sec-fail">
+                                ❌ Não Veio
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -575,21 +594,107 @@ function updateTurnoCounters(atendimentosDia) {
 
 function getSecretariaBadgeText(status) {
     const map = {
-        pendente: "⏳ Aguardando OK",
-        realizado: "✅ Atendido / Realizado",
+        pendente: "⏳ Pendente",
+        aguardando: "🔔 Chegou / Aguardando",
+        realizado: "✅ Atendido",
         ausente: "❌ Ausente / Não Veio",
         cancelado: "🚫 Cancelado"
     };
     return map[status] || status;
 }
 
-function updateSecretariaOK(id, status) {
-    const obsPrompt = prompt("Anotação opcional da Secretaria para este atendimento:", "");
-    sigeDB.updateSecretariaStatusOP(id, status, obsPrompt || "");
+let currentDetailAppointmentId = null;
+
+function openDetalhesModal(id) {
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
+    if (!ag) return;
+
+    currentDetailAppointmentId = id;
+
+    document.getElementById("detalhesAlunoNome").innerText = ag.aluno;
+    document.getElementById("detalhesTurmaBadge").innerText = ag.turma;
+    document.getElementById("detalhesResponsavelNome").innerText = ag.responsavel;
+    document.getElementById("detalhesOrientadora").innerText = ag.orientadora || "Orientação Pedagógica";
+    document.getElementById("detalhesDataHorario").innerText = `${formatDateBR(ag.data)} às ${ag.horario} (${ag.turno.toUpperCase()})`;
+    
+    document.getElementById("detalhesTipoVaga").innerHTML = `<span class="op-type-tag ${ag.tipo}">${ag.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>`;
+    document.getElementById("detalhesStatusBadge").innerHTML = `<span class="secretaria-status-badge status-${ag.statusSecretaria}">${getSecretariaBadgeText(ag.statusSecretaria)}</span>`;
+
+    const waBtn = document.getElementById("detalhesWaBtn");
+    const waText = document.getElementById("detalhesTelefoneText");
+    if (waBtn && waText) {
+        waText.innerText = ag.telefone || "Sem telefone";
+        waBtn.href = getWhatsAppUrl(ag.telefone, ag.aluno, ag.responsavel, ag.data, ag.horario);
+    }
+
+    document.getElementById("detalhesMotivoText").innerText = ag.motivo;
+
+    const obsBox = document.getElementById("detalhesObsBox");
+    const obsText = document.getElementById("detalhesObsText");
+    if (obsBox && obsText) {
+        if (ag.obsSecretaria || ag.chegadaEm) {
+            let info = ag.obsSecretaria ? `"${ag.obsSecretaria}"` : "";
+            if (ag.chegadaEm) {
+                const hor = ag.chegadaEm.split("T")[1]?.substring(0, 5) || "";
+                info += ` (Chegou na recepção às ${hor})`;
+            }
+            obsText.innerText = info;
+            obsBox.style.display = "block";
+        } else {
+            obsBox.style.display = "none";
+        }
+    }
+
+    // Visibilidade dos botões conforme o perfil
+    const role = sigeDB.getRole();
+    const btnAguardando = document.getElementById("btnAcaoAguardando");
+    const btnAtendido = document.getElementById("btnAcaoAtendido");
+    const btnNaoVeio = document.getElementById("btnAcaoNaoVeio");
+
+    if (btnAguardando) btnAguardando.style.display = ["secretaria", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
+    if (btnAtendido) btnAtendido.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
+    if (btnNaoVeio) btnNaoVeio.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
+
+    document.getElementById("modalDetalhesOP").style.display = "flex";
+}
+
+function closeDetalhesModal() {
+    const modal = document.getElementById("modalDetalhesOP");
+    if (modal) modal.style.display = "none";
+    currentDetailAppointmentId = null;
+}
+
+function detalhesMudarStatus(newStatus, customId = null) {
+    const id = customId || currentDetailAppointmentId;
+    if (!id) return;
+
+    let obsPrompt = "";
+    let chegadaEm = null;
+
+    if (newStatus === "aguardando") {
+        chegadaEm = new Date().toISOString();
+        obsPrompt = prompt("Anotação opcional da Secretaria (ex: Mãe aguarda no hall):", "Chegou na recepção.");
+    } else {
+        obsPrompt = prompt("Anotação opcional sobre o atendimento:", "");
+    }
+
+    sigeDB.updateSecretariaStatusOP(id, newStatus, obsPrompt || "", chegadaEm);
+
     renderModuleOrientacaoPedagogica();
     updateBadgesCounts();
     renderNotifications();
-    showToast("Status de atendimento atualizado pela Secretaria!");
+
+    if (newStatus === "aguardando") {
+        showToast("🔔 Aluno marcado como AGUARDANDO. Orientadora foi notificada!");
+    } else if (newStatus === "realizado") {
+        showToast("✅ Atendimento concluído pela Orientadora!");
+    } else if (newStatus === "ausente") {
+        showToast("❌ Marcado como NÃO VEIO / Ausente.");
+    }
+
+    if (currentDetailAppointmentId === id) {
+        openDetalhesModal(id);
+    }
 }
 
 // MODAL AGENDAMENTO OP
@@ -617,6 +722,7 @@ function submitAgendamentoOP(e) {
     const turma = document.getElementById("opInputTurma").value;
     const responsavel = document.getElementById("opInputResponsavel").value;
     const telefone = document.getElementById("opInputTelefone").value;
+    const orientadora = document.getElementById("opInputOrientadora").value;
     const data = document.getElementById("opInputData").value;
     const horario = document.getElementById("opInputHorario").value;
     const turno = document.getElementById("opInputTurno").value;
@@ -625,7 +731,7 @@ function submitAgendamentoOP(e) {
 
     try {
         sigeDB.addAgendamentoOP({
-            aluno, turma, responsavel, telefone, data, horario, turno, tipo, motivo,
+            aluno, turma, responsavel, telefone, orientadora, data, horario, turno, tipo, motivo,
             statusSecretaria: "pendente",
             obsSecretaria: "",
             registradoPor: getRoleLabel(sigeDB.getRole())

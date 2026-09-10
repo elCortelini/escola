@@ -15,12 +15,13 @@ const defaultSigeData = {
             turma: "7º Ano A",
             responsavel: "Mariana Santos (Mãe)",
             telefone: "47998877665",
+            orientadora: "Orientadora 1 (Carmen)",
             data: "2026-09-10",
             horario: "08:30",
             turno: "matutino", // matutino ou vespertino
             tipo: "agendado", // agendado ou emergencial
             motivo: "Acompanhamento de rendimento escolar em Matemática e assiduidade.",
-            statusSecretaria: "realizado", // pendente, realizado, ausente, cancelado
+            statusSecretaria: "realizado", // pendente, aguardando, realizado, ausente, cancelado
             obsSecretaria: "Mãe compareceu pontualmente. Atendido pela orientadora Carmen.",
             registradoPor: "Secretaria",
             criadoEm: "2026-09-09T10:00:00"
@@ -31,13 +32,15 @@ const defaultSigeData = {
             turma: "8º Ano B",
             responsavel: "Roberto Lima (Pai)",
             telefone: "47991234567",
+            orientadora: "Orientadora 2 (Luciana)",
             data: "2026-09-10",
             horario: "10:00",
             turno: "matutino",
             tipo: "agendado",
             motivo: "Conflito interpessoal durante o intervalo de aulas.",
-            statusSecretaria: "pendente",
-            obsSecretaria: "",
+            statusSecretaria: "aguardando",
+            chegadaEm: "2026-09-10T09:55:00",
+            obsSecretaria: "Pai chegou na recepção e aguarda atendimento.",
             registradoPor: "Orientação",
             criadoEm: "2026-09-09T14:30:00"
         },
@@ -47,6 +50,7 @@ const defaultSigeData = {
             turma: "6º Ano C",
             responsavel: "Carla Oliveira (Mãe)",
             telefone: "47988332211",
+            orientadora: "Orientadora 1 (Carmen)",
             data: "2026-09-10",
             horario: "11:00",
             turno: "matutino",
@@ -63,6 +67,7 @@ const defaultSigeData = {
             turma: "8º Ano A",
             responsavel: "Juliana Vinicius",
             telefone: "47997711223",
+            orientadora: "Orientadora 2 (Luciana)",
             data: "2026-09-10",
             horario: "14:00",
             turno: "vespertino",
@@ -271,11 +276,12 @@ class SigeDatabase {
         return agendamento;
     }
 
-    updateSecretariaStatusOP(id, status, obs = "") {
+    updateSecretariaStatusOP(id, status, obs = "", chegadaEm = null) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
         if (ag) {
             ag.statusSecretaria = status;
             if (obs) ag.obsSecretaria = obs;
+            if (chegadaEm) ag.chegadaEm = chegadaEm;
             this.saveData(this.data);
         }
     }
@@ -372,6 +378,18 @@ class SigeDatabase {
                     time: `Turno ${e.turno.toUpperCase()}`,
                     targetTab: "op",
                     unread: !this.data.notificacoesLidas.includes(`notif-op-${e.id}`)
+                });
+            });
+
+            const aguardandoHoje = this.getAgendamentosOP().filter(a => a.statusSecretaria === "aguardando");
+            aguardandoHoje.forEach(a => {
+                list.push({
+                    id: `notif-wait-${a.id}`,
+                    title: `🔔 Aluno Aguardando na Recepção!`,
+                    desc: `${a.aluno} (${a.turma}) chegou e aguarda (${a.orientadora || 'Orientação'}).`,
+                    time: a.chegadaEm ? `Chegou às ${a.chegadaEm.split("T")[1]?.substring(0,5) || ''}` : "Recepção",
+                    targetTab: "op",
+                    unread: !this.data.notificacoesLidas.includes(`notif-wait-${a.id}`)
                 });
             });
         }

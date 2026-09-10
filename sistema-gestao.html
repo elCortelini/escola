@@ -152,11 +152,18 @@
                         <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Agenda da Orientação Pedagógica (OP)
                     </h3>
                     <p style="font-size:0.85rem; color:#64748b;">
-                        Controle estrito: <strong>3 agendados + 1 emergencial por turno</strong>. Clique em 💬 nos cartões para abrir o WhatsApp do pai/responsável.
+                        Controle estrito: <strong>3 agendados + 1 emergencial por turno</strong>. Clique em qualquer agendamento para ver detalhes completos!
                     </p>
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Seletor da Orientadora (Consolidada vs Individual) -->
+                    <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd;">
+                        <option value="todas">🌐 Visão Consolidada (Ambas Orientadoras)</option>
+                        <option value="Orientadora 1 (Carmen)">💛 Orientadora 1 (Carmen)</option>
+                        <option value="Orientadora 2 (Luciana)">💛 Orientadora 2 (Luciana)</option>
+                    </select>
+
                     <!-- Alternador de Visão Semanal / Cards -->
                     <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
                         <button onclick="setOpViewMode('semanal')" class="view-toggle-btn active" data-mode="semanal">
@@ -490,6 +497,14 @@
                 </div>
 
                 <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Responsável:</label>
+                    <select id="opInputOrientadora" class="search-input" style="width:100%;">
+                        <option value="Orientadora 1 (Carmen)">💛 Orientadora 1 (Carmen)</option>
+                        <option value="Orientadora 2 (Luciana)">💛 Orientadora 2 (Luciana)</option>
+                    </select>
+                </div>
+
+                <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo / O que vai ser tratado:</label>
                     <textarea id="opInputMotivo" required rows="3" placeholder="Descreva detalhadamente o motivo da reunião..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
@@ -499,6 +514,102 @@
                     <button type="submit" class="btn btn-primary" style="width:auto;">Salvar Agendamento</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL DETALHES DO AGENDAMENTO OP -->
+    <!-- ========================================== -->
+    <div id="modalDetalhesOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <h3 id="detalhesAlunoNome" style="color:#0f172a; font-weight:900; font-size:1.3rem;">Nome do Aluno</h3>
+                        <span id="detalhesTurmaBadge" class="weekly-class-badge">Turma</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:#64748b; margin-top:2px;">
+                        <i class="fa-solid fa-user"></i> Responsável: <strong id="detalhesResponsavelNome">-</strong>
+                    </p>
+                </div>
+                <button onclick="closeDetalhesModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Informações Principais -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">ORIENTADORA DESIGNADA</div>
+                    <div id="detalhesOrientadora" style="font-weight:800; color:#1e3a8a; font-size:0.9rem; margin-top:2px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">DATA & HORÁRIO</div>
+                    <div id="detalhesDataHorario" style="font-weight:800; color:#0f172a; font-size:0.9rem; margin-top:2px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">TIPO DE VAGA</div>
+                    <div id="detalhesTipoVaga" style="margin-top:4px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">STATUS RECEPÇÃO / SECRETARIA</div>
+                    <div id="detalhesStatusBadge" style="margin-top:4px;">-</div>
+                </div>
+            </div>
+
+            <!-- Botão WhatsApp Direto -->
+            <div style="margin-bottom:1.2rem;">
+                <a id="detalhesWaBtn" href="#" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.92rem;">
+                    <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> 💬 Abrir WhatsApp do Responsável (<span id="detalhesTelefoneText">-</span>)
+                </a>
+            </div>
+
+            <!-- Motivo detalhado -->
+            <div style="margin-bottom:1.2rem;">
+                <label style="font-weight:800; font-size:0.88rem; color:#0f172a;"><i class="fa-solid fa-align-left"></i> Motivo / Assunto a ser Tratado:</label>
+                <div id="detalhesMotivoText" style="background:#f1f5f9; padding:12px; border-radius:12px; font-size:0.88rem; color:#334155; margin-top:6px; line-height:1.5;">
+                    -
+                </div>
+            </div>
+
+            <!-- Observações da Secretaria -->
+            <div id="detalhesObsBox" style="margin-bottom:1.2rem; display:none;">
+                <label style="font-weight:800; font-size:0.85rem; color:#475569;"><i class="fa-regular fa-comment-dots"></i> Observações do Atendimento:</label>
+                <div id="detalhesObsText" style="font-size:0.85rem; color:#475569; font-style:italic; margin-top:4px;"></div>
+            </div>
+
+            <!-- Painel de Ações por Perfil (Secretaria e Orientadoras) -->
+            <div style="background:#fffbeb; border:1px solid #fde68a; padding:1.2rem; border-radius:14px; margin-top:1rem;">
+                <h4 style="font-size:0.9rem; font-weight:800; color:#92400e; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-sliders"></i> Atualização de Status do Atendimento
+                </h4>
+
+                <div style="font-size:0.8rem; color:#78350f; margin-bottom:10px;">
+                    Ações de Recepção e Atendimento:
+                </div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <!-- Ação da Secretaria: Aguardando -->
+                    <button id="btnAcaoAguardando" onclick="detalhesMudarStatus('aguardando')" class="btn-sec" style="background:#f59e0b; color:white; padding:8px 14px; font-size:0.85rem; font-weight:800;">
+                        <i class="fa-solid fa-bell"></i> ⏳ Marcar Chegou / Aguardando na Recepção
+                    </button>
+
+                    <!-- Ações das Orientadoras: Atendido e Não Veio -->
+                    <button id="btnAcaoAtendido" onclick="detalhesMudarStatus('realizado')" class="btn-sec btn-sec-ok" style="padding:8px 14px; font-size:0.85rem; font-weight:800;">
+                        <i class="fa-solid fa-check-circle"></i> ✅ Marcar Atendido (Orientadora)
+                    </button>
+
+                    <button id="btnAcaoNaoVeio" onclick="detalhesMudarStatus('ausente')" class="btn-sec btn-sec-fail" style="padding:8px 14px; font-size:0.85rem; font-weight:800;">
+                        <i class="fa-solid fa-times-circle"></i> ❌ Marcar Não Veio (Orientadora)
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;">
+                <button type="button" onclick="closeDetalhesModal()" class="btn btn-secondary" style="width:auto;">Fechar Detalhes</button>
+            </div>
         </div>
     </div>
 
