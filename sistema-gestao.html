@@ -574,9 +574,60 @@
                 </div>
             </div>
 
+            <!-- Registro de Escuta & Encaminhamento Externo -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
+                <h4 style="font-size:0.88rem; font-weight:800; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-user-doctor" style="color:#7c3aed;"></i> Encaminhamento Externo & Deliberação da Escuta
+                </h4>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569;">Encaminhado Para:</label>
+                        <select id="detalhesInputEncaminhamento" class="search-input" style="width:100%; margin-top:3px; font-size:0.82rem;">
+                            <option value="Nenhum">Nenhum Encaminhamento Externo</option>
+                            <option value="Psicologia">Psicologia</option>
+                            <option value="Neuropediatria / Pediatria">Neuropediatria / Pediatria</option>
+                            <option value="Conselho Tutelar">Conselho Tutelar</option>
+                            <option value="CRAS / CREAS">CRAS / CREAS</option>
+                            <option value="Fonoaudiologia">Fonoaudiologia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569;">Salvar Alteração:</label>
+                        <button onclick="salvarEncaminhamentoEDeliberacao()" class="btn btn-secondary" style="width:100%; margin-top:3px; padding:6px; font-size:0.8rem; background:#7c3aed; color:white; border:none;">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Registro
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.78rem; font-weight:700; color:#475569;">Histórico do Atendimento & Deliberações:</label>
+                    <textarea id="detalhesInputHistoricoTratado" rows="2" placeholder="Descreva o que foi acertado na reunião com os pais..." class="search-input" style="width:100%; font-size:0.82rem; margin-top:3px; font-family:inherit;"></textarea>
+                </div>
+            </div>
+
+            <!-- Ferramentas Rápidas (Lembretes, Declaração, Prontuário) -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.2rem;">
+                <button onclick="dispararLembrete24h()" class="btn-sec" style="background:#2563eb; color:white; font-size:0.78rem; padding:6px 12px;">
+                    <i class="fa-brands fa-whatsapp"></i> 📱 Lembrete 24h
+                </button>
+                <button onclick="dispararLembreteHoje()" class="btn-sec" style="background:#059669; color:white; font-size:0.78rem; padding:6px 12px;">
+                    <i class="fa-brands fa-whatsapp"></i> 📱 Lembrete HOJE
+                </button>
+                <button onclick="gerarDeclaracaoComparecimento(currentDetailAppointmentId)" class="btn-sec" style="background:#0f172a; color:white; font-size:0.78rem; padding:6px 12px;">
+                    <i class="fa-solid fa-file-contract"></i> 📄 Declaração de Comparecimento
+                </button>
+                <button onclick="abrirProntuarioDoAlunoAtual()" class="btn-sec" style="background:#7c3aed; color:white; font-size:0.78rem; padding:6px 12px;">
+                    <i class="fa-solid fa-folder-open"></i> 🗂️ Prontuário do Aluno
+                </button>
+                <button onclick="reagendarAluno(currentDetailAppointmentId)" class="btn-sec" style="background:#4f46e5; color:white; font-size:0.78rem; padding:6px 12px;">
+                    <i class="fa-solid fa-calendar-plus"></i> 📅 Reagendar
+                </button>
+            </div>
+
             <!-- Observações da Secretaria -->
             <div id="detalhesObsBox" style="margin-bottom:1.2rem; display:none;">
-                <label style="font-weight:800; font-size:0.85rem; color:#475569;"><i class="fa-regular fa-comment-dots"></i> Observações do Atendimento:</label>
+                <label style="font-weight:800; font-size:0.85rem; color:#475569;"><i class="fa-regular fa-comment-dots"></i> Observações da Secretaria:</label>
                 <div id="detalhesObsText" style="font-size:0.85rem; color:#475569; font-style:italic; margin-top:4px;"></div>
             </div>
 
@@ -609,6 +660,31 @@
 
             <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;">
                 <button type="button" onclick="closeDetalhesModal()" class="btn btn-secondary" style="width:auto;">Fechar Detalhes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL PRONTUÁRIO COMPLETO DO ALUNO -->
+    <!-- ========================================== -->
+    <div id="modalProntuarioAluno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:700px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-folder-open" style="color:#7c3aed;"></i> Prontuário Único: <span id="prontuarioAlunoNome">Aluno</span>
+                    </h3>
+                    <p id="prontuarioTotalCount" style="font-size:0.82rem; color:#64748b; margin-top:2px;">Histórico de atendimentos na Orientação Pedagógica</p>
+                </div>
+                <button onclick="closeProntuarioModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="prontuarioTimelineContainer">
+                <!-- Rendered via JS -->
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+                <button type="button" onclick="closeProntuarioModal()" class="btn btn-secondary" style="width:auto;">Fechar Prontuário</button>
             </div>
         </div>
     </div>

@@ -605,6 +605,27 @@ function getSecretariaBadgeText(status) {
 
 let currentDetailAppointmentId = null;
 
+function playArrivalChime() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+        console.log("AudioChime fallback:", e);
+    }
+}
+
 function openDetalhesModal(id) {
     const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
     if (!ag) return;
@@ -628,6 +649,13 @@ function openDetalhesModal(id) {
     }
 
     document.getElementById("detalhesMotivoText").innerText = ag.motivo;
+    
+    if (document.getElementById("detalhesInputEncaminhamento")) {
+        document.getElementById("detalhesInputEncaminhamento").value = ag.encaminhamento || "Nenhum";
+    }
+    if (document.getElementById("detalhesInputHistoricoTratado")) {
+        document.getElementById("detalhesInputHistoricoTratado").value = ag.historicoTratado || "";
+    }
 
     const obsBox = document.getElementById("detalhesObsBox");
     const obsText = document.getElementById("detalhesObsText");
@@ -674,6 +702,7 @@ function detalhesMudarStatus(newStatus, customId = null) {
     if (newStatus === "aguardando") {
         chegadaEm = new Date().toISOString();
         obsPrompt = prompt("Anotação opcional da Secretaria (ex: Mãe aguarda no hall):", "Chegou na recepção.");
+        playArrivalChime(); // Bipe sonoro
     } else {
         obsPrompt = prompt("Anotação opcional sobre o atendimento:", "");
     }
@@ -685,7 +714,7 @@ function detalhesMudarStatus(newStatus, customId = null) {
     renderNotifications();
 
     if (newStatus === "aguardando") {
-        showToast("🔔 Aluno marcado como AGUARDANDO. Orientadora foi notificada!");
+        showToast("🔔 Aluno marcado como AGUARDANDO. Orientadora notificada com bipe!");
     } else if (newStatus === "realizado") {
         showToast("✅ Atendimento concluído pela Orientadora!");
     } else if (newStatus === "ausente") {
@@ -695,6 +724,181 @@ function detalhesMudarStatus(newStatus, customId = null) {
     if (currentDetailAppointmentId === id) {
         openDetalhesModal(id);
     }
+}
+
+function salvarEncaminhamentoEDeliberacao() {
+    if (!currentDetailAppointmentId) return;
+    const enc = document.getElementById("detalhesInputEncaminhamento").value;
+    const hist = document.getElementById("detalhesInputHistoricoTratado").value;
+
+    sigeDB.updateEncaminhamentoOP(currentDetailAppointmentId, enc, hist);
+    showToast("💾 Encaminhamento e histórico tratados salvos com sucesso!");
+    renderModuleOrientacaoPedagogica();
+}
+
+function dispararLembrete24h() {
+    if (!currentDetailAppointmentId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
+
+    let cleanPhone = ag.telefone.replace(/\D/g, "");
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = "55" + cleanPhone;
+
+    const msg = `Olá ${ag.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(ag.data)}) às ${ag.horario}. Orientadora: ${ag.orientadora || 'OP'}.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+
+    sigeDB.logWhatsappReminder(currentDetailAppointmentId, "24h");
+    showToast("📱 Lembrete de 24h aberto no WhatsApp!");
+}
+
+function dispararLembreteHoje() {
+    if (!currentDetailAppointmentId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
+
+    let cleanPhone = ag.telefone.replace(/\D/g, "");
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = "55" + cleanPhone;
+
+    const msg = `Olá ${ag.responsavel || 'Responsável'}! Lembramos da sua reunião HOJE (${formatDateBR(ag.data)}) às ${ag.horario} no Centro Educacional Pedro Rizzi. Orientadora: ${ag.orientadora || 'OP'}.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+
+    sigeDB.logWhatsappReminder(currentDetailAppointmentId, "no_dia");
+    showToast("📱 Lembrete do Dia aberto no WhatsApp!");
+}
+
+function gerarDeclaracaoComparecimento(id) {
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
+    if (!ag) return;
+
+    const dataAtual = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
+    const horChegada = ag.chegadaEm ? ag.chegadaEm.split("T")[1]?.substring(0, 5) : ag.horario;
+
+    const certHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Declaração de Comparecimento - C.E. Pedro Rizzi</title>
+            <style>
+                body { font-family: 'Times New Roman', serif; padding: 40px; color: #111; line-height: 1.8; }
+                .cert-box { border: 3px double #000; padding: 40px; max-width: 750px; margin: 0 auto; text-align: center; }
+                .header { margin-bottom: 30px; }
+                .title { font-size: 22px; font-weight: bold; margin: 30px 0; text-transform: uppercase; letter-spacing: 2px; }
+                .content { font-size: 17px; text-align: justify; text-indent: 40px; margin-bottom: 50px; }
+                .footer-sign { margin-top: 60px; display: flex; justify-content: space-around; }
+                .sign-line { border-top: 1px solid #000; width: 250px; text-align: center; font-size: 14px; padding-top: 5px; }
+                @media print { .no-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="text-align:center; margin-bottom:20px;">
+                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#2563eb; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">
+                    🖨️ Imprimir / Salvar PDF
+                </button>
+            </div>
+
+            <div class="cert-box">
+                <div class="header">
+                    <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                    <p style="font-size:14px; margin-top:-10px;">Rua Pedro Rangel, S/N - Itajaí / SC • Fone: (47) 3348-0000</p>
+                    <hr style="border: 0.5px solid #000; margin-top:15px;">
+                </div>
+
+                <div class="title">DECLARAÇÃO DE COMPARECIMENTO</div>
+
+                <div class="content">
+                    Declaramos para os devidos fins a quem interessar possa que o(a) Sr(a). <strong>${ag.responsavel}</strong> compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião e acompanhamento pedagógico referente ao estudante <strong>${ag.aluno}</strong>, regularmente matriculado no <strong>${ag.turma}</strong>.
+                </div>
+
+                <p style="text-align:right; font-size:16px; margin-top:40px;">
+                    Itajaí/SC, ${dataAtual}.
+                </p>
+
+                <div class="footer-sign">
+                    <div class="sign-line">
+                        <strong>Orientação Pedagógica</strong><br>
+                        ${ag.orientadora || 'C.E. Pedro Rizzi'}
+                    </div>
+                    <div class="sign-line">
+                        <strong>Direção Escolar</strong><br>
+                        Centro Educacional Pedro Rizzi
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.write(certHtml);
+    win.document.close();
+}
+
+function abrirProntuarioDoAlunoAtual() {
+    if (!currentDetailAppointmentId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    if (ag) openProntuarioModal(ag.aluno);
+}
+
+function openProntuarioModal(alunoNome) {
+    const todos = sigeDB.getAgendamentosOP().filter(a => a.aluno.toLowerCase().trim() === alunoNome.toLowerCase().trim());
+    
+    document.getElementById("prontuarioAlunoNome").innerText = alunoNome;
+    document.getElementById("prontuarioTotalCount").innerText = `${todos.length} atendimento(s) no histórico`;
+
+    const bodyContainer = document.getElementById("prontuarioTimelineContainer");
+    if (bodyContainer) {
+        if (todos.length === 0) {
+            bodyContainer.innerHTML = `<div class="empty-state"><p>Nenhum atendimento cadastrado para este aluno.</p></div>`;
+        } else {
+            bodyContainer.innerHTML = todos.map(a => `
+                <div style="background:#f8fafc; border-left:4px solid #7c3aed; border-radius:12px; padding:1.2rem; margin-bottom:1rem; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            <i class="fa-regular fa-calendar"></i> ${formatDateBR(a.data)} às ${a.horario} (${a.turno.toUpperCase()})
+                        </span>
+                        <span class="secretaria-status-badge status-${a.statusSecretaria}">${getSecretariaBadgeText(a.statusSecretaria)}</span>
+                    </div>
+                    <div style="font-size:0.85rem; color:#475569; margin-top:6px;">
+                        <strong>Responsável:</strong> ${a.responsavel} • <strong>Orientadora:</strong> ${a.orientadora || 'OP'}
+                    </div>
+                    <div style="font-size:0.88rem; color:#1e293b; margin-top:8px; background:white; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                        <strong>Motivo / Assunto:</strong> ${a.motivo}
+                    </div>
+                    ${a.historicoTratado || a.encaminhamento ? `
+                        <div style="font-size:0.85rem; color:#15803d; margin-top:6px; background:#f0fdf4; padding:8px 10px; border-radius:8px; border:1px solid #bbf7d0;">
+                            <strong>Encaminhamento:</strong> ${a.encaminhamento || 'Nenhum'}
+                            ${a.historicoTratado ? `<br><strong>Deliberações:</strong> ${a.historicoTratado}` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("");
+        }
+    }
+
+    document.getElementById("modalProntuarioAluno").style.display = "flex";
+}
+
+function closeProntuarioModal() {
+    const modal = document.getElementById("modalProntuarioAluno");
+    if (modal) modal.style.display = "none";
+}
+
+function reagendarAluno(id) {
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
+    if (!ag) return;
+
+    closeDetalhesModal();
+    openAgendamentoModal("", ag.turno, ag.tipo);
+
+    document.getElementById("opInputAluno").value = ag.aluno;
+    document.getElementById("opInputTurma").value = ag.turma;
+    document.getElementById("opInputResponsavel").value = ag.responsavel;
+    document.getElementById("opInputTelefone").value = ag.telefone;
+    document.getElementById("opInputOrientadora").value = ag.orientadora || "Orientadora 1 (Carmen)";
+    document.getElementById("opInputMotivo").value = `[REAGENDADO]: ${ag.motivo}`;
+
+    showToast(`📅 Formulário de reagendamento pré-preenchido para ${ag.aluno}! Escolha a nova data.`);
 }
 
 // MODAL AGENDAMENTO OP

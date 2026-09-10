@@ -247,12 +247,67 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
-    // Agendamentos OP Operations
-    getAgendamentosOP() {
-        return this.data.agendamentosOP || [];
-    }
+    // Bloqueio de Dias / Feriados
+    getDiasBloqueados() {
+        return this.data.diasBloqueados || [];
+    },
+
+    isDiaBloqueado(dateIso) {
+        return (this.data.diasBloqueados || []).some(d => d.data === dateIso);
+    },
+
+    toggleBloqueioDia(dateIso, motivo = "Conselho de Classe / Recesso") {
+        if (!this.data.diasBloqueados) this.data.diasBloqueados = [];
+        const index = this.data.diasBloqueados.findIndex(d => d.data === dateIso);
+        if (index >= 0) {
+            this.data.diasBloqueados.splice(index, 1);
+        } else {
+            this.data.diasBloqueados.push({ data: dateIso, motivo, bloqueadoPor: this.getRole() });
+        }
+        this.saveData(this.data);
+    },
+
+    logWhatsappReminder(id, tipoLembrete) {
+        const ag = this.data.agendamentosOP.find(a => a.id === id);
+        if (ag) {
+            if (!ag.historicoWhatsapp) ag.historicoWhatsapp = [];
+            ag.historicoWhatsapp.push({
+                tipo: tipoLembrete, // '24h' ou 'no_dia'
+                enviadoEm: new Date().toISOString()
+            });
+            this.saveData(this.data);
+        }
+    },
+
+    addAnexoOP(id, nomeArquivo, urlOuData) {
+        const ag = this.data.agendamentosOP.find(a => a.id === id);
+        if (ag) {
+            if (!ag.anexos) ag.anexos = [];
+            ag.anexos.push({
+                nome: nomeArquivo,
+                url: urlOuData,
+                data: new Date().toISOString()
+            });
+            this.saveData(this.data);
+        }
+    },
+
+    updateEncaminhamentoOP(id, encaminhamento, historicoTratado) {
+        const ag = this.data.agendamentosOP.find(a => a.id === id);
+        if (ag) {
+            if (encaminhamento !== undefined) ag.encaminhamento = encaminhamento;
+            if (historicoTratado !== undefined) ag.historicoTratado = historicoTratado;
+            this.saveData(this.data);
+        }
+    },
 
     addAgendamentoOP(agendamento) {
+        // Verifica se o dia esta bloqueado pela Direcao
+        if (this.isDiaBloqueado(agendamento.data)) {
+            const blockObj = this.data.diasBloqueados.find(d => d.data === agendamento.data);
+            throw new Error(`Data Bloqueada pela Direção (${agendamento.data}): ${blockObj ? blockObj.motivo : 'Recesso / Conselho'}`);
+        }
+
         // Validação estrita de limite de turno (3 Agendados + 1 Emergencial por turno)
         const dateAppointments = this.data.agendamentosOP.filter(
             a => a.data === agendamento.data && a.turno === agendamento.turno && a.statusSecretaria !== "cancelado"
@@ -271,10 +326,13 @@ class SigeDatabase {
 
         agendamento.id = "op-" + Date.now();
         agendamento.criadoEm = new Date().toISOString();
+        if (!agendamento.historicoWhatsapp) agendamento.historicoWhatsapp = [];
+        if (!agendamento.anexos) agendamento.anexos = [];
+        
         this.data.agendamentosOP.unshift(agendamento);
         this.saveData(this.data);
         return agendamento;
-    }
+    },
 
     updateSecretariaStatusOP(id, status, obs = "", chegadaEm = null) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
