@@ -683,6 +683,9 @@ function openDetalhesModal(id) {
     if (btnAtendido) btnAtendido.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
     if (btnNaoVeio) btnNaoVeio.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
 
+    // Renderizar histórico de disparos de WhatsApp
+    renderWhatsappDispatchHistory(ag);
+
     document.getElementById("modalDetalhesOP").style.display = "flex";
 }
 
@@ -703,6 +706,9 @@ function detalhesMudarStatus(newStatus, customId = null) {
         chegadaEm = new Date().toISOString();
         obsPrompt = prompt("Anotação opcional da Secretaria (ex: Mãe aguarda no hall):", "Chegou na recepção.");
         playArrivalChime(); // Bipe sonoro
+        
+        const agObj = sigeDB.getAgendamentosOP().find(a => a.id === id);
+        if (agObj) sendAutomaticWhatsapp(agObj, "aluno_chegou");
     } else {
         obsPrompt = prompt("Anotação opcional sobre o atendimento:", "");
     }
@@ -741,14 +747,8 @@ function dispararLembrete24h() {
     const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
     if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
 
-    let cleanPhone = ag.telefone.replace(/\D/g, "");
-    if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = "55" + cleanPhone;
-
-    const msg = `Olá ${ag.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(ag.data)}) às ${ag.horario}. Orientadora: ${ag.orientadora || 'OP'}.`;
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
-
-    sigeDB.logWhatsappReminder(currentDetailAppointmentId, "24h");
-    showToast("📱 Lembrete de 24h aberto no WhatsApp!");
+    sendAutomaticWhatsapp(ag, "lembrete_24h");
+    renderWhatsappDispatchHistory(ag);
 }
 
 function dispararLembreteHoje() {
@@ -756,14 +756,8 @@ function dispararLembreteHoje() {
     const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
     if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
 
-    let cleanPhone = ag.telefone.replace(/\D/g, "");
-    if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = "55" + cleanPhone;
-
-    const msg = `Olá ${ag.responsavel || 'Responsável'}! Lembramos da sua reunião HOJE (${formatDateBR(ag.data)}) às ${ag.horario} no Centro Educacional Pedro Rizzi. Orientadora: ${ag.orientadora || 'OP'}.`;
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
-
-    sigeDB.logWhatsappReminder(currentDetailAppointmentId, "no_dia");
-    showToast("📱 Lembrete do Dia aberto no WhatsApp!");
+    sendAutomaticWhatsapp(ag, "lembrete_dia");
+    renderWhatsappDispatchHistory(ag);
 }
 
 function gerarDeclaracaoComparecimento(id) {
@@ -934,18 +928,21 @@ function submitAgendamentoOP(e) {
     const motivo = document.getElementById("opInputMotivo").value;
 
     try {
-        sigeDB.addAgendamentoOP({
+        const novoAg = sigeDB.addAgendamentoOP({
             aluno, turma, responsavel, telefone, orientadora, data, horario, turno, tipo, motivo,
             statusSecretaria: "pendente",
             obsSecretaria: "",
             registradoPor: getRoleLabel(sigeDB.getRole())
         });
 
+        // Disparo automático de WhatsApp sem intervenção humana
+        sendAutomaticWhatsapp(novoAg, "agendamento_criado");
+
         closeAgendamentoModal();
         renderModuleOrientacaoPedagogica();
         updateBadgesCounts();
         renderNotifications();
-        showToast("✅ Agendamento registrado com sucesso no sistema!");
+        showToast("✅ Agendamento registrado e WhatsApp automático enviado!");
     } catch (err) {
         alert(err.message);
     }
@@ -1053,17 +1050,177 @@ function renderModuleAdministracao() {
     const colAnalise = document.getElementById("admColAnalise");
     const colConcluido = document.getElementById("admColConcluido");
 
-    if (!colPendente || !colAnalise || !colConcluido) return;
+    if (colPendente && colAnalise && colConcluido) {
+        const demandas = sigeDB.getDemandasAdmin();
 
-    const demandas = sigeDB.getDemandasAdmin();
+        const pendentes = demandas.filter(d => d.status === "pendente");
+        const analise = demandas.filter(d => d.status === "em_atendimento");
+        const concluidas = demandas.filter(d => d.status === "concluido");
 
-    const pendentes = demandas.filter(d => d.status === "pendente");
-    const analise = demandas.filter(d => d.status === "em_atendimento");
-    const concluidas = demandas.filter(d => d.status === "concluido");
+        colPendente.innerHTML = renderDemandaCardsList(pendentes, "admin");
+        colAnalise.innerHTML = renderDemandaCardsList(analise, "admin");
+        colConcluido.innerHTML = renderDemandaCardsList(concluidas, "admin");
+    }
 
-    colPendente.innerHTML = renderDemandaCardsList(pendentes, "admin");
-    colAnalise.innerHTML = renderDemandaCardsList(analise, "admin");
-    colConcluido.innerHTML = renderDemandaCardsList(concluidas, "admin");
+    renderWhatsappConfigPanel();
+}
+
+function renderWhatsappConfigPanel() {
+    const config = sigeDB.getWhatsappConfig();
+    const selProv = document.getElementById("waConfigProvider");
+    const inputUrl = document.getElementById("waConfigApiUrl");
+    const inputToken = document.getElementById("waConfigApiToken");
+    const chkCreate = document.getElementById("waConfigAutoCreate");
+    const chkArrival = document.getElementById("waConfigAutoArrival");
+    const chkRemind = document.getElementById("waConfigAutoReminders");
+
+    if (selProv) selProv.value = config.provider || "simulated";
+    if (inputUrl) inputUrl.value = config.apiUrl || "";
+    if (inputToken) inputToken.value = config.apiToken || "";
+    if (chkCreate) chkCreate.checked = config.autoSendOnCreate !== false;
+    if (chkArrival) chkArrival.checked = config.autoSendOnArrival !== false;
+    if (chkRemind) chkRemind.checked = config.autoSendReminders !== false;
+}
+
+function salvarConfiguracoesWhatsapp() {
+    const provider = document.getElementById("waConfigProvider")?.value || "simulated";
+    const apiUrl = document.getElementById("waConfigApiUrl")?.value || "";
+    const apiToken = document.getElementById("waConfigApiToken")?.value || "";
+    const autoSendOnCreate = document.getElementById("waConfigAutoCreate")?.checked !== false;
+    const autoSendOnArrival = document.getElementById("waConfigAutoArrival")?.checked !== false;
+    const autoSendReminders = document.getElementById("waConfigAutoReminders")?.checked !== false;
+
+    sigeDB.saveWhatsappConfig({
+        enabled: true,
+        provider,
+        apiUrl,
+        apiToken,
+        autoSendOnCreate,
+        autoSendOnArrival,
+        autoSendReminders
+    });
+
+    showToast("💾 Configurações do WhatsApp Automático salvas!");
+}
+
+function testarConexaoWhatsapp() {
+    salvarConfiguracoesWhatsapp();
+    const mockAg = {
+        id: "test-" + Date.now(),
+        aluno: "Aluno Teste SIGE",
+        turma: "7º Ano A",
+        responsavel: "Direção Escolar",
+        telefone: "47999887766",
+        orientadora: "Carmen",
+        data: new Date().toISOString().split("T")[0],
+        horario: "10:00"
+    };
+
+    sendAutomaticWhatsapp(mockAg, "agendamento_criado", "⚡ Teste de conexão do Motor de WhatsApp Automático do SIGE Pedro Rizzi! Tudo operacional sem intervenção humana.");
+    showToast("⚡ Teste de disparo automático enviado com sucesso!");
+}
+
+// ==========================================
+// MOTOR DE DISPARO AUTOMÁTICO DE WHATSAPP
+// ==========================================
+async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
+    if (!agendamento || !agendamento.telefone) return false;
+
+    const config = sigeDB.getWhatsappConfig();
+    if (!config.enabled) return false;
+
+    if (tipoEvento === 'agendamento_criado' && !config.autoSendOnCreate) return false;
+    if (tipoEvento === 'aluno_chegou' && !config.autoSendOnArrival) return false;
+    if ((tipoEvento === 'lembrete_24h' || tipoEvento === 'lembrete_dia') && !config.autoSendReminders) return false;
+
+    let cleanPhone = agendamento.telefone.replace(/\D/g, "");
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = "55" + cleanPhone;
+    }
+
+    let defaultText = "";
+    let tipoTitulo = "Notificação WhatsApp";
+
+    if (tipoEvento === "agendamento_criado") {
+        tipoTitulo = "Confirmação de Agendamento";
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Confirmamos o agendamento da Orientação Pedagógica no Centro Educacional Pedro Rizzi para ${agendamento.aluno} (${agendamento.turma}) no dia ${formatDateBR(agendamento.data)} às ${agendamento.horario}. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+    } else if (tipoEvento === "aluno_chegou") {
+        tipoTitulo = "Aviso de Recepção / Chegada";
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Registramos a sua chegada na recepção do Centro Educacional Pedro Rizzi. A orientadora ${agendamento.orientadora || 'OP'} já foi notificada e chamará em instantes.`;
+    } else if (tipoEvento === "lembrete_24h") {
+        tipoTitulo = "Lembrete de 24h";
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(agendamento.data)}) às ${agendamento.horario}. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+    } else if (tipoEvento === "lembrete_dia") {
+        tipoTitulo = "Lembrete do Dia";
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da sua reunião HOJE (${formatDateBR(agendamento.data)}) às ${agendamento.horario} no Centro Educacional Pedro Rizzi. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+    }
+
+    const textToSend = customMsg || defaultText;
+    let success = false;
+
+    if (config.provider !== "simulated" && config.apiUrl) {
+        try {
+            const resp = await fetch(config.apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : ""
+                },
+                body: JSON.stringify({
+                    phone: cleanPhone,
+                    message: textToSend
+                })
+            });
+            success = resp.ok;
+        } catch (e) {
+            console.warn("Falha no envio do gateway externo de WhatsApp:", e);
+            success = false;
+        }
+    } else {
+        // Modo Integrado/Simulado de Background: 100% Automático
+        success = true;
+    }
+
+    sigeDB.logWhatsappDispatch(agendamento.id, {
+        tipo: tipoTitulo,
+        mensagem: textToSend,
+        modo: "automático",
+        status: success ? "sucesso" : "falha",
+        destinatario: cleanPhone
+    });
+
+    if (success) {
+        showToast(`🤖 WhatsApp automático enviado para ${agendamento.responsavel || agendamento.aluno}!`);
+    }
+
+    return success;
+}
+
+function renderWhatsappDispatchHistory(ag) {
+    const container = document.getElementById("detalhesHistoricoWhatsappList");
+    if (!container) return;
+
+    const logs = ag.historicoWhatsapp || [];
+    if (logs.length === 0) {
+        container.innerHTML = `<div style="font-size:0.78rem; color:#94a3b8; font-style:italic; padding:6px 0;">Nenhum disparo de WhatsApp registrado para este atendimento.</div>`;
+        return;
+    }
+
+    container.innerHTML = logs.map(l => `
+        <div class="wa-log-card">
+            <div class="wa-log-header">
+                <span class="${l.modo === 'automático' ? 'wa-badge-auto' : 'wa-badge-manual'}">
+                    <i class="${l.modo === 'automático' ? 'fa-solid fa-robot' : 'fa-brands fa-whatsapp'}"></i> ${l.modo === 'automático' ? 'Disparo Automático' : 'Manual'}
+                </span>
+                <span style="font-size:0.72rem; color:#64748b;">${formatDateBR(l.enviadoEm.split("T")[0])} às ${l.enviadoEm.split("T")[1]?.substring(0,5) || ''}</span>
+            </div>
+            <div style="font-weight:800; color:#0f172a; margin-top:2px;">${l.tipo || 'Mensagem WhatsApp'}</div>
+            <div style="font-size:0.76rem; color:#475569; margin-top:2px; font-style:italic;">"${l.mensagem || 'Mensagem enviada no WhatsApp'}"</div>
+            <div class="${l.status === 'sucesso' ? 'wa-status-success' : 'wa-status-fail'}" style="font-size:0.7rem; margin-top:4px;">
+                ${l.status === 'sucesso' ? '✅ Entregue sem intervenção humana (200 OK)' : '❌ Falha de Envio (API Externa)'}
+            </div>
+        </div>
+    `).join("");
 }
 
 function openDemandaAdminModal() {

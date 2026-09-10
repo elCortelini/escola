@@ -332,11 +332,67 @@
                     <div id="admColAnalise"></div>
                 </div>
 
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Resolvidas</span>
+            <!-- Configurações do Gateway de WhatsApp Automático (Sem Intervenção Humana) -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-top:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.4rem;"></i> Motor de WhatsApp Automático (Sem Clique Humano)
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Configure a API para disparar confirmações, avisos e lembretes diretamente ao celular do pai em segundo plano.
+                        </p>
                     </div>
-                    <div id="admColConcluido"></div>
+                    <span class="wa-badge-auto" style="font-size:0.82rem; padding:6px 12px;"><i class="fa-solid fa-bolt"></i> Disparo em Background Ativo</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Provedor de API de WhatsApp:</label>
+                        <select id="waConfigProvider" onchange="salvarConfiguracoesWhatsapp()" class="search-input" style="width:100%; margin-top:4px; font-weight:700; color:#1e3a8a;">
+                            <option value="simulated">🤖 Modo Automático Integrado (Sem Custo / Simulação de Background)</option>
+                            <option value="meta_cloud_api">☁️ Meta WhatsApp Business Cloud API Oficial</option>
+                            <option value="zapi">⚡ Z-API (Provedor de Instâncias)</option>
+                            <option value="evolution_api">🚀 Evolution API (Self-Hosted / Open Source)</option>
+                            <option value="custom_webhook">🔗 Webhook Personalizado (POST JSON)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">URL do Endpoint / Webhook da API:</label>
+                        <input type="text" id="waConfigApiUrl" onchange="salvarConfiguracoesWhatsapp()" placeholder="https://api.z-api.io/instances/SUA_INSTANCIA/send-text" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Token / Chave de Autenticação (Bearer):</label>
+                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Sua Chave de API Token..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:1.2rem;">
+                    <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;"><i class="fa-solid fa-sliders"></i> Gatilhos de Disparo Automático (Dispara sem intervenção humana):</div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoCreate" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>📅 Disparar ao criar Agendamento</span>
+                        </label>
+
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoArrival" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>🔔 Disparar ao marcar Chegou / Aguardando</span>
+                        </label>
+
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoReminders" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>⏰ Disparar Lembretes 24h e no Dia</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button onclick="testarConexaoWhatsapp()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; background:#0284c7; color:white;">
+                        <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
+                    </button>
                 </div>
             </div>
         </section>
@@ -629,6 +685,17 @@
             <div id="detalhesObsBox" style="margin-bottom:1.2rem; display:none;">
                 <label style="font-weight:800; font-size:0.85rem; color:#475569;"><i class="fa-regular fa-comment-dots"></i> Observações da Secretaria:</label>
                 <div id="detalhesObsText" style="font-size:0.85rem; color:#475569; font-style:italic; margin-top:4px;"></div>
+            </div>
+
+            <!-- Histórico de Disparos de WhatsApp (Automáticos e Manuais) -->
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
+                <h4 style="font-size:0.88rem; font-weight:800; color:#166534; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                    <span><i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> Histórico de Disparos WhatsApp (Automáticos)</span>
+                    <span class="wa-badge-auto"><i class="fa-solid fa-robot"></i> Registro Auditável</span>
+                </h4>
+                <div id="detalhesHistoricoWhatsappList" style="display:flex; flex-direction:column; gap:8px; max-height:160px; overflow-y:auto;">
+                    <!-- Rendered via JS -->
+                </div>
             </div>
 
             <!-- Painel de Ações por Perfil (Secretaria e Orientadoras) -->

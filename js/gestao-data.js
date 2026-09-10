@@ -204,7 +204,17 @@ const defaultSigeData = {
         }
     ],
 
-    notificacoesLidas: []
+    notificacoesLidas: [],
+
+    whatsappConfig: {
+        enabled: true,
+        provider: "simulated", // simulated, meta_cloud_api, zapi, evolution_api, custom_webhook
+        apiUrl: "",
+        apiToken: "",
+        autoSendOnCreate: true,
+        autoSendOnArrival: true,
+        autoSendReminders: true
+    }
 };
 
 // Gerenciador de Banco de Dados Local Storage
@@ -277,13 +287,47 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    getWhatsappConfig() {
+        if (!this.data.whatsappConfig) {
+            this.data.whatsappConfig = {
+                enabled: true,
+                provider: "simulated",
+                apiUrl: "",
+                apiToken: "",
+                autoSendOnCreate: true,
+                autoSendOnArrival: true,
+                autoSendReminders: true
+            };
+            this.saveData(this.data);
+        }
+        return this.data.whatsappConfig;
+    }
+
+    saveWhatsappConfig(config) {
+        this.data.whatsappConfig = { ...this.getWhatsappConfig(), ...config };
+        this.saveData(this.data);
+    }
+
     logWhatsappReminder(id, tipoLembrete) {
-        const ag = this.data.agendamentosOP.find(a => a.id === id);
+        this.logWhatsappDispatch(id, {
+            tipo: tipoLembrete === "24h" ? "Lembrete 24h" : "Lembrete no Dia",
+            modo: "manual",
+            status: "sucesso"
+        });
+    }
+
+    logWhatsappDispatch(id, logData) {
+        const ag = this.getAgendamentosOP().find(a => a.id === id);
         if (ag) {
             if (!ag.historicoWhatsapp) ag.historicoWhatsapp = [];
-            ag.historicoWhatsapp.push({
-                tipo: tipoLembrete, // '24h' ou 'no_dia'
-                enviadoEm: new Date().toISOString()
+            ag.historicoWhatsapp.unshift({
+                id: "wlog-" + Date.now() + "-" + Math.floor(Math.random()*1000),
+                tipo: logData.tipo || "Notificação WhatsApp",
+                mensagem: logData.mensagem || "",
+                enviadoEm: new Date().toISOString(),
+                modo: logData.modo || "automático", // "automático" ou "manual"
+                status: logData.status || "sucesso", // "sucesso" ou "falha"
+                destinatario: logData.destinatario || ag.telefone || ""
             });
             this.saveData(this.data);
         }

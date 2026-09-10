@@ -911,3 +911,58 @@
     background: #eff6ff;
     transform: scale(1.02);
 }
+
+/* ========================================== */
+/* ESTILOS DE DISPARO AUTOMÁTICO DE WHATSAPP  */
+/* ========================================== */
+.wa-badge-auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    border: 1px solid #86efac;
+}
+
+.wa-badge-manual {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    border: 1px solid #7dd3fc;
+}
+
+.wa-log-card {
+    background: white;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    font-size: 0.8rem;
+}
+
+.wa-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.wa-status-success {
+    color: #16a34a;
+    font-weight: 800;
+}
+
+.wa-status-fail {
+    color: #dc2626;
+    font-weight: 800;
+}
