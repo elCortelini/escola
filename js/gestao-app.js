@@ -1064,6 +1064,8 @@ function renderSupervisaoWeeklyAgenda(weekDays, demandas) {
                                     }
 
                                     const categoryClass = getCategoryCssClass(item.categoria);
+                                    const statusCss = getDemandaStatusCssClass(item.status);
+                                    const statusText = getDemandaStatusBadgeText(item.status);
 
                                     return `
                                         <div class="sup-event-card ${spanType} ${categoryClass}" onclick="openDemandaSupervisaoModalWithData('${item.id}')" title="${item.descricao || item.titulo}">
@@ -1073,6 +1075,7 @@ function renderSupervisaoWeeklyAgenda(weekDays, demandas) {
                                             </div>
                                             <div class="sup-event-title">${item.titulo}</div>
                                             <div class="sup-event-target"><i class="fa-solid fa-user-tag"></i> ${item.turmaOuProfessor}</div>
+                                            ${item.envolvidos ? `<div style="font-size:0.68rem; color:#475569; margin-top:2px; font-weight:600;"><i class="fa-solid fa-users" style="color:var(--supervisao-color);"></i> ${item.envolvidos}</div>` : ''}
 
                                             ${isMultiDay ? `
                                                 <div class="sup-event-multiday-bar">
@@ -1082,8 +1085,8 @@ function renderSupervisaoWeeklyAgenda(weekDays, demandas) {
                                             ` : ''}
 
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                                                <span class="secretaria-status-badge status-${item.status === 'concluido' ? 'realizado' : (item.status === 'em_atendimento' ? 'aguardando' : 'pendente')}" style="font-size:0.65rem; padding:2px 6px;">
-                                                    ${getDemandaStatusBadgeText(item.status)}
+                                                <span class="secretaria-status-badge ${statusCss}" style="font-size:0.65rem; padding:2px 6px;">
+                                                    ${statusText}
                                                 </span>
                                                 <span style="font-size:0.68rem; color:#64748b; font-weight:700;"><i class="fa-solid fa-user-gear"></i> ${item.responsavel ? item.responsavel.split(" ")[0] : 'Sup'}</span>
                                             </div>
@@ -1105,18 +1108,21 @@ function renderSupervisaoWeeklyAgenda(weekDays, demandas) {
 
 function renderSupervisaoKanban(demandas) {
     const colPendente = document.getElementById("supColPendente");
-    const colAnalise = document.getElementById("supColAnalise");
-    const colConcluido = document.getElementById("supColConcluido");
+    const colAdiado = document.getElementById("supColAdiado");
+    const colResolvido = document.getElementById("supColResolvido");
+    const colNaoResolvido = document.getElementById("supColNaoResolvido");
 
-    if (!colPendente || !colAnalise || !colConcluido) return;
+    if (!colPendente || !colAdiado || !colResolvido || !colNaoResolvido) return;
 
-    const pendentes = demandas.filter(d => d.status === "pendente");
-    const analise = demandas.filter(d => d.status === "em_atendimento");
-    const concluidas = demandas.filter(d => d.status === "concluido");
+    const pendentes = demandas.filter(d => d.status === "pendente" || d.status === "em_atendimento" || d.status === "em_andamento" || !d.status);
+    const adiados = demandas.filter(d => d.status === "adiado" || d.status === "reformular");
+    const resolvidos = demandas.filter(d => d.status === "resolvido" || d.status === "concluido");
+    const naoResolvidos = demandas.filter(d => d.status === "nao_resolvido");
 
     colPendente.innerHTML = renderDemandaCardsList(pendentes, "supervisao");
-    colAnalise.innerHTML = renderDemandaCardsList(analise, "supervisao");
-    colConcluido.innerHTML = renderDemandaCardsList(concluidas, "supervisao");
+    colAdiado.innerHTML = renderDemandaCardsList(adiados, "supervisao");
+    colResolvido.innerHTML = renderDemandaCardsList(resolvidos, "supervisao");
+    colNaoResolvido.innerHTML = renderDemandaCardsList(naoResolvidos, "supervisao");
 }
 
 function getCategoryCssClass(cat) {
@@ -1131,9 +1137,21 @@ function getCategoryCssClass(cat) {
 }
 
 function getDemandaStatusBadgeText(status) {
-    if (status === "concluido") return "✅ Concluído";
-    if (status === "em_atendimento") return "⏳ Em Andamento";
+    if (status === "resolvido" || status === "concluido") return "✅ Resolvido";
+    if (status === "adiado") return "⏸️ Adiado";
+    if (status === "nao_resolvido") return "❌ Não Resolvido";
+    if (status === "reformular") return "🔄 Reformular";
+    if (status === "em_atendimento" || status === "em_andamento") return "⏳ Em Andamento";
     return "📌 Pendente";
+}
+
+function getDemandaStatusCssClass(status) {
+    if (status === "resolvido" || status === "concluido") return "status-resolvido";
+    if (status === "adiado") return "status-adiado";
+    if (status === "nao_resolvido") return "status-naoresolvido";
+    if (status === "reformular") return "status-reformular";
+    if (status === "em_atendimento" || status === "em_andamento") return "status-aguardando";
+    return "status-pendente";
 }
 
 function renderDemandaCardsList(items, moduleType) {
@@ -1142,23 +1160,22 @@ function renderDemandaCardsList(items, moduleType) {
     }
 
     return items.map(d => `
-        <div class="demanda-card">
+        <div class="demanda-card" onclick="${moduleType === 'supervisao' ? `openDemandaSupervisaoModalWithData('${d.id}')` : ''}" style="cursor:pointer;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <span class="priority-tag prio-${d.prioridade}">${d.prioridade.toUpperCase()}</span>
+                <span class="priority-tag prio-${d.prioridade}">${(d.prioridade || 'media').toUpperCase()}</span>
                 <span style="font-size:0.75rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${formatDateBR(d.dataFim || d.prazo)}</span>
             </div>
             <div class="demanda-title" style="margin-top:6px;">${d.titulo}</div>
             <p style="font-size:0.82rem; color:#475569; margin-top:4px;">${d.descricao}</p>
+            ${d.envolvidos ? `<div style="font-size:0.75rem; color:#475569; margin-top:4px; font-weight:600;"><i class="fa-solid fa-users" style="color:var(--supervisao-color);"></i> ${d.envolvidos}</div>` : ''}
             <div style="font-size:0.75rem; color:#64748b; margin-top:8px;">
                 <i class="fa-solid fa-user-tag"></i> ${d.turmaOuProfessor || d.setor || ''} • <strong style="color:var(--primary-dark);">${d.categoria || ''}</strong>
             </div>
             <div class="demanda-meta">
                 <span>Resp: <strong>${d.responsavel}</strong></span>
-                <div style="display:flex; gap:4px;">
-                    ${d.status !== 'pendente' ? `<button onclick="updateDemandaStatus('${moduleType}', '${d.id}', 'pendente')" class="btn-sec" title="Mover para Pendente">⏮</button>` : ''}
-                    ${d.status !== 'em_atendimento' ? `<button onclick="updateDemandaStatus('${moduleType}', '${d.id}', 'em_atendimento')" class="btn-sec" title="Em Atendimento">▶</button>` : ''}
-                    ${d.status !== 'concluido' ? `<button onclick="updateDemandaStatus('${moduleType}', '${d.id}', 'concluido')" class="btn-sec btn-sec-ok" title="Concluir">✓</button>` : ''}
-                </div>
+                <span class="secretaria-status-badge ${getDemandaStatusCssClass(d.status)}" style="font-size:0.68rem; padding:2px 6px;">
+                    ${getDemandaStatusBadgeText(d.status)}
+                </span>
             </div>
         </div>
     `).join("");
@@ -1177,8 +1194,22 @@ function updateDemandaStatus(moduleType, id, newStatus) {
     showToast("Status da demanda atualizado!");
 }
 
+function addEnvolvidoTag(tag) {
+    const input = document.getElementById("supInputEnvolvidos");
+    if (!input) return;
+    let val = input.value.trim();
+    if (!val) {
+        input.value = tag;
+    } else if (!val.includes(tag)) {
+        input.value = val + ", " + tag;
+    }
+}
+
 function openDemandaSupervisaoModal(dateIso = null, turno = "matutino") {
     const hojeIso = dateIso || new Date().toISOString().split("T")[0];
+    const form = document.querySelector("#modalDemandaSupervisao form");
+    if (form) form.reset();
+
     const elDataInicio = document.getElementById("supInputDataInicio");
     const elDataFim = document.getElementById("supInputDataFim");
     const elTurno = document.getElementById("supInputTurno");
@@ -1200,6 +1231,8 @@ function submitDemandaSupervisao(e) {
     e.preventDefault();
     const titulo = document.getElementById("supInputTitulo").value;
     const turmaOuProfessor = document.getElementById("supInputAlvo").value;
+    const envolvidosInput = document.getElementById("supInputEnvolvidos");
+    const envolvidos = envolvidosInput ? envolvidosInput.value : "";
     const categoria = document.getElementById("supInputCategoria").value;
     const turno = document.getElementById("supInputTurno").value;
     const dataInicio = document.getElementById("supInputDataInicio").value;
@@ -1209,7 +1242,7 @@ function submitDemandaSupervisao(e) {
     const descricao = document.getElementById("supInputDescricao").value;
 
     sigeDB.addDemandaSupervisao({
-        titulo, turmaOuProfessor, categoria, turno, dataInicio, dataFim,
+        titulo, turmaOuProfessor, envolvidos, categoria, turno, dataInicio, dataFim,
         prioridade, responsavel, descricao,
         prazo: dataFim,
         status: "pendente"
@@ -1231,6 +1264,7 @@ function openDemandaSupervisaoModalWithData(id) {
 
     const elTitulo = document.getElementById("detalhesSupTitulo");
     const elAlvo = document.getElementById("detalhesSupAlvo");
+    const elEnvolvidos = document.getElementById("detalhesSupEnvolvidos");
     const elCategoria = document.getElementById("detalhesSupCategoria");
     const elResponsavel = document.getElementById("detalhesSupResponsavel");
     const elDatas = document.getElementById("detalhesSupDatas");
@@ -1239,6 +1273,7 @@ function openDemandaSupervisaoModalWithData(id) {
 
     if (elTitulo) elTitulo.innerText = item.titulo || "Demanda da Supervisão";
     if (elAlvo) elAlvo.innerText = item.turmaOuProfessor || "Docentes / Turmas";
+    if (elEnvolvidos) elEnvolvidos.innerText = item.envolvidos || "Não especificado";
     if (elCategoria) elCategoria.innerText = item.categoria || "Supervisão Pedagógica";
     if (elResponsavel) elResponsavel.innerText = item.responsavel || "Supervisora 1";
 
@@ -1255,9 +1290,11 @@ function openDemandaSupervisaoModalWithData(id) {
     }
 
     if (elStatus) {
+        const statusCss = getDemandaStatusCssClass(item.status);
+        const statusText = getDemandaStatusBadgeText(item.status);
         elStatus.innerHTML = `
-            <span class="secretaria-status-badge status-${item.status === 'concluido' ? 'realizado' : (item.status === 'em_atendimento' ? 'aguardando' : 'pendente')}">
-                ${getDemandaStatusBadgeText(item.status)}
+            <span class="secretaria-status-badge ${statusCss}">
+                ${statusText}
             </span>
         `;
     }

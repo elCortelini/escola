@@ -341,26 +341,33 @@
 
             <!-- CONTAINER VISÃO 2: KANBAN DE COLUNAS DE STATUS -->
             <div id="supListViewContainer" style="display:none; margin-top:1rem;">
-                <div class="demandas-columns">
+                <div class="demandas-columns" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
                     <div class="demanda-column">
                         <div class="demanda-column-header">
-                            <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Pendentes</span>
+                            <span><i class="fa-regular fa-clock" style="color:#2563eb;"></i> Pendente / Em Andamento</span>
                         </div>
                         <div id="supColPendente"></div>
                     </div>
 
                     <div class="demanda-column">
                         <div class="demanda-column-header">
-                            <span><i class="fa-solid fa-spinner" style="color:#2563eb;"></i> Em Atendimento / Análise</span>
+                            <span><i class="fa-solid fa-arrows-rotate" style="color:#8b5cf6;"></i> Adiado / Reformular</span>
                         </div>
-                        <div id="supColAnalise"></div>
+                        <div id="supColAdiado"></div>
                     </div>
 
                     <div class="demanda-column">
                         <div class="demanda-column-header">
-                            <span><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Concluídas</span>
+                            <span><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Resolvido</span>
                         </div>
-                        <div id="supColConcluido"></div>
+                        <div id="supColResolvido"></div>
+                    </div>
+
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i> Não Resolvido</span>
+                        </div>
+                        <div id="supColNaoResolvido"></div>
                     </div>
                 </div>
             </div>
@@ -915,6 +922,22 @@
                     </div>
                 </div>
 
+                <!-- Campo de Pessoas / Equipe Envolvida -->
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">
+                        <i class="fa-solid fa-users" style="color:var(--supervisao-color);"></i> Pessoas / Equipe Envolvida:
+                    </label>
+                    <input type="text" id="supInputEnvolvidos" placeholder="Ex: Orientação (Carmen), Direção, Profª Ana" class="search-input" style="width:100%;">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; align-items:center;">
+                        <span style="font-size:0.72rem; color:#64748b; font-weight:700;">Marcar Envolvidos:</span>
+                        <button type="button" onclick="addEnvolvidoTag('Orientação Pedagógica (OP)')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">+ OP</button>
+                        <button type="button" onclick="addEnvolvidoTag('Direção Escolar')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#fef3c7; color:#b45309; border-color:#fde047;">+ Direção</button>
+                        <button type="button" onclick="addEnvolvidoTag('Professores / Docentes')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">+ Docentes</button>
+                        <button type="button" onclick="addEnvolvidoTag('Secretaria Escolar')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#ecfdf5; color:#047857; border-color:#a7f3d0;">+ Secretaria</button>
+                        <button type="button" onclick="addEnvolvidoTag('Alunos / Pais')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#fff1f2; color:#be123c; border-color:#fecdd3;">+ Alunos/Pais</button>
+                    </div>
+                </div>
+
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
@@ -963,16 +986,22 @@
                     <button type="submit" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);">Registrar no Quadro</button>
                 </div>
             </form>
+        </div>
+    </div>
+
     <!-- ========================================== -->
     <!-- MODAL DETALHES DA DEMANDA / EVENTO DA SUPERVISÃO -->
     <!-- ========================================== -->
     <div id="modalDetalhesDemandaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:2rem; border-radius:20px; max-width:550px; width:92%; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:580px; width:92%; box-shadow:0 20px 50px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
                 <div>
                     <h3 id="detalhesSupTitulo" style="color:#0f172a; font-weight:900; font-size:1.2rem;">Título da Demanda</h3>
                     <p style="font-size:0.82rem; color:#64748b; margin-top:2px;">
-                        <i class="fa-solid fa-user-tag"></i> Alvo / Envolvidos: <strong id="detalhesSupAlvo">-</strong>
+                        <i class="fa-solid fa-user-tag"></i> Alvo / Professor: <strong id="detalhesSupAlvo" style="color:#0f172a;">-</strong>
+                    </p>
+                    <p style="font-size:0.82rem; color:#64748b; margin-top:2px;">
+                        <i class="fa-solid fa-users" style="color:var(--supervisao-color);"></i> Pessoas Envolvidas: <strong id="detalhesSupEnvolvidos" style="color:#0f172a;">-</strong>
                     </p>
                 </div>
                 <button onclick="closeDetalhesDemandaSupervisaoModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
@@ -1009,17 +1038,26 @@
 
             <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
                 <label style="font-weight:800; font-size:0.85rem; color:#0f172a; display:block; margin-bottom:8px;">
-                    <i class="fa-solid fa-sliders"></i> Atualizar Status da Demanda:
+                    <i class="fa-solid fa-sliders"></i> Atualizar Status do Atendimento / Evento:
                 </label>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button onclick="mudarStatusDemandaSupervisaoAtual('pendente')" class="btn-sec" style="background:#f59e0b; color:white;">
-                        📌 Marcar Pendente
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('resolvido')" class="btn-sec" style="background:#10b981; color:white; font-weight:700; justify-content:center;">
+                        ✅ Resolvido
                     </button>
-                    <button onclick="mudarStatusDemandaSupervisaoAtual('em_atendimento')" class="btn-sec" style="background:#2563eb; color:white;">
-                        ▶ Em Andamento / Análise
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('adiado')" class="btn-sec" style="background:#f59e0b; color:white; font-weight:700; justify-content:center;">
+                        ⏸️ Adiado
                     </button>
-                    <button onclick="mudarStatusDemandaSupervisaoAtual('concluido')" class="btn-sec btn-sec-ok">
-                        ✅ Concluir Demanda
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('nao_resolvido')" class="btn-sec" style="background:#ef4444; color:white; font-weight:700; justify-content:center;">
+                        ❌ Não Resolvido
+                    </button>
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('reformular')" class="btn-sec" style="background:#8b5cf6; color:white; font-weight:700; justify-content:center;">
+                        🔄 Reformular
+                    </button>
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('em_atendimento')" class="btn-sec" style="background:#2563eb; color:white; font-weight:700; justify-content:center;">
+                        ▶ Em Andamento
+                    </button>
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('pendente')" class="btn-sec" style="background:#64748b; color:white; font-weight:700; justify-content:center;">
+                        📌 Pendente
                     </button>
                 </div>
             </div>

@@ -85,14 +85,15 @@ const defaultSigeData = {
             id: "sup-201",
             titulo: "Conselho de Classe Intermediário - 7º Anos",
             turmaOuProfessor: "Professores do 7º Ano",
+            envolvidos: "Orientação Pedagógica (OP), Direção Escolar",
             categoria: "Conselho de Classe",
             prioridade: "alta", // alta, media, baixa
             turno: "matutino", // matutino, vespertino, ambos
             dataInicio: "2026-09-08",
             dataFim: "2026-09-10", // Multi-dias! (3 dias: Terça a Quinta)
-            status: "em_atendimento", // pendente, em_atendimento, concluido
+            status: "em_atendimento", // pendente, em_atendimento, resolvido, adiado, nao_resolvido, reformular
             descricao: "Revisão dos critérios de avaliação e acompanhamento de alunos com dificuldades.",
-            responsavel: "Prof. Marcos (Supervisão)",
+            responsavel: "Supervisora 1",
             prazo: "2026-09-10",
             criadoEm: "2026-09-07"
         },
@@ -100,6 +101,7 @@ const defaultSigeData = {
             id: "sup-202",
             titulo: "Observação de Sala de Aula - 6º Ano B",
             turmaOuProfessor: "Turma 6º Ano B",
+            envolvidos: "Professores / Docentes",
             categoria: "Observação de Sala",
             prioridade: "media",
             turno: "vespertino",
@@ -107,7 +109,7 @@ const defaultSigeData = {
             dataFim: "2026-09-10",
             status: "pendente",
             descricao: "Acompanhar dinamismos e nível de engajamento durante aulas de História.",
-            responsavel: "Supervisão Pedagógica",
+            responsavel: "Supervisora 2",
             prazo: "2026-09-10",
             criadoEm: "2026-09-09"
         },
@@ -115,6 +117,7 @@ const defaultSigeData = {
             id: "sup-203",
             titulo: "Capacitação Docente: Uso de Metodologias Ativas",
             turmaOuProfessor: "Corpo Docente Fund. II",
+            envolvidos: "Professores / Docentes, Direção Escolar",
             categoria: "Capacitação Docente",
             prioridade: "alta",
             turno: "vespertino",
@@ -122,7 +125,7 @@ const defaultSigeData = {
             dataFim: "2026-09-12",
             status: "pendente",
             descricao: "Oficina prática sobre avaliação formativa e ensino híbrido.",
-            responsavel: "Supervisão Pedagógica",
+            responsavel: "Equipe Supervisão",
             prazo: "2026-09-12",
             criadoEm: "2026-09-08"
         }
