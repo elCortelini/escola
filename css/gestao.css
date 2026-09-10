@@ -733,6 +733,7 @@
     width: 100%;
     border-collapse: collapse;
     min-width: 950px;
+    table-layout: fixed;
 }
 
 .weekly-table th {
@@ -743,11 +744,12 @@
     font-size: 0.9rem;
     text-align: center;
     border-right: 1px solid rgba(255, 255, 255, 0.15);
+    width: 18%;
 }
 
 .weekly-table th.col-periodo {
     background: #1e3a8a;
-    width: 120px;
+    width: 130px;
 }
 
 .weekly-table th.col-today {
@@ -766,11 +768,11 @@
 }
 
 .weekly-table td {
-    padding: 10px;
+    padding: 8px;
     border: 1px solid #e2e8f0;
-    vertical-align: top;
+    vertical-align: middle;
     background: #ffffff;
-    height: 90px;
+    height: 85px;
     transition: background 0.15s;
 }
 
@@ -797,7 +799,7 @@
 }
 
 .slot-time-cell .vaga-num {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #1e3a8a;
     display: block;
 }
@@ -816,11 +818,11 @@
     background: white;
     border-radius: 12px;
     border: 1px solid #cbd5e1;
-    padding: 10px;
+    padding: 8px 10px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     height: 100%;
 }
 
@@ -884,27 +886,27 @@
     box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
 }
 
-/* Botão Slot Vazio '+ Nova' */
+/* Botão Slot Vazio '+' apenas */
 .weekly-slot-empty-btn {
     width: 100%;
     height: 100%;
-    min-height: 60px;
+    min-height: 55px;
     border: 2px dashed #cbd5e1;
     border-radius: 12px;
     background: transparent;
-    color: #64748b;
-    font-weight: 700;
-    font-size: 0.82rem;
+    color: #94a3b8;
+    font-weight: 900;
+    font-size: 1.15rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    transition: all 0.15s;
+    transition: all 0.2s ease;
 }
 
 .weekly-slot-empty-btn:hover {
     border-color: #2563eb;
     color: #2563eb;
     background: #eff6ff;
+    transform: scale(1.02);
 }

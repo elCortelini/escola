@@ -459,8 +459,8 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     } else {
                         return `
                             <td class="${d.isToday ? 'today-column-cell' : ''}">
-                                <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}')" class="weekly-slot-empty-btn">
-                                    <i class="fa-solid fa-plus"></i> + Nova
+                                <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}')" class="weekly-slot-empty-btn" title="Adicionar Agendamento">
+                                    <i class="fa-solid fa-plus"></i>
                                 </button>
                             </td>
                         `;
