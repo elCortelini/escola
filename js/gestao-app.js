@@ -1607,6 +1607,18 @@ function cobrarProfessorWhatsapp(profName, projTitle, taskTitle, deadline) {
     const dataFmt = formatDateBR(deadline);
     const msg = `Olá, Prof. ${profName}! A Supervisão Pedagógica (C.E. Pedro Rizzi) lembra que a etapa '${taskTitle}' do projeto '${projTitle}' tem prazo de entrega para ${dataFmt}. Podemos contar com o envio? Qualquer dúvida estamos à disposição!`;
 
+    const professores = sigeDB.getProfessores();
+    const profObj = professores.find(p => p.nome.toLowerCase().includes(profName.toLowerCase()) || profName.toLowerCase().includes(p.nome.toLowerCase()));
+    
+    let phoneParam = "";
+    if (profObj && profObj.telefone) {
+        let cleanPhone = profObj.telefone.replace(/\D/g, "");
+        if (cleanPhone.length >= 10 && !cleanPhone.startsWith("55")) {
+            cleanPhone = "55" + cleanPhone;
+        }
+        if (cleanPhone) phoneParam = `phone=${cleanPhone}&`;
+    }
+
     sigeDB.logWhatsappDispatch("sup-cobranca", {
         tipo: "Cobrança de Projeto Docente",
         mensagem: msg,
@@ -1616,7 +1628,7 @@ function cobrarProfessorWhatsapp(profName, projTitle, taskTitle, deadline) {
     });
 
     const encodedMsg = encodeURIComponent(msg);
-    window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, "_blank");
+    window.open(`https://api.whatsapp.com/send?${phoneParam}text=${encodedMsg}`, "_blank");
     showToast(`📲 Mensagem de cobrança enviada ao docente ${profName}!`);
 }
 
@@ -1752,6 +1764,7 @@ function renderModuleAdministracao() {
     }
 
     renderWhatsappConfigPanel();
+    renderProfessoresAdminTable();
 }
 
 function renderWhatsappConfigPanel() {
@@ -2132,4 +2145,258 @@ function showToast(msg) {
         toast.style.opacity = "0";
         toast.style.transform = "translateY(10px)";
     }, 3000);
+}
+
+// ==========================================
+// GESTÃO E CADASTRO DO CORPO DOCENTE (PROFESSORES)
+// ==========================================
+function renderProfessoresAdminTable() {
+    const tbody = document.getElementById("admProfessoresTableBody");
+    if (!tbody) return;
+
+    const professores = sigeDB.getProfessores();
+    if (!professores || professores.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding:1.5rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-folder-open" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i>
+                    Nenhum professor cadastrado no momento. Clique em "+ Cadastrar Professor" para adicionar.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = professores.map(p => {
+        const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
+        const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
+        const waLink = waPhone ? `https://api.whatsapp.com/send?phone=${waPhone}` : "#";
+
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px 14px; font-weight:800; color:#0f172a;">
+                    <i class="fa-solid fa-user-tie" style="color:#2563eb; margin-right:6px;"></i> ${escapeHtml(p.nome)}
+                </td>
+                <td style="padding:12px 14px; color:#334155; font-weight:600;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700;">
+                        ${escapeHtml(p.disciplina || "Geral")}
+                    </span>
+                </td>
+                <td style="padding:12px 14px;">
+                    ${p.telefone ? `
+                        <a href="${waLink}" target="_blank" style="color:#16a34a; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.82rem;">
+                            <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> ${escapeHtml(p.telefone)}
+                        </a>
+                    ` : '<span style="color:#94a3b8; font-size:0.82rem;">Sem telefone</span>'}
+                </td>
+                <td style="padding:12px 14px; color:#64748b; font-size:0.83rem;">
+                    <div><strong>Turnos:</strong> ${escapeHtml(p.turnos || "Matutino/Vespertino")}</div>
+                    <div><strong>Turmas:</strong> ${escapeHtml(p.turmas || "Todas")}</div>
+                </td>
+                <td style="padding:12px 14px; text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:6px;">
+                        <button onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.75rem; padding:4px 8px;" title="Disparar Aviso WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i> Aviso
+                        </button>
+                        <button onclick="editarProfessor('${p.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Professor">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="excluirProfessor('${p.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Professor">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openCadastroProfessorModal(profId = null) {
+    const modal = document.getElementById("modalCadastroProfessor");
+    const title = document.getElementById("modalCadastroProfTitulo");
+    const inputId = document.getElementById("profInputId");
+    const inputNome = document.getElementById("profInputNome");
+    const inputDisc = document.getElementById("profInputDisciplina");
+    const inputTel = document.getElementById("profInputTelefone");
+    const inputEmail = document.getElementById("profInputEmail");
+    const inputTurnos = document.getElementById("profInputTurnos");
+    const inputTurmas = document.getElementById("profInputTurmas");
+
+    if (!modal) return;
+
+    if (profId) {
+        const professores = sigeDB.getProfessores();
+        const prof = professores.find(p => p.id === profId);
+        if (prof) {
+            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro de Professor`;
+            if (inputId) inputId.value = prof.id;
+            if (inputNome) inputNome.value = prof.nome || "";
+            if (inputDisc) inputDisc.value = prof.disciplina || "";
+            if (inputTel) inputTel.value = prof.telefone || "";
+            if (inputEmail) inputEmail.value = prof.email || "";
+            if (inputTurnos) inputTurnos.value = prof.turnos || "";
+            if (inputTurmas) inputTurmas.value = prof.turmas || "";
+        }
+    } else {
+        if (title) title.innerHTML = `<i class="fa-solid fa-chalkboard-user" style="color:#1e3a8a;"></i> Cadastrar Novo Professor`;
+        if (inputId) inputId.value = "";
+        if (inputNome) inputNome.value = "";
+        if (inputDisc) inputDisc.value = "";
+        if (inputTel) inputTel.value = "";
+        if (inputEmail) inputEmail.value = "";
+        if (inputTurnos) inputTurnos.value = "Matutino e Vespertino";
+        if (inputTurmas) inputTurmas.value = "";
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeCadastroProfessorModal() {
+    const modal = document.getElementById("modalCadastroProfessor");
+    if (modal) modal.style.display = "none";
+}
+
+function submitCadastroProfessor(e) {
+    e.preventDefault();
+    const id = document.getElementById("profInputId")?.value;
+    const nome = document.getElementById("profInputNome")?.value.trim();
+    const disciplina = document.getElementById("profInputDisciplina")?.value.trim();
+    const telefone = document.getElementById("profInputTelefone")?.value.trim();
+    const email = document.getElementById("profInputEmail")?.value.trim();
+    const turnos = document.getElementById("profInputTurnos")?.value.trim();
+    const turmas = document.getElementById("profInputTurmas")?.value.trim();
+
+    if (!nome || !disciplina || !telefone) {
+        showToast("⚠️ Preencha Nome, Disciplina e WhatsApp do professor!");
+        return;
+    }
+
+    sigeDB.saveProfessor({
+        id: id || null,
+        nome,
+        disciplina,
+        telefone,
+        email,
+        turnos,
+        turmas
+    });
+
+    closeCadastroProfessorModal();
+    renderModuleAdministracao();
+    showToast(id ? "✅ Professor atualizado com sucesso!" : "✅ Novo professor cadastrado com sucesso!");
+}
+
+function editarProfessor(profId) {
+    openCadastroProfessorModal(profId);
+}
+
+function excluirProfessor(profId) {
+    const professores = sigeDB.getProfessores();
+    const prof = professores.find(p => p.id === profId);
+    if (!prof) return;
+
+    if (confirm(`Tem certeza que deseja remover o cadastro do(a) ${prof.nome}?`)) {
+        sigeDB.deleteProfessor(profId);
+        renderModuleAdministracao();
+        showToast("🗑️ Professor removido com sucesso.");
+    }
+}
+
+function openDisparoAvisoProfessorModal(profId = "todos") {
+    const modal = document.getElementById("modalDisparoAvisoProfessor");
+    const selectDest = document.getElementById("avisoSelectDestinatario");
+    const inputAssunto = document.getElementById("avisoInputAssunto");
+    const inputMsg = document.getElementById("avisoInputMensagem");
+
+    if (!modal) return;
+
+    const professores = sigeDB.getProfessores();
+
+    if (selectDest) {
+        let opts = `<option value="todos">📢 Todos os Professores (${professores.length} cadastrados)</option>`;
+        professores.forEach(p => {
+            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - ${escapeHtml(p.disciplina)} (${p.telefone})</option>`;
+        });
+        selectDest.innerHTML = opts;
+    }
+
+    if (profId === "todos") {
+        if (selectDest) selectDest.value = "todos";
+        if (inputAssunto) inputAssunto.value = "Comunicado Oficial da Direção / Supervisão Escolar";
+        if (inputMsg) inputMsg.value = "Prezados Professores,\n\nSolicitamos a atenção de todos para o alinhamento das atividades pedagógicas nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
+    } else {
+        const p = professores.find(item => item.id === profId);
+        if (p) {
+            if (inputAssunto) inputAssunto.value = `Aviso para Prof. ${p.nome}`;
+            if (inputMsg) inputMsg.value = `Olá, Prof. ${p.nome}!\n\nEntramos em contato referente à disciplina de ${p.disciplina}.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
+        }
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeDisparoAvisoProfessorModal() {
+    const modal = document.getElementById("modalDisparoAvisoProfessor");
+    if (modal) modal.style.display = "none";
+}
+
+function submitDisparoAvisoProfessor(e) {
+    e.preventDefault();
+    const destId = document.getElementById("avisoSelectDestinatario")?.value;
+    const assunto = document.getElementById("avisoInputAssunto")?.value.trim();
+    const mensagem = document.getElementById("avisoInputMensagem")?.value.trim();
+
+    if (!assunto || !mensagem) {
+        showToast("⚠️ Preencha o assunto e a mensagem do comunicado!");
+        return;
+    }
+
+    const professores = sigeDB.getProfessores();
+
+    if (destId === "todos") {
+        let disparosCount = 0;
+        professores.forEach(p => {
+            if (p.telefone) {
+                const cleanPhone = p.telefone.replace(/\D/g, "");
+                const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
+                const fullMsg = `*${assunto}*\n\n${mensagem}`;
+                
+                sigeDB.logWhatsappDispatch("aviso-geral-prof", {
+                    tipo: "Aviso Geral Docente",
+                    mensagem: fullMsg,
+                    destinatario: p.nome,
+                    telefone: p.telefone,
+                    modo: "manual",
+                    status: "sucesso"
+                });
+                disparosCount++;
+            }
+        });
+
+        const fullMsg = `*${assunto}*\n\n${mensagem}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
+        showToast(`📲 Comunicado registrado para ${disparosCount} professores! Janela do WhatsApp aberta.`);
+    } else {
+        const p = professores.find(item => item.id === destId);
+        if (p) {
+            const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
+            const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
+            const fullMsg = `*${assunto}*\n\n${mensagem}`;
+            
+            sigeDB.logWhatsappDispatch("aviso-individual-prof", {
+                tipo: "Aviso Individual Docente",
+                mensagem: fullMsg,
+                destinatario: p.nome,
+                telefone: p.telefone,
+                modo: "manual",
+                status: "sucesso"
+            });
+
+            const phoneParam = waPhone ? `phone=${waPhone}&` : "";
+            window.open(`https://api.whatsapp.com/send?${phoneParam}text=${encodeURIComponent(fullMsg)}`, "_blank");
+            showToast(`📲 Comunicado direcionado para ${p.nome} enviado via WhatsApp!`);
+        }
+    }
+
+    closeDisparoAvisoProfessorModal();
 }

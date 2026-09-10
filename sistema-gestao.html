@@ -490,10 +490,50 @@
 
                 <div class="demanda-column">
                     <div class="demanda-column-header">
-                        <span><i class="fa-solid fa-hammer" style="color:#2563eb;"></i> Em Execução</span>
+                        <span><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Concluídas</span>
                     </div>
-                    <div id="admColAnalise"></div>
+                    <div id="admColConcluido"></div>
                 </div>
+            </div>
+
+            <!-- Cadastro & Gestão do Corpo Docente (Professores) -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-top:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-chalkboard-user" style="color:#2563eb; font-size:1.3rem;"></i> Cadastro & Gestão do Corpo Docente (Professores)
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Cadastre os professores da escola e seus WhatsApps para incluí-los nas demandas de Supervisão/OP e disparar avisos.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button onclick="openCadastroProfessorModal()" class="btn btn-primary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#1e3a8a;">
+                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Professor
+                        </button>
+                        <button onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#16a34a; color:white;">
+                            <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Aviso a Todos
+                        </button>
+                    </div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.88rem; text-align:left;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#334155; font-weight:800;">
+                                <th style="padding:10px 14px;">Professor(a)</th>
+                                <th style="padding:10px 14px;">Disciplina / Área</th>
+                                <th style="padding:10px 14px;">WhatsApp / Telefone</th>
+                                <th style="padding:10px 14px;">Turnos / Turmas</th>
+                                <th style="padding:10px 14px; text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admProfessoresTableBody">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             <!-- Configurações do Gateway de WhatsApp Automático (Sem Intervenção Humana) -->
             <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-top:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
@@ -1467,6 +1507,104 @@
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
                     <button type="button" onclick="closeNovaTarefaModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="width:auto;">Adicionar ao Calendário</button>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 5: CADASTRO / EDIÇÃO DE PROFESSOR -->
+    <!-- ========================================== -->
+    <div id="modalCadastroProfessor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 id="modalCadastroProfTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-chalkboard-user" style="color:#1e3a8a;"></i> Cadastrar Novo Professor
+                </h3>
+                <button onclick="closeCadastroProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitCadastroProfessor(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="profInputId">
+                
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome Completo do Professor(a):</label>
+                    <input type="text" id="profInputNome" required placeholder="Ex: Prof. Ricardo Santos" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Disciplina / Área:</label>
+                        <input type="text" id="profInputDisciplina" required placeholder="Ex: Matemática" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">WhatsApp (Com DDD):</label>
+                        <input type="tel" id="profInputTelefone" required placeholder="(47) 99999-8888" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">E-mail (Opcional):</label>
+                    <input type="email" id="profInputEmail" placeholder="professor@escola.sc.gov.br" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turnos de Atuação:</label>
+                        <input type="text" id="profInputTurnos" placeholder="Ex: Matutino, Vespertino" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas Atendidas:</label>
+                        <input type="text" id="profInputTurmas" placeholder="Ex: 6º, 7º, 8º Anos" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeCadastroProfessorModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#1e3a8a;">Salvar Professor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 6: DISPARO DE AVISO WHATSAPP -->
+    <!-- ========================================== -->
+    <div id="modalDisparoAvisoProfessor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:580px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-brands fa-whatsapp" style="color:#16a34a; font-size:1.4rem;"></i> Disparar Comunicado via WhatsApp
+                </h3>
+                <button onclick="closeDisparoAvisoProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitDisparoAvisoProfessor(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Destinatário(s):</label>
+                    <select id="avisoSelectDestinatario" class="search-input" style="width:100%; font-weight:700;">
+                        <!-- Opções preenchidas dinamicamente (Todos ou individual) -->
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Assunto / Categoria do Comunicado:</label>
+                    <input type="text" id="avisoInputAssunto" required placeholder="Ex: Lembrete de Reunião de Conselho de Classe" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Mensagem do Comunicado:</label>
+                    <textarea id="avisoInputMensagem" rows="5" required placeholder="Escreva a mensagem oficial que será transmitida ao professor..." class="search-input" style="width:100%; font-family:inherit; font-size:0.88rem; line-height:1.4;"></textarea>
+                </div>
+
+                <div style="background:#f0fdf4; padding:10px; border-radius:10px; border:1px solid #bbf7d0; font-size:0.8rem; color:#166534;">
+                    <i class="fa-solid fa-circle-info"></i> O sistema registrará este disparo na Central de Registros e abrirá a conversa direta do WhatsApp Web/App com o destinatário.
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem;">
+                    <button type="button" onclick="closeDisparoAvisoProfessorModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#16a34a; color:white;">
+                        <i class="fa-brands fa-whatsapp"></i> Disparar Comunicado
+                    </button>
                 </div>
             </form>
         </div>

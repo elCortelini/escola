@@ -339,6 +339,54 @@ const defaultSigeData = {
             telefone: "47999778800",
             email: "supervisao2@escola.gov.br"
         }
+    ],
+
+    professores: [
+        {
+            id: "prof-1",
+            nome: "Prof. Ricardo Santos",
+            disciplina: "Ciências & Biologia",
+            telefone: "47998877665",
+            email: "ricardo.santos@escola.gov.br",
+            turnos: "matutino",
+            turmas: "6º ao 9º Ano"
+        },
+        {
+            id: "prof-2",
+            nome: "Profª Maria Oliveira",
+            disciplina: "Física & Matemática",
+            telefone: "47991234567",
+            email: "maria.oliveira@escola.gov.br",
+            turnos: "ambos",
+            turmas: "8º e 9º Anos"
+        },
+        {
+            id: "prof-3",
+            nome: "Profª Carmen Lucia",
+            disciplina: "Língua Portuguesa",
+            telefone: "47988332211",
+            email: "carmen.lucia@escola.gov.br",
+            turnos: "matutino",
+            turmas: "6º ao 8º Ano"
+        },
+        {
+            id: "prof-4",
+            nome: "Prof. Lucas Gabriel",
+            disciplina: "Robótica & TI",
+            telefone: "47997711223",
+            email: "lucas.gabriel@escola.gov.br",
+            turnos: "vespertino",
+            turmas: "Todos os Anos"
+        },
+        {
+            id: "prof-5",
+            nome: "Profª Juliana Lima",
+            disciplina: "Artes & Projetos",
+            telefone: "47996655443",
+            email: "juliana.lima@escola.gov.br",
+            turnos: "vespertino",
+            turmas: "6º ao 9º Ano"
+        }
     ]
 };
 
@@ -438,6 +486,37 @@ class SigeDatabase {
             this.saveData(this.data);
         }
         return this.data.supervisoras;
+    }
+
+    getProfessores() {
+        if (!this.data.professores || !Array.isArray(this.data.professores)) {
+            this.data.professores = defaultSigeData.professores || [];
+            this.saveData(this.data);
+        }
+        return this.data.professores;
+    }
+
+    saveProfessor(profData) {
+        let list = this.getProfessores();
+        if (profData.id) {
+            const index = list.findIndex(p => p.id === profData.id);
+            if (index >= 0) {
+                list[index] = { ...list[index], ...profData };
+            } else {
+                list.push(profData);
+            }
+        } else {
+            profData.id = "prof-" + Date.now();
+            list.push(profData);
+        }
+        this.saveData(this.data);
+        return profData;
+    }
+
+    deleteProfessor(id) {
+        let list = this.getProfessores();
+        this.data.professores = list.filter(p => p.id !== id);
+        this.saveData(this.data);
     }
 
     getWhatsappConfig() {
