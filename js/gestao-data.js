@@ -247,14 +247,24 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    // Orientação Pedagógica
+    getAgendamentosOP() {
+        if (!this.data || !Array.isArray(this.data.agendamentosOP)) {
+            if (!this.data) this.data = {};
+            this.data.agendamentosOP = defaultSigeData.agendamentosOP || [];
+            this.saveData(this.data);
+        }
+        return this.data.agendamentosOP;
+    }
+
     // Bloqueio de Dias / Feriados
     getDiasBloqueados() {
         return this.data.diasBloqueados || [];
-    },
+    }
 
     isDiaBloqueado(dateIso) {
         return (this.data.diasBloqueados || []).some(d => d.data === dateIso);
-    },
+    }
 
     toggleBloqueioDia(dateIso, motivo = "Conselho de Classe / Recesso") {
         if (!this.data.diasBloqueados) this.data.diasBloqueados = [];
@@ -265,7 +275,7 @@ class SigeDatabase {
             this.data.diasBloqueados.push({ data: dateIso, motivo, bloqueadoPor: this.getRole() });
         }
         this.saveData(this.data);
-    },
+    }
 
     logWhatsappReminder(id, tipoLembrete) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
@@ -277,7 +287,7 @@ class SigeDatabase {
             });
             this.saveData(this.data);
         }
-    },
+    }
 
     addAnexoOP(id, nomeArquivo, urlOuData) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
@@ -290,7 +300,7 @@ class SigeDatabase {
             });
             this.saveData(this.data);
         }
-    },
+    }
 
     updateEncaminhamentoOP(id, encaminhamento, historicoTratado) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
@@ -299,7 +309,7 @@ class SigeDatabase {
             if (historicoTratado !== undefined) ag.historicoTratado = historicoTratado;
             this.saveData(this.data);
         }
-    },
+    }
 
     addAgendamentoOP(agendamento) {
         // Verifica se o dia esta bloqueado pela Direcao
@@ -332,7 +342,7 @@ class SigeDatabase {
         this.data.agendamentosOP.unshift(agendamento);
         this.saveData(this.data);
         return agendamento;
-    },
+    }
 
     updateSecretariaStatusOP(id, status, obs = "", chegadaEm = null) {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
