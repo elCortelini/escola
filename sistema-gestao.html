@@ -282,6 +282,13 @@
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Seletor da Supervisora (Consolidada vs Individual) -->
+                    <select id="supFilterSupervisora" onchange="renderModuleSupervisao()" class="search-input" style="font-weight:700; color:#1e293b; border-color:#cbd5e1;">
+                        <option value="todas">🌐 Visão Consolidada (Ambas Supervisoras)</option>
+                        <option value="Supervisora 1">💙 Supervisora 1</option>
+                        <option value="Supervisora 2">💙 Supervisora 2</option>
+                    </select>
+
                     <!-- Alternador de Visão Semanal / Kanban -->
                     <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
                         <button onclick="setSupViewMode('semanal')" class="view-toggle-btn sup-toggle-btn active" data-mode="semanal">
@@ -913,7 +920,7 @@
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
                         <select id="supInputTurno" class="search-input" style="width:100%;">
                             <option value="matutino">🌅 Matutino (Manhã)</option>
-                            <option value="vespertino">os Vespertino (Tarde)</option>
+                            <option value="vespertino">🌇 Vespertino (Tarde)</option>
                             <option value="ambos">🌐 Ambos os Turnos</option>
                         </select>
                     </div>
@@ -937,8 +944,12 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisor Responsável:</label>
-                        <input type="text" id="supInputResponsavel" required placeholder="Ex: Prof. Marcos (Supervisão)" class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisora Responsável:</label>
+                        <select id="supInputResponsavel" class="search-input" style="width:100%; font-weight:700; color:#1e293b;">
+                            <option value="Supervisora 1">💙 Supervisora 1</option>
+                            <option value="Supervisora 2">💙 Supervisora 2</option>
+                            <option value="Equipe Supervisão">🌐 Ambas / Equipe Supervisão</option>
+                        </select>
                     </div>
                 </div>
 
@@ -952,6 +963,70 @@
                     <button type="submit" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);">Registrar no Quadro</button>
                 </div>
             </form>
+    <!-- ========================================== -->
+    <!-- MODAL DETALHES DA DEMANDA / EVENTO DA SUPERVISÃO -->
+    <!-- ========================================== -->
+    <div id="modalDetalhesDemandaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:550px; width:92%; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
+                <div>
+                    <h3 id="detalhesSupTitulo" style="color:#0f172a; font-weight:900; font-size:1.2rem;">Título da Demanda</h3>
+                    <p style="font-size:0.82rem; color:#64748b; margin-top:2px;">
+                        <i class="fa-solid fa-user-tag"></i> Alvo / Envolvidos: <strong id="detalhesSupAlvo">-</strong>
+                    </p>
+                </div>
+                <button onclick="closeDetalhesDemandaSupervisaoModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">CATEGORIA</div>
+                    <div id="detalhesSupCategoria" style="font-weight:800; color:#1e293b; font-size:0.85rem; margin-top:2px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">SUPERVISORA RESPONSÁVEL</div>
+                    <div id="detalhesSupResponsavel" style="font-weight:800; color:#475569; font-size:0.85rem; margin-top:2px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">PERÍODO / DATAS</div>
+                    <div id="detalhesSupDatas" style="font-weight:800; color:#0f172a; font-size:0.85rem; margin-top:2px;">-</div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">STATUS ATUAL</div>
+                    <div id="detalhesSupStatus" style="margin-top:4px;">-</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1.2rem;">
+                <label style="font-weight:800; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-align-left"></i> Descrição & Objetivos:</label>
+                <div id="detalhesSupDescricao" style="background:#f1f5f9; padding:12px; border-radius:12px; font-size:0.85rem; color:#334155; margin-top:6px; line-height:1.5;">
+                    -
+                </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
+                <label style="font-weight:800; font-size:0.85rem; color:#0f172a; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-sliders"></i> Atualizar Status da Demanda:
+                </label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('pendente')" class="btn-sec" style="background:#f59e0b; color:white;">
+                        📌 Marcar Pendente
+                    </button>
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('em_atendimento')" class="btn-sec" style="background:#2563eb; color:white;">
+                        ▶ Em Andamento / Análise
+                    </button>
+                    <button onclick="mudarStatusDemandaSupervisaoAtual('concluido')" class="btn-sec btn-sec-ok">
+                        ✅ Concluir Demanda
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="button" onclick="closeDetalhesDemandaSupervisaoModal()" class="btn btn-secondary" style="width:auto;">Fechar Detalhes</button>
+            </div>
         </div>
     </div>
 

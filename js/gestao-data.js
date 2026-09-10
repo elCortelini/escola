@@ -238,6 +238,21 @@ const defaultSigeData = {
             telefone: "47999445566",
             email: "luciana.op@escola.gov.br"
         }
+    ],
+
+    supervisoras: [
+        {
+            id: "sup-user-1",
+            nome: "Supervisora 1",
+            telefone: "47999778899",
+            email: "supervisao1@escola.gov.br"
+        },
+        {
+            id: "sup-user-2",
+            nome: "Supervisora 2",
+            telefone: "47999778800",
+            email: "supervisao2@escola.gov.br"
+        }
     ]
 };
 
@@ -329,6 +344,14 @@ class SigeDatabase {
             list.push({ id: id || ("orient-" + Date.now()), nome, telefone, email });
         }
         this.saveData(this.data);
+    }
+
+    getSupervisoras() {
+        if (!this.data.supervisoras || !Array.isArray(this.data.supervisoras)) {
+            this.data.supervisoras = defaultSigeData.supervisoras || [];
+            this.saveData(this.data);
+        }
+        return this.data.supervisoras;
     }
 
     getWhatsappConfig() {

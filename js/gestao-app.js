@@ -956,6 +956,7 @@ function submitAgendamentoOP(e) {
 // ==========================================
 let supViewMode = "semanal"; // "semanal" ou "kanban"
 let currentSupWeekRefDate = new Date();
+let currentDetailDemandaSupId = null;
 
 function setSupViewMode(mode) {
     supViewMode = mode;
@@ -987,7 +988,11 @@ function resetSupWeekToToday() {
 }
 
 function renderModuleSupervisao() {
-    const demandas = sigeDB.getDemandasSupervisao();
+    let demandas = sigeDB.getDemandasSupervisao();
+    const filterSup = document.getElementById("supFilterSupervisora");
+    if (filterSup && filterSup.value && filterSup.value !== "todas") {
+        demandas = demandas.filter(d => d.responsavel === filterSup.value || d.responsavel === "Equipe Supervisão");
+    }
     const weekDays = getWeekDays(currentSupWeekRefDate);
 
     // 1. Renderiza Quadro Semanal da Supervisão
@@ -1215,6 +1220,68 @@ function submitDemandaSupervisao(e) {
     updateBadgesCounts();
     renderNotifications();
     showToast("✅ Demanda / Evento registrado no Quadro da Supervisão!");
+}
+
+function openDemandaSupervisaoModalWithData(id) {
+    const demandas = sigeDB.getDemandasSupervisao();
+    const item = demandas.find(d => String(d.id) === String(id));
+    if (!item) return;
+
+    currentDetailDemandaSupId = id;
+
+    const elTitulo = document.getElementById("detalhesSupTitulo");
+    const elAlvo = document.getElementById("detalhesSupAlvo");
+    const elCategoria = document.getElementById("detalhesSupCategoria");
+    const elResponsavel = document.getElementById("detalhesSupResponsavel");
+    const elDatas = document.getElementById("detalhesSupDatas");
+    const elStatus = document.getElementById("detalhesSupStatus");
+    const elDescricao = document.getElementById("detalhesSupDescricao");
+
+    if (elTitulo) elTitulo.innerText = item.titulo || "Demanda da Supervisão";
+    if (elAlvo) elAlvo.innerText = item.turmaOuProfessor || "Docentes / Turmas";
+    if (elCategoria) elCategoria.innerText = item.categoria || "Supervisão Pedagógica";
+    if (elResponsavel) elResponsavel.innerText = item.responsavel || "Supervisora 1";
+
+    const dataInicio = formatDateBR(item.dataInicio || item.prazo || item.criadoEm);
+    const dataFim = formatDateBR(item.dataFim || item.dataInicio || item.prazo || item.criadoEm);
+    const turnoText = item.turno === 'matutino' ? 'Manhã' : (item.turno === 'vespertino' ? 'Tarde' : 'Integral/Ambos');
+
+    if (elDatas) {
+        if (dataInicio === dataFim) {
+            elDatas.innerText = `${dataInicio} (${turnoText})`;
+        } else {
+            elDatas.innerText = `${dataInicio} até ${dataFim} (${turnoText})`;
+        }
+    }
+
+    if (elStatus) {
+        elStatus.innerHTML = `
+            <span class="secretaria-status-badge status-${item.status === 'concluido' ? 'realizado' : (item.status === 'em_atendimento' ? 'aguardando' : 'pendente')}">
+                ${getDemandaStatusBadgeText(item.status)}
+            </span>
+        `;
+    }
+
+    if (elDescricao) elDescricao.innerText = item.descricao || "Sem detalhes adicionais fornecidos.";
+
+    const modal = document.getElementById("modalDetalhesDemandaSupervisao");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeDetalhesDemandaSupervisaoModal() {
+    currentDetailDemandaSupId = null;
+    const modal = document.getElementById("modalDetalhesDemandaSupervisao");
+    if (modal) modal.style.display = "none";
+}
+
+function mudarStatusDemandaSupervisaoAtual(newStatus) {
+    if (!currentDetailDemandaSupId) return;
+    sigeDB.updateStatusDemandaSupervisao(currentDetailDemandaSupId, newStatus);
+    closeDetalhesDemandaSupervisaoModal();
+    renderModuleSupervisao();
+    updateBadgesCounts();
+    renderNotifications();
+    showToast("Status do evento da Supervisão atualizado!");
 }
 
 // ==========================================
