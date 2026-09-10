@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>SIGE - Sistema Integrado de Gestão Escolar | C.E. Pedro Rizzi</title>
+    
+    <!-- FontAwesome 6 Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=20260910">
+    <link rel="stylesheet" href="css/gestao.css?v=20260910">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
+</head>
+<body>
+
+    <!-- Bar de Seleção de Perfil e Notificações -->
+    <div class="top-bar-role">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span><i class="fa-solid fa-school-lock"></i> <strong>SIGE Rizzi</strong> — Nível de Acesso:</span>
+            <div class="role-selector-container">
+                <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
+                <select id="activeRoleSelect">
+                    <option value="direcao">👑 Gestor / Direção Escolar</option>
+                    <option value="orientacao">💛 Orientador Pedagógico (OP)</option>
+                    <option value="supervisao">📋 Supervisor Pedagógico</option>
+                    <option value="secretaria">📝 Secretaria Escolar</option>
+                    <option value="admin">⚙️ Administrador do Sistema</option>
+                    <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
+                </select>
+            </div>
+            <div id="activeRoleBadge"></div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:16px;">
+            <!-- Sino de Notificações Inteligentes -->
+            <button class="notification-bell-btn" id="notifBellBtn" title="Central de Notificações Pertinentes">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notification-badge" id="notifBadgeCount" style="display:none;">0</span>
+            </button>
+
+            <!-- Dropdown do Sino -->
+            <div class="notification-dropdown" id="notifDropdown">
+                <div class="notification-header">
+                    <span><i class="fa-solid fa-bell"></i> Notificações Pertinentes</span>
+                    <button onclick="markAllNotifsRead()" style="background:none; border:none; color:#f59e0b; cursor:pointer; font-size:0.75rem; font-weight:700;">Marcar lidas</button>
+                </div>
+                <div class="notification-list" id="notifListElem">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigation Principal -->
+    <header class="header-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="brand-text">
+                    <h1>Centro Educacional Pedro Rizzi</h1>
+                    <p>Sistema Integrado de Gestão, Agenda & Comunicação</p>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-house"></i> Portal Início</a></li>
+                <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Pesquisa</a></li>
+                <li><a href="sistema-gestao.html" class="active"><i class="fa-solid fa-cubes-stacked"></i> Módulos SIGE</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Navegação por Abas dos Módulos -->
+    <nav class="sige-nav-tabs">
+        <button class="sige-tab-btn active" data-tab="mural">
+            <i class="fa-solid fa-chalkboard-user"></i> Mural & Calendário
+        </button>
+        <button class="sige-tab-btn" data-tab="op">
+            <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Pedagógica (OP)
+            <span class="tab-badge" id="badgeTabOP">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="supervisao">
+            <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Supervisão Pedagógica
+            <span class="tab-badge" id="badgeTabSup">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="admin">
+            <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Administração
+            <span class="tab-badge" id="badgeTabAdm">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="direcao">
+            <i class="fa-solid fa-crown" style="color:var(--direcao-color);"></i> Direção & Painel
+        </button>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container" style="margin-top:1.5rem; margin-bottom:3rem;">
+
+        <!-- ========================================== -->
+        <!-- ABA 1: MURAL DE RECADOS & CALENDÁRIO -->
+        <!-- ========================================== -->
+        <section id="tab-mural" class="tab-content-section active">
+            <div class="action-toolbar">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                        <i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Mural do Dia & Calendário de Tarefas
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b;">Avisos da escola, prazos organizacionais e atribuições de responsabilidade.</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button onclick="openAvisoModal()" class="btn btn-primary" style="width:auto;">
+                        <i class="fa-solid fa-plus"></i> Publicar Aviso
+                    </button>
+                    <button onclick="openNovaTarefaModal()" class="btn btn-secondary" style="width:auto;">
+                        <i class="fa-solid fa-calendar-plus"></i> Nova Tarefa no Calendário
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
+                <!-- Coluna Mural -->
+                <div>
+                    <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-note-sticky" style="color:#2563eb;"></i> Comunicados Oficiais
+                    </h4>
+                    <div id="muralContainer" class="mural-grid" style="grid-template-columns: 1fr;">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Coluna Calendário de Tarefas -->
+                <div>
+                    <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-calendar-days" style="color:#d97706;"></i> Calendário de Prazos (Quem & Quando)
+                    </h4>
+                    <div id="calendarioContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- ABA 2: ORIENTAÇÃO PEDAGÓGICA (OP) -->
+        <!-- ========================================== -->
+        <section id="tab-op" class="tab-content-section">
+            <div class="action-toolbar">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                        <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Pedagógica & Validação da Secretaria
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b;">
+                        Controle estrito de agenda: <strong>3 vagas agendadas + 1 emergencial por turno</strong>.
+                    </p>
+                </div>
+                <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto;">
+                    <i class="fa-solid fa-calendar-plus"></i> Novo Agendamento OP
+                </button>
+            </div>
+
+            <!-- Resumo de Vagas por Turno -->
+            <div class="turno-slots-container">
+                <div class="turno-card matutino">
+                    <div class="turno-info">
+                        <h4><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Turno Matutino</h4>
+                        <p>Limite estrito de atendimento diário</p>
+                    </div>
+                    <div class="slots-pills">
+                        <span class="slot-pill agendado" id="countMatutinoAgendado">0 / 3 Ocupados</span>
+                        <span class="slot-pill emergencial" id="countMatutinoEmergencial">0 / 1 Ocupado</span>
+                    </div>
+                </div>
+
+                <div class="turno-card vespertino">
+                    <div class="turno-info">
+                        <h4><i class="fa-solid fa-cloud-sun" style="color:#d97706;"></i> Turno Vespertino</h4>
+                        <p>Limite estrito de atendimento diário</p>
+                    </div>
+                    <div class="slots-pills">
+                        <span class="slot-pill agendado" id="countVespertinoAgendado">0 / 3 Ocupados</span>
+                        <span class="slot-pill emergencial" id="countVespertinoEmergencial">0 / 1 Ocupado</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros de Data -->
+            <div style="background:white; padding:12px 18px; border-radius:12px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-weight:700; font-size:0.88rem; color:#0f172a;"><i class="fa-regular fa-calendar"></i> Filtrar Data dos Atendimentos:</label>
+                    <input type="date" id="opFilterData" onchange="renderModuleOrientacaoPedagogica()" class="search-input">
+                </div>
+                <div style="font-size:0.8rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-info"></i> A Secretaria valida a presença clicando em <strong>OK Realizado</strong> nos cards.
+                </div>
+            </div>
+
+            <!-- Grid de Atendimentos OP -->
+            <div id="opAppointmentsGrid" class="op-grid">
+                <!-- Rendered via JS -->
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- ABA 3: SUPERVISÃO PEDAGÓGICA -->
+        <!-- ========================================== -->
+        <section id="tab-supervisao" class="tab-content-section">
+            <div class="action-toolbar">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                        <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Fila de Demandas da Supervisão Pedagógica
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b;">Gestão de ocorrências pedagógicas, acompanhamento docente e resoluções.</p>
+                </div>
+                <button onclick="openDemandaSupervisaoModal()" class="btn btn-primary" style="width:auto;">
+                    <i class="fa-solid fa-plus"></i> Nova Demanda Pedagógica
+                </button>
+            </div>
+
+            <div class="demandas-columns">
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Pendentes</span>
+                    </div>
+                    <div id="supColPendente"></div>
+                </div>
+
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-solid fa-spinner" style="color:#2563eb;"></i> Em Atendimento / Análise</span>
+                    </div>
+                    <div id="supColAnalise"></div>
+                </div>
+
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Concluídas</span>
+                    </div>
+                    <div id="supColConcluido"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- ABA 4: ADMINISTRAÇÃO -->
+        <!-- ========================================== -->
+        <section id="tab-admin" class="tab-content-section">
+            <div class="action-toolbar">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                        <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Demandas da Administração & Infraestrutura
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b;">Manutenção de salas, TI, suprimentos e apoio logístico.</p>
+                </div>
+                <button onclick="openDemandaAdminModal()" class="btn btn-primary" style="width:auto;">
+                    <i class="fa-solid fa-wrench"></i> Solicitar Suporte Adm/TI
+                </button>
+            </div>
+
+            <div class="demandas-columns">
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Solicitações Pendentes</span>
+                    </div>
+                    <div id="admColPendente"></div>
+                </div>
+
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-solid fa-hammer" style="color:#2563eb;"></i> Em Execução</span>
+                    </div>
+                    <div id="admColAnalise"></div>
+                </div>
+
+                <div class="demanda-column">
+                    <div class="demanda-column-header">
+                        <span><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Resolvidas</span>
+                    </div>
+                    <div id="admColConcluido"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- ABA 5: DIREÇÃO & GESTÃO EXECUTIVA -->
+        <!-- ========================================== -->
+        <section id="tab-direcao" class="tab-content-section">
+            <div class="action-toolbar">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                        <i class="fa-solid fa-crown" style="color:var(--direcao-color);"></i> Painel Executivo da Direção Escolar
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b;">Visão panorâmica da escola, indicadores gerenciais e comunicados globais.</p>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem; margin-bottom:2rem;">
+                <div style="background:white; padding:1.2rem; border-radius:16px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700;">TOTAL ATENDIMENTOS OP</div>
+                    <div id="dirStatTotalOP" style="font-size:2rem; font-weight:800; color:#2563eb; margin-top:4px;">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Registrados no sistema</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:16px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700;">TAXA DE PRESENÇA (SECRETARIA)</div>
+                    <div id="dirStatOkSec" style="font-size:2rem; font-weight:800; color:#10b981; margin-top:4px;">0%</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Confirmados com OK</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:16px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700;">DEMANDAS SUPERVISÃO EM ABERTO</div>
+                    <div id="dirStatSupPend" style="font-size:2rem; font-weight:800; color:#7c3aed; margin-top:4px;">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Aguardando solução</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:16px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700;">SOLICITAÇÕES ADM EM ABERTO</div>
+                    <div id="dirStatAdmPend" style="font-size:2rem; font-weight:800; color:#d97706; margin-top:4px;">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Manutenção & Infra</div>
+                </div>
+            </div>
+
+            <div style="background:white; padding:1.8rem; border-radius:16px; border:1px solid #e2e8f0;">
+                <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">
+                    <i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Emissão de Comunicado Oficial para a Escola
+                </h4>
+                <form onsubmit="submitNovoAviso(event)" style="display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título do Aviso:</label>
+                        <input type="text" id="avisoInputTitulo" required placeholder="Ex: Alteração de Horário das Avaliações" class="search-input" style="width:100%; margin-top:4px;">
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div>
+                            <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Público Alvo:</label>
+                            <select id="avisoInputTarget" class="search-input" style="width:100%; margin-top:4px;">
+                                <option value="todos">🌐 Toda a Comunidade Escolar</option>
+                                <option value="professores">👨‍🏫 Apenas Professores</option>
+                                <option value="alunos">🎓 Apenas Alunos</option>
+                                <option value="orientacao_supervisao">💛 Orientação e Supervisão</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-top:24px;">
+                            <input type="checkbox" id="avisoInputUrgente" style="width:18px; height:18px; cursor:pointer;">
+                            <label for="avisoInputUrgente" style="font-weight:700; color:#dc2626; cursor:pointer;">🚨 Marcar como Urgente (Destaque Vermelho)</label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Conteúdo da Mensagem:</label>
+                        <textarea id="avisoInputConteudo" required rows="4" placeholder="Escreva a mensagem completa..." class="search-input" style="width:100%; margin-top:4px; font-family:inherit;"></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+                        <button type="button" onclick="sigeDB.resetToDefault()" class="btn btn-secondary" style="width:auto; background:#fee2e2; color:#991b1b; border:none;">
+                            <i class="fa-solid fa-rotate-left"></i> Restaurar Dados Demonstrativos
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="width:auto;">
+                            <i class="fa-solid fa-paper-plane"></i> Publicar Comunicado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: NOVO AGENDAMENTO OP -->
+    <!-- ========================================== -->
+    <div id="modalAgendamentoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Novo Agendamento - Orientação Pedagógica
+                </h3>
+                <button onclick="closeAgendamentoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formAgendamentoOP" onsubmit="submitAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno:</label>
+                    <input type="text" id="opInputAluno" required placeholder="Ex: Gabriel Souza" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
+                        <input type="text" id="opInputTurma" required placeholder="Ex: 7º Ano A" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
+                        <input type="text" id="opInputResponsavel" required placeholder="Ex: Ana Souza (Mãe)" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato:</label>
+                    <input type="tel" id="opInputTelefone" required placeholder="Ex: 47999887766" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
+                        <input type="date" id="opInputData" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
+                        <input type="time" id="opInputHorario" required class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
+                        <select id="opInputTurno" class="search-input" style="width:100%;">
+                            <option value="matutino">☀️ Matutino (Manhã)</option>
+                            <option value="vespertino">⛅ Vespertino (Tarde)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Tipo de Vaga:</label>
+                        <select id="opInputTipo" class="search-input" style="width:100%;">
+                            <option value="agendado">📅 Agendado Normal (Max 3/turno)</option>
+                            <option value="emergencial">🚨 Vaga Emergencial (Max 1/turno)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo / O que vai ser tratado:</label>
+                    <textarea id="opInputMotivo" required rows="3" placeholder="Descreva detalhadamente o motivo da reunião..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeAgendamentoModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;">Salvar Agendamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: NOVA DEMANDA SUPERVISÃO -->
+    <!-- ========================================== -->
+    <div id="modalDemandaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Nova Demanda - Supervisão Pedagógica
+                </h3>
+                <button onclick="closeDemandaSupervisaoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitDemandaSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Demanda:</label>
+                    <input type="text" id="supInputTitulo" required placeholder="Ex: Análise de Adaptação Curricular" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma ou Professor Alvo:</label>
+                        <input type="text" id="supInputAlvo" required placeholder="Ex: Prof. Marcos (História)" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria:</label>
+                        <select id="supInputCategoria" class="search-input" style="width:100%;">
+                            <option value="Planejamento Pedagógico">Planejamento Pedagógico</option>
+                            <option value="Gestão de Sala">Gestão de Sala</option>
+                            <option value="Documentação">Documentação / Diários</option>
+                            <option value="Atendimento Docente">Atendimento Docente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prioridade:</label>
+                        <select id="supInputPrioridade" class="search-input" style="width:100%;">
+                            <option value="alta">🔴 Alta Prioridade</option>
+                            <option value="media" selected>🟡 Média Prioridade</option>
+                            <option value="baixa">🔵 Baixa Prioridade</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prazo Limite:</label>
+                        <input type="date" id="supInputPrazo" required class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisor Responsável:</label>
+                    <input type="text" id="supInputResponsavel" required placeholder="Ex: Supervisão Pedagógica" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição da Solicitação:</label>
+                    <textarea id="supInputDescricao" required rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeDemandaSupervisaoModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;">Registrar Demanda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: NOVA DEMANDA ADMINISTRAÇÃO -->
+    <!-- ========================================== -->
+    <div id="modalDemandaAdmin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Nova Solicitação - Administração / Infra
+                </h3>
+                <button onclick="closeDemandaAdminModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitDemandaAdmin(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Solicitação:</label>
+                    <input type="text" id="admInputTitulo" required placeholder="Ex: Conserto do Ar Condicionado Sala 5" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor Responsável:</label>
+                        <select id="admInputSetor" class="search-input" style="width:100%;">
+                            <option value="Manutenção & TI">Manutenção & TI</option>
+                            <option value="Suprimentos / Almoxarifado">Suprimentos / Almoxarifado</option>
+                            <option value="Patrimônio">Patrimônio</option>
+                            <option value="Limpeza & Apoio">Limpeza & Apoio</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prioridade:</label>
+                        <select id="admInputPrioridade" class="search-input" style="width:100%;">
+                            <option value="alta">🔴 Urgente</option>
+                            <option value="media" selected>🟡 Normal</option>
+                            <option value="baixa">🔵 Baixa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prazo Limite:</label>
+                        <input type="date" id="admInputPrazo" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Responsável Designado:</label>
+                        <input type="text" id="admInputResponsavel" required placeholder="Ex: Equipe de Apoio" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Detalhes da Necessidade:</label>
+                    <textarea id="admInputDescricao" required rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeDemandaAdminModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;">Enviar Solicitação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODAL 4: NOVA TAREFA NO CALENDÁRIO -->
+    <!-- ========================================== -->
+    <div id="modalNovaTarefa" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-calendar-plus" style="color:var(--accent);"></i> Adicionar Tarefa ao Calendário Escolar
+                </h3>
+                <button onclick="closeNovaTarefaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitNovaTarefa(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">O que deve ser feito (Descrição da Tarefa):</label>
+                    <input type="text" id="tarInputDesc" required placeholder="Ex: Lançamento de notas do 2º trimestre no sistema" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quem deve fazer (Responsável):</label>
+                    <input type="text" id="tarInputResponsavel" required placeholder="Ex: Professores do 6º ao 8º ano" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quando fazer (Data Limite):</label>
+                        <input type="date" id="tarInputQuando" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor/Público Alvo:</label>
+                        <input type="text" id="tarInputDestinatario" required placeholder="Ex: Docentes / Secretaria" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeNovaTarefaModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;">Adicionar ao Calendário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer>
+        <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
+        <p style="font-size:0.82rem; margin-top:4px; opacity:0.8;">Sistema Integrado de Gestão Escolar (SIGE) — Módulos OP, Supervisão, Administração, Direção & Mural</p>
+        <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
+    </footer>
+
+    <!-- JS Files -->
+    <script src="js/gestao-data.js?v=20260910"></script>
+    <script src="js/gestao-app.js?v=20260910"></script>
+</body>
+</html>

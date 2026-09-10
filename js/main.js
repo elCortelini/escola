@@ -4,6 +4,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const defaultSystems = [
     {
+        id: "gestao",
+        title: "SIGE — Gestão Escolar & Agenda",
+        iconClass: "fa-solid fa-cubes-stacked",
+        bgClass: "icon-amber",
+        tag: "GESTÃO INTEGRADA & COMUNICAÇÃO",
+        description: "Controle de agenda OP (3 agendados + 1 emergencial), demandas da Supervisão, Administração, Direção, Mural e Notificações.",
+        url: "sistema-gestao.html",
+        status: "online",
+        badge: "NOVO / MÓDULOS ATIVOS",
+        isLive: true
+    },
+    {
         id: "dashboard",
         title: "Dashboard de Avaliação",
         iconClass: "fa-solid fa-chart-line",

@@ -1,0 +1,631 @@
+/* gestao.css - Estilos específicos para o SIGE do Centro Educacional Pedro Rizzi */
+
+:root {
+    --op-color: #2563eb;
+    --op-light: #eff6ff;
+    --supervisao-color: #7c3aed;
+    --supervisao-light: #f5f3ff;
+    --admin-color: #059669;
+    --admin-light: #ecfdf5;
+    --direcao-color: #b45309;
+    --direcao-light: #fffbeb;
+    --emergencial-color: #dc2626;
+    --emergencial-bg: #fef2f2;
+}
+
+/* Layout Geral & Header Estendido */
+.top-bar-role {
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+    padding: 0.5rem 1.5rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.role-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1e293b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+}
+
+.role-selector-container select {
+    background: transparent;
+    color: #f8fafc;
+    border: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.role-selector-container select option {
+    background: #0f172a;
+    color: white;
+}
+
+/* Sino de Notificações */
+.notification-bell-btn {
+    position: relative;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-bell-btn:hover {
+    background: #334155;
+    color: var(--accent);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0f172a;
+}
+
+/* Dropdown de Notificações */
+.notification-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    width: 360px;
+    max-width: 90vw;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid #e2e8f0;
+    z-index: 2000;
+    display: none;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.notification-dropdown.active {
+    display: block;
+}
+
+.notification-header {
+    background: #0f172a;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.notification-list {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.notification-item:hover {
+    background: #f8fafc;
+}
+
+.notification-item.unread {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+}
+
+.notification-item .notif-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1e293b;
+}
+
+.notification-item .notif-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.notification-item .notif-time {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* Negação de Acesso por Perfil */
+.role-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-pill-admin { background: #fee2e2; color: #991b1b; }
+.role-pill-direcao { background: #fef3c7; color: #92400e; }
+.role-pill-orientacao { background: #dbeafe; color: #1e40af; }
+.role-pill-supervisao { background: #f3e8ff; color: #6b21a8; }
+.role-pill-secretaria { background: #dcfce7; color: #166534; }
+.role-pill-comunidade { background: #f1f5f9; color: #475569; }
+
+/* Navegação por Abas */
+.sige-nav-tabs {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    overflow-x: auto;
+    padding: 0 1.5rem;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.sige-tab-btn {
+    padding: 1rem 1.2rem;
+    border: none;
+    background: transparent;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.sige-tab-btn:hover {
+    color: #1e3a8a;
+    background: #f8fafc;
+}
+
+.sige-tab-btn.active {
+    color: #1e3a8a;
+    border-bottom-color: #f59e0b;
+    background: #f8fafc;
+}
+
+.sige-tab-btn .tab-badge {
+    background: #cbd5e1;
+    color: #1e293b;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+}
+
+.sige-tab-btn.active .tab-badge {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Painel de Conteúdo de Abas */
+.tab-content-section {
+    display: none;
+    padding: 2rem 0;
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+.tab-content-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Indicadores de Turno & Vagas OP */
+.turno-slots-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 1.8rem;
+}
+
+.turno-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.turno-card.matutino {
+    border-left: 5px solid #2563eb;
+}
+
+.turno-card.vespertino {
+    border-left: 5px solid #d97706;
+}
+
+.turno-info h4 {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.turno-info p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.slots-pills {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.slot-pill {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.78rem;
+}
+
+.slot-pill.agendado {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.slot-pill.emergencial {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.slot-pill.esgotado {
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: line-through;
+}
+
+/* Cards de Atendimento OP */
+.op-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1.2rem;
+}
+
+.op-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 1.3rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.op-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.op-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.op-patient-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.op-meta-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.op-type-tag {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.op-type-tag.agendado {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.op-type-tag.emergencial {
+    background: #fee2e2;
+    color: #991b1b;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.op-body {
+    font-size: 0.88rem;
+    color: #334155;
+    margin-bottom: 1rem;
+}
+
+.op-contact-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-decoration: none;
+    margin-top: 8px;
+}
+
+.op-contact-phone:hover {
+    background: #bbf7d0;
+}
+
+/* Área de Validação da Secretaria nos Cards OP */
+.op-secretaria-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-top: 10px;
+}
+
+.secretaria-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.status-pendente { background: #fef3c7; color: #92400e; }
+.status-realizado { background: #dcfce7; color: #166534; }
+.status-ausente { background: #fee2e2; color: #991b1b; }
+.status-cancelado { background: #e2e8f0; color: #475569; }
+
+.secretaria-action-btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.btn-sec {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-sec:hover {
+    opacity: 0.85;
+}
+
+.btn-sec-ok { background: #10b981; color: white; }
+.btn-sec-fail { background: #ef4444; color: white; }
+
+/* Quadro de Demandas (Supervisão & Adm) */
+.demandas-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.demanda-column {
+    background: #f1f5f9;
+    border-radius: 16px;
+    padding: 1.2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.demanda-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.demanda-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.demanda-title {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.demanda-meta {
+    font-size: 0.78rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.priority-tag {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.prio-alta { background: #fee2e2; color: #991b1b; }
+.prio-media { background: #fef3c7; color: #92400e; }
+.prio-baixa { background: #e0f2fe; color: #0369a1; }
+
+/* Mural do Dia & Calendário */
+.mural-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.notice-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.3rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.notice-card.urgent {
+    border: 2px solid #ef4444;
+    background: #fff5f5;
+}
+
+.notice-badge-target {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: #e2e8f0;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.notice-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.notice-body {
+    font-size: 0.88rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.notice-footer {
+    margin-top: 1rem;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Filtros Rápido e Barra de Ações */
+.action-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    background: white;
+    padding: 1rem 1.2rem;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-filter-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.88rem;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Status Vazia */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: white;
+    border-radius: 16px;
+    border: 2px dashed #cbd5e1;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+}
