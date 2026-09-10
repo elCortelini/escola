@@ -951,14 +951,159 @@ function submitAgendamentoOP(e) {
 // ==========================================
 // MÓDULO 3: SUPERVISÃO PEDAGÓGICA
 // ==========================================
+// ==========================================
+// MÓDULO 3: SUPERVISÃO PEDAGÓGICA (QUADRO SEMANAL & MULTI-DIAS)
+// ==========================================
+let supViewMode = "semanal"; // "semanal" ou "kanban"
+let currentSupWeekRefDate = new Date();
+
+function setSupViewMode(mode) {
+    supViewMode = mode;
+    document.querySelectorAll(".sup-toggle-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    const semanalView = document.getElementById("supWeeklyViewContainer");
+    const kanbanView = document.getElementById("supListViewContainer");
+    if (semanalView && kanbanView) {
+        if (mode === "semanal") {
+            semanalView.style.display = "block";
+            kanbanView.style.display = "none";
+        } else {
+            semanalView.style.display = "none";
+            kanbanView.style.display = "block";
+        }
+    }
+    renderModuleSupervisao();
+}
+
+function moveSupWeek(deltaDays) {
+    currentSupWeekRefDate.setDate(currentSupWeekRefDate.getDate() + deltaDays);
+    renderModuleSupervisao();
+}
+
+function resetSupWeekToToday() {
+    currentSupWeekRefDate = new Date();
+    renderModuleSupervisao();
+}
+
 function renderModuleSupervisao() {
+    const demandas = sigeDB.getDemandasSupervisao();
+    const weekDays = getWeekDays(currentSupWeekRefDate);
+
+    // 1. Renderiza Quadro Semanal da Supervisão
+    renderSupervisaoWeeklyAgenda(weekDays, demandas);
+
+    // 2. Renderiza Kanban de Status
+    renderSupervisaoKanban(demandas);
+}
+
+function renderSupervisaoWeeklyAgenda(weekDays, demandas) {
+    const rangeText = document.getElementById("supWeekRangeText");
+    if (rangeText && weekDays.length === 5) {
+        rangeText.innerText = `${weekDays[0].dayMonth} - ${weekDays[4].dayMonth}`;
+    }
+
+    const headerRow = document.getElementById("supWeeklyTableHeaderRow");
+    const bodyTable = document.getElementById("supWeeklyTableBody");
+    if (!headerRow || !bodyTable) return;
+
+    // Header da Tabela
+    headerRow.innerHTML = `
+        <th class="col-periodo" style="background:#334155; color:white;">TURNO / PERÍODO</th>
+        ${weekDays.map(d => `
+            <th class="${d.isToday ? 'col-today' : ''}">
+                ${d.dayName}<br>
+                <span style="font-size:0.8rem; opacity:0.9;">${d.dayMonth}</span>
+                ${d.isToday ? '<span class="today-pill">HOJE</span>' : ''}
+            </th>
+        `).join("")}
+    `;
+
+    const turnosConfig = [
+        { header: "TURNO MATUTINO (MANHÃ)", turno: "matutino", icon: "fa-solid fa-sun", color: "#f59e0b" },
+        { header: "TURNO VESPERTINO (TARDE)", turno: "vespertino", icon: "fa-solid fa-cloud-sun", color: "#d97706" }
+    ];
+
+    bodyTable.innerHTML = turnosConfig.map(t => {
+        return `
+            <tr>
+                <td class="slot-time-cell" style="vertical-align:top; background:#f8fafc; border-right:2px solid #cbd5e1; padding:12px 8px;">
+                    <div style="font-weight:900; color:#1e293b; font-size:0.82rem; display:flex; align-items:center; gap:6px;">
+                        <i class="${t.icon}" style="color:${t.color}; font-size:1rem;"></i> ${t.turno.toUpperCase()}
+                    </div>
+                    <div style="font-size:0.68rem; color:#64748b; margin-top:4px;">Sem limite fixo</div>
+                </td>
+                ${weekDays.map(d => {
+                    // Filtra eventos ativos nesta data e neste turno
+                    const dateItems = demandas.filter(item => {
+                        const matchesTurno = item.turno === t.turno || item.turno === "ambos" || !item.turno;
+                        const dataInicio = item.dataInicio || item.prazo || item.criadoEm;
+                        const dataFim = item.dataFim || dataInicio;
+
+                        return matchesTurno && (dataInicio <= d.dateIso && dataFim >= d.dateIso);
+                    });
+
+                    return `
+                        <td class="${d.isToday ? 'today-column-cell' : ''}" style="vertical-align:top; padding:8px;">
+                            <div style="display:flex; flex-direction:column; gap:6px; min-height:90px;">
+                                ${dateItems.map(item => {
+                                    const dataInicio = item.dataInicio || item.prazo || item.criadoEm;
+                                    const dataFim = item.dataFim || dataInicio;
+                                    const isMultiDay = dataInicio !== dataFim;
+
+                                    let spanType = "single";
+                                    if (isMultiDay) {
+                                        if (d.dateIso === dataInicio) spanType = "start";
+                                        else if (d.dateIso === dataFim) spanType = "end";
+                                        else spanType = "middle";
+                                    }
+
+                                    const categoryClass = getCategoryCssClass(item.categoria);
+
+                                    return `
+                                        <div class="sup-event-card ${spanType} ${categoryClass}" onclick="openDemandaSupervisaoModalWithData('${item.id}')" title="${item.descricao || item.titulo}">
+                                            <div class="sup-event-header">
+                                                <span class="sup-event-cat-badge">${item.categoria || 'Supervisão'}</span>
+                                                <span class="priority-tag prio-${item.prioridade || 'media'}" style="font-size:0.65rem; padding:2px 4px;">${(item.prioridade || 'media').toUpperCase()}</span>
+                                            </div>
+                                            <div class="sup-event-title">${item.titulo}</div>
+                                            <div class="sup-event-target"><i class="fa-solid fa-user-tag"></i> ${item.turmaOuProfessor}</div>
+
+                                            ${isMultiDay ? `
+                                                <div class="sup-event-multiday-bar">
+                                                    <i class="fa-regular fa-calendar-days"></i> 
+                                                    ${spanType === 'start' ? '🚩 Início (Multi-Dias)' : (spanType === 'end' ? '🏁 Término' : '──► Em Andamento')}
+                                                </div>
+                                            ` : ''}
+
+                                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                                <span class="secretaria-status-badge status-${item.status === 'concluido' ? 'realizado' : (item.status === 'em_atendimento' ? 'aguardando' : 'pendente')}" style="font-size:0.65rem; padding:2px 6px;">
+                                                    ${getDemandaStatusBadgeText(item.status)}
+                                                </span>
+                                                <span style="font-size:0.68rem; color:#64748b; font-weight:700;"><i class="fa-solid fa-user-gear"></i> ${item.responsavel ? item.responsavel.split(" ")[0] : 'Sup'}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join("")}
+
+                                <button onclick="openDemandaSupervisaoModal('${d.dateIso}', '${t.turno}')" class="weekly-slot-empty-btn" style="min-height:36px; font-size:0.8rem;" title="Adicionar Evento na Supervisão">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                }).join("")}
+            </tr>
+        `;
+    }).join("");
+}
+
+function renderSupervisaoKanban(demandas) {
     const colPendente = document.getElementById("supColPendente");
     const colAnalise = document.getElementById("supColAnalise");
     const colConcluido = document.getElementById("supColConcluido");
 
     if (!colPendente || !colAnalise || !colConcluido) return;
-
-    const demandas = sigeDB.getDemandasSupervisao();
 
     const pendentes = demandas.filter(d => d.status === "pendente");
     const analise = demandas.filter(d => d.status === "em_atendimento");
@@ -967,6 +1112,23 @@ function renderModuleSupervisao() {
     colPendente.innerHTML = renderDemandaCardsList(pendentes, "supervisao");
     colAnalise.innerHTML = renderDemandaCardsList(analise, "supervisao");
     colConcluido.innerHTML = renderDemandaCardsList(concluidas, "supervisao");
+}
+
+function getCategoryCssClass(cat) {
+    if (!cat) return "cat-planejamento";
+    if (cat.includes("Planejamento")) return "cat-planejamento";
+    if (cat.includes("Observação")) return "cat-observacao";
+    if (cat.includes("Conselho")) return "cat-conselho";
+    if (cat.includes("Capacitação")) return "cat-capacitacao";
+    if (cat.includes("Documentação")) return "cat-documentacao";
+    if (cat.includes("Projetos")) return "cat-projetos";
+    return "cat-atendimento";
+}
+
+function getDemandaStatusBadgeText(status) {
+    if (status === "concluido") return "✅ Concluído";
+    if (status === "em_atendimento") return "⏳ Em Andamento";
+    return "📌 Pendente";
 }
 
 function renderDemandaCardsList(items, moduleType) {
@@ -978,12 +1140,12 @@ function renderDemandaCardsList(items, moduleType) {
         <div class="demanda-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <span class="priority-tag prio-${d.prioridade}">${d.prioridade.toUpperCase()}</span>
-                <span style="font-size:0.75rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${formatDateBR(d.prazo)}</span>
+                <span style="font-size:0.75rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${formatDateBR(d.dataFim || d.prazo)}</span>
             </div>
             <div class="demanda-title" style="margin-top:6px;">${d.titulo}</div>
             <p style="font-size:0.82rem; color:#475569; margin-top:4px;">${d.descricao}</p>
             <div style="font-size:0.75rem; color:#64748b; margin-top:8px;">
-                <i class="fa-solid fa-user-tag"></i> ${d.turmaOuProfessor || d.setor || ''}
+                <i class="fa-solid fa-user-tag"></i> ${d.turmaOuProfessor || d.setor || ''} • <strong style="color:var(--primary-dark);">${d.categoria || ''}</strong>
             </div>
             <div class="demanda-meta">
                 <span>Resp: <strong>${d.responsavel}</strong></span>
@@ -1010,7 +1172,16 @@ function updateDemandaStatus(moduleType, id, newStatus) {
     showToast("Status da demanda atualizado!");
 }
 
-function openDemandaSupervisaoModal() {
+function openDemandaSupervisaoModal(dateIso = null, turno = "matutino") {
+    const hojeIso = dateIso || new Date().toISOString().split("T")[0];
+    const elDataInicio = document.getElementById("supInputDataInicio");
+    const elDataFim = document.getElementById("supInputDataFim");
+    const elTurno = document.getElementById("supInputTurno");
+
+    if (elDataInicio) elDataInicio.value = hojeIso;
+    if (elDataFim) elDataFim.value = hojeIso;
+    if (elTurno) elTurno.value = turno;
+
     const modal = document.getElementById("modalDemandaSupervisao");
     if (modal) modal.style.display = "flex";
 }
@@ -1025,13 +1196,17 @@ function submitDemandaSupervisao(e) {
     const titulo = document.getElementById("supInputTitulo").value;
     const turmaOuProfessor = document.getElementById("supInputAlvo").value;
     const categoria = document.getElementById("supInputCategoria").value;
+    const turno = document.getElementById("supInputTurno").value;
+    const dataInicio = document.getElementById("supInputDataInicio").value;
+    const dataFim = document.getElementById("supInputDataFim").value;
     const prioridade = document.getElementById("supInputPrioridade").value;
-    const descricao = document.getElementById("supInputDescricao").value;
     const responsavel = document.getElementById("supInputResponsavel").value;
-    const prazo = document.getElementById("supInputPrazo").value;
+    const descricao = document.getElementById("supInputDescricao").value;
 
     sigeDB.addDemandaSupervisao({
-        titulo, turmaOuProfessor, categoria, prioridade, descricao, responsavel, prazo,
+        titulo, turmaOuProfessor, categoria, turno, dataInicio, dataFim,
+        prioridade, responsavel, descricao,
+        prazo: dataFim,
         status: "pendente"
     });
 
@@ -1039,7 +1214,7 @@ function submitDemandaSupervisao(e) {
     renderModuleSupervisao();
     updateBadgesCounts();
     renderNotifications();
-    showToast("Demanda pedagógica criada com sucesso!");
+    showToast("✅ Demanda / Evento registrado no Quadro da Supervisão!");
 }
 
 // ==========================================

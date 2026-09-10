@@ -966,3 +966,96 @@
     color: #dc2626;
     font-weight: 800;
 }
+
+/* ========================================== */
+/* QUADRO SEMANAL DA SUPERVISÃO & MULTI-DIAS   */
+/* ========================================== */
+.sup-weekly-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.sup-event-card {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid var(--supervisao-color);
+    padding: 8px 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sup-event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.sup-event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.sup-event-cat-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.sup-event-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.sup-event-target {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Eventos Multi-Dias Spanning Styles */
+.sup-event-multiday-bar {
+    margin-top: 6px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sup-event-card.start {
+    border-left: 5px solid #2563eb;
+    background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.sup-event-card.middle {
+    border-left: 5px solid #3b82f6;
+    border-right: 5px solid #3b82f6;
+    background: #f0f9ff;
+}
+
+.sup-event-card.end {
+    border-right: 5px solid #1d4ed8;
+    background: linear-gradient(90deg, #ffffff 0%, #eff6ff 100%);
+}
+
+/* Cores por Categoria Pedagógica */
+.cat-planejamento { border-left-color: #2563eb; }
+.cat-observacao { border-left-color: #7c3aed; }
+.cat-conselho { border-left-color: #dc2626; }
+.cat-capacitacao { border-left-color: #059669; }
+.cat-documentacao { border-left-color: #d97706; }
+.cat-projetos { border-left-color: #0284c7; }
+.cat-atendimento { border-left-color: #65a30d; }

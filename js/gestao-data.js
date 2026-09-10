@@ -83,39 +83,48 @@ const defaultSigeData = {
     demandasSupervisao: [
         {
             id: "sup-201",
-            titulo: "Alinhamento de Conteúdo e Avaliação - 7º Anos",
-            turmaOuProfessor: "Prof. Ricardo (Ciências)",
-            categoria: "Planejamento Pedagógico",
+            titulo: "Conselho de Classe Intermediário - 7º Anos",
+            turmaOuProfessor: "Professores do 7º Ano",
+            categoria: "Conselho de Classe",
             prioridade: "alta", // alta, media, baixa
+            turno: "matutino", // matutino, vespertino, ambos
+            dataInicio: "2026-09-08",
+            dataFim: "2026-09-10", // Multi-dias! (3 dias: Terça a Quinta)
             status: "em_atendimento", // pendente, em_atendimento, concluido
-            descricao: "Revisar critérios de correção da prova mensal e adaptações para alunos com laudo.",
+            descricao: "Revisão dos critérios de avaliação e acompanhamento de alunos com dificuldades.",
             responsavel: "Prof. Marcos (Supervisão)",
-            prazo: "2026-09-12",
-            criadoEm: "2026-09-08"
+            prazo: "2026-09-10",
+            criadoEm: "2026-09-07"
         },
         {
             id: "sup-202",
             titulo: "Observação de Sala de Aula - 6º Ano B",
             turmaOuProfessor: "Turma 6º Ano B",
-            categoria: "Gestão de Sala",
+            categoria: "Observação de Sala",
             prioridade: "media",
+            turno: "vespertino",
+            dataInicio: "2026-09-10",
+            dataFim: "2026-09-10",
             status: "pendente",
-            descricao: "Acompanhar dinamismos e nível de ruído durante aulas de História.",
+            descricao: "Acompanhar dinamismos e nível de engajamento durante aulas de História.",
             responsavel: "Supervisão Pedagógica",
-            prazo: "2026-09-15",
+            prazo: "2026-09-10",
             criadoEm: "2026-09-09"
         },
         {
             id: "sup-203",
-            titulo: "Entrega dos Diários de Classe referente a Agosto",
+            titulo: "Capacitação Docente: Uso de Metodologias Ativas",
             turmaOuProfessor: "Corpo Docente Fund. II",
-            categoria: "Documentação",
-            prioridade: "baixa",
-            status: "concluido",
-            descricao: "Conferência e validação das notas e frequências registradas nos diários de classe.",
+            categoria: "Capacitação Docente",
+            prioridade: "alta",
+            turno: "vespertino",
+            dataInicio: "2026-09-11",
+            dataFim: "2026-09-12",
+            status: "pendente",
+            descricao: "Oficina prática sobre avaliação formativa e ensino híbrido.",
             responsavel: "Supervisão Pedagógica",
-            prazo: "2026-09-05",
-            criadoEm: "2026-09-01"
+            prazo: "2026-09-12",
+            criadoEm: "2026-09-08"
         }
     ],
 
@@ -441,6 +450,12 @@ class SigeDatabase {
     addDemandaSupervisao(demanda) {
         demanda.id = "sup-" + Date.now();
         demanda.criadoEm = new Date().toISOString().split("T")[0];
+        if (!demanda.dataInicio) demanda.dataInicio = demanda.prazo || demanda.criadoEm;
+        if (!demanda.dataFim) demanda.dataFim = demanda.dataInicio;
+        if (!demanda.turno) demanda.turno = "matutino";
+        if (!demanda.categoria) demanda.categoria = "Planejamento Pedagógico";
+
+        if (!this.data.demandasSupervisao) this.data.demandasSupervisao = [];
         this.data.demandasSupervisao.unshift(demanda);
         this.saveData(this.data);
         return demanda;

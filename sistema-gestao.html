@@ -267,39 +267,94 @@
         <!-- ========================================== -->
         <!-- ABA 3: SUPERVISÃO PEDAGÓGICA -->
         <!-- ========================================== -->
+        <!-- ========================================== -->
+        <!-- ABA 3: SUPERVISÃO PEDAGÓGICA -->
+        <!-- ========================================== -->
         <section id="tab-supervisao" class="tab-content-section">
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Fila de Demandas da Supervisão Pedagógica
+                        <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Quadro Semanal & Demandas da Supervisão Pedagógica
                     </h3>
-                    <p style="font-size:0.85rem; color:#64748b;">Gestão de ocorrências pedagógicas, acompanhamento docente e resoluções.</p>
+                    <p style="font-size:0.85rem; color:#64748b;">
+                        Acompanhamento docente, conselhos de classe, capacitações e eventos de múltiplos dias.
+                    </p>
                 </div>
-                <button onclick="openDemandaSupervisaoModal()" class="btn btn-primary" style="width:auto;">
-                    <i class="fa-solid fa-plus"></i> Nova Demanda Pedagógica
-                </button>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Alternador de Visão Semanal / Kanban -->
+                    <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
+                        <button onclick="setSupViewMode('semanal')" class="view-toggle-btn sup-toggle-btn active" data-mode="semanal">
+                            <i class="fa-solid fa-calendar-week"></i> Quadro da Semana
+                        </button>
+                        <button onclick="setSupViewMode('kanban')" class="view-toggle-btn sup-toggle-btn" data-mode="kanban">
+                            <i class="fa-solid fa-bars-staggered"></i> Kanban de Status
+                        </button>
+                    </div>
+
+                    <button onclick="openDemandaSupervisaoModal()" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);">
+                        <i class="fa-solid fa-plus"></i> Novo Evento / Demanda
+                    </button>
+                </div>
             </div>
 
-            <div class="demandas-columns">
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Pendentes</span>
-                    </div>
-                    <div id="supColPendente"></div>
-                </div>
+            <!-- CONTAINER VISÃO 1: QUADRO DA SEMANA DA SUPERVISÃO (Matutino & Vespertino, Multi-dias) -->
+            <div id="supWeeklyViewContainer">
+                <div class="agenda-semanal-container" style="border-top:4px solid var(--supervisao-color);">
+                    <div class="agenda-toolbar-header" style="background:linear-gradient(135deg, #475569 0%, #1e293b 100%);">
+                        <div class="agenda-title-box">
+                            <h3 style="color:white;"><i class="fa-solid fa-calendar-days" style="color:#a7f3d0;"></i> Quadro Semanal da Supervisão Pedagógica</h3>
+                        </div>
 
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-solid fa-spinner" style="color:#2563eb;"></i> Em Atendimento / Análise</span>
+                        <div class="agenda-nav-controls">
+                            <div class="week-pager-box">
+                                <button onclick="moveSupWeek(-7)" class="week-pager-btn" title="Semana Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span id="supWeekRangeText">Semana</span>
+                                <button onclick="moveSupWeek(7)" class="week-pager-btn" title="Próxima Semana"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button onclick="resetSupWeekToToday()" class="week-pager-btn" style="font-size:0.75rem; background:rgba(255,255,255,0.25); border-radius:6px; margin-left:4px;" title="Ir para Hoje">Hoje</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="supColAnalise"></div>
-                </div>
 
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Concluídas</span>
+                    <!-- Tabela da Agenda Semanal da Supervisão -->
+                    <div class="weekly-table-wrapper">
+                        <table class="weekly-table sup-weekly-table">
+                            <thead>
+                                <tr id="supWeeklyTableHeaderRow">
+                                    <!-- Rendered via JS -->
+                                </tr>
+                            </thead>
+                            <tbody id="supWeeklyTableBody">
+                                <!-- Rendered via JS -->
+                            </tbody>
+                        </table>
                     </div>
-                    <div id="supColConcluido"></div>
+                </div>
+            </div>
+
+            <!-- CONTAINER VISÃO 2: KANBAN DE COLUNAS DE STATUS -->
+            <div id="supListViewContainer" style="display:none; margin-top:1rem;">
+                <div class="demandas-columns">
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Pendentes</span>
+                        </div>
+                        <div id="supColPendente"></div>
+                    </div>
+
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-solid fa-spinner" style="color:#2563eb;"></i> Em Atendimento / Análise</span>
+                        </div>
+                        <div id="supColAnalise"></div>
+                    </div>
+
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Concluídas</span>
+                        </div>
+                        <div id="supColConcluido"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -830,23 +885,45 @@
 
             <form onsubmit="submitDemandaSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Demanda:</label>
-                    <input type="text" id="supInputTitulo" required placeholder="Ex: Análise de Adaptação Curricular" class="search-input" style="width:100%;">
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título do Evento ou Demanda:</label>
+                    <input type="text" id="supInputTitulo" required placeholder="Ex: Conselho de Classe Intermediário / Observação de Aula" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma ou Professor Alvo:</label>
-                        <input type="text" id="supInputAlvo" required placeholder="Ex: Prof. Marcos (História)" class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma ou Professor Envolvido:</label>
+                        <input type="text" id="supInputAlvo" required placeholder="Ex: Prof. Ricardo / 7º Anos" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria:</label>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria Pedagógica:</label>
                         <select id="supInputCategoria" class="search-input" style="width:100%;">
-                            <option value="Planejamento Pedagógico">Planejamento Pedagógico</option>
-                            <option value="Gestão de Sala">Gestão de Sala</option>
-                            <option value="Documentação">Documentação / Diários</option>
-                            <option value="Atendimento Docente">Atendimento Docente</option>
+                            <option value="Planejamento Pedagógico">📝 Planejamento Pedagógico</option>
+                            <option value="Observação de Sala">👁️ Observação de Sala</option>
+                            <option value="Conselho de Classe">🏫 Conselho de Classe</option>
+                            <option value="Capacitação Docente">🎓 Capacitação Docente</option>
+                            <option value="Documentação / Diários">📑 Documentação / Diários</option>
+                            <option value="Projetos & Feiras">🏆 Projetos & Feiras</option>
+                            <option value="Atendimento Docente">💬 Atendimento Docente</option>
                         </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
+                        <select id="supInputTurno" class="search-input" style="width:100%;">
+                            <option value="matutino">🌅 Matutino (Manhã)</option>
+                            <option value="vespertino">os Vespertino (Tarde)</option>
+                            <option value="ambos">🌐 Ambos os Turnos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data Início:</label>
+                        <input type="date" id="supInputDataInicio" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data Término (Multi-dias):</label>
+                        <input type="date" id="supInputDataFim" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
@@ -860,24 +937,19 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prazo Limite:</label>
-                        <input type="date" id="supInputPrazo" required class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisor Responsável:</label>
+                        <input type="text" id="supInputResponsavel" required placeholder="Ex: Prof. Marcos (Supervisão)" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisor Responsável:</label>
-                    <input type="text" id="supInputResponsavel" required placeholder="Ex: Supervisão Pedagógica" class="search-input" style="width:100%;">
-                </div>
-
-                <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição da Solicitação:</label>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição & Objetivos:</label>
                     <textarea id="supInputDescricao" required rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
                     <button type="button" onclick="closeDemandaSupervisaoModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto;">Registrar Demanda</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:var(--supervisao-color); border-color:var(--supervisao-color);">Registrar no Quadro</button>
                 </div>
             </form>
         </div>
