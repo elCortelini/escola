@@ -554,13 +554,13 @@ const defaultSigeData = {
     ],
 
     firebaseConfig: {
-        enabled: false,
-        apiKey: "",
-        authDomain: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
+        enabled: true,
+        apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
+        authDomain: "sas-cepr.firebaseapp.com",
+        projectId: "sas-cepr",
+        storageBucket: "sas-cepr.firebasestorage.app",
+        messagingSenderId: "145326632209",
+        appId: "1:145326632209:web:58d9e934e4a0bf26bcf0b0"
     }
 };
 
@@ -575,16 +575,8 @@ class SigeDatabase {
     }
 
     getFirebaseConfig() {
-        if (!this.data.firebaseConfig) {
-            this.data.firebaseConfig = {
-                enabled: false,
-                apiKey: "",
-                authDomain: "",
-                projectId: "",
-                storageBucket: "",
-                messagingSenderId: "",
-                appId: ""
-            };
+        if (!this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
+            this.data.firebaseConfig = defaultSigeData.firebaseConfig;
             this.saveData(this.data);
         }
         return this.data.firebaseConfig;
