@@ -471,72 +471,148 @@
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Demandas da Administração & Infraestrutura
+                        <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Painel de Administração Integrada do Sistema
                     </h3>
-                    <p style="font-size:0.85rem; color:#64748b;">Manutenção de salas, TI, suprimentos e apoio logístico.</p>
+                    <p style="font-size:0.85rem; color:#64748b;">Gestão de equipe escolar multidisciplinar, turmas, turnos, solicitações de TI/infraestrutura e configurações globais.</p>
                 </div>
-                <button onclick="openDemandaAdminModal()" class="btn btn-primary" style="width:auto;">
-                    <i class="fa-solid fa-wrench"></i> Solicitar Suporte Adm/TI
-                </button>
-            </div>
-
-            <div class="demandas-columns">
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Solicitações Pendentes</span>
-                    </div>
-                    <div id="admColPendente"></div>
-                </div>
-
-                <div class="demanda-column">
-                    <div class="demanda-column-header">
-                        <span><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Concluídas</span>
-                    </div>
-                    <div id="admColConcluido"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#1e3a8a;">
+                        <i class="fa-solid fa-user-plus"></i> + Novo Profissional
+                    </button>
+                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#0284c7;">
+                        <i class="fa-solid fa-graduation-cap"></i> + Nova Turma
+                    </button>
+                    <button onclick="openDemandaAdminModal()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; padding:8px 14px;">
+                        <i class="fa-solid fa-wrench"></i> Suporte Adm/TI
+                    </button>
+                    <button onclick="downloadBackupSige()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#475569; color:white;">
+                        <i class="fa-solid fa-download"></i> Backup JSON
+                    </button>
                 </div>
             </div>
 
-            <!-- Cadastro & Gestão do Corpo Docente (Professores) -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-top:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <!-- CARD 1: GESTÃO DA EQUIPE ESCOLAR MULTIDISCIPLINAR (TODOS OS SETORES) -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                     <div>
                         <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-chalkboard-user" style="color:#2563eb; font-size:1.3rem;"></i> Cadastro & Gestão do Corpo Docente (Professores)
+                            <i class="fa-solid fa-users-gear" style="color:#2563eb; font-size:1.3rem;"></i> Quadros da Equipe Escolar (Profissionais de Todos os Setores)
                         </h4>
                         <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                            Cadastre os professores da escola e seus WhatsApps para incluí-los nas demandas de Supervisão/OP e disparar avisos.
+                            Gerencie colaboradores da Orientação, Supervisão, Direção, Secretaria, Corpo Docente e Infraestrutura.
                         </p>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button onclick="openCadastroProfessorModal()" class="btn btn-primary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#1e3a8a;">
-                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Professor
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#1e3a8a;">
+                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador
                         </button>
-                        <button onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#16a34a; color:white;">
-                            <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Aviso a Todos
+                        <button onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#16a34a; color:white;">
+                            <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado
                         </button>
                     </div>
+                </div>
+
+                <!-- Filtros por Setor -->
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1rem;">
+                    <button onclick="filtrarEquipeEscolar('todos')" id="btnFilterSetor_todos" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#1e293b; color:white; font-weight:700;">Todos os Setores</button>
+                    <button onclick="filtrarEquipeEscolar('docentes')" id="btnFilterSetor_docentes" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">👨‍🏫 Docentes</button>
+                    <button onclick="filtrarEquipeEscolar('orientacao')" id="btnFilterSetor_orientacao" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">🧭 Orientação (OP)</button>
+                    <button onclick="filtrarEquipeEscolar('supervisao')" id="btnFilterSetor_supervisao" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">📋 Supervisão</button>
+                    <button onclick="filtrarEquipeEscolar('direcao')" id="btnFilterSetor_direcao" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">👑 Direção</button>
+                    <button onclick="filtrarEquipeEscolar('secretaria')" id="btnFilterSetor_secretaria" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">📑 Secretaria</button>
+                    <button onclick="filtrarEquipeEscolar('apoio')" id="btnFilterSetor_apoio" class="btn-sec" style="font-size:0.78rem; padding:5px 12px; background:#f1f5f9; color:#334155;">🔧 Apoio & TI</button>
                 </div>
 
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; font-size:0.88rem; text-align:left;">
                         <thead>
                             <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#334155; font-weight:800;">
-                                <th style="padding:10px 14px;">Professor(a)</th>
-                                <th style="padding:10px 14px;">Disciplina / Área</th>
-                                <th style="padding:10px 14px;">WhatsApp / Telefone</th>
-                                <th style="padding:10px 14px;">Turnos / Turmas</th>
+                                <th style="padding:10px 14px;">Profissional</th>
+                                <th style="padding:10px 14px;">Setor / Cargo</th>
+                                <th style="padding:10px 14px;">Especialidade / Disciplina</th>
+                                <th style="padding:10px 14px;">WhatsApp / Contato</th>
+                                <th style="padding:10px 14px;">Turnos / Atuação</th>
                                 <th style="padding:10px 14px; text-align:right;">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="admProfessoresTableBody">
+                        <tbody id="admEquipeTableBody">
                             <!-- Inserido dinamicamente via JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Configurações do Gateway de WhatsApp Automático (Sem Intervenção Humana) -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-top:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-chalkboard" style="color:#0284c7; font-size:1.3rem;"></i> Cadastro & Estrutura de Turmas e Turnos
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Mapeamento de turmas, turnos letivos (Matutino/Vespertino/Noturno), salas de aula e tutores regentes.
+                        </p>
+                    </div>
+                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#0284c7;">
+                        <i class="fa-solid fa-plus"></i> + Nova Turma
+                    </button>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.88rem; text-align:left;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#334155; font-weight:800;">
+                                <th style="padding:10px 14px;">Turma</th>
+                                <th style="padding:10px 14px;">Turno Letivo</th>
+                                <th style="padding:10px 14px;">Nível / Etapa</th>
+                                <th style="padding:10px 14px;">Sala Física</th>
+                                <th style="padding:10px 14px;">Docente Regente / Tutor</th>
+                                <th style="padding:10px 14px; text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admTurmasTableBody">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CARD 3: SOLICITAÇÕES DE INFRAESTRUTURA & MANUTENÇÃO TI -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-wrench" style="color:#f59e0b; font-size:1.3rem;"></i> Chamados de Manutenção, Suprimentos & TI
+                    </h4>
+                    <button onclick="openDemandaAdminModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px;">
+                        <i class="fa-solid fa-plus"></i> Novo Chamado
+                    </button>
+                </div>
+                <div class="demandas-columns">
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-regular fa-clock" style="color:#f59e0b;"></i> Solicitações Pendentes</span>
+                        </div>
+                        <div id="admColPendente"></div>
+                    </div>
+
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-solid fa-hammer" style="color:#2563eb;"></i> Em Atendimento</span>
+                        </div>
+                        <div id="admColAnalise"></div>
+                    </div>
+
+                    <div class="demanda-column">
+                        <div class="demanda-column-header">
+                            <span><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Concluídas</span>
+                        </div>
+                        <div id="admColConcluido"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: CONFIGURAÇÕES DO GATEWAY DE WHATSAPP AUTOMÁTICO -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                     <div>
                         <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
@@ -597,6 +673,89 @@
                         <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
                     </button>
                 </div>
+            </div>
+
+            <!-- CARD 5: CONFIGURAÇÕES DA UNIDADE ESCOLAR & AUDITORIA DE LOGS / BACKUP -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
+                
+                <!-- Parâmetros da Unidade -->
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-school-flag" style="color:#1e3a8a;"></i> Parâmetros da Unidade Escolar
+                    </h4>
+
+                    <form onsubmit="salvarConfiguracoesEscola(event)" style="display:flex; flex-direction:column; gap:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Nome da Unidade Escolar:</label>
+                            <input type="text" id="cfgNomeEscola" required class="search-input" style="width:100%; font-size:0.85rem;">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Cidade / UF:</label>
+                                <input type="text" id="cfgCidadeUf" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Ano Letivo Vigente:</label>
+                                <input type="text" id="cfgAnoLetivo" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Período Letivo Atual:</label>
+                                <input type="text" id="cfgPeriodoAtual" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Telefone Institucional:</label>
+                                <input type="text" id="cfgTelefoneContato" class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
+                            <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#1e3a8a;">
+                                <i class="fa-solid fa-floppy-disk"></i> Salvar Parâmetros
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Backup & Registros de Auditoria -->
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-database" style="color:#059669;"></i> Backup & Segurança do Banco de Dados
+                        </h4>
+                        <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem;">
+                            Exporte ou restaure o arquivo de dados completo do SIGE em formato JSON.
+                        </p>
+
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1.2rem;">
+                            <button onclick="downloadBackupSige()" class="btn btn-primary" style="width:auto; font-size:0.82rem; background:#059669;">
+                                <i class="fa-solid fa-file-export"></i> Baixar Backup (.json)
+                            </button>
+                            <label class="btn btn-secondary" style="width:auto; font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:#475569; color:white;">
+                                <i class="fa-solid fa-file-import"></i> Restaurar Arquivo
+                                <input type="file" id="inputImportBackup" onchange="importarBackupFile(event)" accept=".json" style="display:none;">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fa-solid fa-list-check"></i> Histórico Recente de Auditoria</span>
+                            <span style="font-size:0.75rem; color:#64748b;">Últimas 100 ações</span>
+                        </div>
+                        <div style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:6px; background:#f8fafc;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.78rem;">
+                                <tbody id="admAuditLogsTableBody">
+                                    <!-- Inserido dinamicamente via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -1511,55 +1670,149 @@
 
 
     <!-- ========================================== -->
-    <!-- MODAL 5: CADASTRO / EDIÇÃO DE PROFESSOR -->
+    <!-- MODAL 5: CADASTRO / EDIÇÃO DE PROFISSIONAL (EQUIPE MULTIDISCIPLINAR) -->
     <!-- ========================================== -->
-    <div id="modalCadastroProfessor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+    <div id="modalCadastroProfissional" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:600px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                <h3 id="modalCadastroProfTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-chalkboard-user" style="color:#1e3a8a;"></i> Cadastrar Novo Professor
+                <h3 id="modalCadastroProfissionalTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Profissional da Escola
                 </h3>
-                <button onclick="closeCadastroProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeCadastroProfissionalModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitCadastroProfessor(event)" style="display:flex; flex-direction:column; gap:12px;">
-                <input type="hidden" id="profInputId">
+            <form onsubmit="submitCadastroProfissional(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="proInputId">
                 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome Completo do Professor(a):</label>
-                    <input type="text" id="profInputNome" required placeholder="Ex: Prof. Ricardo Santos" class="search-input" style="width:100%;">
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome Completo do Profissional:</label>
+                    <input type="text" id="proInputNome" required placeholder="Ex: Carmen Lucia Santos" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Disciplina / Área:</label>
-                        <input type="text" id="profInputDisciplina" required placeholder="Ex: Matemática" class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor da Escola:</label>
+                        <select id="proInputSetor" required class="search-input" style="width:100%; font-weight:700;">
+                            <option value="docentes">👨‍🏫 Corpo Docente (Professor)</option>
+                            <option value="orientacao">🧭 Orientação Pedagógica (OP)</option>
+                            <option value="supervisao">📋 Supervisão Pedagógica</option>
+                            <option value="direcao">👑 Direção Escolar</option>
+                            <option value="secretaria">📑 Secretaria Escolar</option>
+                            <option value="apoio">🔧 Apoio, TI & Infraestrutura</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Cargo / Função Oficial:</label>
+                        <input type="text" id="proInputCargo" required placeholder="Ex: Orientadora Pedagógica" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Especialidade / Disciplina:</label>
+                        <input type="text" id="proInputDisciplina" placeholder="Ex: Matemática / Orientação" class="search-input" style="width:100%;">
                     </div>
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">WhatsApp (Com DDD):</label>
-                        <input type="tel" id="profInputTelefone" required placeholder="(47) 99999-8888" class="search-input" style="width:100%;">
+                        <input type="tel" id="proInputTelefone" required placeholder="(47) 99999-8888" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">E-mail (Opcional):</label>
-                    <input type="email" id="profInputEmail" placeholder="professor@escola.sc.gov.br" class="search-input" style="width:100%;">
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">E-mail Institucional:</label>
+                    <input type="email" id="proInputEmail" placeholder="profissional@pedrorizzi.sc.gov.br" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turnos de Atuação:</label>
-                        <input type="text" id="profInputTurnos" placeholder="Ex: Matutino, Vespertino" class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno de Atuação:</label>
+                        <select id="proInputTurno" class="search-input" style="width:100%;">
+                            <option value="matutino">Matutino</option>
+                            <option value="vespertino">Vespertino</option>
+                            <option value="ambos">Matutino e Vespertino</option>
+                            <option value="integral">Integral (Manhã e Tarde)</option>
+                            <option value="noturno">Noturno</option>
+                        </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas Atendidas:</label>
-                        <input type="text" id="profInputTurmas" placeholder="Ex: 6º, 7º, 8º Anos" class="search-input" style="width:100%;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas / Salas Atendidas:</label>
+                        <input type="text" id="proInputTurmas" placeholder="Ex: 6º ao 9º Anos / Bloco A" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
-                    <button type="button" onclick="closeCadastroProfessorModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto; background:#1e3a8a;">Salvar Professor</button>
+                    <button type="button" onclick="closeCadastroProfissionalModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#1e3a8a;">Salvar Colaborador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 7: CADASTRO / EDIÇÃO DE TURMA -->
+    <!-- ========================================== -->
+    <div id="modalCadastroTurma" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 id="modalCadastroTurmaTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Cadastrar Nova Turma
+                </h3>
+                <button onclick="closeCadastroTurmaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitCadastroTurma(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="turmaInputId">
+                
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome da Turma:</label>
+                        <input type="text" id="turmaInputNome" required placeholder="Ex: 7º Ano B" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Ano Letivo:</label>
+                        <input type="text" id="turmaInputAno" required value="2026" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno Letivo:</label>
+                        <select id="turmaInputTurno" class="search-input" style="width:100%; font-weight:700;">
+                            <option value="matutino">Matutino (Manhã)</option>
+                            <option value="vespertino">Vespertino (Tarde)</option>
+                            <option value="integral">Integral</option>
+                            <option value="noturno">Noturno</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nível / Etapa:</label>
+                        <select id="turmaInputNivel" class="search-input" style="width:100%;">
+                            <option value="Ensino Fundamental II">Ensino Fundamental II</option>
+                            <option value="Ensino Fundamental I">Ensino Fundamental I</option>
+                            <option value="Educação Infantil">Educação Infantil</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Sala Física:</label>
+                        <input type="text" id="turmaInputSala" required placeholder="Ex: Sala 12" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Capacidade (Alunos):</label>
+                        <input type="number" id="turmaInputCapacidade" value="35" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Docente Regente / Tutor Responsável:</label>
+                    <input type="text" id="turmaInputRegente" placeholder="Ex: Prof. Ricardo Santos" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeCadastroTurmaModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#0284c7;">Salvar Turma</button>
                 </div>
             </form>
         </div>

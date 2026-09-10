@@ -1764,7 +1764,10 @@ function renderModuleAdministracao() {
     }
 
     renderWhatsappConfigPanel();
-    renderProfessoresAdminTable();
+    renderEquipeEscolarTable("todos");
+    renderTurmasAdminTable();
+    renderConfigEscolaForm();
+    renderAuditLogsTable();
 }
 
 function renderWhatsappConfigPanel() {
@@ -2148,26 +2151,68 @@ function showToast(msg) {
 }
 
 // ==========================================
-// GESTÃO E CADASTRO DO CORPO DOCENTE (PROFESSORES)
+// MÓDULO DE ADMINISTRAÇÃO AVANÇADA DO SISTEMA
 // ==========================================
-function renderProfessoresAdminTable() {
-    const tbody = document.getElementById("admProfessoresTableBody");
+
+let currentSetorFilter = "todos";
+
+function filtrarEquipeEscolar(setor) {
+    currentSetorFilter = setor;
+    
+    const setores = ["todos", "docentes", "orientacao", "supervisao", "direcao", "secretaria", "apoio"];
+    setores.forEach(s => {
+        const btn = document.getElementById(`btnFilterSetor_${s}`);
+        if (btn) {
+            if (s === setor) {
+                btn.style.background = "#1e293b";
+                btn.style.color = "white";
+                btn.style.fontWeight = "700";
+            } else {
+                btn.style.background = "#f1f5f9";
+                btn.style.color = "#334155";
+                btn.style.fontWeight = "normal";
+            }
+        }
+    });
+
+    renderEquipeEscolarTable(setor);
+}
+
+function renderEquipeEscolarTable(setorFiltro = "todos") {
+    const tbody = document.getElementById("admEquipeTableBody");
     if (!tbody) return;
 
-    const professores = sigeDB.getProfessores();
-    if (!professores || professores.length === 0) {
+    const equipe = sigeDB.getEquipeEscolar();
+    let lista = equipe;
+    if (setorFiltro !== "todos") {
+        lista = equipe.filter(p => p.setor === setorFiltro);
+    }
+
+    if (!lista || lista.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" style="padding:1.5rem; text-align:center; color:#64748b;">
+                <td colspan="6" style="padding:1.5rem; text-align:center; color:#64748b;">
                     <i class="fa-solid fa-folder-open" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i>
-                    Nenhum professor cadastrado no momento. Clique em "+ Cadastrar Professor" para adicionar.
+                    Nenhum colaborador encontrado para o setor selecionado. Clique em "+ Novo Profissional" para cadastrar.
                 </td>
             </tr>
         `;
         return;
     }
 
-    tbody.innerHTML = professores.map(p => {
+    const badgeSetor = (setor) => {
+        switch (setor) {
+            case "docentes": return `<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👨‍🏫 Docente</span>`;
+            case "orientacao": return `<span style="background:#f3e8ff; color:#6b21a8; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🧭 Orientação (OP)</span>`;
+            case "supervisao": return `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📋 Supervisão</span>`;
+            case "direcao": return `<span style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👑 Direção</span>`;
+            case "secretaria": return `<span style="background:#cff4fc; color:#055160; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📑 Secretaria</span>`;
+            case "apoio": return `<span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🔧 Apoio / TI</span>`;
+            default: return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">Geral</span>`;
+        }
+    };
+
+    tbody.innerHTML = lista.map(p => {
         const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
         const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
         const waLink = waPhone ? `https://api.whatsapp.com/send?phone=${waPhone}` : "#";
@@ -2175,12 +2220,14 @@ function renderProfessoresAdminTable() {
         return `
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:12px 14px; font-weight:800; color:#0f172a;">
-                    <i class="fa-solid fa-user-tie" style="color:#2563eb; margin-right:6px;"></i> ${escapeHtml(p.nome)}
+                    <i class="fa-solid fa-user" style="color:#2563eb; margin-right:6px;"></i> ${escapeHtml(p.nome)}
                 </td>
-                <td style="padding:12px 14px; color:#334155; font-weight:600;">
-                    <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700;">
-                        ${escapeHtml(p.disciplina || "Geral")}
-                    </span>
+                <td style="padding:12px 14px;">
+                    <div>${badgeSetor(p.setor)}</div>
+                    <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${escapeHtml(p.cargoFuncao || p.setor)}</div>
+                </td>
+                <td style="padding:12px 14px; color:#334155; font-weight:600; font-size:0.83rem;">
+                    ${escapeHtml(p.disciplina || "Geral")}
                 </td>
                 <td style="padding:12px 14px;">
                     ${p.telefone ? `
@@ -2190,18 +2237,18 @@ function renderProfessoresAdminTable() {
                     ` : '<span style="color:#94a3b8; font-size:0.82rem;">Sem telefone</span>'}
                 </td>
                 <td style="padding:12px 14px; color:#64748b; font-size:0.83rem;">
-                    <div><strong>Turnos:</strong> ${escapeHtml(p.turnos || "Matutino/Vespertino")}</div>
-                    <div><strong>Turmas:</strong> ${escapeHtml(p.turmas || "Todas")}</div>
+                    <div><strong>Turno:</strong> ${escapeHtml(p.turnos || "Integral")}</div>
+                    <div><strong>Turmas/Salas:</strong> ${escapeHtml(p.turmasOuSalas || "Geral")}</div>
                 </td>
                 <td style="padding:12px 14px; text-align:right;">
                     <div style="display:flex; justify-content:flex-end; gap:6px;">
                         <button onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.75rem; padding:4px 8px;" title="Disparar Aviso WhatsApp">
                             <i class="fa-brands fa-whatsapp"></i> Aviso
                         </button>
-                        <button onclick="editarProfessor('${p.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Professor">
+                        <button onclick="editarProfissional('${p.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Colaborador">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="excluirProfessor('${p.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Professor">
+                        <button onclick="excluirProfissional('${p.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Colaborador">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -2211,95 +2258,369 @@ function renderProfessoresAdminTable() {
     }).join('');
 }
 
-function openCadastroProfessorModal(profId = null) {
-    const modal = document.getElementById("modalCadastroProfessor");
-    const title = document.getElementById("modalCadastroProfTitulo");
-    const inputId = document.getElementById("profInputId");
-    const inputNome = document.getElementById("profInputNome");
-    const inputDisc = document.getElementById("profInputDisciplina");
-    const inputTel = document.getElementById("profInputTelefone");
-    const inputEmail = document.getElementById("profInputEmail");
-    const inputTurnos = document.getElementById("profInputTurnos");
-    const inputTurmas = document.getElementById("profInputTurmas");
+function openCadastroProfissionalModal(id = null) {
+    const modal = document.getElementById("modalCadastroProfissional");
+    const title = document.getElementById("modalCadastroProfissionalTitulo");
+    const inputId = document.getElementById("proInputId");
+    const inputNome = document.getElementById("proInputNome");
+    const inputSetor = document.getElementById("proInputSetor");
+    const inputCargo = document.getElementById("proInputCargo");
+    const inputDisc = document.getElementById("proInputDisciplina");
+    const inputTel = document.getElementById("proInputTelefone");
+    const inputEmail = document.getElementById("proInputEmail");
+    const inputTurno = document.getElementById("proInputTurno");
+    const inputTurmas = document.getElementById("proInputTurmas");
 
     if (!modal) return;
 
-    if (profId) {
-        const professores = sigeDB.getProfessores();
-        const prof = professores.find(p => p.id === profId);
+    if (id) {
+        const equipe = sigeDB.getEquipeEscolar();
+        const prof = equipe.find(p => p.id === id);
         if (prof) {
-            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro de Professor`;
+            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro do Colaborador`;
             if (inputId) inputId.value = prof.id;
             if (inputNome) inputNome.value = prof.nome || "";
+            if (inputSetor) inputSetor.value = prof.setor || "docentes";
+            if (inputCargo) inputCargo.value = prof.cargoFuncao || "";
             if (inputDisc) inputDisc.value = prof.disciplina || "";
             if (inputTel) inputTel.value = prof.telefone || "";
             if (inputEmail) inputEmail.value = prof.email || "";
-            if (inputTurnos) inputTurnos.value = prof.turnos || "";
-            if (inputTurmas) inputTurmas.value = prof.turmas || "";
+            if (inputTurno) inputTurno.value = prof.turnos || "matutino";
+            if (inputTurmas) inputTurmas.value = prof.turmasOuSalas || "";
         }
     } else {
-        if (title) title.innerHTML = `<i class="fa-solid fa-chalkboard-user" style="color:#1e3a8a;"></i> Cadastrar Novo Professor`;
+        if (title) title.innerHTML = `<i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Profissional da Escola`;
         if (inputId) inputId.value = "";
         if (inputNome) inputNome.value = "";
+        if (inputSetor) inputSetor.value = "docentes";
+        if (inputCargo) inputCargo.value = "";
         if (inputDisc) inputDisc.value = "";
         if (inputTel) inputTel.value = "";
         if (inputEmail) inputEmail.value = "";
-        if (inputTurnos) inputTurnos.value = "Matutino e Vespertino";
+        if (inputTurno) inputTurno.value = "matutino";
         if (inputTurmas) inputTurmas.value = "";
     }
 
     modal.style.display = "flex";
 }
 
-function closeCadastroProfessorModal() {
-    const modal = document.getElementById("modalCadastroProfessor");
+function closeCadastroProfissionalModal() {
+    const modal = document.getElementById("modalCadastroProfissional");
     if (modal) modal.style.display = "none";
 }
 
-function submitCadastroProfessor(e) {
+function submitCadastroProfissional(e) {
     e.preventDefault();
-    const id = document.getElementById("profInputId")?.value;
-    const nome = document.getElementById("profInputNome")?.value.trim();
-    const disciplina = document.getElementById("profInputDisciplina")?.value.trim();
-    const telefone = document.getElementById("profInputTelefone")?.value.trim();
-    const email = document.getElementById("profInputEmail")?.value.trim();
-    const turnos = document.getElementById("profInputTurnos")?.value.trim();
-    const turmas = document.getElementById("profInputTurmas")?.value.trim();
+    const id = document.getElementById("proInputId")?.value;
+    const nome = document.getElementById("proInputNome")?.value.trim();
+    const setor = document.getElementById("proInputSetor")?.value;
+    const cargoFuncao = document.getElementById("proInputCargo")?.value.trim();
+    const disciplina = document.getElementById("proInputDisciplina")?.value.trim();
+    const telefone = document.getElementById("proInputTelefone")?.value.trim();
+    const email = document.getElementById("proInputEmail")?.value.trim();
+    const turnos = document.getElementById("proInputTurno")?.value;
+    const turmasOuSalas = document.getElementById("proInputTurmas")?.value.trim();
 
-    if (!nome || !disciplina || !telefone) {
-        showToast("⚠️ Preencha Nome, Disciplina e WhatsApp do professor!");
+    if (!nome || !setor || !telefone) {
+        showToast("⚠️ Preencha Nome, Setor e WhatsApp do colaborador!");
         return;
     }
 
-    sigeDB.saveProfessor({
+    sigeDB.saveProfissional({
         id: id || null,
         nome,
+        setor,
+        cargoFuncao,
         disciplina,
         telefone,
         email,
         turnos,
-        turmas
+        turmasOuSalas
     });
 
-    closeCadastroProfessorModal();
+    closeCadastroProfissionalModal();
     renderModuleAdministracao();
-    showToast(id ? "✅ Professor atualizado com sucesso!" : "✅ Novo professor cadastrado com sucesso!");
+    showToast(id ? "✅ Cadastro de colaborador atualizado!" : "✅ Novo profissional registrado na equipe!");
 }
 
-function editarProfessor(profId) {
-    openCadastroProfessorModal(profId);
+function editarProfissional(id) {
+    openCadastroProfissionalModal(id);
 }
 
-function excluirProfessor(profId) {
-    const professores = sigeDB.getProfessores();
-    const prof = professores.find(p => p.id === profId);
+function excluirProfissional(id) {
+    const equipe = sigeDB.getEquipeEscolar();
+    const prof = equipe.find(p => p.id === id);
     if (!prof) return;
 
-    if (confirm(`Tem certeza que deseja remover o cadastro do(a) ${prof.nome}?`)) {
-        sigeDB.deleteProfessor(profId);
+    if (confirm(`Tem certeza que deseja remover o cadastro de ${prof.nome} (${prof.cargoFuncao || prof.setor})?`)) {
+        sigeDB.deleteProfissional(id);
         renderModuleAdministracao();
-        showToast("🗑️ Professor removido com sucesso.");
+        showToast("🗑️ Colaborador removido com sucesso.");
     }
+}
+
+function openCadastroProfessorModal(profId = null) {
+    openCadastroProfissionalModal(profId);
+}
+function closeCadastroProfessorModal() {
+    closeCadastroProfissionalModal();
+}
+function editarProfessor(profId) {
+    editarProfissional(profId);
+}
+function excluirProfessor(profId) {
+    excluirProfissional(profId);
+}
+
+// GESTÃO DE TURMAS & TURNOS
+function renderTurmasAdminTable() {
+    const tbody = document.getElementById("admTurmasTableBody");
+    if (!tbody) return;
+
+    const turmas = sigeDB.getTurmasEscola();
+    if (!turmas || turmas.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="padding:1.5rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-graduation-cap" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i>
+                    Nenhuma turma cadastrada no momento. Clique em "+ Nova Turma" para cadastrar.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const badgeTurno = (t) => {
+        switch (t) {
+            case "matutino": return `<span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🌅 Matutino</span>`;
+            case "vespertino": return `<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">☀️ Vespertino</span>`;
+            case "integral": return `<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🕒 Integral</span>`;
+            case "noturno": return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🌙 Noturno</span>`;
+            default: return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">Geral</span>`;
+        }
+    };
+
+    tbody.innerHTML = turmas.map(t => {
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px 14px; font-weight:800; color:#0f172a;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#0284c7; margin-right:6px;"></i> ${escapeHtml(t.nome)}
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:normal; margin-left:4px;">(${escapeHtml(t.anoLetivo || '2026')})</span>
+                </td>
+                <td style="padding:12px 14px;">${badgeTurno(t.turno)}</td>
+                <td style="padding:12px 14px; color:#334155; font-size:0.83rem;">${escapeHtml(t.nivel || "Ensino Fundamental")}</td>
+                <td style="padding:12px 14px; color:#0f172a; font-weight:700; font-size:0.83rem;">
+                    <i class="fa-solid fa-door-open" style="color:#64748b;"></i> ${escapeHtml(t.sala || "Sem sala")}
+                </td>
+                <td style="padding:12px 14px; color:#334155; font-weight:600; font-size:0.83rem;">
+                    ${escapeHtml(t.regente || "Não definido")}
+                </td>
+                <td style="padding:12px 14px; text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:6px;">
+                        <button onclick="editarTurma('${t.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Turma">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="excluirTurma('${t.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Turma">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openCadastroTurmaModal(id = null) {
+    const modal = document.getElementById("modalCadastroTurma");
+    const title = document.getElementById("modalCadastroTurmaTitulo");
+    const inputId = document.getElementById("turmaInputId");
+    const inputNome = document.getElementById("turmaInputNome");
+    const inputAno = document.getElementById("turmaInputAno");
+    const inputTurno = document.getElementById("turmaInputTurno");
+    const inputNivel = document.getElementById("turmaInputNivel");
+    const inputSala = document.getElementById("turmaInputSala");
+    const inputCap = document.getElementById("turmaInputCapacidade");
+    const inputReg = document.getElementById("turmaInputRegente");
+
+    if (!modal) return;
+
+    if (id) {
+        const turmas = sigeDB.getTurmasEscola();
+        const turma = turmas.find(t => t.id === id);
+        if (turma) {
+            if (title) title.innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:#0284c7;"></i> Editar Cadastro da Turma`;
+            if (inputId) inputId.value = turma.id;
+            if (inputNome) inputNome.value = turma.nome || "";
+            if (inputAno) inputAno.value = turma.anoLetivo || "2026";
+            if (inputTurno) inputTurno.value = turma.turno || "matutino";
+            if (inputNivel) inputNivel.value = turma.nivel || "Ensino Fundamental II";
+            if (inputSala) inputSala.value = turma.sala || "";
+            if (inputCap) inputCap.value = turma.capacidade || 35;
+            if (inputReg) inputReg.value = turma.regente || "";
+        }
+    } else {
+        if (title) title.innerHTML = `<i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Cadastrar Nova Turma`;
+        if (inputId) inputId.value = "";
+        if (inputNome) inputNome.value = "";
+        if (inputAno) inputAno.value = "2026";
+        if (inputTurno) inputTurno.value = "matutino";
+        if (inputNivel) inputNivel.value = "Ensino Fundamental II";
+        if (inputSala) inputSala.value = "";
+        if (inputCap) inputCap.value = 35;
+        if (inputReg) inputReg.value = "";
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeCadastroTurmaModal() {
+    const modal = document.getElementById("modalCadastroTurma");
+    if (modal) modal.style.display = "none";
+}
+
+function submitCadastroTurma(e) {
+    e.preventDefault();
+    const id = document.getElementById("turmaInputId")?.value;
+    const nome = document.getElementById("turmaInputNome")?.value.trim();
+    const anoLetivo = document.getElementById("turmaInputAno")?.value.trim();
+    const turno = document.getElementById("turmaInputTurno")?.value;
+    const nivel = document.getElementById("turmaInputNivel")?.value;
+    const sala = document.getElementById("turmaInputSala")?.value.trim();
+    const capacidade = parseInt(document.getElementById("turmaInputCapacidade")?.value || "35", 10);
+    const regente = document.getElementById("turmaInputRegente")?.value.trim();
+
+    if (!nome || !sala) {
+        showToast("⚠️ Preencha Nome da Turma e Sala Física!");
+        return;
+    }
+
+    sigeDB.saveTurma({
+        id: id || null,
+        nome,
+        anoLetivo,
+        turno,
+        nivel,
+        sala,
+        capacidade,
+        regente
+    });
+
+    closeCadastroTurmaModal();
+    renderModuleAdministracao();
+    showToast(id ? "✅ Dados da turma atualizados!" : "✅ Nova turma cadastrada com sucesso!");
+}
+
+function editarTurma(id) {
+    openCadastroTurmaModal(id);
+}
+
+function excluirTurma(id) {
+    const turmas = sigeDB.getTurmasEscola();
+    const turma = turmas.find(t => t.id === id);
+    if (!turma) return;
+
+    if (confirm(`Tem certeza que deseja excluir a turma ${turma.nome}?`)) {
+        sigeDB.deleteTurma(id);
+        renderModuleAdministracao();
+        showToast("🗑️ Turma removida da estrutura escolar.");
+    }
+}
+
+// CONFIGURAÇÕES DA UNIDADE & BACKUP & LOGS
+function renderConfigEscolaForm() {
+    const config = sigeDB.getConfigEscola();
+    const inputNome = document.getElementById("cfgNomeEscola");
+    const inputCid = document.getElementById("cfgCidadeUf");
+    const inputAno = document.getElementById("cfgAnoLetivo");
+    const inputPer = document.getElementById("cfgPeriodoAtual");
+    const inputTel = document.getElementById("cfgTelefoneContato");
+
+    if (inputNome) inputNome.value = config.nomeEscola || "Centro Educacional Pedro Rizzi";
+    if (inputCid) inputCid.value = config.cidadeUf || "Itajaí / SC";
+    if (inputAno) inputAno.value = config.anoLetivo || "2026";
+    if (inputPer) inputPer.value = config.periodoAtual || "3º Trimestre";
+    if (inputTel) inputTel.value = config.telefoneContato || "(47) 3348-0000";
+}
+
+function salvarConfiguracoesEscola(e) {
+    e.preventDefault();
+    const nomeEscola = document.getElementById("cfgNomeEscola")?.value.trim();
+    const cidadeUf = document.getElementById("cfgCidadeUf")?.value.trim();
+    const anoLetivo = document.getElementById("cfgAnoLetivo")?.value.trim();
+    const periodoAtual = document.getElementById("cfgPeriodoAtual")?.value.trim();
+    const telefoneContato = document.getElementById("cfgTelefoneContato")?.value.trim();
+
+    sigeDB.saveConfigEscola({
+        nomeEscola,
+        cidadeUf,
+        anoLetivo,
+        periodoAtual,
+        telefoneContato
+    });
+
+    showToast("⚙️ Parâmetros institucionais salvos com sucesso!");
+}
+
+function renderAuditLogsTable() {
+    const tbody = document.getElementById("admAuditLogsTableBody");
+    if (!tbody) return;
+
+    const logs = sigeDB.getAuditLogs();
+    if (!logs || logs.length === 0) {
+        tbody.innerHTML = `<tr><td style="padding:8px; color:#94a3b8;">Nenhum registro de auditoria.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = logs.slice(0, 15).map(l => {
+        const dateFmt = new Date(l.data).toLocaleDateString("pt-BR") + " " + new Date(l.data).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:4px 6px; color:#64748b; white-space:nowrap;">${dateFmt}</td>
+                <td style="padding:4px 6px; font-weight:700; color:#1e293b;">[${escapeHtml(l.setor || 'Geral')}]</td>
+                <td style="padding:4px 6px; color:#334155;">${escapeHtml(l.acao)}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function downloadBackupSige() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sigeDB.data, null, 2));
+    const downloadAnchor = document.createElement("a");
+    const dateToday = new Date().toISOString().split("T")[0];
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `SIGE_Backup_PedroRizzi_${dateToday}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    sigeDB.logAuditEvent("Backup", "Download de arquivo de backup JSON realizado", "Administração");
+    renderAuditLogsTable();
+    showToast("💾 Arquivo de Backup JSON baixado com sucesso!");
+}
+
+function importarBackupFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const parsed = JSON.parse(evt.target.result);
+            if (parsed && typeof parsed === "object") {
+                if (confirm("⚠️ ATENÇÃO: Restaurar o backup substituirá os dados atuais pelo arquivo selecionado. Deseja continuar?")) {
+                    sigeDB.saveData(parsed);
+                    sigeDB.logAuditEvent("Backup", "Restauração de banco de dados via arquivo JSON", "Administração");
+                    alert("✅ Banco de dados restaurado com sucesso!");
+                    window.location.reload();
+                }
+            } else {
+                alert("❌ Formato de arquivo JSON inválido.");
+            }
+        } catch (err) {
+            alert("❌ Erro ao ler arquivo de backup: " + err.message);
+        }
+    };
+    reader.readAsText(file);
 }
 
 function openDisparoAvisoProfessorModal(profId = "todos") {
@@ -2310,25 +2631,26 @@ function openDisparoAvisoProfessorModal(profId = "todos") {
 
     if (!modal) return;
 
-    const professores = sigeDB.getProfessores();
+    const equipe = sigeDB.getEquipeEscolar();
 
     if (selectDest) {
-        let opts = `<option value="todos">📢 Todos os Professores (${professores.length} cadastrados)</option>`;
-        professores.forEach(p => {
-            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - ${escapeHtml(p.disciplina)} (${p.telefone})</option>`;
+        let opts = `<option value="todos">📢 Toda a Equipe Escolar (${equipe.length} colaboradores)</option>`;
+        equipe.forEach(p => {
+            const setorLabel = p.setor ? p.setor.toUpperCase() : "DOCENTE";
+            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - [${setorLabel}] ${escapeHtml(p.cargoFuncao || p.disciplina)} (${p.telefone})</option>`;
         });
         selectDest.innerHTML = opts;
     }
 
     if (profId === "todos") {
         if (selectDest) selectDest.value = "todos";
-        if (inputAssunto) inputAssunto.value = "Comunicado Oficial da Direção / Supervisão Escolar";
-        if (inputMsg) inputMsg.value = "Prezados Professores,\n\nSolicitamos a atenção de todos para o alinhamento das atividades pedagógicas nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
+        if (inputAssunto) inputAssunto.value = "Comunicado Oficial da Direção Escolar";
+        if (inputMsg) inputMsg.value = "Prezados Colaboradores,\n\nSolicitamos a atenção de todos para os alinhamentos e diretrizes da unidade nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
     } else {
-        const p = professores.find(item => item.id === profId);
+        const p = equipe.find(item => item.id === profId);
         if (p) {
-            if (inputAssunto) inputAssunto.value = `Aviso para Prof. ${p.nome}`;
-            if (inputMsg) inputMsg.value = `Olá, Prof. ${p.nome}!\n\nEntramos em contato referente à disciplina de ${p.disciplina}.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
+            if (inputAssunto) inputAssunto.value = `Comunicado para ${p.nome}`;
+            if (inputMsg) inputMsg.value = `Olá, ${p.nome}!\n\nEntramos em contato referente às demandas do setor ${p.setor.toUpperCase()}.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
         }
     }
 
@@ -2351,18 +2673,18 @@ function submitDisparoAvisoProfessor(e) {
         return;
     }
 
-    const professores = sigeDB.getProfessores();
+    const equipe = sigeDB.getEquipeEscolar();
 
     if (destId === "todos") {
         let disparosCount = 0;
-        professores.forEach(p => {
+        equipe.forEach(p => {
             if (p.telefone) {
                 const cleanPhone = p.telefone.replace(/\D/g, "");
                 const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
                 const fullMsg = `*${assunto}*\n\n${mensagem}`;
                 
-                sigeDB.logWhatsappDispatch("aviso-geral-prof", {
-                    tipo: "Aviso Geral Docente",
+                sigeDB.logWhatsappDispatch("aviso-geral-equipe", {
+                    tipo: "Aviso Geral Equipe",
                     mensagem: fullMsg,
                     destinatario: p.nome,
                     telefone: p.telefone,
@@ -2375,16 +2697,16 @@ function submitDisparoAvisoProfessor(e) {
 
         const fullMsg = `*${assunto}*\n\n${mensagem}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
-        showToast(`📲 Comunicado registrado para ${disparosCount} professores! Janela do WhatsApp aberta.`);
+        showToast(`📲 Comunicado registrado para ${disparosCount} colaboradores! Janela do WhatsApp aberta.`);
     } else {
-        const p = professores.find(item => item.id === destId);
+        const p = equipe.find(item => item.id === destId);
         if (p) {
             const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
             const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
             const fullMsg = `*${assunto}*\n\n${mensagem}`;
             
-            sigeDB.logWhatsappDispatch("aviso-individual-prof", {
-                tipo: "Aviso Individual Docente",
+            sigeDB.logWhatsappDispatch("aviso-individual-equipe", {
+                tipo: "Aviso Individual Colaborador",
                 mensagem: fullMsg,
                 destinatario: p.nome,
                 telefone: p.telefone,

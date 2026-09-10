@@ -387,6 +387,170 @@ const defaultSigeData = {
             turnos: "vespertino",
             turmas: "6º ao 9º Ano"
         }
+    ],
+
+    equipeEscola: [
+        {
+            id: "prof-1",
+            nome: "Prof. Ricardo Santos",
+            setor: "docentes",
+            cargoFuncao: "Professor de Ciências & Biologia",
+            disciplina: "Ciências & Biologia",
+            telefone: "47998877665",
+            email: "ricardo.santos@escola.gov.br",
+            turnos: "matutino",
+            turmasOuSalas: "6º ao 9º Ano"
+        },
+        {
+            id: "prof-2",
+            nome: "Profª Maria Oliveira",
+            setor: "docentes",
+            cargoFuncao: "Professora de Física & Matemática",
+            disciplina: "Física & Matemática",
+            telefone: "47991234567",
+            email: "maria.oliveira@escola.gov.br",
+            turnos: "ambos",
+            turmasOuSalas: "8º e 9º Anos"
+        },
+        {
+            id: "prof-3",
+            nome: "Profª Carmen Lucia",
+            setor: "docentes",
+            cargoFuncao: "Professora de Língua Portuguesa",
+            disciplina: "Língua Portuguesa",
+            telefone: "47988332211",
+            email: "carmen.lucia@escola.gov.br",
+            turnos: "matutino",
+            turmasOuSalas: "6º ao 8º Ano"
+        },
+        {
+            id: "prof-4",
+            nome: "Prof. Lucas Gabriel",
+            setor: "docentes",
+            cargoFuncao: "Professor de Robótica & TI",
+            disciplina: "Robótica & TI",
+            telefone: "47997711223",
+            email: "lucas.gabriel@escola.gov.br",
+            turnos: "vespertino",
+            turmasOuSalas: "Todos os Anos"
+        },
+        {
+            id: "prof-5",
+            nome: "Profª Juliana Lima",
+            setor: "docentes",
+            cargoFuncao: "Professora de Artes & Projetos",
+            disciplina: "Artes & Projetos",
+            telefone: "47996655443",
+            email: "juliana.lima@escola.gov.br",
+            turnos: "vespertino",
+            turmasOuSalas: "6º ao 9º Ano"
+        },
+        {
+            id: "orient-1",
+            nome: "Carmen Lucia (Orientadora)",
+            setor: "orientacao",
+            cargoFuncao: "Orientadora Pedagógica - Matutino",
+            disciplina: "Orientação Pedagógica",
+            telefone: "47999112233",
+            email: "carmen.op@escola.gov.br",
+            turnos: "matutino",
+            turmasOuSalas: "6º ao 9º Anos"
+        },
+        {
+            id: "orient-2",
+            nome: "Luciana Santos (Orientadora)",
+            setor: "orientacao",
+            cargoFuncao: "Orientadora Pedagógica - Vespertino",
+            disciplina: "Orientação Pedagógica",
+            telefone: "47999445566",
+            email: "luciana.op@escola.gov.br",
+            turnos: "vespertino",
+            turmasOuSalas: "1º ao 5º Anos"
+        },
+        {
+            id: "sup-user-1",
+            nome: "Supervisora 1 (Ana Paula)",
+            setor: "supervisao",
+            cargoFuncao: "Supervisora Pedagógica Geral",
+            disciplina: "Supervisão Pedagógica",
+            telefone: "47999778899",
+            email: "supervisao1@escola.gov.br",
+            turnos: "matutino",
+            turmasOuSalas: "Toda a Unidade"
+        },
+        {
+            id: "sup-user-2",
+            nome: "Supervisora 2 (Fernanda)",
+            setor: "supervisao",
+            cargoFuncao: "Supervisora Pedagógica de Projetos",
+            disciplina: "Supervisão Pedagógica",
+            telefone: "47999778800",
+            email: "supervisao2@escola.gov.br",
+            turnos: "vespertino",
+            turmasOuSalas: "Toda a Unidade"
+        },
+        {
+            id: "dir-1",
+            nome: "Diretora Elena Cortelini",
+            setor: "direcao",
+            cargoFuncao: "Diretora Escolar Geral",
+            disciplina: "Gestão Escolar",
+            telefone: "47999881122",
+            email: "direcao@escola.gov.br",
+            turnos: "integral",
+            turmasOuSalas: "Geral"
+        },
+        {
+            id: "sec-1",
+            nome: "Patricia Duarte (Secretária)",
+            setor: "secretaria",
+            cargoFuncao: "Chefe da Secretaria Escolar",
+            disciplina: "Secretaria & Matrículas",
+            telefone: "47999223344",
+            email: "secretaria@escola.gov.br",
+            turnos: "integral",
+            turmasOuSalas: "Recepção / Secretaria"
+        },
+        {
+            id: "apoio-1",
+            nome: "Marcos Ribeiro (TI & Manutenção)",
+            setor: "apoio",
+            cargoFuncao: "Técnico em Suporte TI & Infraestrutura",
+            disciplina: "Apoio Técnico",
+            telefone: "47999334455",
+            email: "ti.manutencao@escola.gov.br",
+            turnos: "integral",
+            turmasOuSalas: "Laboratórios & Redes"
+        }
+    ],
+
+    turmasEscola: [
+        { id: "turma-101", nome: "1º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental I", sala: "Sala 01", capacidade: 30, regente: "Profª Juliana Lima" },
+        { id: "turma-102", nome: "2º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental I", sala: "Sala 02", capacidade: 30, regente: "Profª Maria Oliveira" },
+        { id: "turma-601", nome: "6º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 10", capacidade: 35, regente: "Profª Carmen Lucia" },
+        { id: "turma-602", nome: "6º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 10", capacidade: 35, regente: "Prof. Lucas Gabriel" },
+        { id: "turma-701", nome: "7º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 12", capacidade: 35, regente: "Prof. Ricardo Santos" },
+        { id: "turma-702", nome: "7º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 12", capacidade: 35, regente: "Prof. Ricardo Santos" },
+        { id: "turma-801", nome: "8º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 14", capacidade: 35, regente: "Profª Maria Oliveira" },
+        { id: "turma-802", nome: "8º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 14", capacidade: 35, regente: "Prof. Lucas Gabriel" },
+        { id: "turma-901", nome: "9º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 15", capacidade: 35, regente: "Profª Carmen Lucia" }
+    ],
+
+    configEscola: {
+        nomeEscola: "Centro Educacional Pedro Rizzi",
+        cidadeUf: "Itajaí / SC",
+        anoLetivo: "2026",
+        periodoAtual: "3º Trimestre",
+        horarioMatutino: "07:30 - 11:45",
+        horarioVespertino: "13:15 - 17:30",
+        telefoneContato: "(47) 3348-0000",
+        emailContato: "contato@pedrorizzi.sc.gov.br"
+    },
+
+    auditLogs: [
+        { id: "log-1", data: "2026-09-10T14:30:00", usuario: "Administração", acao: "Cadastro de Nova Turma (7º Ano B)", setor: "Admin" },
+        { id: "log-2", data: "2026-09-10T15:10:00", usuario: "Supervisão", acao: "Disparo de Cobrança WhatsApp (Prof. Ricardo)", setor: "Supervisão" },
+        { id: "log-3", data: "2026-09-10T16:20:00", usuario: "Secretaria", acao: "Agendamento OP Registrado (Lucas Gabriel)", setor: "Orientação" }
     ]
 };
 
@@ -517,6 +681,122 @@ class SigeDatabase {
         let list = this.getProfessores();
         this.data.professores = list.filter(p => p.id !== id);
         this.saveData(this.data);
+    }
+
+    getEquipeEscolar() {
+        if (!this.data.equipeEscola || !Array.isArray(this.data.equipeEscola)) {
+            this.data.equipeEscola = defaultSigeData.equipeEscola || [];
+            this.saveData(this.data);
+        }
+        return this.data.equipeEscola;
+    }
+
+    saveProfissional(profData) {
+        let list = this.getEquipeEscolar();
+        if (profData.id) {
+            const index = list.findIndex(p => p.id === profData.id);
+            if (index >= 0) {
+                list[index] = { ...list[index], ...profData };
+            } else {
+                list.push(profData);
+            }
+        } else {
+            profData.id = "prof-" + Date.now();
+            list.push(profData);
+        }
+        
+        if (profData.setor === "docentes") {
+            this.saveProfessor(profData);
+        }
+
+        this.saveData(this.data);
+        this.logAuditEvent("Equipe Escolar", `Salvo profissional ${profData.nome} (${profData.cargoFuncao || profData.setor})`, "Administração");
+        return profData;
+    }
+
+    deleteProfissional(id) {
+        let list = this.getEquipeEscolar();
+        const prof = list.find(p => p.id === id);
+        this.data.equipeEscola = list.filter(p => p.id !== id);
+        this.deleteProfessor(id);
+        this.saveData(this.data);
+        if (prof) {
+            this.logAuditEvent("Equipe Escolar", `Removido profissional ${prof.nome}`, "Administração");
+        }
+    }
+
+    getTurmasEscola() {
+        if (!this.data.turmasEscola || !Array.isArray(this.data.turmasEscola)) {
+            this.data.turmasEscola = defaultSigeData.turmasEscola || [];
+            this.saveData(this.data);
+        }
+        return this.data.turmasEscola;
+    }
+
+    saveTurma(turmaData) {
+        let list = this.getTurmasEscola();
+        if (turmaData.id) {
+            const index = list.findIndex(t => t.id === turmaData.id);
+            if (index >= 0) {
+                list[index] = { ...list[index], ...turmaData };
+            } else {
+                list.push(turmaData);
+            }
+        } else {
+            turmaData.id = "turma-" + Date.now();
+            list.push(turmaData);
+        }
+        this.saveData(this.data);
+        this.logAuditEvent("Turmas & Turnos", `Salva turma ${turmaData.nome} (${turmaData.turno})`, "Administração");
+        return turmaData;
+    }
+
+    deleteTurma(id) {
+        let list = this.getTurmasEscola();
+        const turma = list.find(t => t.id === id);
+        this.data.turmasEscola = list.filter(t => t.id !== id);
+        this.saveData(this.data);
+        if (turma) {
+            this.logAuditEvent("Turmas & Turnos", `Removida turma ${turma.nome}`, "Administração");
+        }
+    }
+
+    getConfigEscola() {
+        if (!this.data.configEscola) {
+            this.data.configEscola = defaultSigeData.configEscola;
+            this.saveData(this.data);
+        }
+        return this.data.configEscola;
+    }
+
+    saveConfigEscola(configData) {
+        this.data.configEscola = { ...this.getConfigEscola(), ...configData };
+        this.saveData(this.data);
+        this.logAuditEvent("Configuração Escolar", "Atualizados parâmetros institucionais da escola", "Administração");
+        return this.data.configEscola;
+    }
+
+    getAuditLogs() {
+        if (!this.data.auditLogs || !Array.isArray(this.data.auditLogs)) {
+            this.data.auditLogs = defaultSigeData.auditLogs || [];
+            this.saveData(this.data);
+        }
+        return this.data.auditLogs;
+    }
+
+    logAuditEvent(setor, acao, usuario = "Sistema") {
+        let logs = this.getAuditLogs();
+        const newLog = {
+            id: "log-" + Date.now(),
+            data: new Date().toISOString(),
+            usuario,
+            acao,
+            setor
+        };
+        logs.unshift(newLog);
+        if (logs.length > 100) logs = logs.slice(0, 100);
+        this.data.auditLogs = logs;
+        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
     }
 
     getWhatsappConfig() {
