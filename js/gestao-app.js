@@ -1764,6 +1764,7 @@ function renderModuleAdministracao() {
     }
 
     renderWhatsappConfigPanel();
+    renderFirebaseConfigPanel();
     renderEquipeEscolarTable("todos");
     renderTurmasAdminTable();
     renderConfigEscolaForm();
@@ -2722,3 +2723,64 @@ function submitDisparoAvisoProfessor(e) {
 
     closeDisparoAvisoProfessorModal();
 }
+
+// ==========================================
+// CONFIGURAÇÃO E PAINEL DO FIREBASE CLOUD
+// ==========================================
+function renderFirebaseConfigPanel() {
+    const config = sigeDB.getFirebaseConfig();
+    const apiKey = document.getElementById("fbApiKey");
+    const projectId = document.getElementById("fbProjectId");
+    const authDomain = document.getElementById("fbAuthDomain");
+    const appId = document.getElementById("fbAppId");
+    const statusBadge = document.getElementById("firebaseStatusBadge");
+
+    if (apiKey) apiKey.value = config.apiKey || "";
+    if (projectId) projectId.value = config.projectId || "";
+    if (authDomain) authDomain.value = config.authDomain || "";
+    if (appId) appId.value = config.appId || "";
+
+    if (statusBadge) {
+        if (sigeDB.isFirebaseConnected()) {
+            statusBadge.style.background = "#dcfce7";
+            statusBadge.style.color = "#166534";
+            statusBadge.innerHTML = `<i class="fa-solid fa-cloud-check"></i> 🔥 Sincronização Cloud Ativa (Firebase Conectado)`;
+        } else if (config.projectId) {
+            statusBadge.style.background = "#fef3c7";
+            statusBadge.style.color = "#92400e";
+            statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Conectando ao Firebase...`;
+        } else {
+            statusBadge.style.background = "#f1f5f9";
+            statusBadge.style.color = "#475569";
+            statusBadge.innerHTML = `<i class="fa-solid fa-hard-drive"></i> Modo Local (Insira credenciais do Firebase para nuvem)`;
+        }
+    }
+}
+
+function salvarConfiguracoesFirebase(e) {
+    e.preventDefault();
+    const apiKey = document.getElementById("fbApiKey")?.value.trim();
+    const projectId = document.getElementById("fbProjectId")?.value.trim();
+    const authDomain = document.getElementById("fbAuthDomain")?.value.trim();
+    const appId = document.getElementById("fbAppId")?.value.trim();
+
+    if (!projectId || !apiKey) {
+        showToast("⚠️ Preencha pelo menos o API Key e Project ID do Firebase!");
+        return;
+    }
+
+    sigeDB.saveFirebaseConfig({
+        enabled: true,
+        apiKey,
+        projectId,
+        authDomain: authDomain || `${projectId}.firebaseapp.com`,
+        storageBucket: `${projectId}.appspot.com`,
+        messagingSenderId: "",
+        appId
+    });
+
+    renderFirebaseConfigPanel();
+    sigeDB.logAuditEvent("Firebase", "Credenciais do Firebase salvas e sincronização ativada", "Administração");
+    showToast("🔥 Credenciais do Firebase salvas! Conexão iniciada.");
+}
+

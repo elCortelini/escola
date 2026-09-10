@@ -551,13 +551,107 @@ const defaultSigeData = {
         { id: "log-1", data: "2026-09-10T14:30:00", usuario: "Administração", acao: "Cadastro de Nova Turma (7º Ano B)", setor: "Admin" },
         { id: "log-2", data: "2026-09-10T15:10:00", usuario: "Supervisão", acao: "Disparo de Cobrança WhatsApp (Prof. Ricardo)", setor: "Supervisão" },
         { id: "log-3", data: "2026-09-10T16:20:00", usuario: "Secretaria", acao: "Agendamento OP Registrado (Lucas Gabriel)", setor: "Orientação" }
-    ]
+    ],
+
+    firebaseConfig: {
+        enabled: false,
+        apiKey: "",
+        authDomain: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: ""
+    }
 };
 
-// Gerenciador de Banco de Dados Local Storage
+// Gerenciador de Banco de Dados Local Storage & Firebase Cloud
 class SigeDatabase {
     constructor() {
         this.data = this.load();
+        this.fbApp = null;
+        this.firestore = null;
+        this.isSyncingFromRemote = false;
+        this.initFirebase();
+    }
+
+    getFirebaseConfig() {
+        if (!this.data.firebaseConfig) {
+            this.data.firebaseConfig = {
+                enabled: false,
+                apiKey: "",
+                authDomain: "",
+                projectId: "",
+                storageBucket: "",
+                messagingSenderId: "",
+                appId: ""
+            };
+            this.saveData(this.data);
+        }
+        return this.data.firebaseConfig;
+    }
+
+    saveFirebaseConfig(config) {
+        this.data.firebaseConfig = { ...this.getFirebaseConfig(), ...config };
+        this.saveData(this.data);
+        this.initFirebase();
+    }
+
+    isFirebaseConnected() {
+        return !!(this.firestore && this.data.firebaseConfig && this.data.firebaseConfig.projectId);
+    }
+
+    initFirebase() {
+        const config = this.getFirebaseConfig();
+        if (!config || !config.projectId || !config.apiKey || typeof firebase === "undefined") {
+            return;
+        }
+
+        try {
+            if (!firebase.apps.length) {
+                this.fbApp = firebase.initializeApp(config);
+            } else {
+                this.fbApp = firebase.app();
+            }
+
+            this.firestore = firebase.firestore();
+
+            this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const remoteData = doc.data();
+                    if (remoteData && typeof remoteData === "object") {
+                        this.isSyncingFromRemote = true;
+                        this.data = { ...this.data, ...remoteData };
+                        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
+                        this.isSyncingFromRemote = false;
+                        
+                        if (typeof renderCurrentModule === "function") {
+                            renderCurrentModule();
+                        } else if (typeof renderModuleAdministracao === "function") {
+                            renderModuleAdministracao();
+                        }
+                    }
+                }
+            }, (error) => {
+                console.warn("Aviso Firebase Firestore Sync:", error.message);
+            });
+
+            console.log("🔥 Firebase Firestore inicializado com sucesso!");
+        } catch (e) {
+            console.error("Erro ao inicializar Firebase:", e);
+        }
+    }
+
+    syncToFirebase() {
+        if (this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
+            return;
+        }
+
+        try {
+            this.firestore.collection("sige_pedro_rizzi").doc("database").set(this.data, { merge: true })
+                .catch(err => console.warn("Erro ao sincronizar com Firebase:", err.message));
+        } catch (e) {
+            console.warn("Exceção ao enviar para Firebase:", e);
+        }
     }
 
     load() {
@@ -577,6 +671,7 @@ class SigeDatabase {
     saveData(data) {
         this.data = data;
         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(data));
+        this.syncToFirebase();
     }
 
     resetToDefault() {

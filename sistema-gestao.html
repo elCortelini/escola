@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="css/style.css?v=20260910_v3">
     <link rel="stylesheet" href="css/gestao.css?v=20260910_v3">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
+
+    <!-- Firebase Cloud Database SDK (v10 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -673,6 +677,53 @@
                         <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
                     </button>
                 </div>
+            </div>
+
+            <!-- CARD FIREBASE: CONEXÃO COM BANCO DE DADOS EM NUVEM (FIREBASE MULTI-DISPOSITIVOS) -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-fire" style="color:#f97316; font-size:1.4rem;"></i> Conexão Firebase Cloud (Sincronização em Tempo Real Multi-Dispositivos)
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Conecte o seu projeto Firebase para sincronizar alterações em tempo real entre todos os computadores da escola.
+                        </p>
+                    </div>
+                    <div id="firebaseStatusBadge" style="font-size:0.82rem; padding:6px 12px; border-radius:12px; font-weight:800; background:#fef3c7; color:#92400e;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Verificando Firebase...
+                    </div>
+                </div>
+
+                <form onsubmit="salvarConfiguracoesFirebase(event)">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">API Key (apiKey):</label>
+                            <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Project ID (projectId):</label>
+                            <input type="text" id="fbProjectId" placeholder="sige-pedro-rizzi" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Auth Domain (authDomain):</label>
+                            <input type="text" id="fbAuthDomain" placeholder="sige-pedro-rizzi.firebaseapp.com" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">App ID (appId):</label>
+                            <input type="text" id="fbAppId" placeholder="1:123456789:web:abcde..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <span style="font-size:0.8rem; color:#64748b;">
+                            <i class="fa-solid fa-shield-halved"></i> O salvamento local no navegador continua ativo mesmo sem internet (Modo Híbrido).
+                        </span>
+                        <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#ea580c;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 🔥 Salvar Credenciais & Conectar Firebase
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- CARD 5: CONFIGURAÇÕES DA UNIDADE ESCOLAR & AUDITORIA DE LOGS / BACKUP -->
