@@ -1138,21 +1138,36 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
         cleanPhone = "55" + cleanPhone;
     }
 
+    // Busca o número cadastrado da Orientadora designada para direcionar retornos
+    const orientadorasList = sigeDB.getOrientadoras();
+    const orientadoraObj = orientadorasList.find(o => 
+        (agendamento.orientadora && agendamento.orientadora.toLowerCase().includes("carmen") && o.nome.toLowerCase().includes("carmen")) ||
+        (agendamento.orientadora && agendamento.orientadora.toLowerCase().includes("luciana") && o.nome.toLowerCase().includes("luciana"))
+    ) || orientadorasList[0];
+
+    let orientadoraCleanPhone = orientadoraObj ? orientadoraObj.telefone.replace(/\D/g, "") : "";
+    if (orientadoraCleanPhone.length === 10 || orientadoraCleanPhone.length === 11) {
+        orientadoraCleanPhone = "55" + orientadoraCleanPhone;
+    }
+
     let defaultText = "";
     let tipoTitulo = "Notificação WhatsApp";
+    const orientadoraNome = agendamento.orientadora || (orientadoraObj ? orientadoraObj.nome : 'OP');
+
+    const linkRetornoOrientadora = orientadoraCleanPhone ? `\n\n💬 Retorno / Dúvidas diretamente para o WhatsApp da ${orientadoraNome}: https://wa.me/${orientadoraCleanPhone}` : "";
 
     if (tipoEvento === "agendamento_criado") {
         tipoTitulo = "Confirmação de Agendamento";
-        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Confirmamos o agendamento da Orientação Pedagógica no Centro Educacional Pedro Rizzi para ${agendamento.aluno} (${agendamento.turma}) no dia ${formatDateBR(agendamento.data)} às ${agendamento.horario}. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Confirmamos o agendamento da Orientação Pedagógica no Centro Educacional Pedro Rizzi para ${agendamento.aluno} (${agendamento.turma}) no dia ${formatDateBR(agendamento.data)} às ${agendamento.horario}. Orientadora: ${orientadoraNome}.${linkRetornoOrientadora}`;
     } else if (tipoEvento === "aluno_chegou") {
         tipoTitulo = "Aviso de Recepção / Chegada";
-        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Registramos a sua chegada na recepção do Centro Educacional Pedro Rizzi. A orientadora ${agendamento.orientadora || 'OP'} já foi notificada e chamará em instantes.`;
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Registramos a sua chegada na recepção do Centro Educacional Pedro Rizzi. A orientadora ${orientadoraNome} já foi notificada e chamará em instantes.`;
     } else if (tipoEvento === "lembrete_24h") {
         tipoTitulo = "Lembrete de 24h";
-        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(agendamento.data)}) às ${agendamento.horario}. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(agendamento.data)}) às ${agendamento.horario}. Orientadora: ${orientadoraNome}.${linkRetornoOrientadora}`;
     } else if (tipoEvento === "lembrete_dia") {
         tipoTitulo = "Lembrete do Dia";
-        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da sua reunião HOJE (${formatDateBR(agendamento.data)}) às ${agendamento.horario} no Centro Educacional Pedro Rizzi. Orientadora: ${agendamento.orientadora || 'OP'}.`;
+        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da sua reunião HOJE (${formatDateBR(agendamento.data)}) às ${agendamento.horario} no Centro Educacional Pedro Rizzi. Orientadora: ${orientadoraNome}.${linkRetornoOrientadora}`;
     }
 
     const textToSend = customMsg || defaultText;
@@ -1181,6 +1196,7 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
         success = true;
     }
 
+    // Gravar Log para o Responsável
     sigeDB.logWhatsappDispatch(agendamento.id, {
         tipo: tipoTitulo,
         mensagem: textToSend,
@@ -1189,11 +1205,66 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
         destinatario: cleanPhone
     });
 
+    // Se for o aviso de chegada, também dispara para a caixa de entrada da Orientadora!
+    if (tipoEvento === "aluno_chegou" && orientadoraCleanPhone) {
+        const msgToOrientadora = `🔔 AVISO DE RECEPÇÃO OP: O responsável pelo aluno(a) ${agendamento.aluno} (${agendamento.turma}) acabou de chegar na recepção e aguarda atendimento (${agendamento.horario}).`;
+        if (config.provider !== "simulated" && config.apiUrl) {
+            try {
+                fetch(config.apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : "" },
+                    body: JSON.stringify({ phone: orientadoraCleanPhone, message: msgToOrientadora })
+                });
+            } catch(e) {}
+        }
+        sigeDB.logWhatsappDispatch(agendamento.id, {
+            tipo: `Aviso na Caixa da ${orientadoraNome}`,
+            mensagem: msgToOrientadora,
+            modo: "automático",
+            status: "sucesso",
+            destinatario: orientadoraCleanPhone
+        });
+    }
+
     if (success) {
         showToast(`🤖 WhatsApp automático enviado para ${agendamento.responsavel || agendamento.aluno}!`);
     }
 
     return success;
+}
+
+function openModalOrientadoras() {
+    const list = sigeDB.getOrientadoras();
+    const o1 = list.find(o => o.nome.includes("Carmen")) || list[0];
+    const o2 = list.find(o => o.nome.includes("Luciana")) || list[1];
+
+    if (o1 && document.getElementById("orientadora1Phone")) document.getElementById("orientadora1Phone").value = o1.telefone || "";
+    if (o1 && document.getElementById("orientadora1Email")) document.getElementById("orientadora1Email").value = o1.email || "";
+
+    if (o2 && document.getElementById("orientadora2Phone")) document.getElementById("orientadora2Phone").value = o2.telefone || "";
+    if (o2 && document.getElementById("orientadora2Email")) document.getElementById("orientadora2Email").value = o2.email || "";
+
+    const modal = document.getElementById("modalCadastroOrientadoras");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeModalOrientadoras() {
+    const modal = document.getElementById("modalCadastroOrientadoras");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarTelefonesOrientadoras(e) {
+    e.preventDefault();
+    const p1 = document.getElementById("orientadora1Phone").value;
+    const e1 = document.getElementById("orientadora1Email").value;
+    const p2 = document.getElementById("orientadora2Phone").value;
+    const e2 = document.getElementById("orientadora2Email").value;
+
+    sigeDB.saveOrientadora("orient-1", "Orientadora 1 (Carmen)", p1, e1);
+    sigeDB.saveOrientadora("orient-2", "Orientadora 2 (Luciana)", p2, e2);
+
+    closeModalOrientadoras();
+    showToast("💾 Telefones de WhatsApp das Orientadoras salvos com sucesso!");
 }
 
 function renderWhatsappDispatchHistory(ag) {

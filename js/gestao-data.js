@@ -214,7 +214,22 @@ const defaultSigeData = {
         autoSendOnCreate: true,
         autoSendOnArrival: true,
         autoSendReminders: true
-    }
+    },
+
+    orientadoras: [
+        {
+            id: "orient-1",
+            nome: "Orientadora 1 (Carmen)",
+            telefone: "47999112233",
+            email: "carmen.op@escola.gov.br"
+        },
+        {
+            id: "orient-2",
+            nome: "Orientadora 2 (Luciana)",
+            telefone: "47999445566",
+            email: "luciana.op@escola.gov.br"
+        }
+    ]
 };
 
 // Gerenciador de Banco de Dados Local Storage
@@ -283,6 +298,26 @@ class SigeDatabase {
             this.data.diasBloqueados.splice(index, 1);
         } else {
             this.data.diasBloqueados.push({ data: dateIso, motivo, bloqueadoPor: this.getRole() });
+        }
+        this.saveData(this.data);
+    }
+
+    getOrientadoras() {
+        if (!this.data.orientadoras || !Array.isArray(this.data.orientadoras)) {
+            this.data.orientadoras = defaultSigeData.orientadoras || [];
+            this.saveData(this.data);
+        }
+        return this.data.orientadoras;
+    }
+
+    saveOrientadora(id, nome, telefone, email) {
+        const list = this.getOrientadoras();
+        const item = list.find(o => o.id === id || o.nome === nome);
+        if (item) {
+            if (telefone) item.telefone = telefone;
+            if (email) item.email = email;
+        } else {
+            list.push({ id: id || ("orient-" + Date.now()), nome, telefone, email });
         }
         this.saveData(this.data);
     }
