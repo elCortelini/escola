@@ -261,16 +261,222 @@ function toggleTarefaStatus(id) {
 // ==========================================
 // MÓDULO 2: ORIENTAÇÃO PEDAGÓGICA (OP)
 // ==========================================
+let opViewMode = "semanal"; // "semanal" ou "cards"
+let currentWeekRefDate = new Date();
+
+function setOpViewMode(mode) {
+    opViewMode = mode;
+    document.querySelectorAll(".view-toggle-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    const semanalView = document.getElementById("opWeeklyViewContainer");
+    const listaView = document.getElementById("opListViewContainer");
+    if (semanalView && listaView) {
+        if (mode === "semanal") {
+            semanalView.style.display = "block";
+            listaView.style.display = "none";
+        } else {
+            semanalView.style.display = "none";
+            listaView.style.display = "block";
+        }
+    }
+    renderModuleOrientacaoPedagogica();
+}
+
+function moveWeek(deltaDays) {
+    currentWeekRefDate.setDate(currentWeekRefDate.getDate() + deltaDays);
+    renderModuleOrientacaoPedagogica();
+}
+
+function resetWeekToToday() {
+    currentWeekRefDate = new Date();
+    renderModuleOrientacaoPedagogica();
+}
+
+function getWeekDays(refDate) {
+    const dayOfWeek = refDate.getDay();
+    const distanceToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(refDate);
+    monday.setDate(refDate.getDate() + distanceToMon);
+
+    const week = [];
+    for (let i = 0; i < 5; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const iso = d.toISOString().split("T")[0];
+        const dayNames = ["Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", "Quinta-Feira", "Sexta-Feira", "Sábado"];
+        const todayIso = new Date().toISOString().split("T")[0];
+        week.push({
+            dateIso: iso,
+            dayName: dayNames[d.getDay()],
+            dayMonth: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+            isToday: iso === todayIso
+        });
+    }
+    return week;
+}
+
+function getWhatsAppUrl(phone, aluno, responsavel, data, horario) {
+    if (!phone) return "#";
+    let cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = "55" + cleanPhone;
+    }
+    const textMsg = encodeURIComponent(`Olá ${responsavel || 'Responsável'}! Entramos em contato do Centro Educacional Pedro Rizzi referente ao aluno(a) ${aluno || ''} sobre o atendimento da Orientação Pedagógica${data ? ' em ' + formatDateBR(data) : ''}${horario ? ' às ' + horario : ''}.`);
+    return `https://wa.me/${cleanPhone}?text=${textMsg}`;
+}
+
+function updateModalWhatsAppPreview() {
+    const telElem = document.getElementById("opInputTelefone");
+    const tel = telElem ? telElem.value : "";
+    const aluno = document.getElementById("opInputAluno") ? document.getElementById("opInputAluno").value : "";
+    const resp = document.getElementById("opInputResponsavel") ? document.getElementById("opInputResponsavel").value : "";
+    const data = document.getElementById("opInputData") ? document.getElementById("opInputData").value : "";
+    const hor = document.getElementById("opInputHorario") ? document.getElementById("opInputHorario").value : "";
+
+    const container = document.getElementById("modalWaPreviewContainer");
+    const btn = document.getElementById("modalWaPreviewBtn");
+
+    if (container && btn) {
+        if (tel.replace(/\D/g, "").length >= 8) {
+            btn.href = getWhatsAppUrl(tel, aluno, resp, data, hor);
+            container.style.display = "block";
+        } else {
+            container.style.display = "none";
+        }
+    }
+}
+
 function renderModuleOrientacaoPedagogica() {
+    const todosAtendimentos = sigeDB.getAgendamentosOP();
+    const weekDays = getWeekDays(currentWeekRefDate);
+
+    // Atualiza contadores para o dia de hoje
+    const hojeStr = new Date().toISOString().split("T")[0];
+    const atendimentosHoje = todosAtendimentos.filter(a => a.data === hojeStr);
+    updateTurnoCounters(atendimentosHoje);
+
+    // 1. Renderiza Visão Semanal (Inspirada no modelo)
+    renderWeeklyAgenda(weekDays, todosAtendimentos);
+
+    // 2. Renderiza Visão Cards (Filtro por Data)
+    renderCardsView(todosAtendimentos);
+}
+
+function renderWeeklyAgenda(weekDays, todosAtendimentos) {
+    const rangeText = document.getElementById("opWeekRangeText");
+    if (rangeText && weekDays.length === 5) {
+        rangeText.innerText = `${weekDays[0].dayMonth} - ${weekDays[4].dayMonth}`;
+    }
+
+    const headerRow = document.getElementById("weeklyTableHeaderRow");
+    const bodyTable = document.getElementById("weeklyTableBody");
+    if (!headerRow || !bodyTable) return;
+
+    // Header da Tabela
+    headerRow.innerHTML = `
+        <th class="col-periodo">PERÍODO / VAGA</th>
+        ${weekDays.map(d => `
+            <th class="${d.isToday ? 'col-today' : ''}">
+                ${d.dayName}<br>
+                <span style="font-size:0.8rem; opacity:0.9;">${d.dayMonth}</span>
+                ${d.isToday ? '<span class="today-pill">HOJE</span>' : ''}
+            </th>
+        `).join("")}
+    `;
+
+    // Linhas dos Turnos
+    const slotsConfig = [
+        { header: "MATUTINO (MANHÃ)", turno: "matutino" },
+        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0 },
+        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1 },
+        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2 },
+        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true },
+        
+        { header: "VESPERTINO (TARDE)", turno: "vespertino" },
+        { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0 },
+        { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1 },
+        { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2 },
+        { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true }
+    ];
+
+    bodyTable.innerHTML = slotsConfig.map(s => {
+        if (s.header) {
+            return `
+                <tr>
+                    <td colspan="6" class="turno-section-header">
+                        <i class="${s.turno === 'matutino' ? 'fa-solid fa-sun' : 'fa-solid fa-cloud-sun'}"></i> ${s.header}
+                    </td>
+                </tr>
+            `;
+        }
+
+        return `
+            <tr>
+                <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}">
+                    <span class="vaga-num">${s.label}</span>
+                    <span style="font-size:0.7rem; opacity:0.8;">${s.turno.toUpperCase()}</span>
+                </td>
+                ${weekDays.map(d => {
+                    const dateAppointments = todosAtendimentos.filter(a => 
+                        a.data === d.dateIso && 
+                        a.turno === s.turno && 
+                        a.tipo === s.tipo && 
+                        a.statusSecretaria !== 'cancelado'
+                    );
+
+                    const item = dateAppointments[s.slotIndex];
+
+                    if (item) {
+                        const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
+                        return `
+                            <td class="${d.isToday ? 'today-column-cell' : ''}">
+                                <div class="weekly-slot-card ${item.tipo}">
+                                    <div class="weekly-slot-header">
+                                        <span class="weekly-student-name">${item.aluno}</span>
+                                        <span class="weekly-class-badge">${item.turma}</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:#64748b;">
+                                        <i class="fa-regular fa-user"></i> ${item.responsavel}
+                                    </div>
+                                    <div class="weekly-motive" title="${item.motivo}">
+                                        "${item.motivo}"
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                        <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.68rem; padding:2px 5px;">
+                                            ${getSecretariaBadgeText(item.statusSecretaria)}
+                                        </span>
+                                        <span style="font-size:0.72rem; color:#64748b; font-weight:700;"><i class="fa-regular fa-clock"></i> ${item.horario}</span>
+                                    </div>
+
+                                    <!-- Botão WhatsApp Direto no Card -->
+                                    <a href="${waUrl}" target="_blank" class="btn-wa-compact">
+                                        <i class="fa-brands fa-whatsapp"></i> Chamar WhatsApp
+                                    </a>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        return `
+                            <td class="${d.isToday ? 'today-column-cell' : ''}">
+                                <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}')" class="weekly-slot-empty-btn">
+                                    <i class="fa-solid fa-plus"></i> + Nova
+                                </button>
+                            </td>
+                        `;
+                    }
+                }).join("")}
+            </tr>
+        `;
+    }).join("");
+}
+
+function renderCardsView(todosAtendimentos) {
     const container = document.getElementById("opAppointmentsGrid");
     const filterDataInput = document.getElementById("opFilterData");
     const filterData = filterDataInput ? filterDataInput.value : new Date().toISOString().split("T")[0];
 
-    const todosAtendimentos = sigeDB.getAgendamentosOP();
     const filtrados = todosAtendimentos.filter(a => !filterData || a.data === filterData);
-
-    // Atualiza contadores de vagas para o dia filtrado
-    updateTurnoCounters(filtrados);
 
     if (!container) return;
 
@@ -279,7 +485,7 @@ function renderModuleOrientacaoPedagogica() {
             <div class="empty-state" style="grid-column: 1 / -1;">
                 <i class="fa-solid fa-calendar-day"></i>
                 <p>Nenhum atendimento agendado para a data escolhida (${formatDateBR(filterData)}).</p>
-                <button onclick="openAgendamentoModal()" class="btn btn-primary" style="margin-top:1rem; width:auto;">
+                <button onclick="openAgendamentoModal('${filterData}')" class="btn btn-primary" style="margin-top:1rem; width:auto;">
                     <i class="fa-solid fa-plus"></i> Criar Agendamento na OP
                 </button>
             </div>
@@ -291,8 +497,7 @@ function renderModuleOrientacaoPedagogica() {
     const canSecretariaValidate = ["secretaria", "admin", "direcao", "orientacao"].includes(role);
 
     container.innerHTML = filtrados.map(a => {
-        const phoneFormatted = a.telefone.replace(/\D/g, "");
-        const waUrl = `https://wa.me/55${phoneFormatted}?text=Olá!%20Entramos%20em%20contato%20do%20Centro%20Educacional%20Pedro%20Rizzi%20sobre%20o%20atendimento%20da%20Orientação%20Pedagógica.`;
+        const waUrl = getWhatsAppUrl(a.telefone, a.aluno, a.responsavel, a.data, a.horario);
 
         return `
             <div class="op-card">
@@ -312,8 +517,8 @@ function renderModuleOrientacaoPedagogica() {
                         </div>
                         
                         ${a.telefone ? `
-                            <a href="${waUrl}" target="_blank" class="op-contact-phone">
-                                <i class="fa-brands fa-whatsapp"></i> Contato: ${a.telefone}
+                            <a href="${waUrl}" target="_blank" class="btn-whatsapp-direct">
+                                <i class="fa-brands fa-whatsapp"></i> 💬 Abrir WhatsApp do Responsável (${a.telefone})
                             </a>
                         ` : ''}
                     </div>
@@ -388,11 +593,16 @@ function updateSecretariaOK(id, status) {
 }
 
 // MODAL AGENDAMENTO OP
-function openAgendamentoModal() {
+function openAgendamentoModal(dateIso = "", turno = "", tipo = "") {
     const modal = document.getElementById("modalAgendamentoOP");
     if (!modal) return;
     document.getElementById("formAgendamentoOP").reset();
-    document.getElementById("opInputData").value = new Date().toISOString().split("T")[0];
+    
+    document.getElementById("opInputData").value = dateIso || new Date().toISOString().split("T")[0];
+    if (turno) document.getElementById("opInputTurno").value = turno;
+    if (tipo) document.getElementById("opInputTipo").value = tipo;
+
+    updateModalWhatsAppPreview();
     modal.style.display = "flex";
 }
 

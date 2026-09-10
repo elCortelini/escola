@@ -149,15 +149,28 @@
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Pedagógica & Validação da Secretaria
+                        <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Agenda da Orientação Pedagógica (OP)
                     </h3>
                     <p style="font-size:0.85rem; color:#64748b;">
-                        Controle estrito de agenda: <strong>3 vagas agendadas + 1 emergencial por turno</strong>.
+                        Controle estrito: <strong>3 agendados + 1 emergencial por turno</strong>. Clique em 💬 nos cartões para abrir o WhatsApp do pai/responsável.
                     </p>
                 </div>
-                <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto;">
-                    <i class="fa-solid fa-calendar-plus"></i> Novo Agendamento OP
-                </button>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Alternador de Visão Semanal / Cards -->
+                    <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
+                        <button onclick="setOpViewMode('semanal')" class="view-toggle-btn active" data-mode="semanal">
+                            <i class="fa-solid fa-calendar-week"></i> Semanal
+                        </button>
+                        <button onclick="setOpViewMode('cards')" class="view-toggle-btn" data-mode="cards">
+                            <i class="fa-solid fa-list-ul"></i> Lista / Cards
+                        </button>
+                    </div>
+
+                    <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
+                        <i class="fa-solid fa-plus"></i> Novo Agendamento
+                    </button>
+                </div>
             </div>
 
             <!-- Resumo de Vagas por Turno -->
@@ -185,20 +198,57 @@
                 </div>
             </div>
 
-            <!-- Filtros de Data -->
-            <div style="background:white; padding:12px 18px; border-radius:12px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="font-weight:700; font-size:0.88rem; color:#0f172a;"><i class="fa-regular fa-calendar"></i> Filtrar Data dos Atendimentos:</label>
-                    <input type="date" id="opFilterData" onchange="renderModuleOrientacaoPedagogica()" class="search-input">
-                </div>
-                <div style="font-size:0.8rem; color:#64748b;">
-                    <i class="fa-solid fa-circle-info"></i> A Secretaria valida a presença clicando em <strong>OK Realizado</strong> nos cards.
+            <!-- CONTAINER VISÃO 1: AGENDA SEMANAL (Inspirada no modelo) -->
+            <div id="opWeeklyViewContainer">
+                <div class="agenda-semanal-container">
+                    <div class="agenda-toolbar-header">
+                        <div class="agenda-title-box">
+                            <h3><i class="fa-solid fa-calendar-days" style="color:#3b82f6;"></i> Agenda Semanal de Atendimentos</h3>
+                        </div>
+
+                        <div class="agenda-nav-controls">
+                            <div class="week-pager-box">
+                                <button onclick="moveWeek(-7)" class="week-pager-btn" title="Semana Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span id="opWeekRangeText">Semana</span>
+                                <button onclick="moveWeek(7)" class="week-pager-btn" title="Próxima Semana"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button onclick="resetWeekToToday()" class="week-pager-btn" style="font-size:0.75rem; background:rgba(255,255,255,0.25); border-radius:6px; margin-left:4px;" title="Ir para Hoje">Hoje</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela da Agenda Semanal -->
+                    <div class="weekly-table-wrapper">
+                        <table class="weekly-table">
+                            <thead>
+                                <tr id="weeklyTableHeaderRow">
+                                    <!-- Rendered via JS -->
+                                </tr>
+                            </thead>
+                            <tbody id="weeklyTableBody">
+                                <!-- Rendered via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- Grid de Atendimentos OP -->
-            <div id="opAppointmentsGrid" class="op-grid">
-                <!-- Rendered via JS -->
+            <!-- CONTAINER VISÃO 2: LISTA DE CARDS (Filtro por data individual) -->
+            <div id="opListViewContainer" style="display:none;">
+                <!-- Filtros de Data -->
+                <div style="background:white; padding:12px 18px; border-radius:12px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label style="font-weight:700; font-size:0.88rem; color:#0f172a;"><i class="fa-regular fa-calendar"></i> Filtrar Data dos Atendimentos:</label>
+                        <input type="date" id="opFilterData" onchange="renderModuleOrientacaoPedagogica()" class="search-input">
+                    </div>
+                    <div style="font-size:0.8rem; color:#64748b;">
+                        <i class="fa-solid fa-circle-info"></i> Clique no botão verde de <strong>WhatsApp</strong> para enviar mensagem direta ao pai.
+                    </div>
+                </div>
+
+                <!-- Grid de Atendimentos OP -->
+                <div id="opAppointmentsGrid" class="op-grid">
+                    <!-- Rendered via JS -->
+                </div>
             </div>
         </section>
 
@@ -402,7 +452,13 @@
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato:</label>
-                    <input type="tel" id="opInputTelefone" required placeholder="Ex: 47999887766" class="search-input" style="width:100%;">
+                    <input type="tel" id="opInputTelefone" oninput="updateModalWhatsAppPreview()" required placeholder="Ex: 47999887766" class="search-input" style="width:100%;">
+                    
+                    <div id="modalWaPreviewContainer" style="margin-top:8px; display:none;">
+                        <a id="modalWaPreviewBtn" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:8px 12px;">
+                            <i class="fa-brands fa-whatsapp"></i> 💬 Testar / Abrir WhatsApp do Responsável
+                        </a>
+                    </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
