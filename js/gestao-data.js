@@ -660,8 +660,8 @@ class SigeDatabase {
                         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
                         this.isSyncingFromRemote = false;
                         
-                        if (typeof renderCurrentModule === "function") {
-                            renderCurrentModule();
+                        if (typeof renderAllModules === "function") {
+                            renderAllModules();
                         } else if (typeof renderModuleAdministracao === "function") {
                             renderModuleAdministracao();
                         }
