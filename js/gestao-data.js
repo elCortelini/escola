@@ -1145,6 +1145,17 @@ class SigeDatabase {
         }
     }
 
+    deleteAgendamentoOP(id) {
+        if (!this.data.agendamentosOP) return false;
+        const index = this.data.agendamentosOP.findIndex(a => a.id === id);
+        if (index >= 0) {
+            this.data.agendamentosOP.splice(index, 1);
+            this.saveData(this.data);
+            return true;
+        }
+        return false;
+    }
+
     // Demandas Supervisão
     getDemandasSupervisao() {
         return this.data.demandasSupervisao || [];

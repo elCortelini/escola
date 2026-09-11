@@ -436,6 +436,9 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         let html = `<div class="day-timeline-list">`;
 
         weekDays.forEach(d => {
+            const isBlocked = sigeDB.isDiaBloqueado(d.dateIso);
+            const blockObj = isBlocked ? (sigeDB.getDiasBloqueados().find(b => b.data === d.dateIso) || {}) : null;
+
             const dateAppointments = todosAtendimentos.filter(a => 
                 a.data === d.dateIso && 
                 a.statusSecretaria !== 'cancelado'
@@ -445,25 +448,38 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
             dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
 
             html += `
-                <div class="day-timeline-card ${d.isToday ? 'today-day-card' : ''}">
+                <div class="day-timeline-card ${d.isToday ? 'today-day-card' : ''} ${isBlocked ? 'blocked-day-card' : ''}">
                     <div class="day-timeline-sidebar">
                         <div>
                             <div class="day-name">${d.dayName}</div>
-                            <div class="day-date">${d.dayMonth} ${d.isToday ? '<span class="today-pill">HOJE</span>' : ''}</div>
+                            <div class="day-date">
+                                ${d.dayMonth} 
+                                ${d.isToday ? '<span class="today-pill">HOJE</span>' : ''}
+                                ${isBlocked ? '<span class="day-blocked-pill"><i class="fa-solid fa-lock"></i> BLOQUEADO</span>' : ''}
+                            </div>
                             <div class="day-count-badge">
                                 <i class="fa-solid fa-calendar-check"></i> ${dateAppointments.length} agendamento(s)
                             </div>
                         </div>
 
                         <div class="day-sidebar-actions">
-                            <button onclick="openAgendamentoModal('${d.dateIso}')" class="btn-day-action btn-add-day-slot" title="Cadastrar novo agendamento para este dia">
-                                <i class="fa-solid fa-calendar-plus"></i> Agendar
-                            </button>
+                            ${isBlocked ? `
+                                <button onclick="alert('A data ${d.dayMonth} está BLOQUEADA para novos agendamentos: ${blockObj.motivo || 'Recesso / Conselho'}. Desbloqueie o dia primeiro se desejar agendar.')" class="btn-day-action btn-add-day-slot" style="opacity:0.65; background:#94a3b8; cursor:not-allowed;" title="Data Bloqueada">
+                                    <i class="fa-solid fa-lock"></i> Agendar
+                                </button>
+                            ` : `
+                                <button onclick="openAgendamentoModal('${d.dateIso}')" class="btn-day-action btn-add-day-slot" title="Cadastrar novo agendamento para este dia">
+                                    <i class="fa-solid fa-calendar-plus"></i> Agendar
+                                </button>
+                            `}
                             <button onclick="imprimirAtendimentosDoDia('${d.dateIso}')" class="btn-day-action btn-print-day-slot" title="Gerar relatório de atendimentos deste dia para impressão">
                                 <i class="fa-solid fa-print"></i> Imprimir
                             </button>
                             <button onclick="abrirVisaoDetalhadaDoDia('${d.dateIso}')" class="btn-day-action btn-view-day-slot" title="Ver atendimentos deste dia na tela com todos os detalhes individuais">
                                 <i class="fa-solid fa-expand"></i> Ver Atendimentos
+                            </button>
+                            <button onclick="toggleBloqueioDiaHandler('${d.dateIso}')" class="btn-day-action ${isBlocked ? 'btn-unblock-day-slot' : 'btn-block-day-slot'}" title="${isBlocked ? 'Desbloquear esta data para permitir agendamentos' : 'Bloquear novos agendamentos nesta data (ex: Conselho/Feriado)'}">
+                                <i class="fa-solid ${isBlocked ? 'fa-lock-open' : 'fa-lock'}"></i> ${isBlocked ? 'Desbloquear Dia' : 'Bloquear Dia'}
                             </button>
                         </div>
                     </div>
@@ -471,7 +487,17 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     <div class="day-timeline-content">
             `;
 
-            if (dateAppointments.length === 0) {
+            if (isBlocked && dateAppointments.length === 0) {
+                html += `
+                    <div class="day-blocked-banner">
+                        <i class="fa-solid fa-ban" style="font-size:1.5rem; color:#ef4444;"></i>
+                        <div>
+                            <div style="font-size:0.95rem; font-weight:900;">Dia Bloqueado para Agendamentos</div>
+                            <div style="font-size:0.78rem; font-weight:600; opacity:0.9;">Motivo: ${blockObj.motivo || 'Conselho de Classe / Recesso'}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (dateAppointments.length === 0) {
                 html += `
                     <div class="day-empty-state">
                         <i class="fa-regular fa-calendar-plus" style="font-size:1.3rem; color:#94a3b8;"></i>
@@ -479,6 +505,15 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     </div>
                 `;
             } else {
+                if (isBlocked) {
+                    html += `
+                        <div class="day-blocked-banner" style="margin-bottom:8px; width:100%;">
+                            <i class="fa-solid fa-lock" style="font-size:1.1rem; color:#ef4444;"></i>
+                            <div><strong>Atenção: Data Bloqueada (${blockObj.motivo || 'Recesso'})</strong> — Exibindo agendamentos já cadastrados.</div>
+                        </div>
+                    `;
+                }
+
                 dateAppointments.forEach(item => {
                     const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                     const isProf = item.publico === "professor";
@@ -512,7 +547,10 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                 </div>
                             </div>
 
-                            <div style="display:flex; justify-content:flex-end; margin-top:auto;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px;">
+                                <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" title="Excluir Agendamento">
+                                    <i class="fa-solid fa-trash-can"></i> Excluir
+                                </button>
                                 <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
                                     <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                                 </a>
@@ -1434,6 +1472,51 @@ function autoSelectTurnoByHorario() {
 window.autoSelectTurnoByHorario = autoSelectTurnoByHorario;
 
 // ==========================================
+// BLOQUEIO DE DIA & EXCLUSÃO DE AGENDAMENTOS
+// ==========================================
+function toggleBloqueioDiaHandler(dateIso) {
+    if (!dateIso) return;
+    const isBlocked = sigeDB.isDiaBloqueado(dateIso);
+    const parts = dateIso.split("-");
+    const dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+    if (isBlocked) {
+        if (confirm(`Deseja DESBLOQUEAR a data ${dataFormatada} para permitir novos agendamentos?`)) {
+            sigeDB.toggleBloqueioDia(dateIso);
+            showToast(`Data ${dataFormatada} desbloqueada com sucesso!`, "success");
+            renderModuleOrientacaoPedagogica();
+        }
+    } else {
+        const motivo = prompt(`Digite o motivo do bloqueio para a data ${dataFormatada}:`, "Conselho de Classe / Recesso / Feriado");
+        if (motivo !== null) {
+            sigeDB.toggleBloqueioDia(dateIso, motivo || "Dia Bloqueado");
+            showToast(`Data ${dataFormatada} bloqueada para novos agendamentos!`, "info");
+            renderModuleOrientacaoPedagogica();
+        }
+    }
+}
+
+function excluirAgendamentoDirect(id) {
+    if (!id) return;
+    const ags = sigeDB.getAgendamentosOP() || [];
+    const item = ags.find(a => a.id === id);
+    const nomeAluno = item ? item.aluno : 'este agendamento';
+
+    if (confirm(`Tem certeza que deseja EXCLUIR permanentemente o agendamento de "${nomeAluno}"?`)) {
+        const deleted = sigeDB.deleteAgendamentoOP(id);
+        if (deleted) {
+            showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
+            closeVisaoDetalhadaDiaModal();
+            closeDetalhesModal();
+            renderModuleOrientacaoPedagogica();
+        }
+    }
+}
+
+window.toggleBloqueioDiaHandler = toggleBloqueioDiaHandler;
+window.excluirAgendamentoDirect = excluirAgendamentoDirect;
+
+// ==========================================
 // IMPRESSÃO E VISÃO DETALHADA DO DIA (OE)
 // ==========================================
 function imprimirAtendimentosDoDia(dateIso) {
@@ -1799,14 +1882,19 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
                         </div>
                     </div>
 
-                    <!-- Rodapé do Card com Ações Rápida -->
+                    <!-- Rodapé do Card com Ações Rápidas -->
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:10px; flex-wrap:wrap; gap:8px;">
                         <a href="${waUrl}" target="_blank" class="btn-whatsapp-direct" style="padding:6px 12px; font-size:0.8rem; text-decoration:none;">
                             <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                         </a>
-                        <button onclick="closeVisaoDetalhadaDiaModal(); openDetalhesModal('${item.id}');" class="btn btn-secondary" style="font-size:0.78rem; padding:6px 12px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">
-                            <i class="fa-solid fa-pen-to-square"></i> Editar / Ver Histórico
-                        </button>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button onclick="excluirAgendamentoDirect('${item.id}');" class="btn btn-secondary" style="font-size:0.78rem; padding:6px 12px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; cursor:pointer;" title="Excluir este agendamento">
+                                <i class="fa-solid fa-trash-can"></i> Excluir
+                            </button>
+                            <button onclick="closeVisaoDetalhadaDiaModal(); openDetalhesModal('${item.id}');" class="btn btn-secondary" style="font-size:0.78rem; padding:6px 12px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar / Ver Histórico
+                            </button>
+                        </div>
                     </div>
 
                 </div>

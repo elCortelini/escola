@@ -1177,6 +1177,68 @@
     background: #4f46e5;
 }
 
+.btn-block-day-slot {
+    background: #e11d48;
+    color: white;
+}
+
+.btn-block-day-slot:hover {
+    background: #be123c;
+}
+
+.btn-unblock-day-slot {
+    background: #475569;
+    color: white;
+}
+
+.btn-unblock-day-slot:hover {
+    background: #334155;
+}
+
+.btn-delete-card {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-delete-card:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.day-blocked-banner {
+    width: 100%;
+    padding: 18px 16px;
+    border: 2px dashed #f87171;
+    background: #fff5f5;
+    border-radius: 12px;
+    text-align: center;
+    color: #991b1b;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.day-blocked-pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 900;
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    padding: 2px 7px;
+    border-radius: 6px;
+    margin-left: 4px;
+}
+
 .day-timeline-content {
     padding: 14px 16px;
     display: flex;
