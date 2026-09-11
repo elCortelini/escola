@@ -514,50 +514,127 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     `;
                 }
 
-                dateAppointments.forEach(item => {
-                    const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
-                    const isProf = item.publico === "professor";
-                    const isClar = isClarinda(item);
+                const isPastStatus = (a) => a.statusSecretaria === 'realizado' || a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente';
+                const activeAppointments = dateAppointments.filter(a => !isPastStatus(a));
+                const pastAppointments = dateAppointments.filter(a => isPastStatus(a));
 
+                html += `<div class="day-timeline-content-split">`;
+
+                // 1. Agendamentos Ativos / Pendentes (Lado Esquerdo)
+                html += `<div class="active-appointments-container">`;
+                if (activeAppointments.length === 0 && pastAppointments.length > 0) {
                     html += `
-                        <div class="timeline-item-card ${isClar ? 'clarinda-card' : 'daiane-card'} ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes">
-                            <div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                    <span class="timeline-item-time"><i class="fa-regular fa-clock"></i> ${item.horario} (${item.turno ? item.turno.toUpperCase() : ''})</span>
-                                    <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.68rem; padding:2px 6px;">
+                        <div style="font-size:0.82rem; color:#64748b; font-weight:700; font-style:italic; padding:12px 14px; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1; width:100%; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:1.2rem;"></i>
+                            <span>Todos os agendamentos deste dia foram concluídos (atendidos ou ausentes).</span>
+                        </div>
+                    `;
+                } else {
+                    activeAppointments.forEach(item => {
+                        const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
+                        const isProf = item.publico === "professor";
+                        const isClar = isClarinda(item);
+
+                        html += `
+                            <div class="timeline-item-card ${isClar ? 'clarinda-card' : 'daiane-card'} ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                        <span class="timeline-item-time"><i class="fa-regular fa-clock"></i> ${item.horario} (${item.turno ? item.turno.toUpperCase() : ''})</span>
+                                        <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.68rem; padding:2px 6px;">
+                                            ${getSecretariaBadgeText(item.statusSecretaria)}
+                                        </span>
+                                    </div>
+
+                                    <div style="margin-bottom:6px;">
+                                        <div style="font-size:0.92rem; font-weight:900; color:#0f172a;">
+                                            ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
+                                            <span class="weekly-class-badge" style="${isProf ? 'background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;' : ''}">${item.turma}</span>
+                                        </div>
+                                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                                            <i class="fa-regular fa-user"></i> ${item.responsavel || '-'}
+                                        </div>
+                                        <div style="font-size:0.73rem; color:${isClar ? '#b91c1c' : '#0369a1'}; font-weight:800; margin-top:3px;">
+                                            <i class="fa-solid fa-user-gear"></i> ${item.orientadora || (isClar ? 'Clarinda (Séries Iniciais)' : 'Daiane (Séries Finais)')}
+                                        </div>
+                                    </div>
+
+                                    <div class="weekly-motive" title="${item.motivo}" style="margin-bottom:8px;">
+                                        "${item.motivo}"
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px;">
+                                    <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" title="Excluir Agendamento">
+                                        <i class="fa-solid fa-trash-can"></i> Excluir
+                                    </button>
+                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
+                                        <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div>`; // fim active-appointments-container
+
+                // 2. Agendamentos Concluídos / Ausentes (Empilhados Menores no Lado Direito)
+                if (pastAppointments.length > 0) {
+                    html += `
+                        <div class="past-appointments-container">
+                            <div style="font-size:0.72rem; font-weight:900; color:#475569; text-transform:uppercase; letter-spacing:0.4px; display:flex; align-items:center; gap:5px; margin-bottom:4px;">
+                                <i class="fa-solid fa-clock-rotate-left" style="color:#64748b;"></i> Concluídos / Ausentes (${pastAppointments.length})
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                    `;
+
+                    pastAppointments.forEach(item => {
+                        const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
+                        const isProf = item.publico === "professor";
+                        const isClar = isClarinda(item);
+
+                        html += `
+                            <div class="timeline-item-card compact-past-card ${isClar ? 'clarinda-card' : 'daiane-card'}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Ver detalhes de ${item.aluno}">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:0.78rem; font-weight:900; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">
+                                        ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
+                                    </span>
+                                    <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.62rem; padding:1px 5px;">
                                         ${getSecretariaBadgeText(item.statusSecretaria)}
                                     </span>
                                 </div>
 
-                                <div style="margin-bottom:6px;">
-                                    <div style="font-size:0.92rem; font-weight:900; color:#0f172a;">
-                                        ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
-                                        <span class="weekly-class-badge" style="${isProf ? 'background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;' : ''}">${item.turma}</span>
-                                    </div>
-                                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                                        <i class="fa-regular fa-user"></i> ${item.responsavel || '-'}
-                                    </div>
-                                    <div style="font-size:0.73rem; color:${isClar ? '#b45309' : '#0369a1'}; font-weight:800; margin-top:3px;">
-                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || (isClar ? 'Clarinda (Séries Iniciais)' : 'Daiane (Séries Finais)')}
-                                    </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7rem; color:#475569; margin-top:2px;">
+                                    <span>Turma: <strong>${item.turma || '-'}</strong></span>
+                                    <span style="font-weight:700;"><i class="fa-regular fa-clock"></i> ${item.horario}</span>
                                 </div>
 
-                                <div class="weekly-motive" title="${item.motivo}" style="margin-bottom:8px;">
+                                <div style="font-size:0.7rem; color:${isClar ? '#b91c1c' : '#0369a1'}; font-weight:800; margin-top:2px;">
+                                    <i class="fa-solid fa-user-gear"></i> ${item.orientadora ? item.orientadora.split(" ")[0] : (isClar ? 'Clarinda' : 'Daiane')}
+                                </div>
+
+                                <div class="weekly-motive" style="font-size:0.7rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.motivo}">
                                     "${item.motivo}"
                                 </div>
-                            </div>
 
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px;">
-                                <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" title="Excluir Agendamento">
-                                    <i class="fa-solid fa-trash-can"></i> Excluir
-                                </button>
-                                <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
-                                    <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
-                                </a>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed rgba(0,0,0,0.1);">
+                                    <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" style="font-size:0.7rem; padding:1px 4px;" title="Excluir">
+                                        <i class="fa-solid fa-trash-can"></i> Excluir
+                                    </button>
+                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact" style="font-size:0.68rem; padding:2px 6px;">
+                                        <i class="fa-brands fa-whatsapp"></i> Mensagem
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
                             </div>
                         </div>
                     `;
-                });
+                }
+
+                html += `</div>`; // fim day-timeline-content-split
             }
 
             html += `
