@@ -866,32 +866,66 @@ function renderCardsView(todosAtendimentos) {
 }
 
 function updateOrientadorasCounters(weekDays) {
-    const todos = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria !== 'cancelado');
+    const todosAgendamentos = sigeDB.getAgendamentosOP() || [];
     if (!weekDays || weekDays.length < 5) return;
 
     const weekStart = weekDays[0].dateIso;
     const weekEnd = weekDays[4].dateIso;
     const currentMonthPrefix = new Date().toISOString().substring(0, 7);
 
-    // Clarinda Rosa Pereira (Orientadora 1)
     const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const clarindaSemanal = todos.filter(a => isClarinda(a) && a.data >= weekStart && a.data <= weekEnd).length;
-    const clarindaMensal = todos.filter(a => isClarinda(a) && a.data && a.data.startsWith(currentMonthPrefix)).length;
-
-    // Daiane Caetano Costa de Aquino (Orientadora 2)
     const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-    const daianeSemanal = todos.filter(a => isDaiane(a) && a.data >= weekStart && a.data <= weekEnd).length;
-    const daianeMensal = todos.filter(a => isDaiane(a) && a.data && a.data.startsWith(currentMonthPrefix)).length;
 
-    const elClarSem = document.getElementById("countClarindaSemanal");
-    const elClarMen = document.getElementById("countClarindaMensal");
-    const elDaiSem = document.getElementById("countDaianeSemanal");
-    const elDaiMen = document.getElementById("countDaianeMensal");
+    function calcMetrics(list) {
+        const total = list.length;
+        const agendados = list.filter(a => a.statusSecretaria === 'agendado' || a.statusSecretaria === 'pendente' || a.statusSecretaria === 'aguardando' || !a.statusSecretaria).length;
+        const atendidos = list.filter(a => a.statusSecretaria === 'realizado').length;
+        const ausentes = list.filter(a => a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente').length;
+        const cancelados = list.filter(a => a.statusSecretaria === 'cancelado').length;
+        return { total, agendados, atendidos, ausentes, cancelados };
+    }
 
-    if (elClarSem) elClarSem.innerText = `📅 Semanal: ${clarindaSemanal}`;
-    if (elClarMen) elClarMen.innerText = `📊 Mês: ${clarindaMensal}`;
-    if (elDaiSem) elDaiSem.innerText = `📅 Semanal: ${daianeSemanal}`;
-    if (elDaiMen) elDaiMen.innerText = `📊 Mês: ${daianeMensal}`;
+    // Clarinda
+    const clarSemList = todosAgendamentos.filter(a => isClarinda(a) && a.data >= weekStart && a.data <= weekEnd);
+    const clarMesList = todosAgendamentos.filter(a => isClarinda(a) && a.data && a.data.startsWith(currentMonthPrefix));
+    const clarSem = calcMetrics(clarSemList);
+    const clarMes = calcMetrics(clarMesList);
+
+    // Daiane
+    const daiSemList = todosAgendamentos.filter(a => isDaiane(a) && a.data >= weekStart && a.data <= weekEnd);
+    const daiMesList = todosAgendamentos.filter(a => isDaiane(a) && a.data && a.data.startsWith(currentMonthPrefix));
+    const daiSem = calcMetrics(daiSemList);
+    const daiMes = calcMetrics(daiMesList);
+
+    renderOrientadoraStatusPills("clarindaPillsContainer", clarSem, clarMes);
+    renderOrientadoraStatusPills("daianePillsContainer", daiSem, daiMes);
+}
+
+function renderOrientadoraStatusPills(containerId, sem, mes) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+            <!-- Linha Semanal -->
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:0.73rem; font-weight:800;">
+                <span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 7px; border-radius:6px;" title="Total de agendamentos na semana">📅 Semanal: <strong>${sem.total}</strong></span>
+                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:2px 6px; border-radius:6px;" title="Agendados/Pendentes nesta semana">🔵 Agend: ${sem.agendados}</span>
+                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:2px 6px; border-radius:6px;" title="Atendidos nesta semana">🟢 Atend: ${sem.atendidos}</span>
+                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:2px 6px; border-radius:6px;" title="Não Veio/Ausentes nesta semana">🔴 Faltou: ${sem.ausentes}</span>
+                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:6px;" title="Cancelados nesta semana">⚪ Canc: ${sem.cancelados}</span>
+            </div>
+
+            <!-- Linha Mensal -->
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:0.73rem; font-weight:800;">
+                <span style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:2px 7px; border-radius:6px;" title="Total acumulado no mês">📊 Mês: <strong>${mes.total}</strong></span>
+                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:2px 6px; border-radius:6px;" title="Agendados/Pendentes no mês">🔵 Agend: ${mes.agendados}</span>
+                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:2px 6px; border-radius:6px;" title="Atendidos no mês">🟢 Atend: ${mes.atendidos}</span>
+                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:2px 6px; border-radius:6px;" title="Não Veio/Ausentes no mês">🔴 Faltou: ${mes.ausentes}</span>
+                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:6px;" title="Cancelados no mês">⚪ Canc: ${mes.cancelados}</span>
+            </div>
+        </div>
+    `;
 }
 
 function getSecretariaBadgeText(status) {
