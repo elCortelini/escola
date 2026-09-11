@@ -1188,7 +1188,7 @@
 .timeline-item-card {
     flex: 1 1 300px;
     min-width: 270px;
-    max-width: 100%;
+    max-width: calc(50% - 6px);
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 12px;
@@ -1245,5 +1245,8 @@
     .day-timeline-sidebar {
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
+    }
+    .timeline-item-card {
+        max-width: 100%;
     }
 }
