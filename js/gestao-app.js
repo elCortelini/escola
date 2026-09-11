@@ -906,23 +906,23 @@ function renderOrientadoraStatusPills(containerId, sem, mes) {
     if (!container) return;
 
     container.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
             <!-- Linha Semanal -->
-            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:0.73rem; font-weight:800;">
-                <span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 7px; border-radius:6px;" title="Total de agendamentos na semana">📅 Semanal: <strong>${sem.total}</strong></span>
-                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:2px 6px; border-radius:6px;" title="Agendados/Pendentes nesta semana">🔵 Agend: ${sem.agendados}</span>
-                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:2px 6px; border-radius:6px;" title="Atendidos nesta semana">🟢 Atend: ${sem.atendidos}</span>
-                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:2px 6px; border-radius:6px;" title="Não Veio/Ausentes nesta semana">🔴 Faltou: ${sem.ausentes}</span>
-                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:6px;" title="Cancelados nesta semana">⚪ Canc: ${sem.cancelados}</span>
+            <div style="display:flex; align-items:center; gap:4px; background:#f8fafc; padding:3px 8px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.72rem; font-weight:700;">
+                <span style="color:#1e3a8a; font-weight:800; padding-right:6px; border-right:1px solid #cbd5e1; white-space:nowrap;" title="Total Semanal">📅 Semanal: <strong>${sem.total}</strong></span>
+                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Agendados/Pendentes">🔵 ${sem.agendados}</span>
+                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Atendidos">🟢 ${sem.atendidos}</span>
+                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Ausentes / Não Veio">🔴 ${sem.ausentes}</span>
+                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Cancelados">⚪ ${sem.cancelados}</span>
             </div>
 
             <!-- Linha Mensal -->
-            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:0.73rem; font-weight:800;">
-                <span style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:2px 7px; border-radius:6px;" title="Total acumulado no mês">📊 Mês: <strong>${mes.total}</strong></span>
-                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:2px 6px; border-radius:6px;" title="Agendados/Pendentes no mês">🔵 Agend: ${mes.agendados}</span>
-                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:2px 6px; border-radius:6px;" title="Atendidos no mês">🟢 Atend: ${mes.atendidos}</span>
-                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:2px 6px; border-radius:6px;" title="Não Veio/Ausentes no mês">🔴 Faltou: ${mes.ausentes}</span>
-                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:6px;" title="Cancelados no mês">⚪ Canc: ${mes.cancelados}</span>
+            <div style="display:flex; align-items:center; gap:4px; background:#f8fafc; padding:3px 8px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.72rem; font-weight:700;">
+                <span style="color:#15803d; font-weight:800; padding-right:6px; border-right:1px solid #cbd5e1; white-space:nowrap;" title="Total Acumulado no Mês">📊 Mês: <strong>${mes.total}</strong></span>
+                <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Agendados/Pendentes">🔵 ${mes.agendados}</span>
+                <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Atendidos">🟢 ${mes.atendidos}</span>
+                <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Ausentes / Não Veio">🔴 ${mes.ausentes}</span>
+                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Cancelados">⚪ ${mes.cancelados}</span>
             </div>
         </div>
     `;

@@ -251,7 +251,7 @@
 /* Indicadores de Turno & Vagas OP */
 .turno-slots-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
     gap: 0.6rem;
     margin-bottom: 0.6rem;
 }
@@ -265,6 +265,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
 }
 
 .turno-card.matutino {
