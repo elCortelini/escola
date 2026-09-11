@@ -240,12 +240,26 @@ function deleteCustomSystem(id) {
     }
 }
 
+function openAgendamentoLabDirect(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    const labUrl = savedUrls['recursos'];
+    
+    if (labUrl && labUrl !== '#') {
+        window.open(labUrl, '_blank');
+    } else {
+        openConfigModal();
+        alert("O link do Agendamento do Laboratório / Recursos ainda não foi configurado. Insira a URL oficial no campo 'Agendamento de Recursos' no painel que abriu na tela.");
+    }
+}
+
 window.openConfigModal = openConfigModal;
 window.closeConfigModal = closeConfigModal;
 window.openAddCustomSystemModal = openAddCustomSystemModal;
 window.closeAddCustomSystemModal = closeAddCustomSystemModal;
 window.submitAddCustomSystem = submitAddCustomSystem;
 window.deleteCustomSystem = deleteCustomSystem;
+window.openAgendamentoLabDirect = openAgendamentoLabDirect;
 
 const configForm = document.getElementById('configForm');
 if (configForm) {
