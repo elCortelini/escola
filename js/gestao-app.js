@@ -238,6 +238,23 @@ function marcarAguardandoSecretaria(id) {
 // ==========================================
 // PERFIL E NÍVEIS DE ACESSO (RBAC)
 // ==========================================
+function syncRoleFilters() {
+    const role = sigeDB.getRole();
+    const opFilter = document.getElementById("opFilterOrientadora");
+
+    if (opFilter) {
+        if (role === "orientadora_clarinda") {
+            opFilter.value = "Clarinda Rosa Pereira";
+            opFilter.disabled = true;
+        } else if (role === "orientadora_daiane") {
+            opFilter.value = "Daiane Caetano Costa de Aquino";
+            opFilter.disabled = true;
+        } else {
+            opFilter.disabled = false;
+        }
+    }
+}
+
 function setupRoleSelector() {
     const roleSelect = document.getElementById("activeRoleSelect");
     const roleBadge = document.getElementById("activeRoleBadge");
@@ -246,28 +263,17 @@ function setupRoleSelector() {
     const currentRole = sigeDB.getRole();
     roleSelect.value = currentRole;
     updateRoleBadgePill(currentRole, roleBadge);
+    syncRoleFilters();
 
     roleSelect.addEventListener("change", (e) => {
         const newRole = e.target.value;
         sigeDB.setRole(newRole);
         updateRoleBadgePill(newRole, roleBadge);
-
-        const opFilter = document.getElementById("opFilterOrientadora");
-        if (opFilter) {
-            if (newRole === "orientadora_clarinda") {
-                opFilter.value = "Clarinda Rosa Pereira";
-                opFilter.disabled = true;
-            } else if (newRole === "orientadora_daiane") {
-                opFilter.value = "Daiane Caetano Costa de Aquino";
-                opFilter.disabled = true;
-            } else {
-                opFilter.disabled = false;
-            }
-        }
+        syncRoleFilters();
 
         renderNotifications();
         renderAllModules();
-        showToast(`Perfil de testes alterado para: ${getRoleLabel(newRole)}`);
+        showToast(`Perfil de visualização alterado para: ${getRoleLabel(newRole)}`);
     });
 }
 
@@ -620,6 +626,7 @@ function updateModalWhatsAppPreview() {
 }
 
 function renderModuleOrientacaoPedagogica() {
+    syncRoleFilters();
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
@@ -1239,8 +1246,16 @@ function renderOpProjetosList() {
     let projetos = sigeDB.getProjetosOrientacao();
 
     if (filterOrientadora !== "todas") {
-        const orientNum = filterOrientadora.includes("1") ? "1" : "2";
-        projetos = projetos.filter(p => !p.orientadoraLider || p.orientadoraLider.includes(orientNum) || p.orientadoraLider.toLowerCase().includes("equipe"));
+        projetos = projetos.filter(p => {
+            if (!p.orientadoraLider || p.orientadoraLider.toLowerCase().includes("equipe")) return true;
+            if (filterOrientadora.includes("Clarinda")) {
+                return p.orientadoraLider.includes("Clarinda") || p.orientadoraLider.includes("1") || p.orientadoraLider.includes("Carmen");
+            }
+            if (filterOrientadora.includes("Daiane")) {
+                return p.orientadoraLider.includes("Daiane") || p.orientadoraLider.includes("2") || p.orientadoraLider.includes("Luciana");
+            }
+            return p.orientadoraLider.includes(filterOrientadora);
+        });
     }
 
     if (projetos.length === 0) {
@@ -4466,6 +4481,7 @@ function updateAllDynamicSelects() {
         });
         selectOpFilter.innerHTML = html;
         if (curVal) selectOpFilter.value = curVal;
+        syncRoleFilters();
     }
 
     if (selectOpModal) {
