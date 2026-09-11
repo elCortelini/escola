@@ -175,6 +175,50 @@ const defaultSigeData = {
         }
     ],
 
+    projetosOrientacao: [
+        {
+            id: "proj-op-101",
+            titulo: "🧠 Programa de Mediação de Conflitos & Cultura de Paz",
+            categoria: "Mediação de Conflitos",
+            descricao: "Oficinas de inteligência emocional, escuta ativa e resolução pacífica de atritos interpessoais entre turmas do 6º ao 9º ano.",
+            dataInicio: "2026-09-01",
+            dataFim: "2026-11-30",
+            orientadoraLider: "Orientadora 1 (Carmen)",
+            envolvidos: "Professores de Educação Física, Psicopedagoga, Direção Escolar",
+            status: "em_dia",
+            etapas: [
+                { id: "e-op-1", titulo: "Rodas de conversa sobre convivência nas turmas do 7º ano", dataLimite: "2026-09-18", responsavel: "Orientadora Carmen", concluido: true },
+                { id: "e-op-2", titulo: "Mapeamento de alunos líderes mediadores de cada turma", dataLimite: "2026-09-28", responsavel: "Orientadora Luciana", concluido: false },
+                { id: "e-op-3", titulo: "Oficina prática com os pais sobre escuta não-violenta em casa", dataLimite: "2026-10-20", responsavel: "Orientadora Carmen", concluido: false }
+            ],
+            checklistAcompanhamento: [
+                { item: "Termos de compromisso de convivência assinados nas turmas", concluido: true },
+                { item: "Relatório de redução de ocorrências encaminhado à Direção", concluido: false },
+                { item: "Painel de sentimentos montado no corredor da Orientação", concluido: true }
+            ]
+        },
+        {
+            id: "proj-op-102",
+            titulo: "📈 Projeto Busca Ativa & Assiduidade Escolar 3º Trimestre",
+            categoria: "Assiduidade & Frequência",
+            descricao: "Acompanhamento intensivo de alunos com infrequência escolar superior a 15%, contato com famílias e rede de proteção.",
+            dataInicio: "2026-09-05",
+            dataFim: "2026-10-25",
+            orientadoraLider: "Orientadora 2 (Luciana)",
+            envolvidos: "Secretaria Escolar, Conselho Tutelar, Regentes de Turma",
+            status: "atencao",
+            etapas: [
+                { id: "e-op-21", titulo: "Levantamento das listas de faltas quinzenais com a Secretaria", dataLimite: "2026-09-12", responsavel: "Secretaria / Luciana", concluido: true },
+                { id: "e-op-22", titulo: "Convocação individual dos pais de 12 alunos com frequência crítica", dataLimite: "2026-09-20", responsavel: "Orientadora Luciana", concluido: false },
+                { id: "e-op-23", titulo: "Notificação oficial enviada à Rede de Proteção / Conselho", dataLimite: "2026-10-05", responsavel: "Orientadora Luciana", concluido: false }
+            ],
+            checklistAcompanhamento: [
+                { item: "Fichas FICAI preenchidas para casos acima de 25%", concluido: false },
+                { item: "Encaminhamentos ao Posto de Saúde / CRAS efetuados", concluido: true }
+            ]
+        }
+    ],
+
     atividadesExternasSupervisao: [
         {
             id: "ext-301",
@@ -1059,6 +1103,51 @@ class SigeDatabase {
             p.checklistPreEvento[index].concluido = !p.checklistPreEvento[index].concluido;
             this.saveData(this.data);
         }
+    }
+
+    // Projetos Continuados de Período Variado da Orientação Pedagógica (OP)
+    getProjetosOrientacao() {
+        if (!this.data.projetosOrientacao || !Array.isArray(this.data.projetosOrientacao)) {
+            this.data.projetosOrientacao = defaultSigeData.projetosOrientacao || [];
+            this.saveData(this.data);
+        }
+        return this.data.projetosOrientacao;
+    }
+
+    addProjetoOrientacao(proj) {
+        proj.id = "proj-op-" + Date.now();
+        if (!proj.etapas) proj.etapas = [];
+        if (!proj.checklistAcompanhamento) proj.checklistAcompanhamento = [];
+        if (!proj.status) proj.status = "em_dia";
+        if (!this.data.projetosOrientacao) this.data.projetosOrientacao = [];
+        this.data.projetosOrientacao.unshift(proj);
+        this.saveData(this.data);
+        this.logAuditEvent("Orientação Pedagógica", `Criado projeto continuado: ${proj.titulo}`, "Orientação");
+        return proj;
+    }
+
+    toggleEtapaProjetoOrientacao(projId, etapaId) {
+        const p = (this.getProjetosOrientacao()).find(item => item.id === projId);
+        if (p && p.etapas) {
+            const et = p.etapas.find(e => e.id === etapaId);
+            if (et) et.concluido = !et.concluido;
+            this.saveData(this.data);
+        }
+    }
+
+    toggleChecklistProjetoOrientacao(projId, index) {
+        const p = (this.getProjetosOrientacao()).find(item => item.id === projId);
+        if (p && p.checklistAcompanhamento && p.checklistAcompanhamento[index]) {
+            p.checklistAcompanhamento[index].concluido = !p.checklistAcompanhamento[index].concluido;
+            this.saveData(this.data);
+        }
+    }
+
+    deleteProjetoOrientacao(id) {
+        let list = this.getProjetosOrientacao();
+        this.data.projetosOrientacao = list.filter(p => p.id !== id);
+        this.saveData(this.data);
+        this.logAuditEvent("Orientação Pedagógica", `Removido projeto continuado ID: ${id}`, "Orientação");
     }
 
     // Atividades Externas / Aulas Passeio

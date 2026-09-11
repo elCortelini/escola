@@ -261,24 +261,22 @@ function toggleTarefaStatus(id) {
 // ==========================================
 // MÓDULO 2: ORIENTAÇÃO PEDAGÓGICA (OP)
 // ==========================================
-let opViewMode = "semanal"; // "semanal" ou "cards"
+let opViewMode = "semanal"; // "semanal", "cards", "projetos"
 let currentWeekRefDate = new Date();
 
 function setOpViewMode(mode) {
     opViewMode = mode;
-    document.querySelectorAll(".view-toggle-btn").forEach(btn => {
+    document.querySelectorAll(".op-toggle-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
     });
     const semanalView = document.getElementById("opWeeklyViewContainer");
     const listaView = document.getElementById("opListViewContainer");
-    if (semanalView && listaView) {
-        if (mode === "semanal") {
-            semanalView.style.display = "block";
-            listaView.style.display = "none";
-        } else {
-            semanalView.style.display = "none";
-            listaView.style.display = "block";
-        }
+    const projetosView = document.getElementById("opProjectsViewContainer");
+
+    if (semanalView && listaView && projetosView) {
+        semanalView.style.display = mode === "semanal" ? "block" : "none";
+        listaView.style.display = mode === "cards" ? "block" : "none";
+        projetosView.style.display = mode === "projetos" ? "block" : "none";
     }
     renderModuleOrientacaoPedagogica();
 }
@@ -370,6 +368,9 @@ function renderModuleOrientacaoPedagogica() {
 
     // 2. Renderiza Visão Cards (Filtro por Data)
     renderCardsView(todosAtendimentos);
+
+    // 3. Renderiza Visão Projetos OP
+    renderOpProjetosList();
 }
 
 function renderWeeklyAgenda(weekDays, todosAtendimentos) {
@@ -601,6 +602,211 @@ function getSecretariaBadgeText(status) {
         cancelado: "🚫 Cancelado"
     };
     return map[status] || status;
+}
+
+// ==========================================
+// PROJETOS CONTINUADOS DA ORIENTAÇÃO PEDAGÓGICA (OP)
+// ==========================================
+function renderOpProjetosList() {
+    const container = document.getElementById("opProjetosListContainer");
+    if (!container) return;
+
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
+
+    let projetos = sigeDB.getProjetosOrientacao();
+
+    if (filterOrientadora !== "todas") {
+        const orientNum = filterOrientadora.includes("1") ? "1" : "2";
+        projetos = projetos.filter(p => p.orientadoraLider && p.orientadoraLider.includes(orientNum));
+    }
+
+    if (projetos.length === 0) {
+        container.innerHTML = `<div style="font-size:0.85rem; color:#94a3b8; text-align:center; padding:2rem; background:white; border-radius:14px; border:1px solid #cbd5e1;"><i class="fa-solid fa-folder-open" style="font-size:2rem; margin-bottom:8px; display:block;"></i>Nenhum projeto continuado da OP cadastrado. Clique em <strong>"+ Projeto OP"</strong> para iniciar.</div>`;
+        return;
+    }
+
+    container.innerHTML = projetos.map(p => {
+        const totalEtapas = p.etapas ? p.etapas.length : 0;
+        const concluidasEtapas = p.etapas ? p.etapas.filter(e => e.concluido).length : 0;
+        const pctProgresso = totalEtapas > 0 ? Math.round((concluidasEtapas / totalEtapas) * 100) : 0;
+
+        let statusBadge = `<span class="secretaria-status-badge status-realizado">🟢 Em Dia</span>`;
+        if (p.status === "atencao") statusBadge = `<span class="secretaria-status-badge status-adiado">🟡 Atenção (Acompanhamento)</span>`;
+        if (p.status === "atrasado") statusBadge = `<span class="secretaria-status-badge status-naoresolvido">🔴 Atrasado / Intervenção urgente</span>`;
+        if (p.status === "concluido" || pctProgresso === 100) statusBadge = `<span class="secretaria-status-badge status-realizado">🏁 Concluído (100%)</span>`;
+
+        return `
+            <div style="background:white; border-radius:18px; padding:1.5rem; border:1px solid #cbd5e1; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <h4 style="font-size:1.1rem; font-weight:900; color:#0f172a;">${p.titulo}</h4>
+                            <span class="sup-event-cat-badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;">${p.categoria || 'Projeto OP'}</span>
+                            ${statusBadge}
+                        </div>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:4px;">${p.descricao}</p>
+                        <div style="font-size:0.78rem; font-weight:700; color:#1e3a8a; margin-top:4px;">
+                            <i class="fa-solid fa-user-gear"></i> <strong>Líder OP:</strong> ${p.orientadoraLider || 'Orientação Pedagógica'}
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.75rem; color:#64748b; font-weight:700;">PERÍODO DE EXECUÇÃO</div>
+                        <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">
+                            ${formatDateBR(p.dataInicio)} até ${formatDateBR(p.dataFim)}
+                        </div>
+                        <button onclick="excluirProjetoOP('${p.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; margin-top:6px;"><i class="fa-solid fa-trash"></i> Excluir Projeto</button>
+                    </div>
+                </div>
+
+                <!-- Barra de Progresso -->
+                <div style="margin-top:1rem; background:#f1f5f9; border-radius:10px; padding:6px 10px; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:800; color:#334155; margin-bottom:4px;">
+                        <span>Progresso do Acompanhamento (${concluidasEtapas}/${totalEtapas} etapas concluídas)</span>
+                        <span>${pctProgresso}%</span>
+                    </div>
+                    <div style="background:#cbd5e1; height:10px; border-radius:5px; overflow:hidden;">
+                        <div style="background:linear-gradient(90deg, #d97706, #10b981); height:100%; width:${pctProgresso}%;"></div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:1.2rem; margin-top:1.2rem;">
+                    <!-- Lista de Sub-Etapas / Marcos de Orientação -->
+                    <div style="background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #e2e8f0;">
+                        <div style="font-size:0.82rem; font-weight:900; color:#1e293b; margin-bottom:8px; display:flex; justify-content:space-between;">
+                            <span><i class="fa-solid fa-list-check" style="color:#d97706;"></i> Etapas & Ações Continuadas:</span>
+                            <span style="font-size:0.72rem; color:#64748b;">Marcar para concluir</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            ${p.etapas ? p.etapas.map(et => `
+                                <div style="display:flex; align-items:center; justify-content:space-between; background:white; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1;">
+                                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.8rem; color:${et.concluido ? '#64748b' : '#0f172a'}; text-decoration:${et.concluido ? 'line-through' : 'none'}; flex:1;">
+                                        <input type="checkbox" ${et.concluido ? 'checked' : ''} onchange="sigeDB.toggleEtapaProjetoOrientacao('${p.id}', '${et.id}'); renderModuleOrientacaoPedagogica();">
+                                        <strong>${et.titulo}</strong>
+                                    </label>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="font-size:0.72rem; color:#64748b;"><i class="fa-solid fa-user"></i> ${et.responsavel} (${formatDateBR(et.dataLimite)})</span>
+                                        ${!et.concluido ? `<button onclick="cobrarEtapaOPWhatsapp('${et.responsavel}', '${p.titulo.replace(/'/g, "\\'")}', '${et.titulo.replace(/'/g, "\\'")}', '${et.dataLimite}')" class="btn-sec" style="font-size:0.68rem; padding:2px 8px; background:#d97706; color:white; border-radius:6px;" title="Cobrar/Notificar no WhatsApp">📲 Notificar</button>` : ''}
+                                    </div>
+                                </div>
+                            `).join("") : ''}
+                        </div>
+                    </div>
+
+                    <!-- Checklist de Procedimentos OP -->
+                    <div style="background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #e2e8f0;">
+                        <div style="font-size:0.82rem; font-weight:900; color:#1e293b; margin-bottom:8px;">
+                            <i class="fa-solid fa-clipboard-list" style="color:#059669;"></i> Checklist de Acompanhamento:
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            ${p.checklistAcompanhamento ? p.checklistAcompanhamento.map((item, idx) => `
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.78rem; color:${item.concluido ? '#64748b' : '#0f172a'}; text-decoration:${item.concluido ? 'line-through' : 'none'}; background:white; padding:5px 8px; border-radius:6px; border:1px solid #e2e8f0;">
+                                    <input type="checkbox" ${item.concluido ? 'checked' : ''} onchange="sigeDB.toggleChecklistProjetoOrientacao('${p.id}', ${idx}); renderModuleOrientacaoPedagogica();">
+                                    ${item.item}
+                                </label>
+                            `).join("") : ''}
+                        </div>
+
+                        <div style="margin-top:10px; font-size:0.75rem; color:#475569; background:white; padding:6px 10px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <i class="fa-solid fa-users" style="color:var(--op-color);"></i> <strong>Professores & Atores:</strong> ${p.envolvidos || 'Equipe Pedagógica'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function openNovoProjetoOPModal() {
+    const modal = document.getElementById("modalNovoProjetoOP");
+    if (modal) {
+        document.getElementById("projOpInputTitulo").value = "";
+        document.getElementById("projOpInputCategoria").value = "Mediação de Conflitos";
+        document.getElementById("projOpInputOrientadora").value = "Orientadora 1 (Carmen)";
+        document.getElementById("projOpInputDataInicio").value = new Date().toISOString().split("T")[0];
+        document.getElementById("projOpInputDataFim").value = getFutureDateIso(60);
+        document.getElementById("projOpInputStatus").value = "em_dia";
+        document.getElementById("projOpInputEnvolvidos").value = "";
+        document.getElementById("projOpInputDescricao").value = "";
+        document.getElementById("projOpInputEtapasText").value = "";
+        document.getElementById("projOpInputChecklistText").value = "";
+        modal.style.display = "flex";
+    }
+}
+
+function closeNovoProjetoOPModal() {
+    const modal = document.getElementById("modalNovoProjetoOP");
+    if (modal) modal.style.display = "none";
+}
+
+function submitNovoProjetoOP(e) {
+    e.preventDefault();
+    const titulo = document.getElementById("projOpInputTitulo").value.trim();
+    const categoria = document.getElementById("projOpInputCategoria").value;
+    const orientadoraLider = document.getElementById("projOpInputOrientadora").value;
+    const dataInicio = document.getElementById("projOpInputDataInicio").value;
+    const dataFim = document.getElementById("projOpInputDataFim").value;
+    const status = document.getElementById("projOpInputStatus").value;
+    const envolvidos = document.getElementById("projOpInputEnvolvidos").value.trim();
+    const descricao = document.getElementById("projOpInputDescricao").value.trim();
+
+    // Parse sub-etapas
+    const etapasRaw = document.getElementById("projOpInputEtapasText").value.trim().split("\n");
+    const etapas = [];
+    etapasRaw.forEach((line, idx) => {
+        if (!line.trim()) return;
+        const parts = line.split("|").map(p => p.trim());
+        etapas.push({
+            id: `e-op-${Date.now()}-${idx}`,
+            titulo: parts[0] || "Etapa sem título",
+            dataLimite: parts[1] || dataFim,
+            responsavel: parts[2] || orientadoraLider,
+            concluido: false
+        });
+    });
+
+    // Parse checklist
+    const checkRaw = document.getElementById("projOpInputChecklistText").value.trim().split("\n");
+    const checklistAcompanhamento = [];
+    checkRaw.forEach(line => {
+        if (!line.trim()) return;
+        checklistAcompanhamento.push({
+            item: line.trim(),
+            concluido: false
+        });
+    });
+
+    const newProj = {
+        titulo,
+        categoria,
+        orientadoraLider,
+        dataInicio,
+        dataFim,
+        status,
+        envolvidos,
+        descricao,
+        etapas,
+        checklistAcompanhamento
+    };
+
+    sigeDB.addProjetoOrientacao(newProj);
+    closeNovoProjetoOPModal();
+    renderModuleOrientacaoPedagogica();
+    showToast("Projeto continuado da OP cadastrado com sucesso!");
+}
+
+function excluirProjetoOP(id) {
+    if (confirm("Tem certeza que deseja excluir este projeto da Orientação Pedagógica?")) {
+        sigeDB.deleteProjetoOrientacao(id);
+        renderModuleOrientacaoPedagogica();
+        showToast("Projeto removido!");
+    }
+}
+
+function cobrarEtapaOPWhatsapp(responsavel, projTitulo, etapaTitulo, dataLimite) {
+    const textMsg = encodeURIComponent(`Olá ${responsavel}! Lembramos sobre a etapa "${etapaTitulo}" do projeto OP "${projTitulo}", com prazo limite em ${formatDateBR(dataLimite)}. Por favor, confirme o andamento.`);
+    window.open(`https://wa.me/?text=${textMsg}`, '_blank');
+    sigeDB.logAuditEvent("Orientação Pedagógica", `Lembrete WhatsApp enviado para ${responsavel} (Projeto OP: ${projTitulo})`, "Orientação");
 }
 
 let currentDetailAppointmentId = null;

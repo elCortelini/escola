@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>SIGE - Sistema Integrado de Gestão Escolar | C.E. Pedro Rizzi</title>
+    <title>IntegraRizzi — Sistema Integrado de Gestão Escolar | C.E. Pedro Rizzi</title>
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,7 +23,7 @@
     <!-- Bar de Seleção de Perfil e Notificações -->
     <div class="top-bar-role">
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <span><i class="fa-solid fa-school-lock"></i> <strong>SIGE Rizzi</strong> — Nível de Acesso:</span>
+            <span><i class="fa-solid fa-school-lock"></i> <strong>IntegraRizzi</strong> — Nível de Acesso:</span>
             <div class="role-selector-container">
                 <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
                 <select id="activeRoleSelect">
@@ -64,14 +64,14 @@
             <a href="index.html" class="brand">
                 <div class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="brand-text">
-                    <h1>Centro Educacional Pedro Rizzi</h1>
-                    <p>Sistema Integrado de Gestão, Agenda & Comunicação</p>
+                    <h1>IntegraRizzi</h1>
+                    <p>Sistema Integrado de Gestão Escolar | C.E. Pedro Rizzi</p>
                 </div>
             </a>
             <ul class="nav-links">
                 <li><a href="index.html"><i class="fa-solid fa-house"></i> Portal Início</a></li>
                 <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Pesquisa</a></li>
-                <li><a href="sistema-gestao.html" class="active"><i class="fa-solid fa-cubes-stacked"></i> Módulos SIGE</a></li>
+                <li><a href="sistema-gestao.html" class="active"><i class="fa-solid fa-cubes-stacked"></i> Módulos IntegraRizzi</a></li>
             </ul>
         </div>
     </header>
@@ -168,18 +168,25 @@
                         <option value="Orientadora 2 (Luciana)">💛 Orientadora 2 (Luciana)</option>
                     </select>
 
-                    <!-- Alternador de Visão Semanal / Cards -->
+                    <!-- Alternador de Visão Semanal / Cards / Projetos OP -->
                     <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
-                        <button onclick="setOpViewMode('semanal')" class="view-toggle-btn active" data-mode="semanal">
+                        <button onclick="setOpViewMode('semanal')" class="view-toggle-btn op-toggle-btn active" data-mode="semanal">
                             <i class="fa-solid fa-calendar-week"></i> Semanal
                         </button>
-                        <button onclick="setOpViewMode('cards')" class="view-toggle-btn" data-mode="cards">
+                        <button onclick="setOpViewMode('cards')" class="view-toggle-btn op-toggle-btn" data-mode="cards">
                             <i class="fa-solid fa-list-ul"></i> Lista / Cards
+                        </button>
+                        <button onclick="setOpViewMode('projetos')" class="view-toggle-btn op-toggle-btn" data-mode="projetos">
+                            <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos OP
                         </button>
                     </div>
 
                     <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.85rem;" title="Configurar Telefones de WhatsApp das Orientadoras">
                         <i class="fa-brands fa-whatsapp"></i> WhatsApps das Orientadoras
+                    </button>
+
+                    <button onclick="openNovoProjetoOPModal()" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;" title="Cadastrar Projeto Continuado OP">
+                        <i class="fa-solid fa-folder-plus"></i> + Projeto OP
                     </button>
 
                     <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
@@ -262,6 +269,22 @@
 
                 <!-- Grid de Atendimentos OP -->
                 <div id="opAppointmentsGrid" class="op-grid">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            <!-- CONTAINER VISÃO 3: PROJETOS CONTINUADOS DE PERÍODO VARIADO (OP) -->
+            <div id="opProjectsViewContainer" style="display:none; margin-top:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos Continuados & Programas de Acompanhamento (OP)</h4>
+                        <p style="font-size:0.82rem; color:#64748b;">Acompanhamento de programas continuados de médio e longo prazo (Mediação de Conflitos, Busca Ativa, Inclusão).</p>
+                    </div>
+                    <button onclick="openNovoProjetoOPModal()" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;">
+                        <i class="fa-solid fa-plus"></i> Criar Novo Projeto OP
+                    </button>
+                </div>
+                <div id="opProjetosListContainer" style="display:flex; flex-direction:column; gap:1.2rem;">
                     <!-- Rendered via JS -->
                 </div>
             </div>
@@ -1915,10 +1938,99 @@
     </div>
 
 
+    <!-- ========================================== -->
+    <!-- MODAL NOVO PROJETO CONTINUADO OP -->
+    <!-- ========================================== -->
+    <div id="modalNovoProjetoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:650px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Cadastrar Projeto / Programa OP
+                </h3>
+                <button onclick="closeNovoProjetoOPModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="submitNovoProjetoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título do Projeto / Programa:</label>
+                    <input type="text" id="projOpInputTitulo" required placeholder="Ex: 🧠 Programa de Mediação de Conflitos & Cultura de Paz" class="search-input" style="width:100%;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria / Eixo:</label>
+                        <select id="projOpInputCategoria" class="search-input" style="width:100%; font-weight:700;">
+                            <option value="Mediação de Conflitos">Mediação de Conflitos</option>
+                            <option value="Acompanhamento Emocional">Acompanhamento Emocional</option>
+                            <option value="Assiduidade & Frequência">Assiduidade & Frequência</option>
+                            <option value="Adaptação Curricular & Inclusão">Adaptação Curricular & Inclusão</option>
+                            <option value="Transição de Anos">Transição de Anos</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Líder:</label>
+                        <select id="projOpInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
+                            <option value="Orientadora 1 (Carmen)">Orientadora 1 (Carmen)</option>
+                            <option value="Orientadora 2 (Luciana)">Orientadora 2 (Luciana)</option>
+                            <option value="Equipe Orientação">Equipe Orientação Pedagógica</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Início:</label>
+                        <input type="date" id="projOpInputDataInicio" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Término:</label>
+                        <input type="date" id="projOpInputDataFim" required class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Status Inicial:</label>
+                        <select id="projOpInputStatus" class="search-input" style="width:100%; font-weight:700;">
+                            <option value="em_dia">🟢 Em dia</option>
+                            <option value="atencao">🟡 Em atenção</option>
+                            <option value="atrasado">🔴 Atrasado</option>
+                            <option value="concluido">🔵 Concluído</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores / Atores Envolvidos:</label>
+                    <input type="text" id="projOpInputEnvolvidos" placeholder="Ex: Regentes de Turma, Psicopedagoga, Famílias" class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição & Objetivos:</label>
+                    <textarea id="projOpInputDescricao" rows="3" placeholder="Descreva os objetivos, público-alvo e metodologia do projeto..." class="search-input" style="width:100%; font-family:inherit; font-size:0.88rem;"></textarea>
+                </div>
+
+                <div style="background:#fffbeb; padding:12px; border-radius:12px; border:1px solid #fde68a;">
+                    <div style="font-weight:800; font-size:0.88rem; color:#92400e; margin-bottom:6px;"><i class="fa-solid fa-list-check"></i> Sub-etapas Iniciais (Linhas separadas: Título | YYYY-MM-DD | Responsável)</div>
+                    <textarea id="projOpInputEtapasText" rows="3" placeholder="Ex:&#10;Rodas de conversa 7º ano | 2026-09-18 | Orientadora Carmen&#10;Mapeamento de líderes mediadores | 2026-09-28 | Orientadora Luciana" class="search-input" style="width:100%; font-family:monospace; font-size:0.8rem;"></textarea>
+                </div>
+
+                <div style="background:#f0fdf4; padding:12px; border-radius:12px; border:1px solid #bbf7d0;">
+                    <div style="font-weight:800; font-size:0.88rem; color:#166534; margin-bottom:6px;"><i class="fa-solid fa-tasks"></i> Checklist de Acompanhamento (Um item por linha)</div>
+                    <textarea id="projOpInputChecklistText" rows="3" placeholder="Ex:&#10;Termos de compromisso assinados&#10;Relatório encaminhado à Direção&#10;Painel de sentimentos montado no corredor" class="search-input" style="width:100%; font-family:inherit; font-size:0.82rem;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                    <button type="button" onclick="closeNovoProjetoOPModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; color:white;">Salvar Projeto OP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Footer -->
     <footer>
-        <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
-        <p style="font-size:0.82rem; margin-top:4px; opacity:0.8;">Sistema Integrado de Gestão Escolar (SIGE) — Módulos OP, Supervisão, Administração, Direção & Mural</p>
+        <p><strong>IntegraRizzi — C.E. Pedro Rizzi</strong> — Itajaí / SC</p>
+        <p style="font-size:0.82rem; margin-top:4px; opacity:0.8;">Sistema Integrado de Gestão Escolar — Módulos OP, Supervisão, Administração, Direção & Mural</p>
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
