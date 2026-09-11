@@ -12,6 +12,17 @@ function initApp() {
     setupTabNavigation();
     setupNotificationBell();
     renderAllModules();
+    setupOpButtons();
+}
+
+function setupOpButtons() {
+    const btnOp = document.getElementById("btnOpenNovoProjetoOP");
+    if (btnOp) {
+        btnOp.onclick = (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+            openNovoProjetoOPModal();
+        };
+    }
 }
 
 // ==========================================
@@ -837,6 +848,13 @@ function cobrarEtapaOPWhatsapp(responsavel, projTitulo, etapaTitulo, dataLimite)
     window.open(`https://wa.me/?text=${textMsg}`, '_blank');
     sigeDB.logAuditEvent("Orientação Pedagógica", `Lembrete WhatsApp enviado para ${responsavel} (Projeto OP: ${projTitulo})`, "Orientação");
 }
+
+// Bind de segurança global no escopo window
+window.openNovoProjetoOPModal = openNovoProjetoOPModal;
+window.closeNovoProjetoOPModal = closeNovoProjetoOPModal;
+window.submitNovoProjetoOP = submitNovoProjetoOP;
+window.excluirProjetoOP = excluirProjetoOP;
+window.cobrarEtapaOPWhatsapp = cobrarEtapaOPWhatsapp;
 
 let currentDetailAppointmentId = null;
 
