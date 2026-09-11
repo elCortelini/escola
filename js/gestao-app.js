@@ -361,12 +361,31 @@ function renderModuleOrientacaoPedagogica() {
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
     const todosAtendimentos = sigeDB.getAgendamentosOP().filter(a => {
-        if (filterOrientadora !== "todas" && a.orientadora && a.orientadora !== filterOrientadora) {
-            return false;
-        }
+        if (filterOrientadora === "todas") return true;
+        if (filterOrientadora.includes("Clarinda")) return isClarinda(a);
+        if (filterOrientadora.includes("Daiane")) return isDaiane(a);
         return true;
     });
+
+    const cardClarinda = document.querySelector(".turno-card.matutino");
+    const cardDaiane = document.querySelector(".turno-card.vespertino");
+
+    if (cardClarinda && cardDaiane) {
+        if (filterOrientadora.includes("Clarinda")) {
+            cardClarinda.style.display = "flex";
+            cardDaiane.style.display = "none";
+        } else if (filterOrientadora.includes("Daiane")) {
+            cardClarinda.style.display = "none";
+            cardDaiane.style.display = "flex";
+        } else {
+            cardClarinda.style.display = "flex";
+            cardDaiane.style.display = "flex";
+        }
+    }
 
     const weekDays = getWeekDays(currentWeekRefDate);
 
@@ -392,6 +411,9 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
     const headerRow = document.getElementById("weeklyTableHeaderRow");
     const bodyTable = document.getElementById("weeklyTableBody");
     if (!headerRow || !bodyTable) return;
+
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
     // Header da Tabela
     headerRow.innerHTML = `
@@ -423,7 +445,16 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais (Mat.)" }
     ];
 
-    let html = slotsConfig.map(s => {
+    let activeSlots = slotsConfig;
+    if (filterOrientadora !== "todas") {
+        if (filterOrientadora.includes("Clarinda")) {
+            activeSlots = slotsConfig.filter(s => s.orientadoraKey === "clarinda");
+        } else if (filterOrientadora.includes("Daiane")) {
+            activeSlots = slotsConfig.filter(s => s.orientadoraKey === "daiane");
+        }
+    }
+
+    let html = activeSlots.map(s => {
         return `
             <tr>
                 <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}">
