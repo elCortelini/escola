@@ -577,52 +577,29 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                 }
                 html += `</div>`; // fim active-appointments-container
 
-                // 2. Agendamentos Concluídos / Ausentes (Empilhados Menores no Lado Direito)
+                // 2. Agendamentos Concluídos / Ausentes (Ultra-Compactos Empilhados no Lado Direito)
                 if (pastAppointments.length > 0) {
                     html += `
                         <div class="past-appointments-container">
-                            <div style="font-size:0.72rem; font-weight:900; color:#475569; text-transform:uppercase; letter-spacing:0.4px; display:flex; align-items:center; gap:5px; margin-bottom:4px;">
-                                <i class="fa-solid fa-clock-rotate-left" style="color:#64748b;"></i> Concluídos / Ausentes (${pastAppointments.length})
+                            <div style="font-size:0.7rem; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:0.4px; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Concluídos (${pastAppointments.length})
                             </div>
-                            <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                            <div style="display:flex; flex-direction:column; gap:5px; width:100%;">
                     `;
 
                     pastAppointments.forEach(item => {
-                        const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                         const isProf = item.publico === "professor";
                         const isClar = isClarinda(item);
 
                         html += `
-                            <div class="timeline-item-card compact-past-card ${isClar ? 'clarinda-card' : 'daiane-card'}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Ver detalhes de ${item.aluno}">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="font-size:0.78rem; font-weight:900; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">
+                            <div class="timeline-item-card ultra-compact-past-card ${isClar ? 'clarinda-card' : 'daiane-card'}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos de ${item.aluno}">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                                    <span style="font-size:0.78rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                         ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
                                     </span>
-                                    <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.62rem; padding:1px 5px;">
-                                        ${getSecretariaBadgeText(item.statusSecretaria)}
+                                    <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.62rem; padding:1px 5px; flex-shrink:0;">
+                                        ${item.statusSecretaria === 'realizado' ? '✅ Atendido' : (item.statusSecretaria === 'faltou' || item.statusSecretaria === 'ausente' ? '❌ Ausente' : getSecretariaBadgeText(item.statusSecretaria))}
                                     </span>
-                                </div>
-
-                                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7rem; color:#475569; margin-top:2px;">
-                                    <span>Turma: <strong>${item.turma || '-'}</strong></span>
-                                    <span style="font-weight:700;"><i class="fa-regular fa-clock"></i> ${item.horario}</span>
-                                </div>
-
-                                <div style="font-size:0.7rem; color:${isClar ? '#b91c1c' : '#0369a1'}; font-weight:800; margin-top:2px;">
-                                    <i class="fa-solid fa-user-gear"></i> ${item.orientadora ? item.orientadora.split(" ")[0] : (isClar ? 'Clarinda' : 'Daiane')}
-                                </div>
-
-                                <div class="weekly-motive" style="font-size:0.7rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.motivo}">
-                                    "${item.motivo}"
-                                </div>
-
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed rgba(0,0,0,0.1);">
-                                    <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" style="font-size:0.7rem; padding:1px 4px;" title="Excluir">
-                                        <i class="fa-solid fa-trash-can"></i> Excluir
-                                    </button>
-                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact" style="font-size:0.68rem; padding:2px 6px;">
-                                        <i class="fa-brands fa-whatsapp"></i> Mensagem
-                                    </a>
                                 </div>
                             </div>
                         `;
