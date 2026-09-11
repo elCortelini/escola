@@ -395,7 +395,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
 
     // Header da Tabela
     headerRow.innerHTML = `
-        <th class="col-periodo">PERÍODO / VAGA</th>
+        <th class="col-periodo">ORIENTADORA / VAGA</th>
         ${weekDays.map(d => `
             <th class="${d.isToday ? 'col-today' : ''}">
                 ${d.dayName}<br>
@@ -405,44 +405,40 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         `).join("")}
     `;
 
-    // Linhas dos Turnos
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
+    // 2 Linhas por vaga: Clarinda Rosa Pereira (Matutino) e Daiane Caetano Costa de Aquino (Vespertino)
     const slotsConfig = [
-        { header: "MATUTINO (MANHÃ)", turno: "matutino" },
-        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0 },
-        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1 },
-        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2 },
-        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true },
+        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "(Matutino)" },
+        { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "(Vespertino)" },
         
-        { header: "VESPERTINO (TARDE)", turno: "vespertino" },
-        { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0 },
-        { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1 },
-        { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2 },
-        { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true }
+        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "(Matutino)" },
+        { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "(Vespertino)" },
+        
+        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "(Matutino)" },
+        { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "(Vespertino)" },
+        
+        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "(Matutino)" },
+        { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "(Vespertino)" }
     ];
 
     let html = slotsConfig.map(s => {
-        if (s.header) {
-            return `
-                <tr>
-                    <td colspan="6" class="turno-section-header">
-                        <i class="${s.turno === 'matutino' ? 'fa-solid fa-sun' : 'fa-solid fa-cloud-sun'}"></i> ${s.header}
-                    </td>
-                </tr>
-            `;
-        }
-
         return `
             <tr>
                 <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}">
                     <span class="vaga-num">${s.label}</span>
-                    <span style="font-size:0.7rem; opacity:0.8;">${s.turno.toUpperCase()}</span>
+                    <span style="font-size:0.72rem; color:${s.orientadoraKey === 'clarinda' ? '#b45309' : '#0369a1'}; font-weight:800; display:block; margin-top:2px;">
+                        <i class="fa-solid fa-user-gear"></i> ${s.orientadoraNome.split(" ")[0]} ${s.orientadoraTag}
+                    </span>
                 </td>
                 ${weekDays.map(d => {
+                    const matcher = s.orientadoraKey === "clarinda" ? isClarinda : isDaiane;
                     const dateAppointments = todosAtendimentos.filter(a => 
                         a.data === d.dateIso && 
-                        a.turno === s.turno && 
                         a.tipo === s.tipo && 
-                        a.statusSecretaria !== 'cancelado'
+                        a.statusSecretaria !== 'cancelado' &&
+                        matcher(a)
                     );
 
                     const item = dateAppointments[s.slotIndex];
@@ -458,7 +454,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         <span class="weekly-class-badge" style="${isProf ? 'background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;' : ''}">${item.turma}</span>
                                     </div>
                                     <div style="font-size:0.73rem; color:#1e3a8a; font-weight:700;">
-                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || 'OE'}
+                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || s.orientadoraNome}
                                     </div>
                                     <div class="weekly-motive" title="${item.motivo}">
                                         "${item.motivo}"
@@ -480,7 +476,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     } else {
                         return `
                             <td class="${d.isToday ? 'today-column-cell' : ''}">
-                                <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}')" class="weekly-slot-empty-btn" title="Adicionar Agendamento">
+                                <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}', '${s.orientadoraNome}')" class="weekly-slot-empty-btn" title="Adicionar Agendamento para ${s.orientadoraNome}">
                                     <i class="fa-solid fa-plus"></i>
                                 </button>
                             </td>
@@ -1237,7 +1233,7 @@ function togglePublicoAgendamentoOP() {
 window.togglePublicoAgendamentoOP = togglePublicoAgendamentoOP;
 
 // MODAL AGENDAMENTO OE
-function openAgendamentoModal(dateIso = "", turno = "", tipo = "") {
+function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {
     const modal = document.getElementById("modalAgendamentoOP");
     if (!modal) return;
     document.getElementById("formAgendamentoOP").reset();
@@ -1246,6 +1242,18 @@ function openAgendamentoModal(dateIso = "", turno = "", tipo = "") {
     document.getElementById("opInputData").value = dateIso || new Date().toISOString().split("T")[0];
     if (turno) document.getElementById("opInputTurno").value = turno;
     if (tipo) document.getElementById("opInputTipo").value = tipo;
+
+    if (orientadoraNome) {
+        const selectOri = document.getElementById("opInputOrientadora");
+        if (selectOri) {
+            for (let opt of selectOri.options) {
+                if (opt.value.includes(orientadoraNome) || opt.text.includes(orientadoraNome)) {
+                    selectOri.value = opt.value;
+                    break;
+                }
+            }
+        }
+    }
 
     updateModalWhatsAppPreview();
     modal.style.display = "flex";
