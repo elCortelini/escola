@@ -1754,10 +1754,47 @@ window.excluirAgendamentoDirect = excluirAgendamentoDirect;
 // ==========================================
 function imprimirAtendimentosDoDia(dateIso) {
     if (!dateIso) return;
+
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterVal = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
     const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
-    const dateAppointments = todosAtendimentos.filter(a => 
+    let dateAppointments = todosAtendimentos.filter(a => 
         a.data === dateIso && a.statusSecretaria !== 'cancelado'
     );
+
+    let subTitleText = "Orientação Educacional (OE) — Relatório Diário de Atendimentos";
+    let signaturesHtml = `
+        <div class="sig-box">
+            Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
+        </div>
+        <div class="sig-box">
+            Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
+        </div>
+    `;
+
+    if (filterVal !== "todas") {
+        if (filterVal.includes("Clarinda")) {
+            dateAppointments = dateAppointments.filter(isClarinda);
+            subTitleText = "Orientação Educacional (OE) — Relatório Diário (Clarinda - Séries Iniciais)";
+            signaturesHtml = `
+                <div class="sig-box" style="margin:0 auto; max-width:350px;">
+                    Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
+                </div>
+            `;
+        } else if (filterVal.includes("Daiane")) {
+            dateAppointments = dateAppointments.filter(isDaiane);
+            subTitleText = "Orientação Educacional (OE) — Relatório Diário (Daiane - Séries Finais)";
+            signaturesHtml = `
+                <div class="sig-box" style="margin:0 auto; max-width:350px;">
+                    Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
+                </div>
+            `;
+        }
+    }
 
     dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
 
@@ -1766,8 +1803,6 @@ function imprimirAtendimentosDoDia(dateIso) {
     const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
     const diaNome = diasSemana[dateObj.getDay()] || "Dia da Semana";
     const dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
 
     let printHtml = `
         <!DOCTYPE html>
@@ -1897,7 +1932,7 @@ function imprimirAtendimentosDoDia(dateIso) {
                     <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:55px; margin-right:12px;">
                     <div>
                         <h1 class="school-title">Centro Educacional Pedro Rizzi</h1>
-                        <h2 class="sub-title">Orientação Educacional (OE) — Relatório Diário de Atendimentos</h2>
+                        <h2 class="sub-title">${subTitleText}</h2>
                     </div>
                 </div>
                 <div class="meta-info">
@@ -1911,7 +1946,7 @@ function imprimirAtendimentosDoDia(dateIso) {
             </div>
 
             ${dateAppointments.length === 0 ? `
-                <div class="empty-notice">Nenhum atendimento agendado para este dia.</div>
+                <div class="empty-notice">Nenhum atendimento agendado para esta orientadora neste dia.</div>
             ` : `
                 <table>
                     <thead>
@@ -1962,12 +1997,7 @@ function imprimirAtendimentosDoDia(dateIso) {
             `}
 
             <div class="footer-signatures">
-                <div class="sig-box">
-                    Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
-                </div>
-                <div class="sig-box">
-                    Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
-                </div>
+                ${signaturesHtml}
             </div>
 
             <script>
@@ -1996,10 +2026,24 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
     const modal = document.getElementById("modalVisaoDetalhadaDia");
     if (!modal) return;
 
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterVal = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
     const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
-    const dateAppointments = todosAtendimentos.filter(a => 
+    let dateAppointments = todosAtendimentos.filter(a => 
         a.data === dateIso && a.statusSecretaria !== 'cancelado'
     );
+
+    if (filterVal !== "todas") {
+        if (filterVal.includes("Clarinda")) {
+            dateAppointments = dateAppointments.filter(isClarinda);
+        } else if (filterVal.includes("Daiane")) {
+            dateAppointments = dateAppointments.filter(isDaiane);
+        }
+    }
 
     dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
 
@@ -2026,8 +2070,6 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
 
     const container = document.getElementById("modalDiaContentBody");
     if (!container) return;
-
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
 
     if (dateAppointments.length === 0) {
         container.innerHTML = `
