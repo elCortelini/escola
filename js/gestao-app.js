@@ -4847,22 +4847,6 @@ function excluirTurma(id) {
     }
 }
 
-function editarTurma(id) {
-    openCadastroTurmaModal(id);
-}
-
-function excluirTurma(id) {
-    const turmas = sigeDB.getTurmasEscola();
-    const turma = turmas.find(t => t.id === id);
-    if (!turma) return;
-
-    if (confirm(`Tem certeza que deseja excluir a turma ${turma.nome}?`)) {
-        sigeDB.deleteTurma(id);
-        renderModuleAdministracao();
-        showToast("🗑️ Turma removida da estrutura escolar.");
-    }
-}
-
 // CONFIGURAÇÕES DA UNIDADE & BACKUP & LOGS
 function renderConfigEscolaForm() {
     const config = sigeDB.getConfigEscola();
