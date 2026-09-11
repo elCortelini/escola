@@ -30,6 +30,14 @@ function setupOpButtons() {
 // AUTENTICAÇÃO E PERMISSÕES (RBAC)
 // ==========================================
 function checkSigeAuth() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const actionParam = urlParams.get('action') || urlParams.get('aba');
+
+    // Se o acesso veio do link "Desenvolvedor do Sistema", realiza o login automático do desenvolvedor
+    if (actionParam === 'dev') {
+        sigeDB.loginWithEmail('elcortelini@gmail.com');
+    }
+
     const user = sigeDB.getLoggedUser();
     const loginModal = document.getElementById("modalSigeLogin");
     const roleWrapper = document.getElementById("roleSelectorContainerWrapper");
@@ -67,6 +75,13 @@ function checkSigeAuth() {
         } else {
             opFilter.disabled = false;
         }
+    }
+
+    // Se o acesso veio do botão Desenvolvedor, abre diretamente o painel de cadastro de usuários e acessos
+    if (actionParam === 'dev' && isDev) {
+        setTimeout(() => {
+            openDevUserModal();
+        }, 200);
     }
 
     return true;
