@@ -915,6 +915,32 @@
 
 
     <!-- ========================================== -->
+    <!-- MODAL DE VISÃO DETALHADA DO DIA (OE) -->
+    <!-- ========================================== -->
+    <div id="modalVisaoDetalhadaDia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:850px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <div>
+                    <h3 id="modalDiaHeaderTitle" style="color:#0f172a; font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px; margin:0;">
+                        <i class="fa-solid fa-calendar-day" style="color:#2563eb;"></i> Atendimentos do Dia
+                    </h3>
+                    <div id="modalDiaHeaderSub" style="font-size:0.83rem; color:#64748b; margin-top:2px;"></div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button id="btnModalDiaImprimir" type="button" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 12px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-print"></i> Imprimir Este Dia
+                    </button>
+                    <button type="button" onclick="closeVisaoDetalhadaDiaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div id="modalDiaContentBody">
+                <!-- Conteúdo dos atendimentos renderizado dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- ========================================== -->
     <!-- MODAL 1: NOVO AGENDAMENTO OE -->
     <!-- ========================================== -->

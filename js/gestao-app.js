@@ -455,9 +455,17 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                             </div>
                         </div>
 
-                        <button onclick="openAgendamentoModal('${d.dateIso}')" class="btn-add-day-slot">
-                            <i class="fa-solid fa-plus"></i> + Agendar
-                        </button>
+                        <div class="day-sidebar-actions">
+                            <button onclick="openAgendamentoModal('${d.dateIso}')" class="btn-day-action btn-add-day-slot" title="Cadastrar novo agendamento para este dia">
+                                <i class="fa-solid fa-calendar-plus"></i> Agendar
+                            </button>
+                            <button onclick="imprimirAtendimentosDoDia('${d.dateIso}')" class="btn-day-action btn-print-day-slot" title="Gerar relatório de atendimentos deste dia para impressão">
+                                <i class="fa-solid fa-print"></i> Imprimir
+                            </button>
+                            <button onclick="abrirVisaoDetalhadaDoDia('${d.dateIso}')" class="btn-day-action btn-view-day-slot" title="Ver atendimentos deste dia na tela com todos os detalhes individuais">
+                                <i class="fa-solid fa-expand"></i> Ver Atendimentos
+                            </button>
+                        </div>
                     </div>
 
                     <div class="day-timeline-content">
@@ -1424,6 +1432,417 @@ function autoSelectTurnoByHorario() {
     }
 }
 window.autoSelectTurnoByHorario = autoSelectTurnoByHorario;
+
+// ==========================================
+// IMPRESSÃO E VISÃO DETALHADA DO DIA (OE)
+// ==========================================
+function imprimirAtendimentosDoDia(dateIso) {
+    if (!dateIso) return;
+    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
+    const dateAppointments = todosAtendimentos.filter(a => 
+        a.data === dateIso && a.statusSecretaria !== 'cancelado'
+    );
+
+    dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
+
+    const parts = dateIso.split("-");
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    const diaNome = diasSemana[dateObj.getDay()] || "Dia da Semana";
+    const dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+
+    let printHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Relatório de Atendimentos OE - ${diaNome} (${dataFormatada})</title>
+            <style>
+                @page { size: A4 portrait; margin: 10mm; }
+                body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    color: #0f172a;
+                    background: #ffffff;
+                    margin: 0;
+                    padding: 10px;
+                    font-size: 12px;
+                }
+                .print-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 2px solid #1e3a8a;
+                    padding-bottom: 10px;
+                    margin-bottom: 14px;
+                }
+                .school-title {
+                    font-size: 16px;
+                    font-weight: 800;
+                    color: #1e3a8a;
+                    margin: 0;
+                }
+                .sub-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #d97706;
+                    margin: 2px 0 0 0;
+                }
+                .meta-info {
+                    text-align: right;
+                    font-size: 11px;
+                    color: #64748b;
+                }
+                .date-badge {
+                    display: inline-block;
+                    background: #eff6ff;
+                    color: #1e3a8a;
+                    border: 1px solid #93c5fd;
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                    font-weight: 800;
+                    font-size: 12px;
+                    margin-bottom: 12px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 8px;
+                }
+                th {
+                    background: #f1f5f9;
+                    color: #334155;
+                    font-weight: 800;
+                    text-align: left;
+                    padding: 8px 6px;
+                    font-size: 11px;
+                    border: 1px solid #cbd5e1;
+                    text-transform: uppercase;
+                }
+                td {
+                    padding: 8px 6px;
+                    border: 1px solid #e2e8f0;
+                    vertical-align: top;
+                    font-size: 11px;
+                }
+                tr:nth-child(even) td {
+                    background: #f8fafc;
+                }
+                .badge-status {
+                    font-size: 10px;
+                    font-weight: 800;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    display: inline-block;
+                }
+                .status-realizado { background: #dcfce7; color: #166534; }
+                .status-agendado { background: #dbeafe; color: #1e40af; }
+                .status-faltou { background: #fee2e2; color: #991b1b; }
+                .status-pendente { background: #fef3c7; color: #92400e; }
+                
+                .orientadora-tag {
+                    font-weight: 800;
+                    font-size: 10px;
+                }
+                .tag-clarinda { color: #b45309; }
+                .tag-daiane { color: #0369a1; }
+                
+                .motive-box {
+                    font-style: italic;
+                    color: #334155;
+                }
+                .footer-signatures {
+                    margin-top: 40px;
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 30px;
+                }
+                .sig-box {
+                    flex: 1;
+                    border-top: 1px solid #94a3b8;
+                    padding-top: 6px;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #475569;
+                    font-weight: 700;
+                }
+                .empty-notice {
+                    text-align: center;
+                    padding: 30px;
+                    color: #64748b;
+                    font-style: italic;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <div>
+                    <h1 class="school-title">Centro Educacional Pedro Rizzi</h1>
+                    <h2 class="sub-title">Orientação Educacional (OE) — Relatório Diário de Atendimentos</h2>
+                </div>
+                <div class="meta-info">
+                    <strong>Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}<br>
+                    <strong>Total:</strong> ${dateAppointments.length} agendamento(s)
+                </div>
+            </div>
+
+            <div class="date-badge">
+                📅 ${diaNome.toUpperCase()}, ${dataFormatada}
+            </div>
+
+            ${dateAppointments.length === 0 ? `
+                <div class="empty-notice">Nenhum atendimento agendado para este dia.</div>
+            ` : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 55px;">Horário</th>
+                            <th style="width: 65px;">Turno</th>
+                            <th>Aluno / Turma</th>
+                            <th>Responsável / Contato</th>
+                            <th>Orientadora</th>
+                            <th>Motivo do Atendimento</th>
+                            <th style="width: 75px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dateAppointments.map(item => {
+                            const isClar = isClarinda(item);
+                            const oriNome = item.orientadora || (isClar ? 'Clarinda (Séries Iniciais)' : 'Daiane (Séries Finais)');
+                            const isProf = item.publico === "professor";
+                            
+                            return `
+                                <tr>
+                                    <td><strong>${item.horario || '-'}</strong></td>
+                                    <td style="text-transform: capitalize;">${item.turno || '-'}</td>
+                                    <td>
+                                        <strong>${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}</strong><br>
+                                        <span style="color:#64748b; font-size:10px;">Turma: ${item.turma || '-'}</span>
+                                    </td>
+                                    <td>
+                                        ${item.responsavel || '-'}<br>
+                                        <span style="color:#64748b; font-size:10px;">📞 ${item.telefone || '-'}</span>
+                                    </td>
+                                    <td class="orientadora-tag ${isClar ? 'tag-clarinda' : 'tag-daiane'}">
+                                        ${oriNome}
+                                    </td>
+                                    <td class="motive-box">
+                                        "${item.motivo || 'Sem motivo registrado'}"
+                                    </td>
+                                    <td>
+                                        <span class="badge-status status-${item.statusSecretaria}">
+                                            ${getSecretariaBadgeText(item.statusSecretaria)}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `}
+
+            <div class="footer-signatures">
+                <div class="sig-box">
+                    Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
+                </div>
+                <div class="sig-box">
+                    Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
+                </div>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 350);
+                }
+            </script>
+        </body>
+        </html>
+    `;
+
+    const printWin = window.open('', '_blank', 'width=900,height=800');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        showToast("Por favor, permita pop-ups no seu navegador para imprimir.", "error");
+    }
+}
+
+function abrirVisaoDetalhadaDoDia(dateIso) {
+    if (!dateIso) return;
+    const modal = document.getElementById("modalVisaoDetalhadaDia");
+    if (!modal) return;
+
+    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
+    const dateAppointments = todosAtendimentos.filter(a => 
+        a.data === dateIso && a.statusSecretaria !== 'cancelado'
+    );
+
+    dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
+
+    const parts = dateIso.split("-");
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    const diaNome = diasSemana[dateObj.getDay()] || "Dia da Semana";
+    const dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+    const titleElem = document.getElementById("modalDiaHeaderTitle");
+    if (titleElem) {
+        titleElem.innerHTML = `<i class="fa-solid fa-calendar-day" style="color:#2563eb;"></i> ${diaNome}, ${dataFormatada}`;
+    }
+
+    const subElem = document.getElementById("modalDiaHeaderSub");
+    if (subElem) {
+        subElem.innerText = `Total de ${dateAppointments.length} agendamento(s) individual(ais) cadastrado(s) para este dia.`;
+    }
+
+    const btnPrint = document.getElementById("btnModalDiaImprimir");
+    if (btnPrint) {
+        btnPrint.onclick = () => imprimirAtendimentosDoDia(dateIso);
+    }
+
+    const container = document.getElementById("modalDiaContentBody");
+    if (!container) return;
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+
+    if (dateAppointments.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:3rem 1rem; color:#64748b;">
+                <i class="fa-regular fa-calendar-xmark" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:12px;"></i>
+                <div style="font-size:1.1rem; font-weight:800; color:#334155;">Nenhum atendimento agendado para ${diaNome} (${dataFormatada})</div>
+                <div style="font-size:0.85rem; margin-top:4px;">Use o botão "Agendar" para registrar um atendimento neste dia.</div>
+                <button onclick="closeVisaoDetalhadaDiaModal(); openAgendamentoModal('${dateIso}');" class="btn btn-primary" style="margin-top:16px; width:auto; background:#10b981; border-color:#10b981; cursor:pointer;">
+                    <i class="fa-solid fa-calendar-plus"></i> Agendar Atendimento para ${dataFormatada}
+                </button>
+            </div>
+        `;
+    } else {
+        let html = `
+            <div style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0;">
+                <span style="font-size:0.85rem; font-weight:800; color:#334155;">
+                    <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> Visão Individual Detalhada dos Atendimentos
+                </span>
+                <button onclick="closeVisaoDetalhadaDiaModal(); openAgendamentoModal('${dateIso}');" class="btn btn-primary" style="font-size:0.78rem; padding:4px 10px; background:#10b981; border:none; width:auto; cursor:pointer;">
+                    <i class="fa-solid fa-plus"></i> Novo Agendamento
+                </button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:16px;">
+        `;
+
+        dateAppointments.forEach((item) => {
+            const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
+            const isProf = item.publico === "professor";
+            const isClar = isClarinda(item);
+            const oriNome = item.orientadora || (isClar ? 'Clarinda Rosa Pereira (Séries Iniciais)' : 'Daiane Caetano Costa de Aquino (Séries Finais)');
+
+            html += `
+                <div style="background:white; border:2px solid ${isClar ? '#f59e0b' : '#0284c7'}; border-radius:14px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.05); position:relative;">
+                    
+                    <!-- Header do Card Individual -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <span style="background:${isClar ? '#fffbeb' : '#f0f9ff'}; color:${isClar ? '#b45309' : '#0369a1'}; border:1px solid ${isClar ? '#fde68a' : '#bae6fd'}; font-weight:900; font-size:0.95rem; padding:4px 10px; border-radius:8px;">
+                                <i class="fa-regular fa-clock"></i> ${item.horario || 'Horário a definir'} (${item.turno ? item.turno.toUpperCase() : 'MANHÃ'})
+                            </span>
+                            <span style="font-size:0.8rem; font-weight:800; color:${isClar ? '#d97706' : '#0284c7'}; background:#f8fafc; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0;">
+                                <i class="fa-solid fa-user-gear"></i> ${oriNome}
+                            </span>
+                        </div>
+                        <div>
+                            <select onchange="updateAgendamentoStatusDirect('${item.id}', this.value)" class="search-input" style="font-size:0.8rem; font-weight:800; padding:4px 8px; border-radius:8px; cursor:pointer;">
+                                <option value="agendado" ${item.statusSecretaria === 'agendado' ? 'selected' : ''}>🔵 Agendado</option>
+                                <option value="realizado" ${item.statusSecretaria === 'realizado' ? 'selected' : ''}>🟢 Realizado</option>
+                                <option value="faltou" ${item.statusSecretaria === 'faltou' ? 'selected' : ''}>🔴 Faltou</option>
+                                <option value="pendente" ${item.statusSecretaria === 'pendente' ? 'selected' : ''}>🟡 Pendente</option>
+                                <option value="cancelado" ${item.statusSecretaria === 'cancelado' ? 'selected' : ''}>⚪ Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dados Principais -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:14px; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:0.75rem; text-transform:uppercase; font-weight:800; color:#64748b;">Aluno / Atendido:</div>
+                            <div style="font-size:1.05rem; font-weight:900; color:#0f172a; margin-top:2px;">
+                                ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
+                            </div>
+                            <div style="margin-top:4px;">
+                                <span class="weekly-class-badge" style="font-size:0.75rem; padding:2px 8px;">Turma: ${item.turma || '-'}</span>
+                                <span style="font-size:0.72rem; background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:6px; font-weight:700;">${item.publico === 'professor' ? 'Professor' : 'Aluno / Família'}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="font-size:0.75rem; text-transform:uppercase; font-weight:800; color:#64748b;">Responsável / Contato:</div>
+                            <div style="font-size:0.92rem; font-weight:800; color:#1e293b; margin-top:2px;">
+                                <i class="fa-regular fa-user" style="color:#64748b;"></i> ${item.responsavel || '-'}
+                            </div>
+                            <div style="font-size:0.83rem; color:#475569; margin-top:2px; display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-phone" style="color:#16a34a;"></i> ${item.telefone || '-'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivo -->
+                    <div style="background:#f8fafc; border-left:4px solid ${isClar ? '#f59e0b' : '#0284c7'}; padding:10px 12px; border-radius:0 8px 8px 0; margin-bottom:12px;">
+                        <div style="font-size:0.73rem; text-transform:uppercase; font-weight:900; color:#475569; margin-bottom:2px;">
+                            <i class="fa-solid fa-comment-dots"></i> Motivo do Atendimento:
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:700; color:#0f172a;">
+                            "${item.motivo || 'Motivo não registrado'}"
+                        </div>
+                    </div>
+
+                    <!-- Rodapé do Card com Ações Rápida -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:10px; flex-wrap:wrap; gap:8px;">
+                        <a href="${waUrl}" target="_blank" class="btn-whatsapp-direct" style="padding:6px 12px; font-size:0.8rem; text-decoration:none;">
+                            <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
+                        </a>
+                        <button onclick="closeVisaoDetalhadaDiaModal(); openDetalhesModal('${item.id}');" class="btn btn-secondary" style="font-size:0.78rem; padding:6px 12px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar / Ver Histórico
+                        </button>
+                    </div>
+
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    modal.style.display = "flex";
+    modal.onclick = (e) => {
+        if (e.target === modal) closeVisaoDetalhadaDiaModal();
+    };
+}
+
+function closeVisaoDetalhadaDiaModal() {
+    const modal = document.getElementById("modalVisaoDetalhadaDia");
+    if (modal) modal.style.display = "none";
+}
+
+function updateAgendamentoStatusDirect(id, newStatus) {
+    const ags = sigeDB.getAgendamentosOP() || [];
+    const item = ags.find(a => a.id === id);
+    if (item) {
+        item.statusSecretaria = newStatus;
+        sigeDB.saveAgendamentosOP(ags);
+        showToast(`Status atualizado para: ${getSecretariaBadgeText(newStatus)}`);
+        renderModuleOrientacaoPedagogica();
+    }
+}
+
+window.imprimirAtendimentosDoDia = imprimirAtendimentosDoDia;
+window.abrirVisaoDetalhadaDoDia = abrirVisaoDetalhadaDoDia;
+window.closeVisaoDetalhadaDiaModal = closeVisaoDetalhadaDiaModal;
+window.updateAgendamentoStatusDirect = updateAgendamentoStatusDirect;
 
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {

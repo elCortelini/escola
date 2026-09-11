@@ -1126,12 +1126,17 @@
     margin-top: 8px;
 }
 
-.btn-add-day-slot {
+.day-sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
     margin-top: 12px;
-    background: #10b981;
-    color: white;
+}
+
+.btn-day-action {
     border: none;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 8px;
     font-size: 0.78rem;
     font-weight: 800;
@@ -1141,11 +1146,35 @@
     gap: 6px;
     width: 100%;
     justify-content: center;
-    transition: background 0.15s;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-add-day-slot {
+    background: #10b981;
+    color: white;
 }
 
 .btn-add-day-slot:hover {
     background: #059669;
+}
+
+.btn-print-day-slot {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-print-day-slot:hover {
+    background: #2563eb;
+}
+
+.btn-view-day-slot {
+    background: #6366f1;
+    color: white;
+}
+
+.btn-view-day-slot:hover {
+    background: #4f46e5;
 }
 
 .day-timeline-content {
