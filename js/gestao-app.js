@@ -238,16 +238,75 @@ function marcarAguardandoSecretaria(id) {
 // ==========================================
 // PERFIL E NÍVEIS DE ACESSO (RBAC)
 // ==========================================
+function getOrientadoraByRole(role) {
+    const orientadoras = sigeDB.getOrientadoras();
+    if (!role) return null;
+    if (role === "orientadora_clarinda") {
+        return orientadoras.find(o => o.nome.toLowerCase().includes("clarinda") || o.id === "orient-1") || orientadoras[0] || null;
+    }
+    if (role === "orientadora_daiane") {
+        return orientadoras.find(o => o.nome.toLowerCase().includes("daiane") || o.id === "orient-2") || orientadoras[1] || null;
+    }
+    if (role.startsWith("orientadora_")) {
+        const idOrName = role.replace("orientadora_", "");
+        return orientadoras.find(o => o.id === idOrName || o.nome === idOrName) || null;
+    }
+    return null;
+}
+
+function getSupervisoraByRole(role) {
+    const supervisoras = sigeDB.getSupervisoras();
+    if (!role) return null;
+    if (role.startsWith("supervisora_")) {
+        const idOrName = role.replace("supervisora_", "");
+        return supervisoras.find(s => s.id === idOrName || s.nome === idOrName) || null;
+    }
+    return null;
+}
+
+function populateActiveRoleSelectOptions(roleSelect) {
+    if (!roleSelect) return;
+
+    const orientadoras = sigeDB.getOrientadoras();
+    const supervisoras = sigeDB.getSupervisoras();
+
+    let html = `
+        <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+    `;
+
+    orientadoras.forEach(o => {
+        let valueKey = "orientadora_" + o.id;
+        if (o.nome.toLowerCase().includes("clarinda") || o.id === "orient-1") valueKey = "orientadora_clarinda";
+        if (o.nome.toLowerCase().includes("daiane") || o.id === "orient-2") valueKey = "orientadora_daiane";
+        
+        const sub = o.turmasOuSalas || o.cargoFuncao || "OE";
+        html += `<option value="${escapeHtml(valueKey)}">💛 Orientadora ${escapeHtml(o.nome)} (${escapeHtml(sub)})</option>`;
+    });
+
+    supervisoras.forEach(s => {
+        const valueKey = "supervisora_" + s.id;
+        html += `<option value="${escapeHtml(valueKey)}">📋 Supervisora ${escapeHtml(s.nome)}</option>`;
+    });
+
+    html += `
+        <option value="secretaria">📝 Secretaria Escolar</option>
+        <option value="direcao">👑 Gestor / Direção Escolar</option>
+        <option value="supervisao">📋 Supervisor Pedagógico Geral</option>
+        <option value="admin">⚙️ Administrador do Sistema</option>
+        <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
+    `;
+
+    roleSelect.innerHTML = html;
+}
+
 function syncRoleFilters() {
     const role = sigeDB.getRole();
     const opFilter = document.getElementById("opFilterOrientadora");
+    const activeOri = getOrientadoraByRole(role);
 
     if (opFilter) {
-        if (role === "orientadora_clarinda") {
-            opFilter.value = "Clarinda Rosa Pereira";
-            opFilter.disabled = true;
-        } else if (role === "orientadora_daiane") {
-            opFilter.value = "Daiane Caetano Costa de Aquino";
+        if (activeOri) {
+            opFilter.value = activeOri.nome;
             opFilter.disabled = true;
         } else {
             opFilter.disabled = false;
@@ -260,12 +319,20 @@ function setupRoleSelector() {
     const roleBadge = document.getElementById("activeRoleBadge");
     if (!roleSelect) return;
 
+    populateActiveRoleSelectOptions(roleSelect);
+
     const currentRole = sigeDB.getRole();
-    roleSelect.value = currentRole;
-    updateRoleBadgePill(currentRole, roleBadge);
+    if (Array.from(roleSelect.options).some(opt => opt.value === currentRole)) {
+        roleSelect.value = currentRole;
+    } else {
+        roleSelect.value = "desenvolvedor";
+        sigeDB.setRole("desenvolvedor");
+    }
+
+    updateRoleBadgePill(sigeDB.getRole(), roleBadge);
     syncRoleFilters();
 
-    roleSelect.addEventListener("change", (e) => {
+    roleSelect.onchange = (e) => {
         const newRole = e.target.value;
         sigeDB.setRole(newRole);
         updateRoleBadgePill(newRole, roleBadge);
@@ -274,7 +341,7 @@ function setupRoleSelector() {
         renderNotifications();
         renderAllModules();
         showToast(`Perfil de visualização alterado para: ${getRoleLabel(newRole)}`);
-    });
+    };
 }
 
 function updateRoleBadgePill(role, badgeElem) {
@@ -284,6 +351,14 @@ function updateRoleBadgePill(role, badgeElem) {
 }
 
 function getRoleLabel(role) {
+    if (role.startsWith("orientadora_")) {
+        const ori = getOrientadoraByRole(role);
+        if (ori) return `Orientadora ${ori.nome}`;
+    }
+    if (role.startsWith("supervisora_")) {
+        const sup = getSupervisoraByRole(role);
+        if (sup) return `Supervisora ${sup.nome}`;
+    }
     const labels = {
         desenvolvedor: "🛠️ Desenvolvedor do Sistema",
         admin: "Administrador do Sistema",
@@ -299,6 +374,8 @@ function getRoleLabel(role) {
 }
 
 function getRoleIcon(role) {
+    if (role.startsWith("orientadora_")) return "fa-solid fa-heart-pulse";
+    if (role.startsWith("supervisora_")) return "fa-solid fa-clipboard-check";
     const icons = {
         desenvolvedor: "fa-solid fa-code",
         admin: "fa-solid fa-user-shield",
@@ -1160,15 +1237,20 @@ function renderCardsView(todosAtendimentos) {
 }
 
 function updateOrientadorasCounters(weekDays) {
+    const container = document.getElementById("orientadorasCardsContainer");
+    if (!container) return;
+
+    const orientadoras = sigeDB.getOrientadoras();
     const todosAgendamentos = sigeDB.getAgendamentosOP() || [];
+    
+    const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
+    const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
+
     if (!weekDays || weekDays.length < 5) return;
 
     const weekStart = weekDays[0].dateIso;
     const weekEnd = weekDays[4].dateIso;
     const currentMonthPrefix = new Date().toISOString().substring(0, 7);
-
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
 
     function calcMetrics(list) {
         const total = list.length;
@@ -1179,20 +1261,72 @@ function updateOrientadorasCounters(weekDays) {
         return { total, agendados, atendidos, ausentes, cancelados };
     }
 
-    // Clarinda
-    const clarSemList = todosAgendamentos.filter(a => isClarinda(a) && a.data >= weekStart && a.data <= weekEnd);
-    const clarMesList = todosAgendamentos.filter(a => isClarinda(a) && a.data && a.data.startsWith(currentMonthPrefix));
-    const clarSem = calcMetrics(clarSemList);
-    const clarMes = calcMetrics(clarMesList);
+    // Filtra orientadoras exibidas no resumo com base no filtro ativo
+    const orientadorasParaExibir = orientadoras.filter(o => {
+        if (filterOrientadora === "todas") return true;
+        return filterOrientadora.toLowerCase().includes(o.nome.toLowerCase()) || o.nome.toLowerCase().includes(filterOrientadora.toLowerCase());
+    });
 
-    // Daiane
-    const daiSemList = todosAgendamentos.filter(a => isDaiane(a) && a.data >= weekStart && a.data <= weekEnd);
-    const daiMesList = todosAgendamentos.filter(a => isDaiane(a) && a.data && a.data.startsWith(currentMonthPrefix));
-    const daiSem = calcMetrics(daiSemList);
-    const daiMes = calcMetrics(daiMesList);
+    const colors = [
+        { border: "#2563eb", bgIcon: "#eff6ff", textIcon: "#2563eb", title: "#1e3a8a" },
+        { border: "#d97706", bgIcon: "#fff7ed", textIcon: "#d97706", title: "#9a3412" },
+        { border: "#10b981", bgIcon: "#f0fdf4", textIcon: "#10b981", title: "#065f46" },
+        { border: "#7c3aed", bgIcon: "#f5f3ff", textIcon: "#7c3aed", title: "#5b21b6" }
+    ];
 
-    renderOrientadoraStatusPills("clarindaPillsContainer", clarSem, clarMes);
-    renderOrientadoraStatusPills("daianePillsContainer", daiSem, daiMes);
+    container.innerHTML = orientadorasParaExibir.map((o, idx) => {
+        const c = colors[idx % colors.length];
+        const isThisOri = (a) => a.orientadora && (
+            a.orientadora.toLowerCase().includes(o.nome.toLowerCase()) || 
+            (o.nome.toLowerCase().includes("clarinda") && (a.orientadora.includes("1") || a.orientadora.includes("Carmen"))) || 
+            (o.nome.toLowerCase().includes("daiane") && (a.orientadora.includes("2") || a.orientadora.includes("Luciana")))
+        );
+
+        const semList = todosAgendamentos.filter(a => isThisOri(a) && a.data >= weekStart && a.data <= weekEnd);
+        const mesList = todosAgendamentos.filter(a => isThisOri(a) && a.data && a.data.startsWith(currentMonthPrefix));
+
+        const sem = calcMetrics(semList);
+        const mes = calcMetrics(mesList);
+
+        const subInfo = o.turmasOuSalas || o.cargoFuncao || "Orientadora Educacional";
+
+        return `
+            <div class="turno-card" style="border-left: 4px solid ${c.border}; background:#ffffff; border-radius:12px; padding:0.6rem 1rem;">
+                <div class="turno-info">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:${c.bgIcon}; color:${c.textIcon}; display:flex; align-items:center; justify-content:center; font-size:0.9rem; border:1px solid #cbd5e1; flex-shrink:0;">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <h4 style="color:${c.title}; font-weight:800; font-size:0.95rem; margin:0; line-height:1.2;">${escapeHtml(o.nome)}</h4>
+                            <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:2px 0 0 0;">${escapeHtml(subInfo)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slots-pills">
+                    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                        <!-- Linha Semanal -->
+                        <div style="display:flex; align-items:center; gap:4px; background:#f8fafc; padding:3px 8px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.72rem; font-weight:700;">
+                            <span style="color:#1e3a8a; font-weight:800; padding-right:6px; border-right:1px solid #cbd5e1; white-space:nowrap;" title="Total Semanal">📅 Semanal: <strong>${sem.total}</strong></span>
+                            <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Agendados/Pendentes">🔵 ${sem.agendados}</span>
+                            <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Atendidos">🟢 ${sem.atendidos}</span>
+                            <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Ausentes / Não Veio">🔴 ${sem.ausentes}</span>
+                            <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Cancelados">⚪ ${sem.cancelados}</span>
+                        </div>
+
+                        <!-- Linha Mensal -->
+                        <div style="display:flex; align-items:center; gap:4px; background:#f8fafc; padding:3px 8px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.72rem; font-weight:700;">
+                            <span style="color:#15803d; font-weight:800; padding-right:6px; border-right:1px solid #cbd5e1; white-space:nowrap;" title="Total Acumulado no Mês">📊 Mês: <strong>${mes.total}</strong></span>
+                            <span style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Agendados/Pendentes">🔵 ${mes.agendados}</span>
+                            <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Atendidos">🟢 ${mes.atendidos}</span>
+                            <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Ausentes / Não Veio">🔴 ${mes.ausentes}</span>
+                            <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; white-space:nowrap;" title="Cancelados">⚪ ${mes.cancelados}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
 }
 
 function renderOrientadoraStatusPills(containerId, sem, mes) {

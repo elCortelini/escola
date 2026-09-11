@@ -186,40 +186,8 @@
             </div>
 
             <!-- Resumo de Atendimentos por Orientadora (Semanal & Acumulado do Mês) -->
-            <div class="turno-slots-container">
-                <div class="turno-card matutino" style="border-left: 4px solid #2563eb; background:#ffffff; border-radius:12px; padding:0.6rem 1rem;">
-                    <div class="turno-info">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="width:32px; height:32px; border-radius:50%; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:0.9rem; border:1px solid #bfdbfe; flex-shrink:0;">
-                                <i class="fa-solid fa-user-check"></i>
-                            </div>
-                            <div>
-                                <h4 style="color:#1e3a8a; font-weight:800; font-size:0.95rem; margin:0; line-height:1.2;">Clarinda Rosa Pereira</h4>
-                                <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:2px 0 0 0;">Séries Iniciais (Matutino / Vespertino)</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slots-pills" id="clarindaPillsContainer">
-                        <!-- Renderizado via JS com métricas por status (Semanal e Mês) -->
-                    </div>
-                </div>
-
-                <div class="turno-card vespertino" style="border-left: 4px solid #d97706; background:#ffffff; border-radius:12px; padding:0.6rem 1rem;">
-                    <div class="turno-info">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="width:32px; height:32px; border-radius:50%; background:#fff7ed; color:#d97706; display:flex; align-items:center; justify-content:center; font-size:0.9rem; border:1px solid #fed7aa; flex-shrink:0;">
-                                <i class="fa-solid fa-user-check"></i>
-                            </div>
-                            <div>
-                                <h4 style="color:#9a3412; font-weight:800; font-size:0.95rem; margin:0; line-height:1.2;">Daiane Caetano Costa de Aquino</h4>
-                                <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:2px 0 0 0;">Séries Finais (Matutino)</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slots-pills" id="daianePillsContainer">
-                        <!-- Renderizado via JS com métricas por status (Semanal e Mês) -->
-                    </div>
-                </div>
+            <div class="turno-slots-container" id="orientadorasCardsContainer">
+                <!-- Renderizado dinamicamente via JS com base nas orientadoras cadastradas -->
             </div>
 
             <!-- CONTAINER VISÃO 1: AGENDA SEMANAL (Inspirada no modelo) -->
