@@ -232,6 +232,9 @@
                             <button onclick="toggleAgendaLayoutMode()" id="btnToggleAgendaLayout" class="view-toggle-btn" style="background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; font-weight:800;" title="Alternar entre Linhas por Dia (Cronológico) e Grade de Vagas">
                                 <i class="fa-solid fa-list-check"></i> <span id="lblAgendaLayoutMode">Linhas por Dia (Novo)</span>
                             </button>
+                            <button onclick="dispararLembretesDoDiaAutomated()" class="view-toggle-btn" style="background:#dcfce7; color:#166534; border-color:#86efac; font-weight:800;" title="Gerar e registrar lembretes automáticos para os atendimentos de hoje">
+                                <i class="fa-solid fa-robot"></i> <span>Disparar Lembretes HOJE</span>
+                            </button>
                             <div class="week-pager-box">
                                 <button onclick="moveWeek(-7)" class="week-pager-btn" title="Semana Anterior"><i class="fa-solid fa-chevron-left"></i></button>
                                 <span id="opWeekRangeText">Semana</span>
@@ -1040,6 +1043,53 @@
 
 
     <!-- ========================================== -->
+    <!-- MODAL DE REAGENDAMENTO DE ATENDIMENTO OE -->
+    <!-- ========================================== -->
+    <div id="modalReagendarOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:500px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-calendar-days" style="color:#4f46e5;"></i> Reagendar Atendimento
+                </h3>
+                <button type="button" onclick="closeReagendarModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="background:#eff6ff; padding:12px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:14px;">
+                <div style="font-size:0.75rem; color:#1e40af; font-weight:800; text-transform:uppercase;">Aluno / Atendido:</div>
+                <div id="reagendarNomeAluno" style="font-size:1.05rem; font-weight:900; color:#0f172a; margin-top:2px;">-</div>
+                <div id="reagendarInfoOri" style="font-size:0.78rem; color:#475569; margin-top:2px;">-</div>
+            </div>
+
+            <form id="formReagendarOP" onsubmit="submitReagendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-weight:800; font-size:0.85rem; color:#0f172a;">Nova Data:</label>
+                    <input type="date" id="reagendarInputData" required class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:800; font-size:0.85rem; color:#0f172a;">Novo Horário:</label>
+                    <input type="time" id="reagendarInputHorario" onchange="autoSelectTurnoReagendamento()" oninput="autoSelectTurnoReagendamento()" required class="search-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="font-weight:800; font-size:0.85rem; color:#0f172a;">Turno (Automático por Horário):</label>
+                    <select id="reagendarInputTurno" class="search-input" style="width:100%;">
+                        <option value="matutino">☀️ Matutino (Manhã)</option>
+                        <option value="vespertino">⛅ Vespertino (Tarde)</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; border-top:1px solid #f1f5f9; padding-top:12px;">
+                    <button type="button" onclick="closeReagendarModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background:#4f46e5; border-color:#4f46e5; width:auto; cursor:pointer;">
+                        <i class="fa-solid fa-calendar-check"></i> Confirmar Reagendamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- MODAL DETALHES DO AGENDAMENTO OP -->
     <!-- ========================================== -->
     <div id="modalDetalhesOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
@@ -1080,48 +1130,55 @@
                 </div>
             </div>
 
-            <!-- Botão WhatsApp Direto -->
-            <div style="margin-bottom:1.2rem;">
-                <a id="detalhesWaBtn" href="#" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.92rem;">
-                    <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Enviar Mensagem (<span id="detalhesTelefoneText">-</span>)
-                </a>
-            </div>
-
             <!-- Motivo detalhado -->
             <div style="margin-bottom:1.2rem;">
-                <label style="font-weight:800; font-size:0.88rem; color:#0f172a;"><i class="fa-solid fa-align-left"></i> Motivo / Assunto a ser Tratado:</label>
+                <label style="font-weight:800; font-size:0.88rem; color:#0f172a;"><i class="fa-solid fa-align-left"></i> Motivo do Atendimento:</label>
                 <div id="detalhesMotivoText" style="background:#f1f5f9; padding:12px; border-radius:12px; font-size:0.88rem; color:#334155; margin-top:6px; line-height:1.5;">
                     -
                 </div>
             </div>
 
-            <!-- Registro do Relato da Conversa & Combinados -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <label style="font-size:0.88rem; font-weight:800; color:#1e293b;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato Completo da Conversa, Atendimento & Combinados:</label>
-                    <button onclick="salvarEncaminhamentoEDeliberacao()" class="btn btn-secondary" style="font-size:0.78rem; padding:5px 12px; background:#7c3aed; color:white; border:none; border-radius:8px;">
-                        <i class="fa-solid fa-floppy-disk"></i> Salvar Relato
+            <!-- Caixa de Envio de Mensagem WhatsApp Editável -->
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:1.1rem; border-radius:14px; margin-bottom:1.2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label style="font-weight:800; font-size:0.88rem; color:#166534;"><i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> Mensagem para Envio via WhatsApp:</label>
+                    <span style="font-size:0.75rem; color:#15803d; font-weight:700;">Mensagem Automática Editável</span>
+                </div>
+
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+                    <button type="button" onclick="aplicarTemplateMensagem('lembrete_dia')" class="btn-sec" style="font-size:0.73rem; padding:3px 8px; background:#dcfce7; color:#166534; border:1px solid #86efac; border-radius:6px; font-weight:700;">
+                        📅 Lembrete HOJE
+                    </button>
+                    <button type="button" onclick="aplicarTemplateMensagem('lembrete_24h')" class="btn-sec" style="font-size:0.73rem; padding:3px 8px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; border-radius:6px; font-weight:700;">
+                        📱 Lembrete 24h
+                    </button>
+                    <button type="button" onclick="aplicarTemplateMensagem('reagendado')" class="btn-sec" style="font-size:0.73rem; padding:3px 8px; background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; border-radius:6px; font-weight:700;">
+                        🔄 Reagendamento
+                    </button>
+                    <button type="button" onclick="aplicarTemplateMensagem('falta')" class="btn-sec" style="font-size:0.73rem; padding:3px 8px; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; border-radius:6px; font-weight:700;">
+                        ⚠️ Ausência / Falta
                     </button>
                 </div>
-                <textarea id="detalhesInputHistoricoTratado" rows="7" placeholder="Descreva aqui detalhadamente a conversa realizada com a família/professor, postura do atendido, combinados e deliberações..." class="search-input" style="width:100%; font-size:0.85rem; margin-top:4px; font-family:inherit; line-height:1.5;"></textarea>
+
+                <textarea id="detalhesMensagemEditavel" rows="3" class="search-input" style="width:100%; font-size:0.85rem; font-family:inherit; color:#0f172a; line-height:1.4; border-color:#86efac; background:white;" placeholder="Digite ou ajuste a mensagem que será enviada via WhatsApp..."></textarea>
+
+                <div style="margin-top:8px;">
+                    <a id="detalhesWaBtn" href="#" onclick="enviarMensagemPersonalizadaWhatsApp(event)" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.9rem; font-weight:800; text-decoration:none;">
+                        <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Enviar Mensagem via WhatsApp (<span id="detalhesTelefoneText">-</span>)
+                    </a>
+                </div>
             </div>
 
-            <!-- Ferramentas Rápidas (Lembretes, Declaração, Prontuário) -->
+            <!-- Ferramentas Rápidas (Declaração, Prontuário, Reagendar) -->
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.2rem;">
-                <button onclick="dispararLembrete24h()" class="btn-sec" style="background:#2563eb; color:white; font-size:0.78rem; padding:6px 12px;">
-                    <i class="fa-brands fa-whatsapp"></i> 📱 Lembrete 24h
+                <button onclick="reagendarAluno(currentDetailAppointmentId)" class="btn-sec" style="background:#4f46e5; color:white; font-size:0.8rem; padding:7px 14px; font-weight:800;">
+                    <i class="fa-solid fa-calendar-plus"></i> 📅 Reagendar
                 </button>
-                <button onclick="dispararLembreteHoje()" class="btn-sec" style="background:#059669; color:white; font-size:0.78rem; padding:6px 12px;">
-                    <i class="fa-brands fa-whatsapp"></i> 📱 Lembrete HOJE
-                </button>
-                <button onclick="gerarDeclaracaoComparecimento(currentDetailAppointmentId)" class="btn-sec" style="background:#0f172a; color:white; font-size:0.78rem; padding:6px 12px;">
+                <button onclick="gerarDeclaracaoComparecimento(currentDetailAppointmentId)" class="btn-sec" style="background:#0f172a; color:white; font-size:0.8rem; padding:7px 14px;">
                     <i class="fa-solid fa-file-contract"></i> 📄 Declaração de Comparecimento
                 </button>
-                <button onclick="abrirProntuarioDoAlunoAtual()" class="btn-sec" style="background:#7c3aed; color:white; font-size:0.78rem; padding:6px 12px;">
+                <button onclick="abrirProntuarioDoAlunoAtual()" class="btn-sec" style="background:#7c3aed; color:white; font-size:0.8rem; padding:7px 14px;">
                     <i class="fa-solid fa-folder-open"></i> 🗂️ Prontuário do Aluno
-                </button>
-                <button onclick="reagendarAluno(currentDetailAppointmentId)" class="btn-sec" style="background:#4f46e5; color:white; font-size:0.78rem; padding:6px 12px;">
-                    <i class="fa-solid fa-calendar-plus"></i> 📅 Reagendar
                 </button>
             </div>
 

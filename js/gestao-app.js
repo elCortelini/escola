@@ -1157,17 +1157,12 @@ function openDetalhesModal(id) {
     const waText = document.getElementById("detalhesTelefoneText");
     if (waBtn && waText) {
         waText.innerText = ag.telefone || "Sem telefone";
-        waBtn.href = getWhatsAppUrl(ag.telefone, ag.aluno, ag.responsavel, ag.data, ag.horario);
     }
 
     document.getElementById("detalhesMotivoText").innerText = ag.motivo;
     
-    if (document.getElementById("detalhesInputEncaminhamento")) {
-        document.getElementById("detalhesInputEncaminhamento").value = ag.encaminhamento || "Nenhum";
-    }
-    if (document.getElementById("detalhesInputHistoricoTratado")) {
-        document.getElementById("detalhesInputHistoricoTratado").value = ag.relatoConversa || ag.historicoTratado || "";
-    }
+    // Preenche a caixa de mensagem editável com o template padrão de lembrete
+    aplicarTemplateMensagem('lembrete_dia');
 
     const obsBox = document.getElementById("detalhesObsBox");
     const obsText = document.getElementById("detalhesObsText");
@@ -1403,22 +1398,205 @@ function closeProntuarioModal() {
     if (modal) modal.style.display = "none";
 }
 
+let currentReagendarId = null;
+
 function reagendarAluno(id) {
     const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
     if (!ag) return;
 
+    currentReagendarId = id;
+    
+    const isProf = ag.publico === "professor";
+    const elemAluno = document.getElementById("reagendarNomeAluno");
+    if (elemAluno) elemAluno.innerText = isProf ? `👨‍🏫 ${ag.aluno}` : `${ag.aluno} (${ag.turma || '-'})`;
+
+    const elemOri = document.getElementById("reagendarInfoOri");
+    if (elemOri) elemOri.innerText = `Orientadora: ${ag.orientadora || 'Orientação Educacional'}`;
+
+    const inpData = document.getElementById("reagendarInputData");
+    if (inpData) inpData.value = ag.data || new Date().toISOString().split("T")[0];
+
+    const inpHorario = document.getElementById("reagendarInputHorario");
+    if (inpHorario) inpHorario.value = ag.horario || "08:00";
+
+    const inpTurno = document.getElementById("reagendarInputTurno");
+    if (inpTurno) inpTurno.value = ag.turno || "matutino";
+
     closeDetalhesModal();
-    openAgendamentoModal("", ag.turno, ag.tipo);
 
-    document.getElementById("opInputAluno").value = ag.aluno;
-    document.getElementById("opInputTurma").value = ag.turma;
-    document.getElementById("opInputResponsavel").value = ag.responsavel;
-    document.getElementById("opInputTelefone").value = ag.telefone;
-    document.getElementById("opInputOrientadora").value = ag.orientadora || "Clarinda Rosa Pereira";
-    document.getElementById("opInputMotivo").value = `[REAGENDADO]: ${ag.motivo}`;
-
-    showToast(`📅 Formulário de reagendamento pré-preenchido para ${ag.aluno}! Escolha a nova data.`);
+    const modal = document.getElementById("modalReagendarOP");
+    if (modal) modal.style.display = "flex";
 }
+
+function closeReagendarModal() {
+    const modal = document.getElementById("modalReagendarOP");
+    if (modal) modal.style.display = "none";
+    currentReagendarId = null;
+}
+
+function autoSelectTurnoReagendamento() {
+    const horElem = document.getElementById("reagendarInputHorario");
+    const turElem = document.getElementById("reagendarInputTurno");
+    if (!horElem || !turElem) return;
+    const val = horElem.value;
+    if (!val) return;
+    const hour = parseInt(val.split(":")[0], 10);
+    if (!isNaN(hour)) {
+        turElem.value = hour < 12 ? "matutino" : "vespertino";
+    }
+}
+
+function submitReagendamentoOP(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!currentReagendarId) return;
+
+    const ags = sigeDB.getAgendamentosOP() || [];
+    const ag = ags.find(a => a.id === currentReagendarId);
+    if (!ag) return;
+
+    const novaData = document.getElementById("reagendarInputData").value;
+    const novoHorario = document.getElementById("reagendarInputHorario").value;
+    const novoTurno = document.getElementById("reagendarInputTurno").value;
+
+    if (!novaData || !novoHorario) {
+        showToast("Por favor, selecione a nova data e o novo horário.", "error");
+        return;
+    }
+
+    if (sigeDB.isDiaBloqueado(novaData)) {
+        const blockObj = sigeDB.getDiasBloqueados().find(b => b.data === novaData);
+        alert(`A data ${formatDateBR(novaData)} está BLOQUEADA (${blockObj ? blockObj.motivo : 'Recesso/Conselho'}). Escolha outra data.`);
+        return;
+    }
+
+    const dataAntiga = ag.data;
+    const horarioAntigo = ag.horario;
+
+    ag.data = novaData;
+    ag.horario = novoHorario;
+    ag.turno = novoTurno;
+    ag.statusSecretaria = "agendado";
+
+    // Registrar histórico do disparo de WhatsApp
+    if (!ag.historicoWhatsapp) ag.historicoWhatsapp = [];
+    const msgAuto = `📅 Reagendado de ${formatDateBR(dataAntiga)} (${horarioAntigo}) para ${formatDateBR(novaData)} às ${novoHorario}`;
+    ag.historicoWhatsapp.unshift({
+        id: "wlog-" + Date.now(),
+        tipo: "Reagendamento de Data/Horário",
+        mensagem: msgAuto,
+        enviadoEm: new Date().toISOString(),
+        modo: "automático",
+        status: "sucesso",
+        destinatario: ag.telefone || ""
+    });
+
+    sigeDB.saveAgendamentosOP(ags);
+
+    showToast(`📅 Agendamento de "${ag.aluno}" reagendado para ${formatDateBR(novaData)} às ${novoHorario}!`, "success");
+    closeReagendarModal();
+    renderModuleOrientacaoPedagogica();
+}
+
+function aplicarTemplateMensagem(tipo) {
+    if (!currentDetailAppointmentId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    if (!ag) return;
+
+    const textarea = document.getElementById("detalhesMensagemEditavel");
+    if (!textarea) return;
+
+    const dataFmt = formatDateBR(ag.data);
+    const alunoNome = ag.aluno;
+    const respNome = ag.responsavel || "Família";
+    const oriNome = ag.orientadora || "Orientação Educacional";
+    const hor = ag.horario || "";
+
+    let text = "";
+    if (tipo === "lembrete_dia") {
+        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} HOJE, às ${hor}. Aguardamos vocês no Centro Educacional Pedro Rizzi.`;
+    } else if (tipo === "lembrete_24h") {
+        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} amanhã, dia ${dataFmt} às ${hor}. Centro Educacional Pedro Rizzi.`;
+    } else if (tipo === "reagendado") {
+        text = `Olá ${respNome}! Confirmamos o REAGENDAMENTO do atendimento do estudante ${alunoNome} (${ag.turma}) para o dia ${dataFmt} às ${hor} com a Orientação Educacional do Centro Educacional Pedro Rizzi.`;
+    } else if (tipo === "falta") {
+        text = `Olá ${respNome}! Registramos a ausência no atendimento agendado do estudante ${alunoNome} (${ag.turma}) no dia ${dataFmt} às ${hor}. Por favor, entre em contato conosco para reagendarmos.`;
+    }
+
+    textarea.value = text;
+    showToast(`Mensagem carregada (${tipo.toUpperCase()}). Você pode editar antes de enviar!`);
+}
+
+function enviarMensagemPersonalizadaWhatsApp(e) {
+    if (!currentDetailAppointmentId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    if (!ag) return;
+
+    const textarea = document.getElementById("detalhesMensagemEditavel");
+    const customText = textarea ? textarea.value.trim() : "";
+    if (!customText) {
+        if (e && e.preventDefault) e.preventDefault();
+        alert("Por favor, digite ou selecione uma mensagem antes de enviar.");
+        return;
+    }
+
+    const cleanPhone = (ag.telefone || "").replace(/\D/g, "");
+    if (!cleanPhone) {
+        if (e && e.preventDefault) e.preventDefault();
+        alert("Telefone/WhatsApp de contato não cadastrado para este atendimento.");
+        return;
+    }
+
+    // Registra disparo no histórico auditável
+    sigeDB.logWhatsappDispatch(ag.id, {
+        tipo: "Mensagem WhatsApp (Personalizada)",
+        mensagem: customText,
+        modo: "manual",
+        status: "sucesso",
+        destinatario: cleanPhone
+    });
+
+    renderWhatsappDispatchHistory(ag);
+
+    const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(customText)}`;
+    window.open(waUrl, "_blank");
+}
+
+function dispararLembretesDoDiaAutomated() {
+    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
+    const hojeIso = new Date().toISOString().split("T")[0];
+    const atendimentosHoje = todosAtendimentos.filter(a => a.data === hojeIso && a.statusSecretaria !== "cancelado");
+
+    if (atendimentosHoje.length === 0) {
+        showToast("Nenhum agendamento cadastrado para hoje para disparar lembretes.", "info");
+        return;
+    }
+
+    let count = 0;
+    atendimentosHoje.forEach(ag => {
+        const dataFmt = formatDateBR(ag.data);
+        const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+        
+        sigeDB.logWhatsappDispatch(ag.id, {
+            tipo: "🤖 Lembrete Automático do Dia",
+            mensagem: textAuto,
+            modo: "automático",
+            status: "sucesso",
+            destinatario: ag.telefone || ""
+        });
+        count++;
+    });
+
+    showToast(`🤖 ${count} lembrete(s) automático(s) registrado(s) no histórico dos atendimentos de hoje!`, "success");
+    renderModuleOrientacaoPedagogica();
+}
+
+window.reagendarAluno = reagendarAluno;
+window.closeReagendarModal = closeReagendarModal;
+window.autoSelectTurnoReagendamento = autoSelectTurnoReagendamento;
+window.submitReagendamentoOP = submitReagendamentoOP;
+window.aplicarTemplateMensagem = aplicarTemplateMensagem;
+window.enviarMensagemPersonalizadaWhatsApp = enviarMensagemPersonalizadaWhatsApp;
+window.dispararLembretesDoDiaAutomated = dispararLembretesDoDiaAutomated;
 
 function togglePublicoAgendamentoOP() {
     const selectPub = document.getElementById("opInputPublico");
