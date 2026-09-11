@@ -22,6 +22,7 @@ function initApp() {
     setupRoleSelector();
     setupTabNavigation();
     setupNotificationBell();
+    updateAllDynamicSelects();
     renderAllModules();
     setupOpButtons();
 }
@@ -4447,7 +4448,131 @@ function renderEquipeEscolarTable(setorFiltro = "todos") {
     }).join('');
 }
 
+function updateAllDynamicSelects() {
+    const orientadoras = sigeDB.getOrientadoras();
+    
+    // Selects de Orientação Pedagógica
+    const selectOpFilter = document.getElementById("opFilterOrientadora");
+    const selectOpModal = document.getElementById("opInputOrientadora");
+    const selectOpEditModal = document.getElementById("editInputOrientadora");
+    const selectOpRelatorio = document.getElementById("relatorioFilterOrientadora");
+    const selectProjOpOri = document.getElementById("projOpInputOrientadora");
+
+    if (selectOpFilter) {
+        const curVal = selectOpFilter.value;
+        let html = `<option value="todas">👥 Todas as Orientadoras (Geral)</option>`;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
+        });
+        selectOpFilter.innerHTML = html;
+        if (curVal) selectOpFilter.value = curVal;
+    }
+
+    if (selectOpModal) {
+        const curVal = selectOpModal.value;
+        let html = ``;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
+        });
+        selectOpModal.innerHTML = html;
+        if (curVal && Array.from(selectOpModal.options).some(opt => opt.value === curVal)) {
+            selectOpModal.value = curVal;
+        }
+    }
+
+    if (selectOpEditModal) {
+        const curVal = selectOpEditModal.value;
+        let html = ``;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)}</option>`;
+        });
+        selectOpEditModal.innerHTML = html;
+        if (curVal && Array.from(selectOpEditModal.options).some(opt => opt.value === curVal)) {
+            selectOpEditModal.value = curVal;
+        }
+    }
+
+    if (selectOpRelatorio) {
+        const curVal = selectOpRelatorio.value;
+        let html = `<option value="todas">Todas as Orientadoras</option>`;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">${escapeHtml(o.nome)}</option>`;
+        });
+        selectOpRelatorio.innerHTML = html;
+        if (curVal) selectOpRelatorio.value = curVal;
+    }
+
+    if (selectProjOpOri) {
+        const curVal = selectProjOpOri.value;
+        let html = ``;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">${escapeHtml(o.nome)}</option>`;
+        });
+        selectProjOpOri.innerHTML = html;
+        if (curVal && Array.from(selectProjOpOri.options).some(opt => opt.value === curVal)) {
+            selectProjOpOri.value = curVal;
+        }
+    }
+
+    // Supervisoras Dropdowns
+    const supervisoras = sigeDB.getSupervisoras();
+    const selectSupFilter = document.getElementById("supFilterSupervisora");
+    const selectSupResp = document.getElementById("supInputResponsavel");
+    const selectProjLider = document.getElementById("projInputLider");
+
+    if (selectSupFilter) {
+        const curVal = selectSupFilter.value;
+        let html = `<option value="todas">📋 Toda a Equipe de Supervisão</option>`;
+        supervisoras.forEach(s => {
+            html += `<option value="${escapeHtml(s.nome)}">📋 ${escapeHtml(s.nome)}</option>`;
+        });
+        selectSupFilter.innerHTML = html;
+        if (curVal) selectSupFilter.value = curVal;
+    }
+
+    if (selectSupResp) {
+        const curVal = selectSupResp.value;
+        let html = ``;
+        supervisoras.forEach(s => {
+            html += `<option value="${escapeHtml(s.nome)}">📋 ${escapeHtml(s.nome)}</option>`;
+        });
+        selectSupResp.innerHTML = html;
+        if (curVal && Array.from(selectSupResp.options).some(opt => opt.value === curVal)) {
+            selectSupResp.value = curVal;
+        }
+    }
+
+    if (selectProjLider) {
+        const curVal = selectProjLider.value;
+        let html = ``;
+        supervisoras.forEach(s => {
+            html += `<option value="${escapeHtml(s.nome)}">📋 ${escapeHtml(s.nome)}</option>`;
+        });
+        selectProjLider.innerHTML = html;
+        if (curVal && Array.from(selectProjLider.options).some(opt => opt.value === curVal)) {
+            selectProjLider.value = curVal;
+        }
+    }
+
+    // Equipe Escolar (Comunicação WhatsApp)
+    const equipe = sigeDB.getEquipeEscolar();
+    const selectAviso = document.getElementById("avisoSelectDestinatario");
+    if (selectAviso) {
+        const curVal = selectAviso.value;
+        let html = `<option value="todos">📢 Toda a Equipe Escolar (${equipe.length} colaboradores)</option>`;
+        equipe.forEach(p => {
+            const setorLabel = p.setor ? p.setor.toUpperCase() : "DOCENTE";
+            html += `<option value="${p.id}">👤 ${escapeHtml(p.nome)} - [${setorLabel}] ${escapeHtml(p.cargoFuncao || p.disciplina || '')} (${escapeHtml(p.telefone || '')})</option>`;
+        });
+        selectAviso.innerHTML = html;
+        if (curVal && Array.from(selectAviso.options).some(opt => opt.value === curVal)) {
+            selectAviso.value = curVal;
+        }
+    }
+}
+
 function openCadastroProfissionalModal(id = null) {
+    if (id && typeof id !== "string") id = null;
     const modal = document.getElementById("modalCadastroProfissional");
     const title = document.getElementById("modalCadastroProfissionalTitulo");
     const inputId = document.getElementById("proInputId");
@@ -4462,7 +4587,7 @@ function openCadastroProfissionalModal(id = null) {
 
     if (!modal) return;
 
-    if (id) {
+    if (id && typeof id === "string") {
         const equipe = sigeDB.getEquipeEscolar();
         const prof = equipe.find(p => p.id === id);
         if (prof) {
@@ -4490,16 +4615,16 @@ function openCadastroProfissionalModal(id = null) {
         if (inputTurmas) inputTurmas.value = "";
     }
 
-    modal.style.display = "flex";
+    modal.style.setProperty("display", "flex", "important");
 }
 
 function closeCadastroProfissionalModal() {
     const modal = document.getElementById("modalCadastroProfissional");
-    if (modal) modal.style.display = "none";
+    if (modal) modal.style.setProperty("display", "none", "important");
 }
 
 function submitCadastroProfissional(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const id = document.getElementById("proInputId")?.value;
     const nome = document.getElementById("proInputNome")?.value.trim();
     const setor = document.getElementById("proInputSetor")?.value;
@@ -4510,9 +4635,9 @@ function submitCadastroProfissional(e) {
     const turnos = document.getElementById("proInputTurno")?.value;
     const turmasOuSalas = document.getElementById("proInputTurmas")?.value.trim();
 
-    if (!nome || !setor || !telefone) {
-        showToast("⚠️ Preencha Nome, Setor e WhatsApp do colaborador!");
-        return;
+    if (!nome || !setor) {
+        showToast("⚠️ Preencha pelo menos o Nome e Setor do colaborador!");
+        return false;
     }
 
     sigeDB.saveProfissional({
@@ -4521,15 +4646,17 @@ function submitCadastroProfissional(e) {
         setor,
         cargoFuncao,
         disciplina,
-        telefone,
-        email,
+        telefone: telefone || "",
+        email: email || "",
         turnos,
         turmasOuSalas
     });
 
     closeCadastroProfissionalModal();
-    renderModuleAdministracao();
+    updateAllDynamicSelects();
+    renderAllModules();
     showToast(id ? "✅ Cadastro de colaborador atualizado!" : "✅ Novo profissional registrado na equipe!");
+    return false;
 }
 
 function editarProfissional(id) {
@@ -4543,7 +4670,8 @@ function excluirProfissional(id) {
 
     if (confirm(`Tem certeza que deseja remover o cadastro de ${prof.nome} (${prof.cargoFuncao || prof.setor})?`)) {
         sigeDB.deleteProfissional(id);
-        renderModuleAdministracao();
+        updateAllDynamicSelects();
+        renderAllModules();
         showToast("🗑️ Colaborador removido com sucesso.");
     }
 }
@@ -4620,6 +4748,7 @@ function renderTurmasAdminTable() {
 }
 
 function openCadastroTurmaModal(id = null) {
+    if (id && typeof id !== "string") id = null;
     const modal = document.getElementById("modalCadastroTurma");
     const title = document.getElementById("modalCadastroTurmaTitulo");
     const inputId = document.getElementById("turmaInputId");
@@ -4633,7 +4762,7 @@ function openCadastroTurmaModal(id = null) {
 
     if (!modal) return;
 
-    if (id) {
+    if (id && typeof id === "string") {
         const turmas = sigeDB.getTurmasEscola();
         const turma = turmas.find(t => t.id === id);
         if (turma) {
@@ -4659,16 +4788,16 @@ function openCadastroTurmaModal(id = null) {
         if (inputReg) inputReg.value = "";
     }
 
-    modal.style.display = "flex";
+    modal.style.setProperty("display", "flex", "important");
 }
 
 function closeCadastroTurmaModal() {
     const modal = document.getElementById("modalCadastroTurma");
-    if (modal) modal.style.display = "none";
+    if (modal) modal.style.setProperty("display", "none", "important");
 }
 
 function submitCadastroTurma(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const id = document.getElementById("turmaInputId")?.value;
     const nome = document.getElementById("turmaInputNome")?.value.trim();
     const anoLetivo = document.getElementById("turmaInputAno")?.value.trim();
@@ -4678,25 +4807,44 @@ function submitCadastroTurma(e) {
     const capacidade = parseInt(document.getElementById("turmaInputCapacidade")?.value || "35", 10);
     const regente = document.getElementById("turmaInputRegente")?.value.trim();
 
-    if (!nome || !sala) {
-        showToast("⚠️ Preencha Nome da Turma e Sala Física!");
-        return;
+    if (!nome) {
+        showToast("⚠️ Preencha o Nome da Turma!");
+        return false;
     }
 
     sigeDB.saveTurma({
         id: id || null,
         nome,
-        anoLetivo,
+        anoLetivo: anoLetivo || "2026",
         turno,
         nivel,
-        sala,
+        sala: sala || "Sala Geral",
         capacidade,
-        regente
+        regente: regente || ""
     });
 
     closeCadastroTurmaModal();
-    renderModuleAdministracao();
+    updateAllDynamicSelects();
+    renderAllModules();
     showToast(id ? "✅ Dados da turma atualizados!" : "✅ Nova turma cadastrada com sucesso!");
+    return false;
+}
+
+function editarTurma(id) {
+    openCadastroTurmaModal(id);
+}
+
+function excluirTurma(id) {
+    const turmas = sigeDB.getTurmasEscola();
+    const turma = turmas.find(t => t.id === id);
+    if (!turma) return;
+
+    if (confirm(`Tem certeza que deseja excluir a turma ${turma.nome}?`)) {
+        sigeDB.deleteTurma(id);
+        updateAllDynamicSelects();
+        renderAllModules();
+        showToast("🗑️ Turma removida da estrutura escolar.");
+    }
 }
 
 function editarTurma(id) {

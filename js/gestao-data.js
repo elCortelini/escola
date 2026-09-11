@@ -940,8 +940,17 @@ class SigeDatabase {
     getOrientadoras() {
         if (!this.data.orientadoras || !Array.isArray(this.data.orientadoras)) {
             this.data.orientadoras = defaultSigeData.orientadoras || [];
-            this.saveData(this.data);
         }
+        const equipe = this.getEquipeEscolar();
+        const deEquipe = equipe.filter(p => p.setor === "orientacao");
+        deEquipe.forEach(p => {
+            const idx = this.data.orientadoras.findIndex(o => o.id === p.id || o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
+            if (idx >= 0) {
+                this.data.orientadoras[idx] = { ...this.data.orientadoras[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.orientadoras[idx].telefone, email: p.email || this.data.orientadoras[idx].email };
+            } else {
+                this.data.orientadoras.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "" });
+            }
+        });
         return this.data.orientadoras;
     }
 
@@ -951,6 +960,7 @@ class SigeDatabase {
         if (item) {
             if (telefone) item.telefone = telefone;
             if (email) item.email = email;
+            if (nome) item.nome = nome;
         } else {
             list.push({ id: id || ("orient-" + Date.now()), nome, telefone, email });
         }
@@ -960,16 +970,47 @@ class SigeDatabase {
     getSupervisoras() {
         if (!this.data.supervisoras || !Array.isArray(this.data.supervisoras)) {
             this.data.supervisoras = defaultSigeData.supervisoras || [];
-            this.saveData(this.data);
         }
+        const equipe = this.getEquipeEscolar();
+        const deEquipe = equipe.filter(p => p.setor === "supervisao");
+        deEquipe.forEach(p => {
+            const idx = this.data.supervisoras.findIndex(s => s.id === p.id || s.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
+            if (idx >= 0) {
+                this.data.supervisoras[idx] = { ...this.data.supervisoras[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.supervisoras[idx].telefone, email: p.email || this.data.supervisoras[idx].email };
+            } else {
+                this.data.supervisoras.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "" });
+            }
+        });
         return this.data.supervisoras;
+    }
+
+    saveSupervisora(id, nome, telefone, email) {
+        const list = this.getSupervisoras();
+        const item = list.find(s => s.id === id || s.nome === nome);
+        if (item) {
+            if (telefone) item.telefone = telefone;
+            if (email) item.email = email;
+            if (nome) item.nome = nome;
+        } else {
+            list.push({ id: id || ("sup-" + Date.now()), nome, telefone: telefone || "", email: email || "" });
+        }
+        this.saveData(this.data);
     }
 
     getProfessores() {
         if (!this.data.professores || !Array.isArray(this.data.professores)) {
             this.data.professores = defaultSigeData.professores || [];
-            this.saveData(this.data);
         }
+        const equipe = this.getEquipeEscolar();
+        const deEquipe = equipe.filter(p => p.setor === "docentes");
+        deEquipe.forEach(p => {
+            const idx = this.data.professores.findIndex(prof => prof.id === p.id || prof.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
+            if (idx >= 0) {
+                this.data.professores[idx] = { ...this.data.professores[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.professores[idx].telefone, email: p.email || this.data.professores[idx].email, disciplina: p.disciplina || this.data.professores[idx].disciplina };
+            } else {
+                this.data.professores.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "", disciplina: p.disciplina || "" });
+            }
+        });
         return this.data.professores;
     }
 
@@ -1020,6 +1061,10 @@ class SigeDatabase {
         
         if (profData.setor === "docentes") {
             this.saveProfessor(profData);
+        } else if (profData.setor === "orientacao") {
+            this.saveOrientadora(profData.id, profData.nome, profData.telefone, profData.email);
+        } else if (profData.setor === "supervisao") {
+            this.saveSupervisora(profData.id, profData.nome, profData.telefone, profData.email);
         }
 
         this.saveData(this.data);
