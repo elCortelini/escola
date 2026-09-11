@@ -16,15 +16,15 @@ const defaultSystems = [
         isLive: true
     },
     {
-        id: "secretaria",
-        title: "Secretaria Escolar",
-        iconClass: "fa-solid fa-id-card",
-        bgClass: "icon-emerald",
-        tag: "MATRÍCULAS & REGISTROS",
-        description: "Solicitações de transferência, atestados de frequência, histórico escolar e atendimentos do balcão.",
-        url: "sistema-gestao.html?aba=secretaria",
+        id: "desenvolvedor",
+        title: "Desenvolvedor do Sistema",
+        iconClass: "fa-solid fa-user-gear",
+        bgClass: "icon-purple",
+        tag: "CONTROLE TOTAL & GESTÃO DE ACESSOS",
+        description: "Painel exclusivo do desenvolvedor para cadastro de e-mails autorizados, controle de permissões (RBAC) e alternador de perfil de testes.",
+        url: "sistema-gestao.html?aba=op",
         status: "online",
-        badge: "MÓDULO ATIVO",
+        badge: "PAINEL DEV / ATIVO",
         isLive: true
     },
     {
