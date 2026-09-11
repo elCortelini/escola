@@ -430,36 +430,61 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
     const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
     const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
 
-    // 2 Linhas por vaga: Clarinda Rosa Pereira (Séries Iniciais) e Daiane Caetano Costa de Aquino (Séries Finais — Matutino)
+    // Estrutura de Vagas: Matutino (3+1 para Clarinda e 3+1 para Daiane) e Vespertino (3+1 apenas para Clarinda)
+    // Alternância de cores por vaga (1ª Vaga: branca, 2ª Vaga: cinza-azulado #f1f5f9, 3ª Vaga: branca, Emergencial: vermelho suave #fef2f2)
     const slotsConfig = [
-        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais" },
-        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais (Mat.)" },
+        { isHeader: true, header: "☀️ TURNO MATUTINO (MANHÃ)", turno: "matutino" },
         
-        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais" },
-        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais (Mat.)" },
+        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
+        { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
         
-        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais" },
-        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais (Mat.)" },
+        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#f1f5f9" },
+        { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#f1f5f9" },
         
-        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais" },
-        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais (Mat.)" }
+        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
+        { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
+        
+        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" },
+        { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#fef2f2" },
+
+        { isHeader: true, header: "⛅ TURNO VESPERTINO (TARDE)", turno: "vespertino" },
+
+        { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
+        { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#f1f5f9" },
+        { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
+        { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" }
     ];
 
-    let activeSlots = slotsConfig;
-    if (filterOrientadora !== "todas") {
+    let activeSlots = slotsConfig.filter(s => {
+        if (filterOrientadora === "todas") return true;
         if (filterOrientadora.includes("Clarinda")) {
-            activeSlots = slotsConfig.filter(s => s.orientadoraKey === "clarinda");
-        } else if (filterOrientadora.includes("Daiane")) {
-            activeSlots = slotsConfig.filter(s => s.orientadoraKey === "daiane");
+            return s.isHeader || s.orientadoraKey === "clarinda";
         }
-    }
+        if (filterOrientadora.includes("Daiane")) {
+            if (s.isHeader && s.turno === "vespertino") return false;
+            return s.isHeader || s.orientadoraKey === "daiane";
+        }
+        return true;
+    });
 
     let html = activeSlots.map(s => {
+        if (s.isHeader) {
+            return `
+                <tr>
+                    <td colspan="6" class="turno-section-header" style="background:#1e3a8a; color:white; font-weight:900; font-size:0.85rem; padding:8px 14px; text-transform:uppercase; letter-spacing:0.5px;">
+                        ${s.header}
+                    </td>
+                </tr>
+            `;
+        }
+
+        const rowBg = s.bgColor || "#ffffff";
+
         return `
-            <tr>
-                <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}">
-                    <span class="vaga-num">${s.label}</span>
-                    <span style="font-size:0.72rem; color:${s.orientadoraKey === 'clarinda' ? '#b45309' : '#0369a1'}; font-weight:800; display:block; margin-top:2px;">
+            <tr style="background-color: ${rowBg};">
+                <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}" style="background-color: ${rowBg}; padding:6px 6px; width:110px;">
+                    <span class="vaga-num" style="font-weight:800; font-size:0.78rem;">${s.label}</span>
+                    <span style="font-size:0.72rem; color:${s.orientadoraKey === 'clarinda' ? '#b45309' : '#0369a1'}; font-weight:800; display:block; margin-top:1px;">
                         <i class="fa-solid fa-user-gear"></i> ${s.orientadoraNome.split(" ")[0]}
                     </span>
                     <span style="font-size:0.65rem; color:#64748b; font-weight:700; display:block; white-space:nowrap;">
@@ -470,6 +495,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     const matcher = s.orientadoraKey === "clarinda" ? isClarinda : isDaiane;
                     const dateAppointments = todosAtendimentos.filter(a => 
                         a.data === d.dateIso && 
+                        a.turno === s.turno &&
                         a.tipo === s.tipo && 
                         a.statusSecretaria !== 'cancelado' &&
                         matcher(a)
@@ -481,7 +507,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                         const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                         const isProf = item.publico === "professor";
                         return `
-                            <td class="${d.isToday ? 'today-column-cell' : ''}">
+                            <td class="${d.isToday ? 'today-column-cell' : ''}" style="background-color: ${d.isToday ? '#fffbeb' : rowBg};">
                                 <div class="weekly-slot-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos">
                                     <div class="weekly-slot-header">
                                         <span class="weekly-student-name">${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}</span>
@@ -509,7 +535,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                         `;
                     } else {
                         return `
-                            <td class="${d.isToday ? 'today-column-cell' : ''}">
+                            <td class="${d.isToday ? 'today-column-cell' : ''}" style="background-color: ${d.isToday ? '#fffbeb' : rowBg};">
                                 <button onclick="openAgendamentoModal('${d.dateIso}', '${s.turno}', '${s.tipo}', '${s.orientadoraNome}')" class="weekly-slot-empty-btn" title="Adicionar Agendamento para ${s.orientadoraNome}">
                                     <i class="fa-solid fa-plus"></i>
                                 </button>

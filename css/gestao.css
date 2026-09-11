@@ -736,24 +736,23 @@
 .weekly-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 950px;
+    min-width: 1050px;
     table-layout: fixed;
 }
 
 .weekly-table th {
     background: #3b82f6;
     color: white;
-    padding: 14px 10px;
+    padding: 12px 8px;
     font-weight: 800;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     text-align: center;
     border-right: 1px solid rgba(255, 255, 255, 0.15);
-    width: 18%;
 }
 
 .weekly-table th.col-periodo {
     background: #1e3a8a;
-    width: 130px;
+    width: 110px;
 }
 
 .weekly-table th.col-today {
