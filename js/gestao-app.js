@@ -794,12 +794,26 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         </div>
                                     </div>
 
-                                    <div class="weekly-motive" title="${item.motivo}" style="margin-bottom:8px;">
+                                    <div class="weekly-motive" title="${item.motivo}" style="margin-bottom:6px;">
                                         "${item.motivo}"
+                                    </div>
+
+                                    <!-- AÇÃO RÁPIDA DA SECRETARIA: BOTÃO DIRETO NA TELA GERAL -->
+                                    <div style="margin-bottom:8px;" onclick="event.stopPropagation();">
+                                        ${item.statusSecretaria === 'aguardando' ? `
+                                            <div style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:800; display:flex; align-items:center; justify-content:space-between;">
+                                                <span><i class="fa-solid fa-bell" style="color:#d97706;"></i> ⏳ <strong>Esperando na Recepção</strong></span>
+                                                <button onclick="marcarAguardandoSecretaria('${item.id}')" style="background:#d97706; color:white; border:none; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800; cursor:pointer;" title="Notificar novamente">🔔 Reenviar</button>
+                                            </div>
+                                        ` : `
+                                            <button onclick="marcarAguardandoSecretaria('${item.id}')" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; font-size:0.78rem; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(245,158,11,0.35); display:flex; align-items:center; justify-content:center; gap:6px;" title="Clique aqui para registrar que a pessoa chegou e está aguardando na recepção">
+                                                <i class="fa-solid fa-bell" style="font-size:0.85rem;"></i> 🔔 Marcar: Chegou / Esperando
+                                            </button>
+                                        `}
                                     </div>
                                 </div>
 
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px; border-top:1px dashed #e2e8f0;">
                                     <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" title="Excluir Agendamento">
                                         <i class="fa-solid fa-trash-can"></i> Excluir
                                     </button>
@@ -965,15 +979,28 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         <div class="weekly-motive" title="${item.motivo}">
                                             "${item.motivo}"
                                         </div>
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                                             <span class="secretaria-status-badge status-${item.statusSecretaria}" style="font-size:0.68rem; padding:2px 5px;">
                                                 ${getSecretariaBadgeText(item.statusSecretaria)}
                                             </span>
                                             <span style="font-size:0.72rem; color:#64748b; font-weight:700;"><i class="fa-regular fa-clock"></i> ${item.horario}</span>
                                         </div>
 
+                                        <!-- AÇÃO RÁPIDA DA SECRETARIA NA GRADE -->
+                                        <div style="margin-top:4px;" onclick="event.stopPropagation();">
+                                            ${item.statusSecretaria === 'aguardando' ? `
+                                                <div style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-weight:900; font-size:0.68rem; padding:3px 5px; border-radius:6px; text-align:center;">
+                                                    <i class="fa-solid fa-bell"></i> ⏳ Esperando
+                                                </div>
+                                            ` : `
+                                                <button onclick="marcarAguardandoSecretaria('${item.id}')" style="background:#f59e0b; color:white; font-weight:900; font-size:0.7rem; padding:4px 6px; border-radius:6px; border:none; cursor:pointer; width:100%; text-align:center; box-shadow:0 2px 4px rgba(245,158,11,0.25);" title="Clique para registrar que a pessoa chegou">
+                                                    <i class="fa-solid fa-bell"></i> 🔔 Chegou / Esperando
+                                                </button>
+                                            `}
+                                        </div>
+
                                         <!-- Botão WhatsApp Direto no Card -->
-                                        <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
+                                        <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact" style="margin-top:4px;">
                                             <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                                         </a>
                                     </div>
@@ -1080,11 +1107,9 @@ function renderCardsView(todosAtendimentos) {
                     ` : ''}
 
                     <div class="secretaria-action-btns" style="flex-wrap:wrap; margin-top:8px;">
-                        ${isSecretaria ? `
-                            <button onclick="detalhesMudarStatus('aguardando', '${a.id}')" class="btn-sec" style="background:#f59e0b; color:white;">
-                                ⏳ Chegou / Aguardando
-                            </button>
-                        ` : ''}
+                        <button onclick="marcarAguardandoSecretaria('${a.id}')" class="btn-sec" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; width:100%; border:none; box-shadow:0 2px 4px rgba(245,158,11,0.3);">
+                            🔔 Marcar que Chegou / Está Esperando
+                        </button>
 
                         ${isOrientadora ? `
                             <button onclick="detalhesMudarStatus('realizado', '${a.id}')" class="btn-sec btn-sec-ok">
