@@ -1355,17 +1355,32 @@ function dispararLembreteHoje() {
     renderWhatsappDispatchHistory(ag);
 }
 
+function addOneHour(timeStr) {
+    if (!timeStr || !timeStr.includes(":")) return "09:00";
+    const parts = timeStr.split(":");
+    let h = parseInt(parts[0], 10);
+    let m = parts[1];
+    h = (h + 1) % 24;
+    const hStr = h < 10 ? `0${h}` : `${h}`;
+    return `${hStr}:${m}`;
+}
+
 function gerarDeclaracaoComparecimento(id) {
     const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
     if (!ag) return;
 
     const dataAtual = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
-    const horChegada = ag.chegadaEm ? ag.chegadaEm.split("T")[1]?.substring(0, 5) : ag.horario;
+    const horInicio = ag.horario || "08:00";
+    const horFim = addOneHour(horInicio);
+
+    const isClar = !ag.orientadora || ag.orientadora.includes("Clarinda") || ag.orientadora.includes("1") || ag.orientadora.includes("Carmen");
+    const orientadoraNome = isClar ? "Clarinda Rosa Pereira" : "Daiane Caetano Costa de Aquino";
+    const orientadoraCargo = isClar ? "Orientadora Educacional — Séries Iniciais" : "Orientadora Educacional — Séries Finais";
 
     const isProf = ag.publico === "professor";
     const corpoTexto = isProf ? 
-        `Declaramos para os devidos fins a quem interessar possa que o(a) docente/professor(a) <strong>${ag.aluno}</strong> (Disciplina/Turma: <strong>${ag.turma}</strong>) compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião, alinhamento pedagógico e atendimento com o setor de Orientação Educacional.` :
-        `Declaramos para os devidos fins a quem interessar possa que o(a) Sr(a). <strong>${ag.responsavel}</strong> compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião e atendimento da Orientação Educacional referente ao estudante <strong>${ag.aluno}</strong>, regularmente matriculado no <strong>${ag.turma}</strong>.`;
+        `Declaramos para os devidos fins a quem interessar possa que o(a) docente/professor(a) <strong>${ag.aluno}</strong> (Disciplina/Turma: <strong>${ag.turma}</strong>) compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horInicio}</strong> às <strong>${horFim}</strong>, para reunião, alinhamento pedagógico e atendimento com o setor de Orientação Educacional.` :
+        `Declaramos para os devidos fins a quem interessar possa que o(a) Sr(a). <strong>${ag.responsavel}</strong> compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horInicio}</strong> às <strong>${horFim}</strong>, para reunião e atendimento da Orientação Educacional referente ao estudante <strong>${ag.aluno}</strong>, regularmente matriculado no <strong>${ag.turma}</strong>.`;
 
     const certHtml = `
         <!DOCTYPE html>
@@ -1382,8 +1397,8 @@ function gerarDeclaracaoComparecimento(id) {
                 .header p { font-size: 13px; margin: 0; color: #333; }
                 .title { font-size: 20px; font-weight: bold; margin: 40px 0 30px 0; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-decoration: underline; }
                 .content { font-size: 16px; text-align: justify; text-indent: 40px; margin-bottom: 40px; line-height: 2; }
-                .footer-sign { margin-top: 80px; display: flex; justify-content: space-around; }
-                .sign-line { border-top: 1px solid #000; width: 260px; text-align: center; font-size: 14px; padding-top: 6px; }
+                .footer-sign { margin-top: 80px; display: flex; justify-content: center; }
+                .sign-line { border-top: 1px solid #000; width: 300px; text-align: center; font-size: 14px; padding-top: 6px; }
                 @media print { .no-print { display: none !important; } .cert-box { border: none; padding: 0; } }
             </style>
         </head>
@@ -1400,7 +1415,7 @@ function gerarDeclaracaoComparecimento(id) {
                         <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:65px; display:block; margin:0 auto 10px auto;">
                         <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
                         <p>SETOR DE ORIENTAÇÃO EDUCACIONAL (OE)</p>
-                        <p style="font-size:12px; margin-top:2px;">Rua Pedro Rangel, S/N - Itajaí / SC • Fone: (47) 3348-0000</p>
+                        <p style="font-size:12px; margin-top:2px;">Rua Agílio Cunha, 812 - Cidade Nova - Itajaí - SC • Fone: (47) 3508-0264</p>
                         <hr style="border: 0.5px solid #000; margin-top:15px;">
                     </div>
 
@@ -1418,12 +1433,8 @@ function gerarDeclaracaoComparecimento(id) {
 
                     <div class="footer-sign">
                         <div class="sign-line">
-                            <strong>Orientação Educacional (OE)</strong><br>
-                            ${ag.orientadora || 'C.E. Pedro Rizzi'}
-                        </div>
-                        <div class="sign-line">
-                            <strong>Direção Escolar</strong><br>
-                            Centro Educacional Pedro Rizzi
+                            <strong>${orientadoraNome}</strong><br>
+                            ${orientadoraCargo}
                         </div>
                     </div>
                 </div>
