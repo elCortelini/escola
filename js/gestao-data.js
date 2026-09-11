@@ -15,14 +15,14 @@ const defaultSigeData = {
             turma: "7º Ano A",
             responsavel: "Mariana Santos (Mãe)",
             telefone: "47998877665",
-            orientadora: "Orientadora 1 (Carmen)",
+            orientadora: "Clarinda Rosa Pereira",
             data: "2026-09-10",
             horario: "08:30",
             turno: "matutino", // matutino ou vespertino
             tipo: "agendado", // agendado ou emergencial
             motivo: "Acompanhamento de rendimento escolar em Matemática e assiduidade.",
             statusSecretaria: "realizado", // pendente, aguardando, realizado, ausente, cancelado
-            obsSecretaria: "Mãe compareceu pontualmente. Atendido pela orientadora Carmen.",
+            obsSecretaria: "Mãe compareceu pontualmente. Atendida por Clarinda Rosa Pereira.",
             registradoPor: "Secretaria",
             criadoEm: "2026-09-09T10:00:00"
         },
@@ -32,7 +32,7 @@ const defaultSigeData = {
             turma: "8º Ano B",
             responsavel: "Roberto Lima (Pai)",
             telefone: "47991234567",
-            orientadora: "Orientadora 2 (Luciana)",
+            orientadora: "Daiane Caetano Costa de Aquino",
             data: "2026-09-10",
             horario: "10:00",
             turno: "matutino",
@@ -358,15 +358,15 @@ const defaultSigeData = {
     orientadoras: [
         {
             id: "orient-1",
-            nome: "Orientadora 1 (Carmen)",
+            nome: "Clarinda Rosa Pereira",
             telefone: "47999112233",
-            email: "carmen.op@escola.gov.br"
+            email: "clarinda@escola.gov.br"
         },
         {
             id: "orient-2",
-            nome: "Orientadora 2 (Luciana)",
+            nome: "Daiane Caetano Costa de Aquino",
             telefone: "47999445566",
-            email: "luciana.op@escola.gov.br"
+            email: "daiane@escola.gov.br"
         }
     ],
 
@@ -491,23 +491,23 @@ const defaultSigeData = {
         },
         {
             id: "orient-1",
-            nome: "Carmen Lucia (Orientadora)",
+            nome: "Clarinda Rosa Pereira",
             setor: "orientacao",
-            cargoFuncao: "Orientadora Pedagógica - Matutino",
-            disciplina: "Orientação Pedagógica",
+            cargoFuncao: "Orientadora Educacional - Matutino",
+            disciplina: "Orientação Educacional (OE)",
             telefone: "47999112233",
-            email: "carmen.op@escola.gov.br",
+            email: "clarinda@escola.gov.br",
             turnos: "matutino",
             turmasOuSalas: "6º ao 9º Anos"
         },
         {
             id: "orient-2",
-            nome: "Luciana Santos (Orientadora)",
+            nome: "Daiane Caetano Costa de Aquino",
             setor: "orientacao",
-            cargoFuncao: "Orientadora Pedagógica - Vespertino",
-            disciplina: "Orientação Pedagógica",
+            cargoFuncao: "Orientadora Educacional - Vespertino",
+            disciplina: "Orientação Educacional (OE)",
             telefone: "47999445566",
-            email: "luciana.op@escola.gov.br",
+            email: "daiane@escola.gov.br",
             turnos: "vespertino",
             turmasOuSalas: "1º ao 5º Anos"
         },

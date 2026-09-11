@@ -164,8 +164,8 @@
                     <!-- Seletor da Orientadora (Consolidada vs Individual) -->
                     <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd;">
                         <option value="todas">🌐 Visão Consolidada (Orientação Educacional)</option>
-                        <option value="Orientador Educacional 1 (Carmen)">💛 Orientador Educacional 1 (Carmen)</option>
-                        <option value="Orientador Educacional 2 (Luciana)">💛 Orientador Educacional 2 (Luciana)</option>
+                        <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Matutino)</option>
+                        <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Vespertino)</option>
                     </select>
 
                     <!-- Alternador de Visão Semanal / Cards (Projetos OE em Standby) -->
@@ -195,27 +195,27 @@
                 </div>
             </div>
 
-            <!-- Resumo de Vagas por Turno -->
+            <!-- Resumo de Atendimentos por Orientadora (Semanal & Acumulado do Mês) -->
             <div class="turno-slots-container">
-                <div class="turno-card matutino">
+                <div class="turno-card matutino" style="border-left: 4px solid #2563eb;">
                     <div class="turno-info">
-                        <h4><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Turno Matutino</h4>
-                        <p>Limite estrito de atendimento diário</p>
+                        <h4 style="color:#1e3a8a; font-weight:800; font-size:1.05rem;"><i class="fa-solid fa-user-check" style="color:#2563eb;"></i> Clarinda Rosa Pereira</h4>
+                        <p style="font-size:0.78rem; color:#64748b;">Orientadora Educacional (Matutino)</p>
                     </div>
-                    <div class="slots-pills">
-                        <span class="slot-pill agendado" id="countMatutinoAgendado">0 / 3 Ocupados</span>
-                        <span class="slot-pill emergencial" id="countMatutinoEmergencial">0 / 1 Ocupado</span>
+                    <div class="slots-pills" style="display:flex; gap:8px;">
+                        <span class="slot-pill agendado" id="countClarindaSemanal" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:700;">📅 Semanal: 0</span>
+                        <span class="slot-pill agendado" id="countClarindaMensal" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:700;">📊 Mês: 0</span>
                     </div>
                 </div>
 
-                <div class="turno-card vespertino">
+                <div class="turno-card vespertino" style="border-left: 4px solid #d97706;">
                     <div class="turno-info">
-                        <h4><i class="fa-solid fa-cloud-sun" style="color:#d97706;"></i> Turno Vespertino</h4>
-                        <p>Limite estrito de atendimento diário</p>
+                        <h4 style="color:#9a3412; font-weight:800; font-size:1.05rem;"><i class="fa-solid fa-user-check" style="color:#d97706;"></i> Daiane Caetano Costa de Aquino</h4>
+                        <p style="font-size:0.78rem; color:#64748b;">Orientadora Educacional (Vespertino)</p>
                     </div>
-                    <div class="slots-pills">
-                        <span class="slot-pill agendado" id="countVespertinoAgendado">0 / 3 Ocupados</span>
-                        <span class="slot-pill emergencial" id="countVespertinoEmergencial">0 / 1 Ocupado</span>
+                    <div class="slots-pills" style="display:flex; gap:8px;">
+                        <span class="slot-pill agendado" id="countDaianeSemanal" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-weight:700;">📅 Semanal: 0</span>
+                        <span class="slot-pill agendado" id="countDaianeMensal" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:700;">📊 Mês: 0</span>
                     </div>
                 </div>
             </div>
@@ -1000,9 +1000,9 @@
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Responsável:</label>
-                    <select id="opInputOrientadora" class="search-input" style="width:100%;">
-                        <option value="Orientador Educacional 1 (Carmen)">💛 Orientador Educacional 1 (Carmen)</option>
-                        <option value="Orientador Educacional 2 (Luciana)">💛 Orientador Educacional 2 (Luciana)</option>
+                    <select id="opInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
+                        <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Matutino)</option>
+                        <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Vespertino)</option>
                     </select>
                 </div>
 
@@ -1081,36 +1081,15 @@
                 </div>
             </div>
 
-            <!-- Registro de Escuta & Encaminhamento Externo -->
+            <!-- Registro do Relato da Conversa & Combinados -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:1rem; border-radius:14px; margin-bottom:1.2rem;">
-                <h4 style="font-size:0.88rem; font-weight:800; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-user-doctor" style="color:#7c3aed;"></i> Encaminhamento Externo & Deliberação da Escuta
-                </h4>
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569;">Encaminhado Para:</label>
-                        <select id="detalhesInputEncaminhamento" class="search-input" style="width:100%; margin-top:3px; font-size:0.82rem;">
-                            <option value="Nenhum">Nenhum Encaminhamento Externo</option>
-                            <option value="Psicologia">Psicologia</option>
-                            <option value="Neuropediatria / Pediatria">Neuropediatria / Pediatria</option>
-                            <option value="Conselho Tutelar">Conselho Tutelar</option>
-                            <option value="CRAS / CREAS">CRAS / CREAS</option>
-                            <option value="Fonoaudiologia">Fonoaudiologia</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569;">Salvar Alteração:</label>
-                        <button onclick="salvarEncaminhamentoEDeliberacao()" class="btn btn-secondary" style="width:100%; margin-top:3px; padding:6px; font-size:0.8rem; background:#7c3aed; color:white; border:none;">
-                            <i class="fa-solid fa-floppy-disk"></i> Salvar Registro
-                        </button>
-                    </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-size:0.88rem; font-weight:800; color:#1e293b;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato Completo da Conversa, Atendimento & Combinados:</label>
+                    <button onclick="salvarEncaminhamentoEDeliberacao()" class="btn btn-secondary" style="font-size:0.78rem; padding:5px 12px; background:#7c3aed; color:white; border:none; border-radius:8px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Relato
+                    </button>
                 </div>
-
-                <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#1e293b;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato Completo da Conversa, Atendimento & Combinados:</label>
-                    <textarea id="detalhesInputHistoricoTratado" rows="7" placeholder="Descreva aqui detalhadamente a conversa realizada com a família/professor, posture do atendido, combinados e encaminhamentos..." class="search-input" style="width:100%; font-size:0.85rem; margin-top:4px; font-family:inherit; line-height:1.5;"></textarea>
-                </div>
+                <textarea id="detalhesInputHistoricoTratado" rows="7" placeholder="Descreva aqui detalhadamente a conversa realizada com a família/professor, postura do atendido, combinados e deliberações..." class="search-input" style="width:100%; font-size:0.85rem; margin-top:4px; font-family:inherit; line-height:1.5;"></textarea>
             </div>
 
             <!-- Ferramentas Rápidas (Lembretes, Declaração, Prontuário) -->
@@ -1227,7 +1206,7 @@
                 <div style="display:flex; flex-direction:column; gap:1.2rem; margin-bottom:1.5rem;">
                     <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0;">
                         <label style="font-weight:800; font-size:0.88rem; color:#1e3a8a; display:block; margin-bottom:6px;">
-                            💛 Orientadora 1: Carmen
+                            💛 Clarinda Rosa Pereira (Matutino)
                         </label>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                             <div>
@@ -1236,14 +1215,14 @@
                             </div>
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
-                                <input type="email" id="orientadora1Email" placeholder="carmen@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
+                                <input type="email" id="orientadora1Email" placeholder="clarinda@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
                             </div>
                         </div>
                     </div>
 
                     <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0;">
                         <label style="font-weight:800; font-size:0.88rem; color:#1e3a8a; display:block; margin-bottom:6px;">
-                            💛 Orientadora 2: Luciana
+                            💛 Daiane Caetano Costa de Aquino (Vespertino)
                         </label>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                             <div>
@@ -1252,7 +1231,7 @@
                             </div>
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
-                                <input type="email" id="orientadora2Email" placeholder="luciana@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
+                                <input type="email" id="orientadora2Email" placeholder="daiane@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
                             </div>
                         </div>
                     </div>

@@ -370,10 +370,8 @@ function renderModuleOrientacaoPedagogica() {
 
     const weekDays = getWeekDays(currentWeekRefDate);
 
-    // Atualiza contadores para o dia de hoje
-    const hojeStr = new Date().toISOString().split("T")[0];
-    const atendimentosHoje = todosAtendimentos.filter(a => a.data === hojeStr);
-    updateTurnoCounters(atendimentosHoje);
+    // Atualiza contadores de atendimento por orientadora (Semanal & Mês)
+    updateOrientadorasCounters(weekDays);
 
     // 1. Renderiza Visão Semanal (Inspirada no modelo)
     renderWeeklyAgenda(weekDays, todosAtendimentos);
@@ -595,22 +593,33 @@ function renderCardsView(todosAtendimentos) {
     }).join("");
 }
 
-function updateTurnoCounters(atendimentosDia) {
-    const matutinoAg = atendimentosDia.filter(a => a.turno === 'matutino' && a.tipo === 'agendado' && a.statusSecretaria !== 'cancelado').length;
-    const matutinoEm = atendimentosDia.filter(a => a.turno === 'matutino' && a.tipo === 'emergencial' && a.statusSecretaria !== 'cancelado').length;
+function updateOrientadorasCounters(weekDays) {
+    const todos = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria !== 'cancelado');
+    if (!weekDays || weekDays.length < 5) return;
 
-    const vespertinoAg = atendimentosDia.filter(a => a.turno === 'vespertino' && a.tipo === 'agendado' && a.statusSecretaria !== 'cancelado').length;
-    const vespertinoEm = atendimentosDia.filter(a => a.turno === 'vespertino' && a.tipo === 'emergencial' && a.statusSecretaria !== 'cancelado').length;
+    const weekStart = weekDays[0].dateIso;
+    const weekEnd = weekDays[4].dateIso;
+    const currentMonthPrefix = new Date().toISOString().substring(0, 7);
 
-    const elMatAg = document.getElementById("countMatutinoAgendado");
-    const elMatEm = document.getElementById("countMatutinoEmergencial");
-    const elVespAg = document.getElementById("countVespertinoAgendado");
-    const elVespEm = document.getElementById("countVespertinoEmergencial");
+    // Clarinda Rosa Pereira (Orientadora 1)
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const clarindaSemanal = todos.filter(a => isClarinda(a) && a.data >= weekStart && a.data <= weekEnd).length;
+    const clarindaMensal = todos.filter(a => isClarinda(a) && a.data && a.data.startsWith(currentMonthPrefix)).length;
 
-    if (elMatAg) elMatAg.innerText = `${matutinoAg} / 3 Ocupados`;
-    if (elMatEm) elMatEm.innerText = `${matutinoEm} / 1 Ocupado`;
-    if (elVespAg) elVespAg.innerText = `${vespertinoAg} / 3 Ocupados`;
-    if (elVespEm) elVespEm.innerText = `${vespertinoEm} / 1 Ocupado`;
+    // Daiane Caetano Costa de Aquino (Orientadora 2)
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+    const daianeSemanal = todos.filter(a => isDaiane(a) && a.data >= weekStart && a.data <= weekEnd).length;
+    const daianeMensal = todos.filter(a => isDaiane(a) && a.data && a.data.startsWith(currentMonthPrefix)).length;
+
+    const elClarSem = document.getElementById("countClarindaSemanal");
+    const elClarMen = document.getElementById("countClarindaMensal");
+    const elDaiSem = document.getElementById("countDaianeSemanal");
+    const elDaiMen = document.getElementById("countDaianeMensal");
+
+    if (elClarSem) elClarSem.innerText = `📅 Semanal: ${clarindaSemanal}`;
+    if (elClarMen) elClarMen.innerText = `📊 Mês: ${clarindaMensal}`;
+    if (elDaiSem) elDaiSem.innerText = `📅 Semanal: ${daianeSemanal}`;
+    if (elDaiMen) elDaiMen.innerText = `📊 Mês: ${daianeMensal}`;
 }
 
 function getSecretariaBadgeText(status) {
@@ -989,25 +998,23 @@ function detalhesMudarStatus(newStatus, customId = null) {
 
     if (newStatus === "aguardando") {
         chegadaEm = new Date().toISOString();
-        obsPrompt = prompt("Anotação opcional da Secretaria (ex: Mãe aguarda no hall):", "Chegou na recepção.");
+        obsPrompt = "Chegou na recepção.";
         playArrivalChime(); // Bipe sonoro
         
         const agObj = sigeDB.getAgendamentosOP().find(a => a.id === id);
         if (agObj) sendAutomaticWhatsapp(agObj, "aluno_chegou");
-    } else {
-        obsPrompt = prompt("Anotação opcional sobre o atendimento:", "");
     }
 
-    sigeDB.updateSecretariaStatusOP(id, newStatus, obsPrompt || "", chegadaEm);
+    sigeDB.updateSecretariaStatusOP(id, newStatus, obsPrompt, chegadaEm);
 
     renderModuleOrientacaoPedagogica();
     updateBadgesCounts();
     renderNotifications();
 
     if (newStatus === "aguardando") {
-        showToast("🔔 Aluno marcado como AGUARDANDO. Orientadora notificada com bipe!");
+        showToast("🔔 Marcado como AGUARDANDO na recepção.");
     } else if (newStatus === "realizado") {
-        showToast("✅ Atendimento concluído pela Orientadora!");
+        showToast("✅ Atendimento marcado como CONCLUÍDO!");
     } else if (newStatus === "ausente") {
         showToast("❌ Marcado como NÃO VEIO / Ausente.");
     }
@@ -1019,11 +1026,13 @@ function detalhesMudarStatus(newStatus, customId = null) {
 
 function salvarEncaminhamentoEDeliberacao() {
     if (!currentDetailAppointmentId) return;
-    const enc = document.getElementById("detalhesInputEncaminhamento").value;
-    const hist = document.getElementById("detalhesInputHistoricoTratado").value;
+    const encElem = document.getElementById("detalhesInputEncaminhamento");
+    const enc = encElem ? encElem.value : "Nenhum";
+    const histElem = document.getElementById("detalhesInputHistoricoTratado");
+    const hist = histElem ? histElem.value : "";
 
     sigeDB.updateEncaminhamentoOP(currentDetailAppointmentId, enc, hist);
-    showToast("💾 Encaminhamento e histórico tratados salvos com sucesso!");
+    showToast("💾 Relato da conversa e combinados salvos com sucesso!");
     renderModuleOrientacaoPedagogica();
 }
 
@@ -1187,7 +1196,7 @@ function reagendarAluno(id) {
     document.getElementById("opInputTurma").value = ag.turma;
     document.getElementById("opInputResponsavel").value = ag.responsavel;
     document.getElementById("opInputTelefone").value = ag.telefone;
-    document.getElementById("opInputOrientadora").value = ag.orientadora || "Orientadora 1 (Carmen)";
+    document.getElementById("opInputOrientadora").value = ag.orientadora || "Clarinda Rosa Pereira";
     document.getElementById("opInputMotivo").value = `[REAGENDADO]: ${ag.motivo}`;
 
     showToast(`📅 Formulário de reagendamento pré-preenchido para ${ag.aluno}! Escolha a nova data.`);
@@ -2280,8 +2289,8 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 
 function openModalOrientadoras() {
     const list = sigeDB.getOrientadoras();
-    const o1 = list.find(o => o.nome.includes("Carmen")) || list[0];
-    const o2 = list.find(o => o.nome.includes("Luciana")) || list[1];
+    const o1 = list.find(o => o.nome.includes("Clarinda") || o.nome.includes("1")) || list[0];
+    const o2 = list.find(o => o.nome.includes("Daiane") || o.nome.includes("2")) || list[1];
 
     if (o1 && document.getElementById("orientadora1Phone")) document.getElementById("orientadora1Phone").value = o1.telefone || "";
     if (o1 && document.getElementById("orientadora1Email")) document.getElementById("orientadora1Email").value = o1.email || "";
@@ -2305,8 +2314,8 @@ function salvarTelefonesOrientadoras(e) {
     const p2 = document.getElementById("orientadora2Phone").value;
     const e2 = document.getElementById("orientadora2Email").value;
 
-    sigeDB.saveOrientadora("orient-1", "Orientadora 1 (Carmen)", p1, e1);
-    sigeDB.saveOrientadora("orient-2", "Orientadora 2 (Luciana)", p2, e2);
+    sigeDB.saveOrientadora("orient-1", "Clarinda Rosa Pereira", p1, e1);
+    sigeDB.saveOrientadora("orient-2", "Daiane Caetano Costa de Aquino", p2, e2);
 
     closeModalOrientadoras();
     showToast("💾 Telefones de WhatsApp das Orientadoras salvos com sucesso!");
