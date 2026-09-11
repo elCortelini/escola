@@ -1363,7 +1363,7 @@ function openNovoProjetoOPModal() {
 
             if (elTit) elTit.value = "";
             if (elCat) elCat.value = "Mediação de Conflitos";
-            if (elOri) elOri.value = "Orientadora 1 (Carmen)";
+            if (elOri && elOri.options.length > 0) elOri.value = elOri.options[0].value;
             if (elIni) elIni.value = hojeIso;
             if (elFim) elFim.value = futuroIso;
             if (elSts) elSts.value = "em_dia";
@@ -1410,7 +1410,7 @@ function submitNovoProjetoOP(e) {
         }
 
         const categoria = elCat ? elCat.value : "Mediação de Conflitos";
-        const orientadoraLider = elOri ? elOri.value : "Orientadora 1 (Carmen)";
+        const orientadoraLider = elOri ? elOri.value : "Clarinda Rosa Pereira";
         const hojeIso = new Date().toISOString().split("T")[0];
         const dataInicio = elIni && elIni.value ? elIni.value : hojeIso;
         const dataFim = elFim && elFim.value ? elFim.value : hojeIso;
@@ -4006,7 +4006,7 @@ function testarConexaoWhatsapp() {
         turma: "7º Ano A",
         responsavel: "Direção Escolar",
         telefone: "47999887766",
-        orientadora: "Carmen",
+        orientadora: "Clarinda Rosa Pereira",
         data: new Date().toISOString().split("T")[0],
         horario: "10:00"
     };

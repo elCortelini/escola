@@ -294,13 +294,13 @@ const defaultSigeData = {
             descricao: "Oficinas de inteligência emocional, escuta ativa e resolução pacífica de atritos interpessoais entre turmas do 6º ao 9º ano.",
             dataInicio: "2026-09-01",
             dataFim: "2026-11-30",
-            orientadoraLider: "Orientadora 1 (Carmen)",
+            orientadoraLider: "Clarinda Rosa Pereira",
             envolvidos: "Professores de Educação Física, Psicopedagoga, Direção Escolar",
             status: "em_dia",
             etapas: [
-                { id: "e-op-1", titulo: "Rodas de conversa sobre convivência nas turmas do 7º ano", dataLimite: "2026-09-18", responsavel: "Orientadora Carmen", concluido: true },
-                { id: "e-op-2", titulo: "Mapeamento de alunos líderes mediadores de cada turma", dataLimite: "2026-09-28", responsavel: "Orientadora Luciana", concluido: false },
-                { id: "e-op-3", titulo: "Oficina prática com os pais sobre escuta não-violenta em casa", dataLimite: "2026-10-20", responsavel: "Orientadora Carmen", concluido: false }
+                { id: "e-op-1", titulo: "Rodas de conversa sobre convivência nas turmas do 7º ano", dataLimite: "2026-09-18", responsavel: "Orientadora Clarinda", concluido: true },
+                { id: "e-op-2", titulo: "Mapeamento de alunos líderes mediadores de cada turma", dataLimite: "2026-09-28", responsavel: "Orientadora Daiane", concluido: false },
+                { id: "e-op-3", titulo: "Oficina prática com os pais sobre escuta não-violenta em casa", dataLimite: "2026-10-20", responsavel: "Orientadora Clarinda", concluido: false }
             ],
             checklistAcompanhamento: [
                 { item: "Termos de compromisso de convivência assinados nas turmas", concluido: true },
@@ -315,13 +315,13 @@ const defaultSigeData = {
             descricao: "Acompanhamento intensivo de alunos com infrequência escolar superior a 15%, contato com famílias e rede de proteção.",
             dataInicio: "2026-09-05",
             dataFim: "2026-10-25",
-            orientadoraLider: "Orientadora 2 (Luciana)",
+            orientadoraLider: "Daiane Caetano Costa de Aquino",
             envolvidos: "Secretaria Escolar, Conselho Tutelar, Regentes de Turma",
             status: "atencao",
             etapas: [
-                { id: "e-op-21", titulo: "Levantamento das listas de faltas quinzenais com a Secretaria", dataLimite: "2026-09-12", responsavel: "Secretaria / Luciana", concluido: true },
-                { id: "e-op-22", titulo: "Convocação individual dos pais de 12 alunos com frequência crítica", dataLimite: "2026-09-20", responsavel: "Orientadora Luciana", concluido: false },
-                { id: "e-op-23", titulo: "Notificação oficial enviada à Rede de Proteção / Conselho", dataLimite: "2026-10-05", responsavel: "Orientadora Luciana", concluido: false }
+                { id: "e-op-21", titulo: "Levantamento das listas de faltas quinzenais com a Secretaria", dataLimite: "2026-09-12", responsavel: "Secretaria / Daiane", concluido: true },
+                { id: "e-op-22", titulo: "Convocação individual dos pais de 12 alunos com frequência crítica", dataLimite: "2026-09-20", responsavel: "Orientadora Daiane", concluido: false },
+                { id: "e-op-23", titulo: "Notificação oficial enviada à Rede de Proteção / Conselho", dataLimite: "2026-10-05", responsavel: "Orientadora Daiane", concluido: false }
             ],
             checklistAcompanhamento: [
                 { item: "Fichas FICAI preenchidas para casos acima de 25%", concluido: false },
@@ -938,20 +938,30 @@ class SigeDatabase {
     }
 
     getOrientadoras() {
-        if (!this.data.orientadoras || !Array.isArray(this.data.orientadoras)) {
-            this.data.orientadoras = defaultSigeData.orientadoras || [];
-        }
         const equipe = this.getEquipeEscolar();
         const deEquipe = equipe.filter(p => p.setor === "orientacao");
-        deEquipe.forEach(p => {
-            const idx = this.data.orientadoras.findIndex(o => o.id === p.id || o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
-            if (idx >= 0) {
-                this.data.orientadoras[idx] = { ...this.data.orientadoras[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.orientadoras[idx].telefone, email: p.email || this.data.orientadoras[idx].email };
-            } else {
-                this.data.orientadoras.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "" });
-            }
+        
+        // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar
+        const orientadorasValidas = deEquipe.map(p => {
+            const existente = (this.data.orientadoras || []).find(o => 
+                o.id === p.id || 
+                o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim() ||
+                (p.nome.toLowerCase().includes("clarinda") && (o.id === "orient-1" || (o.nome && (o.nome.includes("Carmen") || o.nome.includes("1"))))) ||
+                (p.nome.toLowerCase().includes("daiane") && (o.id === "orient-2" || (o.nome && (o.nome.includes("Luciana") || o.nome.includes("2")))))
+            );
+            return {
+                id: p.id,
+                nome: p.nome,
+                telefone: p.telefone || (existente ? existente.telefone : ""),
+                email: p.email || (existente ? existente.email : "")
+            };
         });
-        return this.data.orientadoras;
+
+        if (orientadorasValidas.length > 0) {
+            this.data.orientadoras = orientadorasValidas;
+            this.saveData(this.data);
+        }
+        return this.data.orientadoras || [];
     }
 
     saveOrientadora(id, nome, telefone, email) {
