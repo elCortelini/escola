@@ -168,7 +168,7 @@
                         <option value="Orientador Educacional 2 (Luciana)">💛 Orientador Educacional 2 (Luciana)</option>
                     </select>
 
-                    <!-- Alternador de Visão Semanal / Cards / Projetos OE -->
+                    <!-- Alternador de Visão Semanal / Cards (Projetos OE em Standby) -->
                     <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
                         <button onclick="setOpViewMode('semanal')" class="view-toggle-btn op-toggle-btn active" data-mode="semanal">
                             <i class="fa-solid fa-calendar-week"></i> Semanal
@@ -176,7 +176,7 @@
                         <button onclick="setOpViewMode('cards')" class="view-toggle-btn op-toggle-btn" data-mode="cards">
                             <i class="fa-solid fa-list-ul"></i> Lista / Cards
                         </button>
-                        <button onclick="setOpViewMode('projetos')" class="view-toggle-btn op-toggle-btn" data-mode="projetos">
+                        <button onclick="setOpViewMode('projetos')" class="view-toggle-btn op-toggle-btn" data-mode="projetos" style="display:none;">
                             <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos OE
                         </button>
                     </div>
@@ -185,7 +185,7 @@
                         <i class="fa-brands fa-whatsapp"></i> WhatsApps da Orientação
                     </button>
 
-                    <button type="button" id="btnOpenNovoProjetoOP" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;" title="Cadastrar Projeto Continuado OE">
+                    <button type="button" id="btnOpenNovoProjetoOP" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; display:none;" title="Cadastrar Projeto Continuado OE">
                         <i class="fa-solid fa-folder-plus"></i> + Projeto OE
                     </button>
 

@@ -276,6 +276,7 @@ let opViewMode = "semanal"; // "semanal", "cards", "projetos"
 let currentWeekRefDate = new Date();
 
 function setOpViewMode(mode) {
+    if (mode === "projetos") mode = "semanal";
     opViewMode = mode;
     document.querySelectorAll(".op-toggle-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
@@ -287,7 +288,7 @@ function setOpViewMode(mode) {
     if (semanalView && listaView && projetosView) {
         semanalView.style.display = mode === "semanal" ? "block" : "none";
         listaView.style.display = mode === "cards" ? "block" : "none";
-        projetosView.style.display = mode === "projetos" ? "block" : "none";
+        projetosView.style.display = "none";
     }
     renderModuleOrientacaoPedagogica();
 }
@@ -492,60 +493,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         `;
     }).join("");
 
-    // Linha de Projetos Continuados da OE na Agenda Semanal
-    const projetosOE = sigeDB.getProjetosOrientacao();
-    const projRowHtml = `
-        <tr>
-            <td colspan="6" class="turno-section-header" style="background:#fff7ed; color:#c2410c; border-top:2px solid #fed7aa;">
-                <i class="fa-solid fa-rocket" style="color:#ea580c;"></i> 🚀 PROJETOS & PROGRAMAS DA OE EM ANDAMENTO
-            </td>
-        </tr>
-        <tr>
-            <td class="slot-time-cell" style="vertical-align:top; background:#fffbf5; border-right:2px solid #fed7aa; padding:10px 8px;">
-                <div style="font-weight:900; color:#9a3412; font-size:0.82rem; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-folder-open" style="color:#ea580c;"></i> PROJETOS OE
-                </div>
-                <div style="font-size:0.68rem; color:#9a3412; margin-top:4px;">Acompanhamento Continuado</div>
-                <button onclick="openNovoProjetoOPModal()" class="btn-sec" style="margin-top:8px; font-size:0.7rem; padding:4px 6px; background:#ea580c; color:white; border:none; width:100%; text-align:center; border-radius:6px;">
-                    <i class="fa-solid fa-plus"></i> + Projeto OE
-                </button>
-            </td>
-            ${weekDays.map(d => {
-                const activeProjects = projetosOE.filter(p => {
-                    const dataInicio = p.dataInicio || p.criadoEm || d.dateIso;
-                    const dataFim = p.dataFim || dataInicio;
-                    return d.dateIso >= dataInicio && d.dateIso <= dataFim;
-                });
-
-                return `
-                    <td class="${d.isToday ? 'today-column-cell' : ''}" style="vertical-align:top; padding:8px;">
-                        <div style="display:flex; flex-direction:column; gap:6px; min-height:80px;">
-                            ${activeProjects.length > 0 ? activeProjects.map(p => {
-                                const etapasHoje = p.etapas ? p.etapas.filter(e => e.dataLimite === d.dateIso) : [];
-                                return `
-                                    <div class="weekly-slot-card" onclick="setOpViewMode('projetos')" style="border-left:4px solid #ea580c; background:#fffbf5; cursor:pointer;" title="Clique para abrir detalhes dos Projetos OE">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:800; color:#9a3412;">
-                                            <span><i class="fa-solid fa-rocket" style="color:#d97706;"></i> ${p.titulo}</span>
-                                        </div>
-                                        <div style="font-size:0.68rem; color:#b45309; margin-top:2px;">
-                                            <i class="fa-solid fa-user-gear"></i> ${p.orientadoraLider || 'OE'}
-                                        </div>
-                                        ${etapasHoje.map(e => `
-                                            <div style="font-size:0.68rem; background:${e.concluido ? '#dcfce7' : '#fef3c7'}; color:${e.concluido ? '#15803d' : '#92400e'}; padding:2px 4px; border-radius:4px; margin-top:4px; font-weight:700;">
-                                                ${e.concluido ? '✅' : '🎯 Marco:'} ${e.titulo}
-                                            </div>
-                                        `).join("")}
-                                    </div>
-                                `;
-                            }).join("") : `<span style="font-size:0.7rem; color:#cbd5e1; font-style:italic;">Sem projetos na data</span>`}
-                        </div>
-                    </td>
-                `;
-            }).join("")}
-        </tr>
-    `;
-
-    bodyTable.innerHTML = html + projRowHtml;
+    bodyTable.innerHTML = html;
 }
 
 function renderCardsView(todosAtendimentos) {
