@@ -729,8 +729,58 @@ function renderOpProjetosList() {
 }
 
 function openNovoProjetoOPModal() {
+    try {
+        if (typeof setOpViewMode === "function") {
+            setOpViewMode('projetos');
+        }
+
+        const modal = document.getElementById("modalNovoProjetoOP");
+        if (modal) {
+            const elTit = document.getElementById("projOpInputTitulo");
+            const elCat = document.getElementById("projOpInputCategoria");
+            const elOri = document.getElementById("projOpInputOrientadora");
+            const elIni = document.getElementById("projOpInputDataInicio");
+            const elFim = document.getElementById("projOpInputDataFim");
+            const elSts = document.getElementById("projOpInputStatus");
+            const elEnv = document.getElementById("projOpInputEnvolvidos");
+            const elDes = document.getElementById("projOpInputDescricao");
+            const elEtp = document.getElementById("projOpInputEtapasText");
+            const elChk = document.getElementById("projOpInputChecklistText");
+
+            const hojeIso = new Date().toISOString().split("T")[0];
+            const futuroIso = (typeof getFutureDateIso === "function") ? getFutureDateIso(60) : hojeIso;
+
+            if (elTit) elTit.value = "";
+            if (elCat) elCat.value = "Mediação de Conflitos";
+            if (elOri) elOri.value = "Orientadora 1 (Carmen)";
+            if (elIni) elIni.value = hojeIso;
+            if (elFim) elFim.value = futuroIso;
+            if (elSts) elSts.value = "em_dia";
+            if (elEnv) elEnv.value = "";
+            if (elDes) elDes.value = "";
+            if (elEtp) elEtp.value = "";
+            if (elChk) elChk.value = "";
+
+            modal.style.setProperty("display", "flex", "important");
+        } else {
+            console.error("modalNovoProjetoOP não encontrado no DOM!");
+        }
+    } catch (err) {
+        console.error("Erro ao abrir modalNovoProjetoOP:", err);
+    }
+}
+
+function closeNovoProjetoOPModal() {
     const modal = document.getElementById("modalNovoProjetoOP");
     if (modal) {
+        modal.style.setProperty("display", "none", "important");
+    }
+}
+
+function submitNovoProjetoOP(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    try {
         const elTit = document.getElementById("projOpInputTitulo");
         const elCat = document.getElementById("projOpInputCategoria");
         const elOri = document.getElementById("projOpInputOrientadora");
@@ -742,97 +792,69 @@ function openNovoProjetoOPModal() {
         const elEtp = document.getElementById("projOpInputEtapasText");
         const elChk = document.getElementById("projOpInputChecklistText");
 
-        if (elTit) elTit.value = "";
-        if (elCat) elCat.value = "Mediação de Conflitos";
-        if (elOri) elOri.value = "Orientadora 1 (Carmen)";
-        if (elIni) elIni.value = new Date().toISOString().split("T")[0];
-        if (elFim) elFim.value = getFutureDateIso(60);
-        if (elSts) elSts.value = "em_dia";
-        if (elEnv) elEnv.value = "";
-        if (elDes) elDes.value = "";
-        if (elEtp) elEtp.value = "";
-        if (elChk) elChk.value = "";
+        const titulo = elTit ? elTit.value.trim() : "";
+        if (!titulo) {
+            showToast("Por favor, informe o título do projeto.");
+            return false;
+        }
 
-        modal.style.display = "flex";
-    }
-}
+        const categoria = elCat ? elCat.value : "Mediação de Conflitos";
+        const orientadoraLider = elOri ? elOri.value : "Orientadora 1 (Carmen)";
+        const hojeIso = new Date().toISOString().split("T")[0];
+        const dataInicio = elIni && elIni.value ? elIni.value : hojeIso;
+        const dataFim = elFim && elFim.value ? elFim.value : hojeIso;
+        const status = elSts ? elSts.value : "em_dia";
+        const envolvidos = elEnv ? elEnv.value.trim() : "";
+        const descricao = elDes ? elDes.value.trim() : "";
 
-function closeNovoProjetoOPModal() {
-    const modal = document.getElementById("modalNovoProjetoOP");
-    if (modal) modal.style.display = "none";
-}
-
-function submitNovoProjetoOP(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    
-    const elTit = document.getElementById("projOpInputTitulo");
-    const elCat = document.getElementById("projOpInputCategoria");
-    const elOri = document.getElementById("projOpInputOrientadora");
-    const elIni = document.getElementById("projOpInputDataInicio");
-    const elFim = document.getElementById("projOpInputDataFim");
-    const elSts = document.getElementById("projOpInputStatus");
-    const elEnv = document.getElementById("projOpInputEnvolvidos");
-    const elDes = document.getElementById("projOpInputDescricao");
-    const elEtp = document.getElementById("projOpInputEtapasText");
-    const elChk = document.getElementById("projOpInputChecklistText");
-
-    const titulo = elTit ? elTit.value.trim() : "";
-    if (!titulo) {
-        showToast("Por favor, informe o título do projeto.");
-        return;
-    }
-
-    const categoria = elCat ? elCat.value : "Mediação de Conflitos";
-    const orientadoraLider = elOri ? elOri.value : "Orientadora 1 (Carmen)";
-    const dataInicio = elIni && elIni.value ? elIni.value : new Date().toISOString().split("T")[0];
-    const dataFim = elFim && elFim.value ? elFim.value : getFutureDateIso(60);
-    const status = elSts ? elSts.value : "em_dia";
-    const envolvidos = elEnv ? elEnv.value.trim() : "";
-    const descricao = elDes ? elDes.value.trim() : "";
-
-    // Parse sub-etapas
-    const etapasRaw = elEtp && elEtp.value ? elEtp.value.trim().split("\n") : [];
-    const etapas = [];
-    etapasRaw.forEach((line, idx) => {
-        if (!line.trim()) return;
-        const parts = line.split("|").map(p => p.trim());
-        etapas.push({
-            id: `e-op-${Date.now()}-${idx}`,
-            titulo: parts[0] || "Etapa sem título",
-            dataLimite: parts[1] || dataFim,
-            responsavel: parts[2] || orientadoraLider,
-            concluido: false
+        // Parse sub-etapas
+        const etapasRaw = elEtp && elEtp.value ? elEtp.value.trim().split("\n") : [];
+        const etapas = [];
+        etapasRaw.forEach((line, idx) => {
+            if (!line.trim()) return;
+            const parts = line.split("|").map(p => p.trim());
+            etapas.push({
+                id: `e-op-${Date.now()}-${idx}`,
+                titulo: parts[0] || "Etapa sem título",
+                dataLimite: parts[1] || dataFim,
+                responsavel: parts[2] || orientadoraLider,
+                concluido: false
+            });
         });
-    });
 
-    // Parse checklist
-    const checkRaw = elChk && elChk.value ? elChk.value.trim().split("\n") : [];
-    const checklistAcompanhamento = [];
-    checkRaw.forEach(line => {
-        if (!line.trim()) return;
-        checklistAcompanhamento.push({
-            item: line.trim(),
-            concluido: false
+        // Parse checklist
+        const checkRaw = elChk && elChk.value ? elChk.value.trim().split("\n") : [];
+        const checklistAcompanhamento = [];
+        checkRaw.forEach(line => {
+            if (!line.trim()) return;
+            checklistAcompanhamento.push({
+                item: line.trim(),
+                concluido: false
+            });
         });
-    });
 
-    const newProj = {
-        titulo,
-        categoria,
-        orientadoraLider,
-        dataInicio,
-        dataFim,
-        status,
-        envolvidos,
-        descricao,
-        etapas,
-        checklistAcompanhamento
-    };
+        const newProj = {
+            titulo,
+            categoria,
+            orientadoraLider,
+            dataInicio,
+            dataFim,
+            status,
+            envolvidos,
+            descricao,
+            etapas,
+            checklistAcompanhamento
+        };
 
-    sigeDB.addProjetoOrientacao(newProj);
-    closeNovoProjetoOPModal();
-    setOpViewMode('projetos');
-    showToast("Projeto continuado da OP cadastrado com sucesso!");
+        sigeDB.addProjetoOrientacao(newProj);
+        closeNovoProjetoOPModal();
+        setOpViewMode('projetos');
+        showToast("Projeto continuado da OP cadastrado com sucesso!");
+    } catch (err) {
+        console.error("Erro ao cadastrar projeto OP:", err);
+        showToast("Erro ao cadastrar projeto. Tente novamente.");
+    }
+    return false;
 }
 
 function excluirProjetoOP(id) {
