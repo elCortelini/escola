@@ -7,7 +7,14 @@ const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
 // Estrutura Padrão Inicial
 const defaultSigeData = {
-    currentRole: "direcao", // direcao, orientacao, supervisao, secretaria, admin, comunidade
+    currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
+    usuariosCadastrados: [
+        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
+        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
+        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
+        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
+        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
+    ],
     agendamentosOP: [
         // Clarinda Rosa Pereira (Séries Iniciais: 1º ao 5º Anos) - 5 Atendimentos na Semana (07/09 a 11/09)
         {
@@ -817,6 +824,77 @@ class SigeDatabase {
     resetToDefault() {
         this.saveData(defaultSigeData);
         window.location.reload();
+    }
+
+    // Gerenciador de Usuários e Login por E-mail
+    getUsuarios() {
+        if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados) || this.data.usuariosCadastrados.length === 0) {
+            this.data.usuariosCadastrados = [
+                { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
+                { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
+                { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
+                { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
+                { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
+            ];
+            this.saveData(this.data);
+        }
+        return this.data.usuariosCadastrados;
+    }
+
+    addUsuario(user) {
+        const list = this.getUsuarios();
+        const existingIndex = list.findIndex(u => u.email.toLowerCase().trim() === user.email.toLowerCase().trim());
+        if (existingIndex >= 0) {
+            list[existingIndex] = user;
+        } else {
+            list.push(user);
+        }
+        this.data.usuariosCadastrados = list;
+        this.saveData(this.data);
+        return user;
+    }
+
+    removeUsuario(email) {
+        if (email.toLowerCase().trim() === "elcortelini@gmail.com") return false;
+        let list = this.getUsuarios();
+        list = list.filter(u => u.email.toLowerCase().trim() !== email.toLowerCase().trim());
+        this.data.usuariosCadastrados = list;
+        this.saveData(this.data);
+        return true;
+    }
+
+    getLoggedUser() {
+        const loggedEmail = localStorage.getItem("sige_logged_email");
+        if (!loggedEmail) return null;
+        const users = this.getUsuarios();
+        const found = users.find(u => u.email.toLowerCase().trim() === loggedEmail.toLowerCase().trim());
+        if (found) return found;
+        if (loggedEmail.toLowerCase().trim() === "elcortelini@gmail.com") {
+            return { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" };
+        }
+        return null;
+    }
+
+    loginWithEmail(email) {
+        const cleanEmail = email.toLowerCase().trim();
+        const users = this.getUsuarios();
+        let user = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
+
+        if (!user && cleanEmail === "elcortelini@gmail.com") {
+            user = { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" };
+            this.addUsuario(user);
+        }
+
+        if (user) {
+            localStorage.setItem("sige_logged_email", user.email);
+            this.setRole(user.role);
+            return user;
+        }
+        return null;
+    }
+
+    logout() {
+        localStorage.removeItem("sige_logged_email");
     }
 
     // Role Manager

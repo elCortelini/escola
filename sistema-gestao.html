@@ -23,14 +23,18 @@
     <!-- Bar de Seleção de Perfil e Notificações -->
     <div class="top-bar-role">
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <span><i class="fa-solid fa-school-lock"></i> <strong>IntegraRizzi</strong> — Nível de Acesso:</span>
-            <div class="role-selector-container">
+            <span><i class="fa-solid fa-school-lock"></i> <strong>IntegraRizzi</strong></span>
+            
+            <!-- Seletor de Perfil (Visível Exclusivamente para o Desenvolvedor) -->
+            <div class="role-selector-container" id="roleSelectorContainerWrapper">
                 <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
                 <select id="activeRoleSelect">
-                    <option value="direcao">👑 Gestor / Direção Escolar</option>
-                    <option value="orientacao">💛 Orientador Educacional (OE)</option>
-                    <option value="supervisao">📋 Supervisor Pedagógico</option>
+                    <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+                    <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
+                    <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
                     <option value="secretaria">📝 Secretaria Escolar</option>
+                    <option value="direcao">👑 Gestor / Direção Escolar</option>
+                    <option value="supervisao">📋 Supervisor Pedagógico</option>
                     <option value="admin">⚙️ Administrador do Sistema</option>
                     <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
                 </select>
@@ -39,6 +43,18 @@
         </div>
 
         <div style="display:flex; align-items:center; gap:16px;">
+            <!-- Conta de Usuário Logado -->
+            <div id="userAccountDisplay" style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#e2e8f0; font-weight:700;">
+                <i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem;"></i>
+                <span id="loggedUserEmailText">elcortelini@gmail.com</span>
+                <button id="btnDevManageUsers" onclick="openDevUserModal()" style="display:none; background:#7c3aed; color:white; border:none; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Painel do Desenvolvedor: Gestão de E-mails">
+                    <i class="fa-solid fa-user-gear"></i> Gestão E-mails
+                </button>
+                <button onclick="handleSigeLogout()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); color:white; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Sair da Conta">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </div>
+
             <!-- Sino de Notificações Inteligentes -->
             <button class="notification-bell-btn" id="notifBellBtn" title="Central de Notificações Pertinentes">
                 <i class="fa-solid fa-bell"></i>
@@ -70,7 +86,6 @@
             </a>
             <ul class="nav-links">
                 <li><a href="index.html" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 7px 16px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-house"></i> Voltar ao Portal Inicial</a></li>
-                <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Pesquisa</a></li>
             </ul>
         </div>
     </header>
@@ -2205,6 +2220,90 @@
                     <button type="submit" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; color:white;">Salvar Projeto OE</button>
                 </div>
             </form>
+        </div>
+    <!-- Modal de Login por E-mail Institucional -->
+    <div id="modalSigeLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+        <div style="background:white; border-radius:20px; max-width:460px; width:92%; padding:2.2rem; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1; text-align:center;">
+            <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" style="max-height:75px; margin-bottom:1rem; background:white; padding:6px 12px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+            
+            <h3 style="color:#0f172a; font-size:1.4rem; font-weight:900; margin-bottom:4px;">Acesso ao IntegraRizzi</h3>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.5rem;">Insira seu e-mail profissional cadastrado para acessar seu perfil e atribuições.</p>
+
+            <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-envelope" style="color:#2563eb;"></i> E-mail Profissional / Institucional:</label>
+                    <input type="email" id="loginEmailInput" placeholder="seu-email@escola.gov.br ou elcortelini@gmail.com" required style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem; font-weight:600; outline:none;">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:0.95rem; font-weight:800; background:linear-gradient(135deg, #1e3a8a, #2563eb); border:none; margin-top:8px; border-radius:10px; box-shadow:0 4px 14px rgba(37,99,235,0.35);">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+                </button>
+            </form>
+
+            <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed #cbd5e1; text-align:left;">
+                <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">E-mails para teste rápido:</span>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;">
+                    <button onclick="fillLoginEmail('elcortelini@gmail.com')" style="background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">🛠️ Desenvolvedor (elcortelini@gmail.com)</button>
+                    <button onclick="fillLoginEmail('clarinda@escola.gov.br')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">💛 Orientadora Clarinda</button>
+                    <button onclick="fillLoginEmail('daiane@escola.gov.br')" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">💛 Orientadora Daiane</button>
+                    <button onclick="fillLoginEmail('secretaria@escola.gov.br')" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">📝 Secretaria</button>
+                    <button onclick="fillLoginEmail('direcao@escola.gov.br')" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">👑 Direção</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Gestão de Usuários (Exclusivo Desenvolvedor) -->
+    <div id="modalDevUserConfig" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:680px; width:94%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+                <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-user-gear" style="color:#7c3aed;"></i> Painel do Desenvolvedor: Gestão de E-mails & Acessos
+                </h3>
+                <button type="button" onclick="closeDevUserModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Formulário de Adicionar Usuário -->
+            <form id="formAddDevUser" onsubmit="submitAddDevUser(event)" style="background:#f8fafc; padding:12px 16px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:1.2rem; display:flex; flex-direction:column; gap:10px;">
+                <h4 style="font-size:0.88rem; font-weight:800; color:#1e3a8a; margin:0;"><i class="fa-solid fa-user-plus"></i> Cadastrar / Atualizar E-mail Autorizado</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
+                        <input type="email" id="devUserEmail" placeholder="nome@escola.gov.br" required style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nome do Profissional:</label>
+                        <input type="text" id="devUserName" placeholder="Nome Completo" required style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nível de Acesso (Perfil):</label>
+                        <select id="devUserRole" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
+                            <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
+                            <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
+                            <option value="secretaria">📝 Secretaria Escolar</option>
+                            <option value="direcao">👑 Gestor / Direção Escolar</option>
+                            <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:#475569;">Cargo / Descrição:</label>
+                        <input type="text" id="devUserCargo" placeholder="Ex: Orientadora Educacional" required style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;">
+                    </div>
+                </div>
+                <div style="text-align:right; margin-top:4px;">
+                    <button type="submit" class="btn btn-primary" style="width:auto; padding:6px 16px; font-size:0.82rem; background:#7c3aed; border-color:#7c3aed;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Usuário Autorizado
+                    </button>
+                </div>
+            </form>
+
+            <!-- Lista de Usuários Autorizados -->
+            <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:8px;"><i class="fa-solid fa-users-gear"></i> E-mails Cadastrados no Sistema</h4>
+            <div id="devUsersListTableContainer" style="overflow-x:auto;">
+                <!-- Renderizado via JS -->
+            </div>
         </div>
     </div>
 

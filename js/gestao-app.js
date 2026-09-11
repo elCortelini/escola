@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initApp() {
+    checkSigeAuth();
     setupRoleSelector();
     setupTabNavigation();
     setupNotificationBell();
@@ -26,6 +27,189 @@ function setupOpButtons() {
 }
 
 // ==========================================
+// AUTENTICAÇÃO E PERMISSÕES (RBAC)
+// ==========================================
+function checkSigeAuth() {
+    const user = sigeDB.getLoggedUser();
+    const loginModal = document.getElementById("modalSigeLogin");
+    const roleWrapper = document.getElementById("roleSelectorContainerWrapper");
+    const btnDev = document.getElementById("btnDevManageUsers");
+    const userText = document.getElementById("loggedUserEmailText");
+    const opFilter = document.getElementById("opFilterOrientadora");
+
+    if (!user) {
+        if (loginModal) loginModal.style.display = "flex";
+        return false;
+    }
+
+    if (loginModal) loginModal.style.display = "none";
+
+    if (userText) {
+        userText.innerHTML = `<i class="fa-solid fa-user-circle"></i> <strong>${user.nome}</strong> (${user.email})`;
+    }
+
+    // Define papel no BD local
+    sigeDB.setRole(user.role);
+
+    // O Seletor de Perfis e o botão de Gestão de Usuários são EXCLUSIVOS do Desenvolvedor
+    const isDev = user.role === "desenvolvedor";
+    if (roleWrapper) roleWrapper.style.display = isDev ? "inline-flex" : "none";
+    if (btnDev) btnDev.style.display = isDev ? "inline-flex" : "none";
+
+    // Trava de Orientadoras: Orientadora Clarinda / Daiane vêm bloqueadas para a sua própria visão
+    if (opFilter) {
+        if (user.role === "orientadora_clarinda") {
+            opFilter.value = "Clarinda Rosa Pereira";
+            opFilter.disabled = true;
+        } else if (user.role === "orientadora_daiane") {
+            opFilter.value = "Daiane Caetano Costa de Aquino";
+            opFilter.disabled = true;
+        } else {
+            opFilter.disabled = false;
+        }
+    }
+
+    return true;
+}
+
+function submitSigeLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const emailInput = document.getElementById("loginEmailInput");
+    if (!emailInput) return;
+    const email = emailInput.value.trim();
+    if (!email) return;
+
+    const user = sigeDB.loginWithEmail(email);
+    if (user) {
+        showToast(`Bem-vindo(a), ${user.nome}!`);
+        checkSigeAuth();
+        renderAllModules();
+    } else {
+        alert("E-mail não cadastrado no sistema. Verifique a digitação ou solicite autorização ao Desenvolvedor (elcortelini@gmail.com).");
+    }
+}
+
+function fillLoginEmail(email) {
+    const emailInput = document.getElementById("loginEmailInput");
+    if (emailInput) {
+        emailInput.value = email;
+    }
+}
+
+function handleSigeLogout() {
+    sigeDB.logout();
+    showToast("Sessão encerrada.");
+    checkSigeAuth();
+    renderAllModules();
+}
+
+function openDevUserModal() {
+    const modal = document.getElementById("modalDevUserConfig");
+    if (modal) {
+        modal.style.display = "flex";
+        renderDevUsersList();
+    }
+}
+
+function closeDevUserModal() {
+    const modal = document.getElementById("modalDevUserConfig");
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+function renderDevUsersList() {
+    const container = document.getElementById("devUsersListTableContainer");
+    if (!container) return;
+
+    const users = sigeDB.getUsuarios();
+
+    if (!users || users.length === 0) {
+        container.innerHTML = `<div style="padding:1rem; color:#64748b; font-size:0.85rem;">Nenhum usuário cadastrado.</div>`;
+        return;
+    }
+
+    let html = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:8px;">
+            <thead>
+                <tr style="background:#f1f5f9; text-align:left; color:#475569; border-bottom:2px solid #cbd5e1;">
+                    <th style="padding:8px;">Nome / E-mail</th>
+                    <th style="padding:8px;">Nível de Acesso (Perfil)</th>
+                    <th style="padding:8px;">Cargo</th>
+                    <th style="padding:8px; text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    users.forEach(u => {
+        const isDevDefault = u.email.toLowerCase().trim() === "elcortelini@gmail.com";
+        html += `
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px;">
+                    <strong style="color:#0f172a; display:block;">${u.nome}</strong>
+                    <span style="color:#64748b; font-size:0.78rem;">${u.email}</span>
+                </td>
+                <td style="padding:8px;">
+                    <span class="role-badge-pill role-pill-${u.role}" style="font-size:0.75rem;">${getRoleLabel(u.role)}</span>
+                </td>
+                <td style="padding:8px; color:#334155;">${u.cargo || '-'}</td>
+                <td style="padding:8px; text-align:center;">
+                    ${isDevDefault ? `
+                        <span style="color:#94a3b8; font-size:0.75rem; font-style:italic;">(Padrão Dev)</span>
+                    ` : `
+                        <button onclick="deleteDevUser('${u.email}')" class="btn-sec btn-sec-fail" style="padding:3px 8px; font-size:0.72rem;">
+                            <i class="fa-solid fa-trash"></i> Excluir
+                        </button>
+                    `}
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+function submitAddDevUser(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const email = document.getElementById("devUserEmail")?.value.trim();
+    const nome = document.getElementById("devUserName")?.value.trim();
+    const role = document.getElementById("devUserRole")?.value;
+    const cargo = document.getElementById("devUserCargo")?.value.trim();
+
+    if (!email || !nome || !role || !cargo) return;
+
+    sigeDB.addUsuario({ email, nome, role, cargo });
+    showToast(`Usuário ${nome} (${email}) salvo com sucesso!`);
+    
+    if (document.getElementById("devUserEmail")) document.getElementById("devUserEmail").value = "";
+    if (document.getElementById("devUserName")) document.getElementById("devUserName").value = "";
+    if (document.getElementById("devUserCargo")) document.getElementById("devUserCargo").value = "";
+
+    renderDevUsersList();
+}
+
+function deleteDevUser(email) {
+    if (confirm(`Tem certeza que deseja remover as permissões do e-mail ${email}?`)) {
+        if (sigeDB.removeUsuario(email)) {
+            showToast("Usuário removido com sucesso!");
+            renderDevUsersList();
+        } else {
+            alert("Não é possível remover o desenvolvedor principal.");
+        }
+    }
+}
+
+function marcarAguardandoSecretaria(id) {
+    const agora = new Date().toISOString();
+    sigeDB.updateSecretariaStatusOP(id, "aguardando", "Aluno/Responsável aguardando na recepção.", agora);
+    renderNotifications();
+    renderModuleOrientacaoPedagogica();
+    showToast("🔔 Aluno marcado como AGUARDANDO na recepção! Notificação enviada à Orientadora.");
+}
+
+// ==========================================
 // PERFIL E NÍVEIS DE ACESSO (RBAC)
 // ==========================================
 function setupRoleSelector() {
@@ -41,9 +225,23 @@ function setupRoleSelector() {
         const newRole = e.target.value;
         sigeDB.setRole(newRole);
         updateRoleBadgePill(newRole, roleBadge);
+
+        const opFilter = document.getElementById("opFilterOrientadora");
+        if (opFilter) {
+            if (newRole === "orientadora_clarinda") {
+                opFilter.value = "Clarinda Rosa Pereira";
+                opFilter.disabled = true;
+            } else if (newRole === "orientadora_daiane") {
+                opFilter.value = "Daiane Caetano Costa de Aquino";
+                opFilter.disabled = true;
+            } else {
+                opFilter.disabled = false;
+            }
+        }
+
         renderNotifications();
         renderAllModules();
-        showToast(`Perfil alterado para: ${getRoleLabel(newRole)}`);
+        showToast(`Perfil de testes alterado para: ${getRoleLabel(newRole)}`);
     });
 }
 
@@ -55,8 +253,11 @@ function updateRoleBadgePill(role, badgeElem) {
 
 function getRoleLabel(role) {
     const labels = {
+        desenvolvedor: "🛠️ Desenvolvedor do Sistema",
         admin: "Administrador do Sistema",
         direcao: "Gestor / Direção Escolar",
+        orientadora_clarinda: "Orientadora Clarinda (Iniciais)",
+        orientadora_daiane: "Orientadora Daiane (Finais)",
         orientacao: "Orientador Educacional (OE)",
         supervisao: "Supervisor Pedagógico",
         secretaria: "Secretaria Escolar",
@@ -67,8 +268,11 @@ function getRoleLabel(role) {
 
 function getRoleIcon(role) {
     const icons = {
+        desenvolvedor: "fa-solid fa-code",
         admin: "fa-solid fa-user-shield",
         direcao: "fa-solid fa-crown",
+        orientadora_clarinda: "fa-solid fa-heart-pulse",
+        orientadora_daiane: "fa-solid fa-heart-pulse",
         orientacao: "fa-solid fa-heart-pulse",
         supervisao: "fa-solid fa-clipboard-check",
         secretaria: "fa-solid fa-id-card",
@@ -76,6 +280,16 @@ function getRoleIcon(role) {
     };
     return icons[role] || "fa-solid fa-user";
 }
+
+window.checkSigeAuth = checkSigeAuth;
+window.submitSigeLogin = submitSigeLogin;
+window.fillLoginEmail = fillLoginEmail;
+window.handleSigeLogout = handleSigeLogout;
+window.openDevUserModal = openDevUserModal;
+window.closeDevUserModal = closeDevUserModal;
+window.submitAddDevUser = submitAddDevUser;
+window.deleteDevUser = deleteDevUser;
+window.marcarAguardandoSecretaria = marcarAguardandoSecretaria;
 
 // ==========================================
 // NAVEGAÇÃO POR ABAS
