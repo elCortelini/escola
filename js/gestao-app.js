@@ -3,6 +3,16 @@
  * Centro Educacional Pedro Rizzi
  */
 
+function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
@@ -3943,7 +3953,7 @@ function renderModuleAdministracao() {
 
     renderWhatsappConfigPanel();
     renderFirebaseConfigPanel();
-    renderEquipeEscolarTable("todos");
+    renderEquipeEscolarTable(typeof currentSetorFilter !== "undefined" ? currentSetorFilter : "todos");
     renderTurmasAdminTable();
     renderConfigEscolaForm();
     renderAuditLogsTable();
