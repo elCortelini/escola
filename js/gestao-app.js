@@ -1454,18 +1454,33 @@ function abrirProntuarioDoAlunoAtual() {
     if (ag) openProntuarioModal(ag.aluno);
 }
 
+function getOrientadoraInfoForRecord(ag) {
+    const isClar = !ag || !ag.orientadora || ag.orientadora.includes("Clarinda") || ag.orientadora.includes("1") || ag.orientadora.includes("Carmen");
+    return {
+        nome: isClar ? "Clarinda Rosa Pereira" : "Daiane Caetano Costa de Aquino",
+        cargo: isClar ? "Orientadora Educacional — Séries Iniciais" : "Orientadora Educacional — Séries Finais",
+        short: isClar ? "Clarinda Rosa Pereira (Séries Iniciais)" : "Daiane Caetano Costa de Aquino (Séries Finais)",
+        isClar: isClar
+    };
+}
+
 function openProntuarioModal(alunoNome) {
     const todos = sigeDB.getAgendamentosOP().filter(a => a.aluno.toLowerCase().trim() === alunoNome.toLowerCase().trim());
     
+    const ultAg = todos.length > 0 ? todos[todos.length - 1] : null;
+    const oriMain = getOrientadoraInfoForRecord(ultAg);
+
     document.getElementById("prontuarioAlunoNome").innerText = alunoNome;
-    document.getElementById("prontuarioTotalCount").innerText = `${todos.length} atendimento(s) no histórico`;
+    document.getElementById("prontuarioTotalCount").innerText = `${todos.length} atendimento(s) no histórico • Orientadora: ${oriMain.short}`;
 
     const bodyContainer = document.getElementById("prontuarioTimelineContainer");
     if (bodyContainer) {
         if (todos.length === 0) {
             bodyContainer.innerHTML = `<div class="empty-state"><p>Nenhum atendimento cadastrado para este aluno.</p></div>`;
         } else {
-            bodyContainer.innerHTML = todos.map(a => `
+            bodyContainer.innerHTML = todos.map(a => {
+                const itemOri = getOrientadoraInfoForRecord(a);
+                return `
                 <div style="background:#f8fafc; border-left:4px solid #7c3aed; border-radius:12px; padding:1.2rem; margin-bottom:1rem; border:1px solid #e2e8f0;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:800; color:#0f172a; font-size:0.95rem;">
@@ -1474,7 +1489,7 @@ function openProntuarioModal(alunoNome) {
                         <span class="secretaria-status-badge status-${a.statusSecretaria}">${getSecretariaBadgeText(a.statusSecretaria)}</span>
                     </div>
                     <div style="font-size:0.85rem; color:#475569; margin-top:6px;">
-                        <strong>Responsável:</strong> ${a.responsavel} • <strong>Orientadora:</strong> ${a.orientadora || 'OP'}
+                        <strong>Responsável:</strong> ${a.responsavel} • <strong>Orientadora:</strong> ${itemOri.short}
                     </div>
                     <div style="font-size:0.88rem; color:#1e293b; margin-top:8px; background:white; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
                         <strong>Motivo / Assunto:</strong> ${a.motivo}
@@ -1486,7 +1501,8 @@ function openProntuarioModal(alunoNome) {
                         </div>
                     ` : ''}
                 </div>
-            `).join("");
+            `;
+            }).join("");
         }
     }
 
@@ -2736,6 +2752,9 @@ function imprimirProntuarioAlunoCurrent() {
     const todos = sigeDB.getAgendamentosOP().filter(a => a.aluno.toLowerCase().trim() === alunoNome.toLowerCase().trim());
     todos.sort((a, b) => (a.data + (a.horario || "")).localeCompare(b.data + (b.horario || "")));
 
+    const ultAg = todos.length > 0 ? todos[todos.length - 1] : null;
+    const oriMain = getOrientadoraInfoForRecord(ultAg);
+
     let printHtml = `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -2753,8 +2772,8 @@ function imprimirProntuarioAlunoCurrent() {
                 .aluno-name { font-size: 14px; font-weight: 900; color: #0f172a; }
                 .item-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #7c3aed; border-radius: 6px; padding: 10px; margin-bottom: 10px; }
                 .item-header { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 6px; font-weight: 800; }
-                .footer-signatures { margin-top: 35px; display: flex; justify-content: space-between; gap: 30px; }
-                .sig-box { flex: 1; border-top: 1px solid #94a3b8; padding-top: 4px; text-align: center; font-size: 10px; color: #475569; font-weight: 700; }
+                .footer-signatures { margin-top: 35px; display: flex; justify-content: center; }
+                .sig-box { max-width: 350px; width: 100%; border-top: 1px solid #94a3b8; padding-top: 4px; text-align: center; font-size: 10px; color: #475569; font-weight: 700; }
             </style>
         </head>
         <body>
@@ -2774,18 +2793,21 @@ function imprimirProntuarioAlunoCurrent() {
             <div class="aluno-card">
                 <div class="aluno-name">👨‍🎓 ${alunoNome}</div>
                 <div style="font-size:10.5px; color:#475569; margin-top:4px;">
+                    <strong>Orientadora Responsável:</strong> ${oriMain.short}<br>
                     <strong>Histórico de Atendimentos:</strong> ${todos.length} registro(s) encontrado(s) na Orientação Educacional
                 </div>
             </div>
 
-            ${todos.map(a => `
+            ${todos.map(a => {
+                const itemOri = getOrientadoraInfoForRecord(a);
+                return `
                 <div class="item-card">
                     <div class="item-header">
                         <span>📅 ${formatDateBR(a.data)} às ${a.horario || '-'} (${(a.turno || '').toUpperCase()})</span>
                         <span>Status: ${getSecretariaBadgeText(a.statusSecretaria)}</span>
                     </div>
                     <div style="font-size:10.5px; margin-bottom:4px;">
-                        <strong>Turma:</strong> ${a.turma || '-'} • <strong>Responsável:</strong> ${a.responsavel || '-'} (📞 ${a.telefone || '-'}) • <strong>Orientadora:</strong> ${a.orientadora || 'OP'}
+                        <strong>Turma:</strong> ${a.turma || '-'} • <strong>Responsável:</strong> ${a.responsavel || '-'} (📞 ${a.telefone || '-'}) • <strong>Orientadora:</strong> ${itemOri.short}
                     </div>
                     <div style="background:#f8fafc; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:4px;">
                         <strong>Motivo:</strong> ${a.motivo || 'Não informado'}
@@ -2797,11 +2819,11 @@ function imprimirProntuarioAlunoCurrent() {
                         </div>
                     ` : ''}
                 </div>
-            `).join("")}
+            `;
+            }).join("")}
 
             <div class="footer-signatures">
-                <div class="sig-box">Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais</div>
-                <div class="sig-box">Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais</div>
+                <div class="sig-box">${oriMain.nome}<br>${oriMain.cargo}</div>
             </div>
 
             <script>
