@@ -69,21 +69,20 @@
                 </div>
             </a>
             <ul class="nav-links">
-                <li><a href="index.html"><i class="fa-solid fa-house"></i> Portal Início</a></li>
+                <li><a href="index.html" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 7px 16px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-house"></i> Voltar ao Portal Inicial</a></li>
                 <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Pesquisa</a></li>
-                <li><a href="sistema-gestao.html" class="active"><i class="fa-solid fa-cubes-stacked"></i> Módulos IntegraRizzi</a></li>
             </ul>
         </div>
     </header>
 
-    <!-- Navegação por Abas dos Módulos -->
-    <nav class="sige-nav-tabs">
-        <button class="sige-tab-btn active" data-tab="mural">
-            <i class="fa-solid fa-chalkboard-user"></i> Mural & Calendário
-        </button>
-        <button class="sige-tab-btn" data-tab="op">
+    <!-- Navegação por Abas dos Módulos (Oculta para acesso exclusivo via Home) -->
+    <nav class="sige-nav-tabs" style="display:none;">
+        <button class="sige-tab-btn active" data-tab="op">
             <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Educacional (OE)
             <span class="tab-badge" id="badgeTabOP">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="mural">
+            <i class="fa-solid fa-chalkboard-user"></i> Mural & Calendário
         </button>
         <button class="sige-tab-btn" data-tab="supervisao">
             <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Supervisão Pedagógica
@@ -104,7 +103,7 @@
         <!-- ========================================== -->
         <!-- ABA 1: MURAL DE RECADOS & CALENDÁRIO -->
         <!-- ========================================== -->
-        <section id="tab-mural" class="tab-content-section active">
+        <section id="tab-mural" class="tab-content-section">
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
@@ -149,7 +148,7 @@
         <!-- ========================================== -->
         <!-- ABA 2: ORIENTAÇÃO EDUCACIONAL (OE) -->
         <!-- ========================================== -->
-        <section id="tab-op" class="tab-content-section">
+        <section id="tab-op" class="tab-content-section active">
             <div class="action-toolbar" style="padding:0.5rem 1rem; margin-bottom:0.75rem;">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.15rem; margin:0;">

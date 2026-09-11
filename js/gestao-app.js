@@ -95,25 +95,37 @@ function setupTabNavigation() {
             const targetSection = document.getElementById(`tab-${targetId}`);
             if (targetSection) targetSection.classList.add("active");
 
-            // Recarregar especificidades do módulo
             renderAllModules();
         });
     });
 
-    // Ativação automática de aba via parâmetro da URL (?aba=op ou #tab-op)
+    // Ativação automática via URL (?aba=op por padrão para Orientação Educacional)
     const urlParams = new URLSearchParams(window.location.search);
-    const abaParam = urlParams.get('aba');
-    if (abaParam) {
-        switchTab(abaParam);
-    } else if (window.location.hash) {
-        const hashTab = window.location.hash.replace('#tab-', '').replace('#', '');
-        if (hashTab) switchTab(hashTab);
+    let abaParam = urlParams.get('aba');
+    if (!abaParam && window.location.hash) {
+        abaParam = window.location.hash.replace('#tab-', '').replace('#', '');
+    }
+    if (!abaParam) abaParam = 'op'; // Padrão: Orientação Educacional (OE)
+
+    switchTab(abaParam);
+
+    // Oculta a barra de navegação de abas internas para manter acesso exclusivo via Portal Inicial
+    const navTabs = document.querySelector(".sige-nav-tabs");
+    if (navTabs) {
+        navTabs.style.display = "none";
     }
 }
 
 function switchTab(tabId) {
     const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
-    if (btn) btn.click();
+    const sections = document.querySelectorAll(".tab-content-section");
+
+    sections.forEach(s => s.classList.remove("active"));
+    const targetSection = document.getElementById(`tab-${tabId}`) || document.getElementById("tab-op");
+    if (targetSection) targetSection.classList.add("active");
+    if (btn) btn.classList.add("active");
+
+    renderAllModules();
 }
 
 // ==========================================
