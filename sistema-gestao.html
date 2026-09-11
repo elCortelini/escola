@@ -228,7 +228,10 @@
                             <h3><i class="fa-solid fa-calendar-days" style="color:#3b82f6;"></i> Agenda Semanal de Atendimentos</h3>
                         </div>
 
-                        <div class="agenda-nav-controls">
+                        <div class="agenda-nav-controls" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button onclick="toggleAgendaLayoutMode()" id="btnToggleAgendaLayout" class="view-toggle-btn" style="background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; font-weight:800;" title="Alternar entre Linhas por Dia (Cronológico) e Grade de Vagas">
+                                <i class="fa-solid fa-list-check"></i> <span id="lblAgendaLayoutMode">Linhas por Dia (Novo)</span>
+                            </button>
                             <div class="week-pager-box">
                                 <button onclick="moveWeek(-7)" class="week-pager-btn" title="Semana Anterior"><i class="fa-solid fa-chevron-left"></i></button>
                                 <span id="opWeekRangeText">Semana</span>
@@ -238,18 +241,9 @@
                         </div>
                     </div>
 
-                    <!-- Tabela da Agenda Semanal -->
-                    <div class="weekly-table-wrapper">
-                        <table class="weekly-table">
-                            <thead>
-                                <tr id="weeklyTableHeaderRow">
-                                    <!-- Rendered via JS -->
-                                </tr>
-                            </thead>
-                            <tbody id="weeklyTableBody">
-                                <!-- Rendered via JS -->
-                            </tbody>
-                        </table>
+                    <!-- Container Dinâmico da Agenda Semanal (Linhas por Dia ou Grade de Vagas) -->
+                    <div id="agendaWeeklyContent">
+                        <!-- Renderizado via JS -->
                     </div>
                 </div>
             </div>
