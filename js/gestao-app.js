@@ -99,6 +99,16 @@ function setupTabNavigation() {
             renderAllModules();
         });
     });
+
+    // Ativação automática de aba via parâmetro da URL (?aba=op ou #tab-op)
+    const urlParams = new URLSearchParams(window.location.search);
+    const abaParam = urlParams.get('aba');
+    if (abaParam) {
+        switchTab(abaParam);
+    } else if (window.location.hash) {
+        const hashTab = window.location.hash.replace('#tab-', '').replace('#', '');
+        if (hashTab) switchTab(hashTab);
+    }
 }
 
 function switchTab(tabId) {

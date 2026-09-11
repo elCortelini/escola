@@ -19,7 +19,7 @@
     <header class="header-nav">
         <div class="nav-container">
             <a href="index.html" class="brand">
-                <div class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></div>
+                <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" class="brand-header-logo">
                 <div class="brand-text">
                     <h1>IntegraRizzi</h1>
                     <p>Portal Integrado de Gestão Escolar | C.E. Pedro Rizzi</p>
@@ -27,36 +27,70 @@
             </a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active"><i class="fa-solid fa-house"></i> Início</a></li>
-                <li><a href="sistema-gestao.html"><i class="fa-solid fa-cubes-stacked"></i> Gestão Escolar (IntegraRizzi)</a></li>
+                <li><a href="sistema-gestao.html?aba=op"><i class="fa-solid fa-heart-pulse" style="color:#f43f5e;"></i> Orientação (OE)</a></li>
+                <li><a href="#sistemas-hub"><i class="fa-solid fa-layer-group"></i> Central de Módulos</a></li>
                 <li><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard Avaliação</a></li>
-                <li><a href="#sistemas"><i class="fa-solid fa-cubes"></i> Sistemas</a></li>
                 <li><a href="#config" onclick="openConfigModal()" class="btn-config"><i class="fa-solid fa-gear"></i> Configurações</a></li>
             </ul>
         </div>
     </header>
 
-    <!-- Hero Section Limpa -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="badge-tag"><i class="fa-solid fa-shield-halved"></i> Gestão Educacional Integrada</div>
-            <h2>Portal de Sistemas Escolares</h2>
-            <p>Acesse as plataformas digitais, relatórios analíticos em tempo real e ferramentas de apoio à comunidade escolar do Centro Educacional Pedro Rizzi.</p>
-            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="sistema-gestao.html" class="btn btn-primary" style="width: auto; padding: 0.8rem 1.6rem; font-size: 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">
-                    <i class="fa-solid fa-cubes-stacked"></i> Acessar SIGE — Gestão & Agenda
-                </a>
-                <a href="dashboard.html" class="btn btn-secondary" style="width: auto; padding: 0.8rem 1.6rem; font-size: 1rem; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard de Avaliação
-                </a>
+    <!-- Hero Showcase com Logo Grande & IntegraRizzi -->
+    <section class="hero-showcase">
+        <div class="hero-content-wrap">
+            <!-- Moldura Destaque da Logo Grande -->
+            <div class="main-logo-showcase">
+                <div class="logo-aura"></div>
+                <img src="img/logo-pedro-rizzi.png" alt="Logo Oficial Centro Educacional Pedro Rizzi" class="big-school-logo">
+            </div>
+            
+            <div class="hero-text-block">
+                <div class="hero-badge"><i class="fa-solid fa-school"></i> CENTRO EDUCACIONAL PEDRO RIZZI</div>
+                <h1 class="hero-main-title">IntegraRizzi</h1>
+                <p class="hero-main-subtitle">Portal Unificado de Gestão Educacional, Orientação e Plataformas Escolares</p>
+            </div>
+
+            <!-- Cards Principais de Ação (Dois Pilares de Entrada) -->
+            <div class="action-pillars-grid">
+                <!-- Pillar 1: Acesso Direto a Orientacao Educacional (OE) -->
+                <div class="pillar-card pillar-op">
+                    <div>
+                        <div class="pillar-badge badge-oe"><i class="fa-solid fa-bolt"></i> ACESSO DIRETO</div>
+                        <div class="pillar-icon-box icon-op">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <h3>Orientação Educacional (OE)</h3>
+                        <p>Gestão completa da agenda semanal, controle de 4 vagas por turno, prontuário único do aluno e emissão de declarações.</p>
+                    </div>
+                    <a href="sistema-gestao.html?aba=op" class="pillar-btn btn-op-primary">
+                        <span>Acessar Agenda OE</span> <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Pillar 2: Central de Modulos e Outros Sistemas -->
+                <div class="pillar-card pillar-hub">
+                    <div>
+                        <div class="pillar-badge badge-hub"><i class="fa-solid fa-layer-group"></i> PLATAFORMA INTEGRADA</div>
+                        <div class="pillar-icon-box icon-hub">
+                            <i class="fa-solid fa-cubes-stacked"></i>
+                        </div>
+                        <h3>Central de Módulos & Sistemas</h3>
+                        <p>Portal com acesso à Secretaria, Direção, Dashboard de Avaliação dos Alunos e sistemas complementares da escola.</p>
+                    </div>
+                    <a href="#sistemas-hub" class="pillar-btn btn-hub-secondary">
+                        <span>Explorar Módulos & Sistemas</span> <i class="fa-solid fa-chevron-down"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Main Container -->
-    <main class="container">
-        <div class="section-header" id="sistemas">
-            <h3>Sistemas e Plataformas Escolares</h3>
-            <p>Selecione o sistema desejado para acessar seus recursos e funcionalidades.</p>
+    <!-- Main Container: Central de Modulos e Sistemas -->
+    <main class="container" id="sistemas-hub">
+        <div class="section-header" style="margin-bottom: 2rem;">
+            <span class="badge-tag" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;"><i class="fa-solid fa-grid-2-plus"></i> CATÁLOGO COMPLETO</span>
+            <h3 style="font-size: 1.8rem; font-weight: 900; color: #0f172a; margin-top: 4px;">Módulos Escolares & Sistemas Desenvolvidos</h3>
+            <p style="font-size: 1rem; color: #64748b;">Acesse qualquer módulo do IntegraRizzi ou os sistemas complementares configurados para a escola.</p>
         </div>
 
         <div class="systems-grid" id="systemsGrid">
