@@ -235,7 +235,7 @@
 /* Painel de Conteúdo de Abas */
 .tab-content-section {
     display: none;
-    padding: 2rem 0;
+    padding: 0.5rem 0;
     animation: fadeIn 0.25s ease-in-out;
 }
 
@@ -252,14 +252,14 @@
 .turno-slots-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.2rem;
-    margin-bottom: 1.8rem;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
 }
 
 .turno-card {
     background: white;
-    border-radius: 16px;
-    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
     border: 1px solid #e2e8f0;
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -595,11 +595,11 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
     background: white;
-    padding: 1rem 1.2rem;
-    border-radius: 14px;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
 }
 
@@ -646,22 +646,22 @@
 
 .agenda-semanal-container {
     background: white;
-    border-radius: 20px;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
     box-shadow: var(--shadow-md);
     overflow: hidden;
-    margin-top: 1rem;
+    margin-top: 0.4rem;
 }
 
 .agenda-toolbar-header {
     background: #ffffff;
-    padding: 1.2rem 1.5rem;
+    padding: 0.6rem 1rem;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.6rem;
 }
 
 .agenda-title-box h3 {

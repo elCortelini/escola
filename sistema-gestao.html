@@ -150,47 +150,23 @@
         <!-- ABA 2: ORIENTAÇÃO EDUCACIONAL (OE) -->
         <!-- ========================================== -->
         <section id="tab-op" class="tab-content-section">
-            <div class="action-toolbar">
+            <div class="action-toolbar" style="padding:0.5rem 1rem; margin-bottom:0.75rem;">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.15rem; margin:0;">
                         <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Agenda da Orientação Educacional (OE)
                     </h3>
-                    <p style="font-size:0.85rem; color:#64748b;">
-                        Controle estrito: <strong>3 agendados + 1 emergencial por turno</strong>. Clique em qualquer agendamento para ver detalhes completos!
-                    </p>
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                     <!-- Seletor da Orientadora (Consolidada vs Individual) -->
-                    <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd;">
+                    <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd; padding:6px 12px;">
                         <option value="todas">🌐 Visão Consolidada (Orientação Educacional)</option>
                         <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Séries Iniciais — Matutino/Vespertino)</option>
                         <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Séries Finais — Matutino)</option>
                     </select>
 
-                    <!-- Alternador de Visão Semanal / Cards (Projetos OE em Standby) -->
-                    <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
-                        <button onclick="setOpViewMode('semanal')" class="view-toggle-btn op-toggle-btn active" data-mode="semanal">
-                            <i class="fa-solid fa-calendar-week"></i> Semanal
-                        </button>
-                        <button onclick="setOpViewMode('cards')" class="view-toggle-btn op-toggle-btn" data-mode="cards">
-                            <i class="fa-solid fa-list-ul"></i> Lista / Cards
-                        </button>
-                        <button onclick="setOpViewMode('projetos')" class="view-toggle-btn op-toggle-btn" data-mode="projetos" style="display:none;">
-                            <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos OE
-                        </button>
-                    </div>
-
-                    <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.85rem;" title="Configurar Telefones de WhatsApp das Orientadoras">
+                    <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.82rem; padding:6px 12px;" title="Configurar Telefones de WhatsApp das Orientadoras">
                         <i class="fa-brands fa-whatsapp"></i> WhatsApps da Orientação
-                    </button>
-
-                    <button type="button" id="btnOpenNovoProjetoOP" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; display:none;" title="Cadastrar Projeto Continuado OE">
-                        <i class="fa-solid fa-folder-plus"></i> + Projeto OE
-                    </button>
-
-                    <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
-                        <i class="fa-solid fa-plus"></i> Novo Agendamento
                     </button>
                 </div>
             </div>
