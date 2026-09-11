@@ -934,12 +934,11 @@
             </div>
 
             <form id="formAgendamentoOP" onsubmit="submitAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
-                <!-- Seleção do Público Atendido -->
+                <!-- Seleção do Público Atendido (Aluno / Família) -->
                 <div style="background:#eff6ff; padding:10px 14px; border-radius:12px; border:1px solid #bfdbfe;">
                     <label style="font-weight:800; font-size:0.85rem; color:#1e3a8a;"><i class="fa-solid fa-users-viewfinder"></i> Público do Atendimento:</label>
-                    <select id="opInputPublico" onchange="togglePublicoAgendamentoOP()" class="search-input" style="width:100%; font-weight:700; color:#1e3a8a; margin-top:4px; border-color:#93c5fd; background:white;">
+                    <select id="opInputPublico" class="search-input" style="width:100%; font-weight:700; color:#1e3a8a; margin-top:4px; border-color:#93c5fd; background:white;">
                         <option value="aluno">👨‍🎓 Aluno / Família</option>
-                        <option value="professor">👨‍🏫 Professor / Docente</option>
                     </select>
                 </div>
 
@@ -965,7 +964,7 @@
                     
                     <div id="modalWaPreviewContainer" style="margin-top:8px; display:none;">
                         <a id="modalWaPreviewBtn" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:8px 12px;">
-                            <i class="fa-brands fa-whatsapp"></i> 💬 Testar / Abrir WhatsApp de Contato
+                            <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                         </a>
                     </div>
                 </div>
@@ -977,13 +976,13 @@
                     </div>
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
-                        <input type="time" id="opInputHorario" required class="search-input" style="width:100%;">
+                        <input type="time" id="opInputHorario" onchange="autoSelectTurnoByHorario()" oninput="autoSelectTurnoByHorario()" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno (Automático por Horário):</label>
                         <select id="opInputTurno" class="search-input" style="width:100%;">
                             <option value="matutino">☀️ Matutino (Manhã)</option>
                             <option value="vespertino">⛅ Vespertino (Tarde)</option>
@@ -1009,11 +1008,6 @@
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo / O que vai ser tratado:</label>
                     <textarea id="opInputMotivo" required rows="3" placeholder="Descreva sucintamente o motivo do agendamento..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
-                </div>
-
-                <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato da Conversa / Atendimento & Combinados:</label>
-                    <textarea id="opInputRelatoConversa" rows="6" placeholder="Descreva aqui o relato completo da conversa realizada, posture do atendido, combinados e deliberações da Orientação..." class="search-input" style="width:100%; font-family:inherit; margin-top:4px;"></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
@@ -1069,7 +1063,7 @@
             <!-- Botão WhatsApp Direto -->
             <div style="margin-bottom:1.2rem;">
                 <a id="detalhesWaBtn" href="#" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.92rem;">
-                    <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> 💬 Abrir WhatsApp do Responsável (<span id="detalhesTelefoneText">-</span>)
+                    <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Enviar Mensagem (<span id="detalhesTelefoneText">-</span>)
                 </a>
             </div>
 

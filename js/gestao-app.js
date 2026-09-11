@@ -502,7 +502,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
 
                                     <!-- Botão WhatsApp Direto no Card -->
                                     <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
-                                        <i class="fa-brands fa-whatsapp"></i> Chamar WhatsApp
+                                        <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                                     </a>
                                 </div>
                             </td>
@@ -580,7 +580,7 @@ function renderCardsView(todosAtendimentos) {
                         
                         ${a.telefone ? `
                             <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-whatsapp-direct">
-                                <i class="fa-brands fa-whatsapp"></i> 💬 Abrir WhatsApp de Contato (${a.telefone})
+                                <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                             </a>
                         ` : ''}
                     </div>
@@ -1266,22 +1266,51 @@ function togglePublicoAgendamentoOP() {
 }
 window.togglePublicoAgendamentoOP = togglePublicoAgendamentoOP;
 
+function autoSelectTurnoByHorario() {
+    const horElem = document.getElementById("opInputHorario");
+    const turElem = document.getElementById("opInputTurno");
+    if (!horElem || !turElem) return;
+    const val = horElem.value;
+    if (!val) return;
+    const hour = parseInt(val.split(":")[0], 10);
+    if (!isNaN(hour)) {
+        if (hour < 12) {
+            turElem.value = "matutino";
+        } else {
+            turElem.value = "vespertino";
+        }
+    }
+}
+window.autoSelectTurnoByHorario = autoSelectTurnoByHorario;
+
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {
     const modal = document.getElementById("modalAgendamentoOP");
     if (!modal) return;
     document.getElementById("formAgendamentoOP").reset();
-    togglePublicoAgendamentoOP();
+
+    const selectPub = document.getElementById("opInputPublico");
+    if (selectPub) selectPub.value = "aluno";
+    if (typeof togglePublicoAgendamentoOP === "function") togglePublicoAgendamentoOP();
     
     document.getElementById("opInputData").value = dateIso || new Date().toISOString().split("T")[0];
     if (turno) document.getElementById("opInputTurno").value = turno;
     if (tipo) document.getElementById("opInputTipo").value = tipo;
 
-    if (orientadoraNome) {
+    // Verificar orientadora selecionada no filtro superior se nenhuma foi passada explicitamente
+    const filterSelect = document.getElementById("opFilterOrientadora");
+    const filterVal = filterSelect ? filterSelect.value : "todas";
+
+    let targetOri = orientadoraNome;
+    if (!targetOri && filterVal !== "todas") {
+        targetOri = filterVal;
+    }
+
+    if (targetOri) {
         const selectOri = document.getElementById("opInputOrientadora");
         if (selectOri) {
             for (let opt of selectOri.options) {
-                if (opt.value.includes(orientadoraNome) || opt.text.includes(orientadoraNome)) {
+                if (opt.value.includes(targetOri) || opt.text.includes(targetOri) || targetOri.includes(opt.value.split(" ")[0])) {
                     selectOri.value = opt.value;
                     break;
                 }
@@ -1289,6 +1318,7 @@ function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNo
         }
     }
 
+    autoSelectTurnoByHorario();
     updateModalWhatsAppPreview();
     modal.style.display = "flex";
 }
@@ -1312,14 +1342,12 @@ function submitAgendamentoOP(e) {
     const turno = document.getElementById("opInputTurno").value;
     const tipo = document.getElementById("opInputTipo").value;
     const motivo = document.getElementById("opInputMotivo").value;
-    const relatoConversaElem = document.getElementById("opInputRelatoConversa");
-    const relatoConversa = relatoConversaElem ? relatoConversaElem.value.trim() : "";
 
     try {
         const novoAg = sigeDB.addAgendamentoOP({
             publico, aluno, turma, responsavel, telefone, orientadora, data, horario, turno, tipo, motivo,
-            relatoConversa,
-            historicoTratado: relatoConversa,
+            relatoConversa: "",
+            historicoTratado: "",
             statusSecretaria: "pendente",
             obsSecretaria: "",
             registradoPor: getRoleLabel(sigeDB.getRole())
