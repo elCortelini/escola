@@ -493,23 +493,23 @@ const defaultSigeData = {
             id: "orient-1",
             nome: "Clarinda Rosa Pereira",
             setor: "orientacao",
-            cargoFuncao: "Orientadora Educacional - Matutino",
+            cargoFuncao: "Orientadora Educacional — Séries Iniciais",
             disciplina: "Orientação Educacional (OE)",
             telefone: "47999112233",
             email: "clarinda@escola.gov.br",
-            turnos: "matutino",
-            turmasOuSalas: "6º ao 9º Anos"
+            turnos: "matutino,vespertino",
+            turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)"
         },
         {
             id: "orient-2",
             nome: "Daiane Caetano Costa de Aquino",
             setor: "orientacao",
-            cargoFuncao: "Orientadora Educacional - Vespertino",
+            cargoFuncao: "Orientadora Educacional — Séries Finais",
             disciplina: "Orientação Educacional (OE)",
             telefone: "47999445566",
             email: "daiane@escola.gov.br",
-            turnos: "vespertino",
-            turmasOuSalas: "1º ao 5º Anos"
+            turnos: "matutino",
+            turmasOuSalas: "6º ao 9º Anos (Séries Finais)"
         },
         {
             id: "sup-user-1",
