@@ -22,7 +22,7 @@ const defaultSystems = [
         bgClass: "icon-purple",
         tag: "CONTROLE TOTAL & GESTÃO DE ACESSOS",
         description: "Painel exclusivo do desenvolvedor para cadastro de e-mails autorizados, controle de permissões (RBAC) e alternador de perfil de testes.",
-        url: "sistema-gestao.html?aba=op&action=dev",
+        url: "sistema-gestao.html?aba=admin&action=dev",
         status: "online",
         badge: "PAINEL DEV / ATIVO",
         isLive: true
