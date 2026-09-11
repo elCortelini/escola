@@ -28,7 +28,7 @@
                 <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
                 <select id="activeRoleSelect">
                     <option value="direcao">👑 Gestor / Direção Escolar</option>
-                    <option value="orientacao">💛 Orientador Pedagógico (OP)</option>
+                    <option value="orientacao">💛 Orientador Educacional (OE)</option>
                     <option value="supervisao">📋 Supervisor Pedagógico</option>
                     <option value="secretaria">📝 Secretaria Escolar</option>
                     <option value="admin">⚙️ Administrador do Sistema</option>
@@ -82,7 +82,7 @@
             <i class="fa-solid fa-chalkboard-user"></i> Mural & Calendário
         </button>
         <button class="sige-tab-btn" data-tab="op">
-            <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Pedagógica (OP)
+            <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Educacional (OE)
             <span class="tab-badge" id="badgeTabOP">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="supervisao">
@@ -147,13 +147,13 @@
 
 
         <!-- ========================================== -->
-        <!-- ABA 2: ORIENTAÇÃO PEDAGÓGICA (OP) -->
+        <!-- ABA 2: ORIENTAÇÃO EDUCACIONAL (OE) -->
         <!-- ========================================== -->
         <section id="tab-op" class="tab-content-section">
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Agenda da Orientação Pedagógica (OP)
+                        <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Agenda da Orientação Educacional (OE)
                     </h3>
                     <p style="font-size:0.85rem; color:#64748b;">
                         Controle estrito: <strong>3 agendados + 1 emergencial por turno</strong>. Clique em qualquer agendamento para ver detalhes completos!
@@ -163,12 +163,12 @@
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                     <!-- Seletor da Orientadora (Consolidada vs Individual) -->
                     <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd;">
-                        <option value="todas">🌐 Visão Consolidada (Ambas Orientadoras)</option>
-                        <option value="Orientadora 1 (Carmen)">💛 Orientadora 1 (Carmen)</option>
-                        <option value="Orientadora 2 (Luciana)">💛 Orientadora 2 (Luciana)</option>
+                        <option value="todas">🌐 Visão Consolidada (Orientação Educacional)</option>
+                        <option value="Orientador Educacional 1 (Carmen)">💛 Orientador Educacional 1 (Carmen)</option>
+                        <option value="Orientador Educacional 2 (Luciana)">💛 Orientador Educacional 2 (Luciana)</option>
                     </select>
 
-                    <!-- Alternador de Visão Semanal / Cards / Projetos OP -->
+                    <!-- Alternador de Visão Semanal / Cards / Projetos OE -->
                     <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:14px; border:1px solid #cbd5e1;">
                         <button onclick="setOpViewMode('semanal')" class="view-toggle-btn op-toggle-btn active" data-mode="semanal">
                             <i class="fa-solid fa-calendar-week"></i> Semanal
@@ -177,16 +177,16 @@
                             <i class="fa-solid fa-list-ul"></i> Lista / Cards
                         </button>
                         <button onclick="setOpViewMode('projetos')" class="view-toggle-btn op-toggle-btn" data-mode="projetos">
-                            <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos OP
+                            <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos OE
                         </button>
                     </div>
 
                     <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.85rem;" title="Configurar Telefones de WhatsApp das Orientadoras">
-                        <i class="fa-brands fa-whatsapp"></i> WhatsApps das Orientadoras
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApps da Orientação
                     </button>
 
-                    <button type="button" id="btnOpenNovoProjetoOP" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;" title="Cadastrar Projeto Continuado OP">
-                        <i class="fa-solid fa-folder-plus"></i> + Projeto OP
+                    <button type="button" id="btnOpenNovoProjetoOP" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;" title="Cadastrar Projeto Continuado OE">
+                        <i class="fa-solid fa-folder-plus"></i> + Projeto OE
                     </button>
 
                     <button onclick="openAgendamentoModal()" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
@@ -277,11 +277,11 @@
             <div id="opProjectsViewContainer" style="display:none; margin-top:1rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
                     <div>
-                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos Continuados & Programas de Acompanhamento (OP)</h4>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a;"><i class="fa-solid fa-rocket" style="color:#d97706;"></i> Projetos Continuados & Programas de Acompanhamento (OE)</h4>
                         <p style="font-size:0.82rem; color:#64748b;">Acompanhamento de programas continuados de médio e longo prazo (Mediação de Conflitos, Busca Ativa, Inclusão).</p>
                     </div>
                     <button type="button" onclick="openNovoProjetoOPModal(); return false;" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706;">
-                        <i class="fa-solid fa-plus"></i> Criar Novo Projeto OP
+                        <i class="fa-solid fa-plus"></i> Criar Novo Projeto OE
                     </button>
                 </div>
                 <div id="opProjetosListContainer" style="display:flex; flex-direction:column; gap:1.2rem;">
@@ -921,41 +921,51 @@
 
 
     <!-- ========================================== -->
-    <!-- MODAL 1: NOVO AGENDAMENTO OP -->
+    <!-- ========================================== -->
+    <!-- MODAL 1: NOVO AGENDAMENTO OE -->
     <!-- ========================================== -->
     <div id="modalAgendamentoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Novo Agendamento - Orientação Pedagógica
+                    <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Novo Agendamento - Orientação Educacional (OE)
                 </h3>
                 <button onclick="closeAgendamentoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form id="formAgendamentoOP" onsubmit="submitAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Seleção do Público Atendido -->
+                <div style="background:#eff6ff; padding:10px 14px; border-radius:12px; border:1px solid #bfdbfe;">
+                    <label style="font-weight:800; font-size:0.85rem; color:#1e3a8a;"><i class="fa-solid fa-users-viewfinder"></i> Público do Atendimento:</label>
+                    <select id="opInputPublico" onchange="togglePublicoAgendamentoOP()" class="search-input" style="width:100%; font-weight:700; color:#1e3a8a; margin-top:4px; border-color:#93c5fd; background:white;">
+                        <option value="aluno">👨‍🎓 Aluno / Família</option>
+                        <option value="professor">👨‍🏫 Professor / Docente</option>
+                    </select>
+                </div>
+
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno:</label>
+                    <label id="opLabelAluno" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno:</label>
                     <input type="text" id="opInputAluno" required placeholder="Ex: Gabriel Souza" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
+                        <label id="opLabelTurma" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
                         <input type="text" id="opInputTurma" required placeholder="Ex: 7º Ano A" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
+                        <label id="opLabelResponsavel" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
                         <input type="text" id="opInputResponsavel" required placeholder="Ex: Ana Souza (Mãe)" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato:</label>
+                    <label id="opLabelTelefone" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato:</label>
                     <input type="tel" id="opInputTelefone" oninput="updateModalWhatsAppPreview()" required placeholder="Ex: 47999887766" class="search-input" style="width:100%;">
                     
                     <div id="modalWaPreviewContainer" style="margin-top:8px; display:none;">
                         <a id="modalWaPreviewBtn" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:8px 12px;">
-                            <i class="fa-brands fa-whatsapp"></i> 💬 Testar / Abrir WhatsApp do Responsável
+                            <i class="fa-brands fa-whatsapp"></i> 💬 Testar / Abrir WhatsApp de Contato
                         </a>
                     </div>
                 </div>
@@ -989,16 +999,21 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Responsável:</label>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Responsável:</label>
                     <select id="opInputOrientadora" class="search-input" style="width:100%;">
-                        <option value="Orientadora 1 (Carmen)">💛 Orientadora 1 (Carmen)</option>
-                        <option value="Orientadora 2 (Luciana)">💛 Orientadora 2 (Luciana)</option>
+                        <option value="Orientador Educacional 1 (Carmen)">💛 Orientador Educacional 1 (Carmen)</option>
+                        <option value="Orientador Educacional 2 (Luciana)">💛 Orientador Educacional 2 (Luciana)</option>
                     </select>
                 </div>
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo / O que vai ser tratado:</label>
-                    <textarea id="opInputMotivo" required rows="3" placeholder="Descreva detalhadamente o motivo da reunião..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                    <textarea id="opInputMotivo" required rows="3" placeholder="Descreva sucintamente o motivo do agendamento..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato da Conversa / Atendimento & Combinados:</label>
+                    <textarea id="opInputRelatoConversa" rows="6" placeholder="Descreva aqui o relato completo da conversa realizada, posture do atendido, combinados e deliberações da Orientação..." class="search-input" style="width:100%; font-family:inherit; margin-top:4px;"></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
@@ -1093,8 +1108,8 @@
                 </div>
 
                 <div>
-                    <label style="font-size:0.78rem; font-weight:700; color:#475569;">Histórico do Atendimento & Deliberações:</label>
-                    <textarea id="detalhesInputHistoricoTratado" rows="2" placeholder="Descreva o que foi acertado na reunião com os pais..." class="search-input" style="width:100%; font-size:0.82rem; margin-top:3px; font-family:inherit;"></textarea>
+                    <label style="font-size:0.82rem; font-weight:800; color:#1e293b;"><i class="fa-solid fa-comments" style="color:var(--op-color);"></i> Relato Completo da Conversa, Atendimento & Combinados:</label>
+                    <textarea id="detalhesInputHistoricoTratado" rows="7" placeholder="Descreva aqui detalhadamente a conversa realizada com a família/professor, posture do atendido, combinados e encaminhamentos..." class="search-input" style="width:100%; font-size:0.85rem; margin-top:4px; font-family:inherit; line-height:1.5;"></textarea>
                 </div>
             </div>
 
@@ -1177,7 +1192,7 @@
                     <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-folder-open" style="color:#7c3aed;"></i> Prontuário Único: <span id="prontuarioAlunoNome">Aluno</span>
                     </h3>
-                    <p id="prontuarioTotalCount" style="font-size:0.82rem; color:#64748b; margin-top:2px;">Histórico de atendimentos na Orientação Pedagógica</p>
+                    <p id="prontuarioTotalCount" style="font-size:0.82rem; color:#64748b; margin-top:2px;">Histórico de atendimentos na Orientação Educacional (OE)</p>
                 </div>
                 <button onclick="closeProntuarioModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -1299,7 +1314,7 @@
                     <input type="text" id="supInputEnvolvidos" placeholder="Ex: Orientação (Carmen), Direção, Profª Ana" class="search-input" style="width:100%;">
                     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; align-items:center;">
                         <span style="font-size:0.72rem; color:#64748b; font-weight:700;">Marcar Envolvidos:</span>
-                        <button type="button" onclick="addEnvolvidoTag('Orientação Pedagógica (OP)')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">+ OP</button>
+                        <button type="button" onclick="addEnvolvidoTag('Orientação Educacional (OE)')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">+ OE</button>
                         <button type="button" onclick="addEnvolvidoTag('Direção Escolar')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#fef3c7; color:#b45309; border-color:#fde047;">+ Direção</button>
                         <button type="button" onclick="addEnvolvidoTag('Professores / Docentes')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">+ Docentes</button>
                         <button type="button" onclick="addEnvolvidoTag('Secretaria Escolar')" class="btn-sec" style="font-size:0.7rem; padding:2px 8px; background:#ecfdf5; color:#047857; border-color:#a7f3d0;">+ Secretaria</button>
@@ -1768,7 +1783,7 @@
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor da Escola:</label>
                         <select id="proInputSetor" required class="search-input" style="width:100%; font-weight:700;">
                             <option value="docentes">👨‍🏫 Corpo Docente (Professor)</option>
-                            <option value="orientacao">🧭 Orientação Pedagógica (OP)</option>
+                            <option value="orientacao">🧭 Orientação Educacional (OE)</option>
                             <option value="supervisao">📋 Supervisão Pedagógica</option>
                             <option value="direcao">👑 Direção Escolar</option>
                             <option value="secretaria">📑 Secretaria Escolar</option>
@@ -1939,13 +1954,13 @@
 
 
     <!-- ========================================== -->
-    <!-- MODAL NOVO PROJETO CONTINUADO OP -->
+    <!-- MODAL NOVO PROJETO CONTINUADO OE -->
     <!-- ========================================== -->
     <div id="modalNovoProjetoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:650px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Cadastrar Projeto / Programa OP
+                    <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Cadastrar Projeto / Programa OE
                 </h3>
                 <button onclick="closeNovoProjetoOPModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -1969,11 +1984,11 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Líder:</label>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Líder:</label>
                         <select id="projOpInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
-                            <option value="Orientadora 1 (Carmen)">Orientadora 1 (Carmen)</option>
-                            <option value="Orientadora 2 (Luciana)">Orientadora 2 (Luciana)</option>
-                            <option value="Equipe Orientação">Equipe Orientação Pedagógica</option>
+                            <option value="Orientador Educacional 1 (Carmen)">Orientador Educacional 1 (Carmen)</option>
+                            <option value="Orientador Educacional 2 (Luciana)">Orientador Educacional 2 (Luciana)</option>
+                            <option value="Equipe Orientação Educacional">Equipe Orientação Educacional</option>
                         </select>
                     </div>
                 </div>
@@ -2020,7 +2035,7 @@
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
                     <button type="button" onclick="closeNovoProjetoOPModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; color:white;">Salvar Projeto OP</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#d97706; border-color:#d97706; color:white;">Salvar Projeto OE</button>
                 </div>
             </form>
         </div>

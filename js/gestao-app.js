@@ -57,7 +57,7 @@ function getRoleLabel(role) {
     const labels = {
         admin: "Administrador do Sistema",
         direcao: "Gestor / Direção Escolar",
-        orientacao: "Orientador Pedagógico (OP)",
+        orientacao: "Orientador Educacional (OE)",
         supervisao: "Supervisor Pedagógico",
         secretaria: "Secretaria Escolar",
         comunidade: "Professor / Aluno / Comunidade"
@@ -331,7 +331,7 @@ function getWhatsAppUrl(phone, aluno, responsavel, data, horario) {
     if (cleanPhone.length === 10 || cleanPhone.length === 11) {
         cleanPhone = "55" + cleanPhone;
     }
-    const textMsg = encodeURIComponent(`Olá ${responsavel || 'Responsável'}! Entramos em contato do Centro Educacional Pedro Rizzi referente ao aluno(a) ${aluno || ''} sobre o atendimento da Orientação Pedagógica${data ? ' em ' + formatDateBR(data) : ''}${horario ? ' às ' + horario : ''}.`);
+    const textMsg = encodeURIComponent(`Olá ${responsavel || 'Responsável'}! Entramos em contato do Centro Educacional Pedro Rizzi referente ao atendimento da Orientação Educacional (OE)${aluno ? ' referente a ' + aluno : ''}${data ? ' em ' + formatDateBR(data) : ''}${horario ? ' às ' + horario : ''}.`);
     return `https://wa.me/${cleanPhone}?text=${textMsg}`;
 }
 
@@ -421,7 +421,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true }
     ];
 
-    bodyTable.innerHTML = slotsConfig.map(s => {
+    let html = slotsConfig.map(s => {
         if (s.header) {
             return `
                 <tr>
@@ -450,15 +450,16 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
 
                     if (item) {
                         const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
+                        const isProf = item.publico === "professor";
                         return `
                             <td class="${d.isToday ? 'today-column-cell' : ''}">
                                 <div class="weekly-slot-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos">
                                     <div class="weekly-slot-header">
-                                        <span class="weekly-student-name">${item.aluno}</span>
-                                        <span class="weekly-class-badge">${item.turma}</span>
+                                        <span class="weekly-student-name">${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}</span>
+                                        <span class="weekly-class-badge" style="${isProf ? 'background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;' : ''}">${item.turma}</span>
                                     </div>
                                     <div style="font-size:0.73rem; color:#1e3a8a; font-weight:700;">
-                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || 'OP'}
+                                        <i class="fa-solid fa-user-gear"></i> ${item.orientadora || 'OE'}
                                     </div>
                                     <div class="weekly-motive" title="${item.motivo}">
                                         "${item.motivo}"
@@ -490,6 +491,61 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
             </tr>
         `;
     }).join("");
+
+    // Linha de Projetos Continuados da OE na Agenda Semanal
+    const projetosOE = sigeDB.getProjetosOrientacao();
+    const projRowHtml = `
+        <tr>
+            <td colspan="6" class="turno-section-header" style="background:#fff7ed; color:#c2410c; border-top:2px solid #fed7aa;">
+                <i class="fa-solid fa-rocket" style="color:#ea580c;"></i> 🚀 PROJETOS & PROGRAMAS DA OE EM ANDAMENTO
+            </td>
+        </tr>
+        <tr>
+            <td class="slot-time-cell" style="vertical-align:top; background:#fffbf5; border-right:2px solid #fed7aa; padding:10px 8px;">
+                <div style="font-weight:900; color:#9a3412; font-size:0.82rem; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-folder-open" style="color:#ea580c;"></i> PROJETOS OE
+                </div>
+                <div style="font-size:0.68rem; color:#9a3412; margin-top:4px;">Acompanhamento Continuado</div>
+                <button onclick="openNovoProjetoOPModal()" class="btn-sec" style="margin-top:8px; font-size:0.7rem; padding:4px 6px; background:#ea580c; color:white; border:none; width:100%; text-align:center; border-radius:6px;">
+                    <i class="fa-solid fa-plus"></i> + Projeto OE
+                </button>
+            </td>
+            ${weekDays.map(d => {
+                const activeProjects = projetosOE.filter(p => {
+                    const dataInicio = p.dataInicio || p.criadoEm || d.dateIso;
+                    const dataFim = p.dataFim || dataInicio;
+                    return d.dateIso >= dataInicio && d.dateIso <= dataFim;
+                });
+
+                return `
+                    <td class="${d.isToday ? 'today-column-cell' : ''}" style="vertical-align:top; padding:8px;">
+                        <div style="display:flex; flex-direction:column; gap:6px; min-height:80px;">
+                            ${activeProjects.length > 0 ? activeProjects.map(p => {
+                                const etapasHoje = p.etapas ? p.etapas.filter(e => e.dataLimite === d.dateIso) : [];
+                                return `
+                                    <div class="weekly-slot-card" onclick="setOpViewMode('projetos')" style="border-left:4px solid #ea580c; background:#fffbf5; cursor:pointer;" title="Clique para abrir detalhes dos Projetos OE">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:800; color:#9a3412;">
+                                            <span><i class="fa-solid fa-rocket" style="color:#d97706;"></i> ${p.titulo}</span>
+                                        </div>
+                                        <div style="font-size:0.68rem; color:#b45309; margin-top:2px;">
+                                            <i class="fa-solid fa-user-gear"></i> ${p.orientadoraLider || 'OE'}
+                                        </div>
+                                        ${etapasHoje.map(e => `
+                                            <div style="font-size:0.68rem; background:${e.concluido ? '#dcfce7' : '#fef3c7'}; color:${e.concluido ? '#15803d' : '#92400e'}; padding:2px 4px; border-radius:4px; margin-top:4px; font-weight:700;">
+                                                ${e.concluido ? '✅' : '🎯 Marco:'} ${e.titulo}
+                                            </div>
+                                        `).join("")}
+                                    </div>
+                                `;
+                            }).join("") : `<span style="font-size:0.7rem; color:#cbd5e1; font-style:italic;">Sem projetos na data</span>`}
+                        </div>
+                    </td>
+                `;
+            }).join("")}
+        </tr>
+    `;
+
+    bodyTable.innerHTML = html + projRowHtml;
 }
 
 function renderCardsView(todosAtendimentos) {
@@ -507,7 +563,7 @@ function renderCardsView(todosAtendimentos) {
                 <i class="fa-solid fa-calendar-day"></i>
                 <p>Nenhum atendimento agendado para a data escolhida (${formatDateBR(filterData)}).</p>
                 <button onclick="openAgendamentoModal('${filterData}')" class="btn btn-primary" style="margin-top:1rem; width:auto;">
-                    <i class="fa-solid fa-plus"></i> Criar Agendamento na OP
+                    <i class="fa-solid fa-plus"></i> Criar Agendamento na OE
                 </button>
             </div>
         `;
@@ -520,16 +576,20 @@ function renderCardsView(todosAtendimentos) {
 
     container.innerHTML = filtrados.map(a => {
         const waUrl = getWhatsAppUrl(a.telefone, a.aluno, a.responsavel, a.data, a.horario);
+        const isProf = a.publico === "professor";
 
         return `
             <div class="op-card" onclick="openDetalhesModal('${a.id}')" style="cursor:pointer;">
                 <div>
                     <div class="op-card-header">
                         <div>
-                            <div class="op-patient-name">${a.aluno}</div>
+                            <div class="op-patient-name" style="display:flex; align-items:center; gap:6px;">
+                                ${isProf ? '<span class="sup-event-cat-badge" style="background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;">👨‍🏫 Professor</span>' : ''}
+                                <span>${a.aluno}</span>
+                            </div>
                             <div class="op-meta-sub">
                                 <i class="fa-solid fa-graduation-cap"></i> ${a.turma} • <i class="fa-regular fa-user"></i> ${a.responsavel}
-                                <br><strong style="color:#1e3a8a;"><i class="fa-solid fa-user-gear"></i> ${a.orientadora || 'Orientação'}</strong>
+                                <br><strong style="color:#1e3a8a;"><i class="fa-solid fa-user-gear"></i> ${a.orientadora || 'OE'}</strong>
                             </div>
                         </div>
                         <span class="op-type-tag ${a.tipo}">${a.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>
@@ -537,13 +597,14 @@ function renderCardsView(todosAtendimentos) {
 
                     <div class="op-body">
                         <p style="margin-bottom: 8px;"><strong>Motivo / Assunto:</strong> ${a.motivo}</p>
+                        ${a.relatoConversa ? `<p style="margin-bottom:8px; font-size:0.82rem; color:#475569; background:#f8fafc; padding:6px 8px; border-radius:6px; border:1px solid #e2e8f0;"><strong>💬 Relato da Conversa:</strong> ${a.relatoConversa}</p>` : ''}
                         <div style="font-size: 0.8rem; color: #64748b;">
                             <i class="fa-regular fa-clock"></i> <strong>Data/Horário:</strong> ${formatDateBR(a.data)} às ${a.horario} (${a.turno.toUpperCase()})
                         </div>
                         
                         ${a.telefone ? `
                             <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-whatsapp-direct">
-                                <i class="fa-brands fa-whatsapp"></i> 💬 Abrir WhatsApp do Responsável (${a.telefone})
+                                <i class="fa-brands fa-whatsapp"></i> 💬 Abrir WhatsApp de Contato (${a.telefone})
                             </a>
                         ` : ''}
                     </div>
@@ -907,10 +968,11 @@ function openDetalhesModal(id) {
 
     currentDetailAppointmentId = id;
 
-    document.getElementById("detalhesAlunoNome").innerText = ag.aluno;
-    document.getElementById("detalhesTurmaBadge").innerText = ag.turma;
-    document.getElementById("detalhesResponsavelNome").innerText = ag.responsavel;
-    document.getElementById("detalhesOrientadora").innerText = ag.orientadora || "Orientação Pedagógica";
+    const isProf = ag.publico === "professor";
+    document.getElementById("detalhesAlunoNome").innerText = isProf ? `👨‍🏫 ${ag.aluno}` : ag.aluno;
+    document.getElementById("detalhesTurmaBadge").innerText = isProf ? `Docente: ${ag.turma}` : ag.turma;
+    document.getElementById("detalhesResponsavelNome").innerText = ag.responsavel || (isProf ? 'Contato Direto' : '-');
+    document.getElementById("detalhesOrientadora").innerText = ag.orientadora || "Orientação Educacional (OE)";
     document.getElementById("detalhesDataHorario").innerText = `${formatDateBR(ag.data)} às ${ag.horario} (${ag.turno.toUpperCase()})`;
     
     document.getElementById("detalhesTipoVaga").innerHTML = `<span class="op-type-tag ${ag.tipo}">${ag.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>`;
@@ -929,7 +991,7 @@ function openDetalhesModal(id) {
         document.getElementById("detalhesInputEncaminhamento").value = ag.encaminhamento || "Nenhum";
     }
     if (document.getElementById("detalhesInputHistoricoTratado")) {
-        document.getElementById("detalhesInputHistoricoTratado").value = ag.historicoTratado || "";
+        document.getElementById("detalhesInputHistoricoTratado").value = ag.relatoConversa || ag.historicoTratado || "";
     }
 
     const obsBox = document.getElementById("detalhesObsBox");
@@ -1042,55 +1104,68 @@ function gerarDeclaracaoComparecimento(id) {
     const dataAtual = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
     const horChegada = ag.chegadaEm ? ag.chegadaEm.split("T")[1]?.substring(0, 5) : ag.horario;
 
+    const isProf = ag.publico === "professor";
+    const corpoTexto = isProf ? 
+        `Declaramos para os devidos fins a quem interessar possa que o(a) docente/professor(a) <strong>${ag.aluno}</strong> (Disciplina/Turma: <strong>${ag.turma}</strong>) compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião, alinhamento pedagógico e atendimento com o setor de Orientação Educacional.` :
+        `Declaramos para os devidos fins a quem interessar possa que o(a) Sr(a). <strong>${ag.responsavel}</strong> compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião e atendimento da Orientação Educacional referente ao estudante <strong>${ag.aluno}</strong>, regularmente matriculado no <strong>${ag.turma}</strong>.`;
+
     const certHtml = `
         <!DOCTYPE html>
         <html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
-            <title>Declaração de Comparecimento - C.E. Pedro Rizzi</title>
+            <title>Declaração de Comparecimento - Orientação Educacional - C.E. Pedro Rizzi</title>
             <style>
-                body { font-family: 'Times New Roman', serif; padding: 40px; color: #111; line-height: 1.8; }
-                .cert-box { border: 3px double #000; padding: 40px; max-width: 750px; margin: 0 auto; text-align: center; }
-                .header { margin-bottom: 30px; }
-                .title { font-size: 22px; font-weight: bold; margin: 30px 0; text-transform: uppercase; letter-spacing: 2px; }
-                .content { font-size: 17px; text-align: justify; text-indent: 40px; margin-bottom: 50px; }
-                .footer-sign { margin-top: 60px; display: flex; justify-content: space-around; }
-                .sign-line { border-top: 1px solid #000; width: 250px; text-align: center; font-size: 14px; padding-top: 5px; }
-                @media print { .no-print { display: none; } }
+                @page { size: portrait; margin: 20mm; }
+                body { font-family: 'Times New Roman', serif; padding: 20px; color: #111; line-height: 1.8; background: #fff; }
+                .cert-box { border: 2px solid #000; padding: 40px 30px; max-width: 700px; margin: 0 auto; min-height: 850px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .header h2 { font-size: 20px; font-weight: bold; margin: 0 0 5px 0; letter-spacing: 1px; }
+                .header p { font-size: 13px; margin: 0; color: #333; }
+                .title { font-size: 20px; font-weight: bold; margin: 40px 0 30px 0; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-decoration: underline; }
+                .content { font-size: 16px; text-align: justify; text-indent: 40px; margin-bottom: 40px; line-height: 2; }
+                .footer-sign { margin-top: 80px; display: flex; justify-content: space-around; }
+                .sign-line { border-top: 1px solid #000; width: 260px; text-align: center; font-size: 14px; padding-top: 6px; }
+                @media print { .no-print { display: none !important; } .cert-box { border: none; padding: 0; } }
             </style>
         </head>
         <body>
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#2563eb; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">
-                    🖨️ Imprimir / Salvar PDF
+                <button onclick="window.print()" style="padding:12px 24px; font-size:16px; background:#1e3a8a; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    🖨️ Imprimir / Salvar PDF (Formato Retrato A4)
                 </button>
             </div>
 
             <div class="cert-box">
-                <div class="header">
-                    <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
-                    <p style="font-size:14px; margin-top:-10px;">Rua Pedro Rangel, S/N - Itajaí / SC • Fone: (47) 3348-0000</p>
-                    <hr style="border: 0.5px solid #000; margin-top:15px;">
-                </div>
-
-                <div class="title">DECLARAÇÃO DE COMPARECIMENTO</div>
-
-                <div class="content">
-                    Declaramos para os devidos fins a quem interessar possa que o(a) Sr(a). <strong>${ag.responsavel}</strong> compareceu a este estabelecimento de ensino no dia <strong>${formatDateBR(ag.data)}</strong>, no período das <strong>${horChegada}</strong> às <strong>${ag.horario}</strong>, para reunião e acompanhamento pedagógico referente ao estudante <strong>${ag.aluno}</strong>, regularmente matriculado no <strong>${ag.turma}</strong>.
-                </div>
-
-                <p style="text-align:right; font-size:16px; margin-top:40px;">
-                    Itajaí/SC, ${dataAtual}.
-                </p>
-
-                <div class="footer-sign">
-                    <div class="sign-line">
-                        <strong>Orientação Pedagógica</strong><br>
-                        ${ag.orientadora || 'C.E. Pedro Rizzi'}
+                <div>
+                    <div class="header">
+                        <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                        <p>SETOR DE ORIENTAÇÃO EDUCACIONAL (OE)</p>
+                        <p style="font-size:12px; margin-top:2px;">Rua Pedro Rangel, S/N - Itajaí / SC • Fone: (47) 3348-0000</p>
+                        <hr style="border: 0.5px solid #000; margin-top:15px;">
                     </div>
-                    <div class="sign-line">
-                        <strong>Direção Escolar</strong><br>
-                        Centro Educacional Pedro Rizzi
+
+                    <div class="title">DECLARAÇÃO DE COMPARECIMENTO</div>
+
+                    <div class="content">
+                        ${corpoTexto}
+                    </div>
+                </div>
+
+                <div>
+                    <p style="text-align:right; font-size:15px; margin-bottom:60px;">
+                        Itajaí/SC, ${dataAtual}.
+                    </p>
+
+                    <div class="footer-sign">
+                        <div class="sign-line">
+                            <strong>Orientação Educacional (OE)</strong><br>
+                            ${ag.orientadora || 'C.E. Pedro Rizzi'}
+                        </div>
+                        <div class="sign-line">
+                            <strong>Direção Escolar</strong><br>
+                            Centro Educacional Pedro Rizzi
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1170,11 +1245,46 @@ function reagendarAluno(id) {
     showToast(`📅 Formulário de reagendamento pré-preenchido para ${ag.aluno}! Escolha a nova data.`);
 }
 
-// MODAL AGENDAMENTO OP
+function togglePublicoAgendamentoOP() {
+    const selectPub = document.getElementById("opInputPublico");
+    if (!selectPub) return;
+    const val = selectPub.value;
+
+    const lblAluno = document.getElementById("opLabelAluno");
+    const inpAluno = document.getElementById("opInputAluno");
+    const lblTurma = document.getElementById("opLabelTurma");
+    const inpTurma = document.getElementById("opInputTurma");
+    const lblResp = document.getElementById("opLabelResponsavel");
+    const inpResp = document.getElementById("opInputResponsavel");
+    const lblTel = document.getElementById("opLabelTelefone");
+    const inpTel = document.getElementById("opInputTelefone");
+
+    if (val === "professor") {
+        if (lblAluno) lblAluno.innerText = "Nome do Professor / Docente:";
+        if (inpAluno) inpAluno.placeholder = "Ex: Prof. Carlos Silva";
+        if (lblTurma) lblTurma.innerText = "Disciplina / Turma:";
+        if (inpTurma) inpTurma.placeholder = "Ex: Matemática / 7º Ano A";
+        if (lblResp) lblResp.innerText = "Contato / Coordenação (Opcional):";
+        if (inpResp) inpResp.placeholder = "Ex: Coordenação Pedagógica";
+        if (lblTel) lblTel.innerText = "Telefone / WhatsApp do Professor:";
+    } else {
+        if (lblAluno) lblAluno.innerText = "Nome do Aluno:";
+        if (inpAluno) inpAluno.placeholder = "Ex: Gabriel Souza";
+        if (lblTurma) lblTurma.innerText = "Turma:";
+        if (inpTurma) inpTurma.placeholder = "Ex: 7º Ano A";
+        if (lblResp) lblResp.innerText = "Nome do Responsável:";
+        if (inpResp) inpResp.placeholder = "Ex: Ana Souza (Mãe)";
+        if (lblTel) lblTel.innerText = "Telefone / WhatsApp de Contato:";
+    }
+}
+window.togglePublicoAgendamentoOP = togglePublicoAgendamentoOP;
+
+// MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "") {
     const modal = document.getElementById("modalAgendamentoOP");
     if (!modal) return;
     document.getElementById("formAgendamentoOP").reset();
+    togglePublicoAgendamentoOP();
     
     document.getElementById("opInputData").value = dateIso || new Date().toISOString().split("T")[0];
     if (turno) document.getElementById("opInputTurno").value = turno;
@@ -1190,7 +1300,9 @@ function closeAgendamentoModal() {
 }
 
 function submitAgendamentoOP(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    const publicoSelect = document.getElementById("opInputPublico");
+    const publico = publicoSelect ? publicoSelect.value : "aluno";
     const aluno = document.getElementById("opInputAluno").value;
     const turma = document.getElementById("opInputTurma").value;
     const responsavel = document.getElementById("opInputResponsavel").value;
@@ -1201,10 +1313,14 @@ function submitAgendamentoOP(e) {
     const turno = document.getElementById("opInputTurno").value;
     const tipo = document.getElementById("opInputTipo").value;
     const motivo = document.getElementById("opInputMotivo").value;
+    const relatoConversaElem = document.getElementById("opInputRelatoConversa");
+    const relatoConversa = relatoConversaElem ? relatoConversaElem.value.trim() : "";
 
     try {
         const novoAg = sigeDB.addAgendamentoOP({
-            aluno, turma, responsavel, telefone, orientadora, data, horario, turno, tipo, motivo,
+            publico, aluno, turma, responsavel, telefone, orientadora, data, horario, turno, tipo, motivo,
+            relatoConversa,
+            historicoTratado: relatoConversa,
             statusSecretaria: "pendente",
             obsSecretaria: "",
             registradoPor: getRoleLabel(sigeDB.getRole())
@@ -1217,7 +1333,7 @@ function submitAgendamentoOP(e) {
         renderModuleOrientacaoPedagogica();
         updateBadgesCounts();
         renderNotifications();
-        showToast("✅ Agendamento registrado e WhatsApp automático enviado!");
+        showToast("✅ Agendamento de Orientação Educacional registrado com sucesso!");
     } catch (err) {
         alert(err.message);
     }
