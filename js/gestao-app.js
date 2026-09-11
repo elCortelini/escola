@@ -1309,6 +1309,7 @@ function gerarDeclaracaoComparecimento(id) {
             <div class="cert-box">
                 <div>
                     <div class="header">
+                        <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:65px; display:block; margin:0 auto 10px auto;">
                         <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
                         <p>SETOR DE ORIENTAÇÃO EDUCACIONAL (OE)</p>
                         <p style="font-size:12px; margin-top:2px;">Rua Pedro Rangel, S/N - Itajaí / SC • Fone: (47) 3348-0000</p>
@@ -1838,9 +1839,12 @@ function imprimirAtendimentosDoDia(dateIso) {
         </head>
         <body>
             <div class="print-header">
-                <div>
-                    <h1 class="school-title">Centro Educacional Pedro Rizzi</h1>
-                    <h2 class="sub-title">Orientação Educacional (OE) — Relatório Diário de Atendimentos</h2>
+                <div style="display:flex; align-items:center;">
+                    <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:55px; margin-right:12px;">
+                    <div>
+                        <h1 class="school-title">Centro Educacional Pedro Rizzi</h1>
+                        <h2 class="sub-title">Orientação Educacional (OE) — Relatório Diário de Atendimentos</h2>
+                    </div>
                 </div>
                 <div class="meta-info">
                     <strong>Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}<br>
@@ -2192,6 +2196,496 @@ function submitAgendamentoOP(e) {
         alert(err.message);
     }
 }
+
+// ==========================================
+// EDIÇÃO DE AGENDAMENTO OE
+// ==========================================
+let currentEditingAppointmentId = null;
+
+function openEditarModal(id) {
+    if (!id) return;
+    const ags = sigeDB.getAgendamentosOP() || [];
+    const item = ags.find(a => a.id === id);
+    if (!item) return;
+
+    currentEditingAppointmentId = id;
+
+    const elPub = document.getElementById("editInputPublico");
+    const elAluno = document.getElementById("editInputAluno");
+    const elTurma = document.getElementById("editInputTurma");
+    const elResp = document.getElementById("editInputResponsavel");
+    const elTel = document.getElementById("editInputTelefone");
+    const elData = document.getElementById("editInputData");
+    const elHora = document.getElementById("editInputHorario");
+    const elOri = document.getElementById("editInputOrientadora");
+    const elSts = document.getElementById("editInputStatus");
+    const elMot = document.getElementById("editInputMotivo");
+
+    if (elPub) elPub.value = item.publico || "aluno";
+    if (elAluno) elAluno.value = item.aluno || "";
+    if (elTurma) elTurma.value = item.turma || "";
+    if (elResp) elResp.value = item.responsavel || "";
+    if (elTel) elTel.value = item.telefone || "";
+    if (elData) elData.value = item.data || "";
+    if (elHora) elHora.value = item.horario || "";
+    if (elMot) elMot.value = item.motivo || "";
+    if (elSts) elSts.value = item.statusSecretaria || "pendente";
+
+    if (elOri) {
+        const isClar = !item.orientadora || item.orientadora.includes("Clarinda") || item.orientadora.includes("1");
+        elOri.value = isClar ? "Clarinda Rosa Pereira (Séries Iniciais)" : "Daiane Caetano Costa de Aquino (Séries Finais)";
+    }
+
+    const modal = document.getElementById("modalEditarOP");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeEditarModal() {
+    const modal = document.getElementById("modalEditarOP");
+    if (modal) modal.style.display = "none";
+}
+
+function submitEditarAgendamentoOP(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!currentEditingAppointmentId) return false;
+
+    const ags = sigeDB.getAgendamentosOP() || [];
+    const itemIndex = ags.findIndex(a => a.id === currentEditingAppointmentId);
+    if (itemIndex === -1) return false;
+
+    const elPub = document.getElementById("editInputPublico");
+    const elAluno = document.getElementById("editInputAluno");
+    const elTurma = document.getElementById("editInputTurma");
+    const elResp = document.getElementById("editInputResponsavel");
+    const elTel = document.getElementById("editInputTelefone");
+    const elData = document.getElementById("editInputData");
+    const elHora = document.getElementById("editInputHorario");
+    const elOri = document.getElementById("editInputOrientadora");
+    const elSts = document.getElementById("editInputStatus");
+    const elMot = document.getElementById("editInputMotivo");
+
+    let turno = ags[itemIndex].turno || "matutino";
+    if (elHora && elHora.value) {
+        const h = parseInt(elHora.value.split(":")[0], 10);
+        turno = h < 12 ? "matutino" : "vespertino";
+    }
+
+    ags[itemIndex] = {
+        ...ags[itemIndex],
+        publico: elPub ? elPub.value : ags[itemIndex].publico,
+        aluno: elAluno ? elAluno.value.trim() : ags[itemIndex].aluno,
+        turma: elTurma ? elTurma.value.trim() : ags[itemIndex].turma,
+        responsavel: elResp ? elResp.value.trim() : ags[itemIndex].responsavel,
+        telefone: elTel ? elTel.value.trim() : ags[itemIndex].telefone,
+        data: elData ? elData.value : ags[itemIndex].data,
+        horario: elHora ? elHora.value : ags[itemIndex].horario,
+        orientadora: elOri ? elOri.value : ags[itemIndex].orientadora,
+        statusSecretaria: elSts ? elSts.value : ags[itemIndex].statusSecretaria,
+        motivo: elMot ? elMot.value.trim() : ags[itemIndex].motivo,
+        turno
+    };
+
+    sigeDB.saveAgendamentosOP(ags);
+    closeEditarModal();
+    closeDetalhesModal();
+    renderModuleOrientacaoPedagogica();
+    showToast("✅ Dados do agendamento editados e salvos!");
+    return false;
+}
+
+// ==========================================
+// RELATÓRIO DE ATENDIMENTOS POR PERÍODO / DATA (OE)
+// ==========================================
+function openRelatorioModal() {
+    const modal = document.getElementById("modalRelatorioOP");
+    if (!modal) return;
+
+    const hoje = new Date();
+    const isoHoje = hoje.toISOString().split("T")[0];
+    const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split("T")[0];
+
+    const elIni = document.getElementById("relatorioDataInicio");
+    const elFim = document.getElementById("relatorioDataFim");
+    if (elIni && !elIni.value) elIni.value = primeiroDiaMes;
+    if (elFim && !elFim.value) elFim.value = isoHoje;
+
+    gerarVisualizacaoRelatorioOP();
+    modal.style.display = "flex";
+}
+
+function closeRelatorioModal() {
+    const modal = document.getElementById("modalRelatorioOP");
+    if (modal) modal.style.display = "none";
+}
+
+function getFiltradosRelatorio() {
+    const elIni = document.getElementById("relatorioDataInicio");
+    const elFim = document.getElementById("relatorioDataFim");
+    const elOri = document.getElementById("relatorioFilterOrientadora");
+
+    const dataIni = elIni ? elIni.value : "";
+    const dataFim = elFim ? elFim.value : "";
+    const oriFiltro = elOri ? elOri.value : "todas";
+
+    let ags = sigeDB.getAgendamentosOP() || [];
+    ags = ags.filter(a => a.statusSecretaria !== 'cancelado');
+
+    if (dataIni) ags = ags.filter(a => a.data >= dataIni);
+    if (dataFim) ags = ags.filter(a => a.data <= dataFim);
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
+    if (oriFiltro === "Clarinda") {
+        ags = ags.filter(isClarinda);
+    } else if (oriFiltro === "Daiane") {
+        ags = ags.filter(isDaiane);
+    }
+
+    ags.sort((a, b) => (a.data + (a.horario || "")).localeCompare(b.data + (b.horario || "")));
+    return { ags, dataIni, dataFim, oriFiltro };
+}
+
+function gerarVisualizacaoRelatorioOP() {
+    const container = document.getElementById("relatorioResultBody");
+    if (!container) return;
+
+    const { ags, dataIni, dataFim, oriFiltro } = getFiltradosRelatorio();
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
+    const total = ags.length;
+    const countClarinda = ags.filter(isClarinda).length;
+    const countDaiane = ags.filter(isDaiane).length;
+
+    const countRealizados = ags.filter(a => a.statusSecretaria === 'realizado').length;
+    const countAgendados = ags.filter(a => a.statusSecretaria === 'agendado').length;
+    const countFaltas = ags.filter(a => a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente').length;
+    const countPendentes = ags.filter(a => a.statusSecretaria === 'pendente').length;
+
+    let html = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; padding:12px; border-radius:12px; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:800; color:#0369a1; text-transform:uppercase;">TOTAL</div>
+                <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:2px;">${total}</div>
+            </div>
+            <div style="background:#fffbeb; border:1px solid #fde68a; padding:12px; border-radius:12px; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:800; color:#b45309; text-transform:uppercase;">CLARINDA (INICIAIS)</div>
+                <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:2px;">${countClarinda}</div>
+            </div>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:800; color:#15803d; text-transform:uppercase;">DAIANE (FINAIS)</div>
+                <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:2px;">${countDaiane}</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase;">POR STATUS</div>
+                <div style="font-size:0.78rem; font-weight:700; color:#1e293b; margin-top:4px;">
+                    🟢 ${countRealizados} Realiz. | 🔵 ${countAgendados} Agend.<br>
+                    🔴 ${countFaltas} Faltas | 🟡 ${countPendentes} Pend.
+                </div>
+            </div>
+        </div>
+    `;
+
+    if (total === 0) {
+        html += `
+            <div style="text-align:center; padding:2rem; color:#64748b; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                <i class="fa-regular fa-folder-open" style="font-size:2rem; color:#cbd5e1; margin-bottom:8px;"></i>
+                <p style="font-weight:700;">Nenhum atendimento encontrado para o período selecionado.</p>
+            </div>
+        `;
+    } else {
+        html += `
+            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                <thead>
+                    <tr style="background:#f1f5f9; text-align:left;">
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Data/Hora</th>
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Aluno / Turma</th>
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Responsável / Contato</th>
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Orientadora</th>
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Motivo</th>
+                        <th style="padding:8px; border:1px solid #cbd5e1;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${ags.map(a => {
+                        const isClar = isClarinda(a);
+                        const oriNome = a.orientadora || (isClar ? 'Clarinda Rosa Pereira' : 'Daiane Caetano Costa');
+                        return `
+                            <tr>
+                                <td style="padding:8px; border:1px solid #e2e8f0; font-weight:800;">
+                                    ${formatDateBR(a.data)}<br>
+                                    <span style="font-size:0.75rem; color:#64748b;">${a.horario || '-'} (${a.turno ? a.turno.substring(0,3).toUpperCase() : ''})</span>
+                                </td>
+                                <td style="padding:8px; border:1px solid #e2e8f0;">
+                                    <strong>${a.aluno}</strong><br>
+                                    <span style="font-size:0.75rem; color:#64748b;">Turma: ${a.turma || '-'}</span>
+                                </td>
+                                <td style="padding:8px; border:1px solid #e2e8f0;">
+                                    ${a.responsavel || '-'}<br>
+                                    <span style="font-size:0.75rem; color:#64748b;">📞 ${a.telefone || '-'}</span>
+                                </td>
+                                <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:${isClar ? '#b45309' : '#0369a1'};">
+                                    ${oriNome}
+                                </td>
+                                <td style="padding:8px; border:1px solid #e2e8f0; font-style:italic;">
+                                    "${a.motivo || 'Não informado'}"
+                                </td>
+                                <td style="padding:8px; border:1px solid #e2e8f0;">
+                                    <span class="secretaria-status-badge status-${a.statusSecretaria}">
+                                        ${getSecretariaBadgeText(a.statusSecretaria)}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+function imprimirRelatorioAtendimentosOP() {
+    const { ags, dataIni, dataFim, oriFiltro } = getFiltradosRelatorio();
+
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+
+    const total = ags.length;
+    const countClarinda = ags.filter(isClarinda).length;
+    const countDaiane = ags.filter(isDaiane).length;
+    const countRealizados = ags.filter(a => a.statusSecretaria === 'realizado').length;
+    const countAgendados = ags.filter(a => a.statusSecretaria === 'agendado').length;
+    const countFaltas = ags.filter(a => a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente').length;
+    const countPendentes = ags.filter(a => a.statusSecretaria === 'pendente').length;
+
+    const dataIniFormat = dataIni ? formatDateBR(dataIni) : 'Início';
+    const dataFimFormat = dataFim ? formatDateBR(dataFim) : 'Atual';
+
+    let printHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Relatório OE - ${dataIniFormat} a ${dataFimFormat}</title>
+            <style>
+                @page { size: A4 portrait; margin: 12mm; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 10px; font-size: 11px; }
+                .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 14px; }
+                .logo-img { max-height: 55px; margin-right: 12px; }
+                .title-area { flex: 1; }
+                .school-name { font-size: 16px; font-weight: 900; color: #1e3a8a; margin: 0; }
+                .sub-name { font-size: 12px; font-weight: 800; color: #d97706; margin: 2px 0 0 0; }
+                .stats-grid { display: flex; justify-content: space-between; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 14px; }
+                .stat-box { text-align: center; flex: 1; }
+                .stat-num { font-size: 16px; font-weight: 900; color: #1e3a8a; }
+                .stat-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+                table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                th { background: #f1f5f9; color: #334155; font-weight: 800; text-align: left; padding: 6px; font-size: 10px; border: 1px solid #cbd5e1; text-transform: uppercase; }
+                td { padding: 6px; border: 1px solid #e2e8f0; vertical-align: top; font-size: 10.5px; }
+                tr:nth-child(even) td { background: #f8fafc; }
+                .badge-status { font-size: 9px; font-weight: 800; padding: 2px 5px; border-radius: 4px; display: inline-block; }
+                .status-realizado { background: #dcfce7; color: #166534; }
+                .status-agendado { background: #dbeafe; color: #1e40af; }
+                .status-faltou { background: #fee2e2; color: #991b1b; }
+                .status-pendente { background: #fef3c7; color: #92400e; }
+                .footer-signatures { margin-top: 35px; display: flex; justify-content: space-between; gap: 30px; }
+                .sig-box { flex: 1; border-top: 1px solid #94a3b8; padding-top: 4px; text-align: center; font-size: 10px; color: #475569; font-weight: 700; }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <div style="display:flex; align-items:center;">
+                    <img src="img/logo-pedro-rizzi.png" class="logo-img" alt="Logo Escola">
+                    <div class="title-area">
+                        <h1 class="school-name">CENTRO EDUCACIONAL PEDRO RIZZI</h1>
+                        <h2 class="sub-name">Orientação Educacional (OE) — Relatório Consolidado por Data</h2>
+                    </div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:#64748b;">
+                    <strong>Período:</strong> ${dataIniFormat} a ${dataFimFormat}<br>
+                    <strong>Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-num">${total}</div>
+                    <div class="stat-label">Total Agendamentos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" style="color:#d97706;">${countClarinda}</div>
+                    <div class="stat-label">Clarinda (Iniciais)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" style="color:#16a34a;">${countDaiane}</div>
+                    <div class="stat-label">Daiane (Finais)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" style="color:#166534;">${countRealizados}</div>
+                    <div class="stat-label">Realizados</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" style="color:#991b1b;">${countFaltas}</div>
+                    <div class="stat-label">Faltas / Ausentes</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:70px;">Data/Hora</th>
+                        <th>Aluno / Turma</th>
+                        <th>Responsável / Telefone</th>
+                        <th>Orientadora</th>
+                        <th>Motivo do Atendimento</th>
+                        <th style="width:70px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${ags.map(a => {
+                        const isClar = isClarinda(a);
+                        const oriNome = a.orientadora || (isClar ? 'Clarinda Rosa Pereira' : 'Daiane Caetano');
+                        return `
+                            <tr>
+                                <td><strong>${formatDateBR(a.data)}</strong><br>${a.horario || '-'}</td>
+                                <td><strong>${a.aluno}</strong><br><span style="color:#64748b; font-size:9.5px;">Turma: ${a.turma || '-'}</span></td>
+                                <td>${a.responsavel || '-'}<br><span style="color:#64748b; font-size:9.5px;">📞 ${a.telefone || '-'}</span></td>
+                                <td style="font-weight:700; color:${isClar ? '#b45309' : '#0369a1'};">${oriNome}</td>
+                                <td style="font-style:italic;">"${a.motivo || '-'}"</td>
+                                <td><span class="badge-status status-${a.statusSecretaria}">${getSecretariaBadgeText(a.statusSecretaria)}</span></td>
+                            </tr>
+                        `;
+                    }).join("")}
+                </tbody>
+            </table>
+
+            <div class="footer-signatures">
+                <div class="sig-box">Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais</div>
+                <div class="sig-box">Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais</div>
+            </div>
+
+            <script>
+                window.onload = function() { setTimeout(function() { window.print(); }, 350); }
+            </script>
+        </body>
+        </html>
+    `;
+
+    const printWin = window.open('', '_blank', 'width=900,height=800');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        showToast("Permita pop-ups no navegador para imprimir.", "error");
+    }
+}
+
+// ==========================================
+// IMPRESSÃO DE PRONTUÁRIO INDIVIDUAL COM LOGO
+// ==========================================
+function imprimirProntuarioAlunoCurrent() {
+    const alunoNome = document.getElementById("prontuarioAlunoNome")?.innerText || "";
+    if (!alunoNome) return;
+
+    const todos = sigeDB.getAgendamentosOP().filter(a => a.aluno.toLowerCase().trim() === alunoNome.toLowerCase().trim());
+    todos.sort((a, b) => (a.data + (a.horario || "")).localeCompare(b.data + (b.horario || "")));
+
+    let printHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Prontuário Individual - ${alunoNome}</title>
+            <style>
+                @page { size: A4 portrait; margin: 12mm; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 10px; font-size: 11px; }
+                .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 14px; }
+                .logo-img { max-height: 55px; margin-right: 12px; }
+                .school-name { font-size: 16px; font-weight: 900; color: #1e3a8a; margin: 0; }
+                .sub-name { font-size: 12px; font-weight: 800; color: #7c3aed; margin: 2px 0 0 0; }
+                .aluno-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+                .aluno-name { font-size: 14px; font-weight: 900; color: #0f172a; }
+                .item-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #7c3aed; border-radius: 6px; padding: 10px; margin-bottom: 10px; }
+                .item-header { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 6px; font-weight: 800; }
+                .footer-signatures { margin-top: 35px; display: flex; justify-content: space-between; gap: 30px; }
+                .sig-box { flex: 1; border-top: 1px solid #94a3b8; padding-top: 4px; text-align: center; font-size: 10px; color: #475569; font-weight: 700; }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <div style="display:flex; align-items:center;">
+                    <img src="img/logo-pedro-rizzi.png" class="logo-img" alt="Logo Escola">
+                    <div>
+                        <h1 class="school-name">CENTRO EDUCACIONAL PEDRO RIZZI</h1>
+                        <h2 class="sub-name">Orientação Educacional — Prontuário Individual do Aluno</h2>
+                    </div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:#64748b;">
+                    <strong>Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}
+                </div>
+            </div>
+
+            <div class="aluno-card">
+                <div class="aluno-name">👨‍🎓 ${alunoNome}</div>
+                <div style="font-size:10.5px; color:#475569; margin-top:4px;">
+                    <strong>Histórico de Atendimentos:</strong> ${todos.length} registro(s) encontrado(s) na Orientação Educacional
+                </div>
+            </div>
+
+            ${todos.map(a => `
+                <div class="item-card">
+                    <div class="item-header">
+                        <span>📅 ${formatDateBR(a.data)} às ${a.horario || '-'} (${(a.turno || '').toUpperCase()})</span>
+                        <span>Status: ${getSecretariaBadgeText(a.statusSecretaria)}</span>
+                    </div>
+                    <div style="font-size:10.5px; margin-bottom:4px;">
+                        <strong>Turma:</strong> ${a.turma || '-'} • <strong>Responsável:</strong> ${a.responsavel || '-'} (📞 ${a.telefone || '-'}) • <strong>Orientadora:</strong> ${a.orientadora || 'OP'}
+                    </div>
+                    <div style="background:#f8fafc; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:4px;">
+                        <strong>Motivo:</strong> ${a.motivo || 'Não informado'}
+                    </div>
+                    ${a.historicoTratado || a.encaminhamento ? `
+                        <div style="background:#f0fdf4; padding:6px 8px; border-radius:4px; border:1px solid #bbf7d0; margin-top:4px; color:#166534;">
+                            ${a.encaminhamento ? `<strong>Encaminhamento:</strong> ${a.encaminhamento}<br>` : ''}
+                            ${a.historicoTratado ? `<strong>Deliberações:</strong> ${a.historicoTratado}` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("")}
+
+            <div class="footer-signatures">
+                <div class="sig-box">Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais</div>
+                <div class="sig-box">Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais</div>
+            </div>
+
+            <script>
+                window.onload = function() { setTimeout(function() { window.print(); }, 350); }
+            </script>
+        </body>
+        </html>
+    `;
+
+    const printWin = window.open('', '_blank', 'width=900,height=800');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    }
+}
+
+window.openEditarModal = openEditarModal;
+window.closeEditarModal = closeEditarModal;
+window.submitEditarAgendamentoOP = submitEditarAgendamentoOP;
+window.openRelatorioModal = openRelatorioModal;
+window.closeRelatorioModal = closeRelatorioModal;
+window.gerarVisualizacaoRelatorioOP = gerarVisualizacaoRelatorioOP;
+window.imprimirRelatorioAtendimentosOP = imprimirRelatorioAtendimentosOP;
+window.imprimirProntuarioAlunoCurrent = imprimirProntuarioAlunoCurrent;
 
 // ==========================================
 // MÓDULO 3: SUPERVISÃO PEDAGÓGICA

@@ -1102,6 +1102,13 @@ class SigeDatabase {
         }
     }
 
+    saveAgendamentosOP(agendamentos) {
+        if (this.data) {
+            this.data.agendamentosOP = agendamentos;
+            this.saveData(this.data);
+        }
+    }
+
     addAgendamentoOP(agendamento) {
         // Verifica se o dia esta bloqueado pela Direcao
         if (this.isDiaBloqueado(agendamento.data)) {
@@ -1109,20 +1116,16 @@ class SigeDatabase {
             throw new Error(`Data Bloqueada pela Direção (${agendamento.data}): ${blockObj ? blockObj.motivo : 'Recesso / Conselho'}`);
         }
 
-        // Validação estrita de limite de turno (3 Agendados + 1 Emergencial por turno)
-        const dateAppointments = this.data.agendamentosOP.filter(
-            a => a.data === agendamento.data && a.turno === agendamento.turno && a.statusSecretaria !== "cancelado"
+        // Validação estrita de limite por Orientadora (máximo 4 atendimentos por turno por orientadora)
+        const oriTurnoAppointments = this.data.agendamentosOP.filter(
+            a => a.data === agendamento.data && 
+                 a.turno === agendamento.turno && 
+                 a.statusSecretaria !== "cancelado" &&
+                 (a.orientadora === agendamento.orientadora || (!a.orientadora && agendamento.orientadora.includes("Clarinda")))
         );
 
-        const countAgendados = dateAppointments.filter(a => a.tipo === "agendado").length;
-        const countEmergencial = dateAppointments.filter(a => a.tipo === "emergencial").length;
-
-        if (agendamento.tipo === "agendado" && countAgendados >= 3) {
-            throw new Error(`Limite atingido! O turno ${agendamento.turno.toUpperCase()} já possui 3 agendamentos marcados nesta data. Resta apenas 1 vaga EMERGENCIAL disponível!`);
-        }
-
-        if (agendamento.tipo === "emergencial" && countEmergencial >= 1) {
-            throw new Error(`Limite atingido! O turno ${agendamento.turno.toUpperCase()} já utilizou a vaga EMERGENCIAL do dia.`);
+        if (oriTurnoAppointments.length >= 4) {
+            throw new Error(`Limite atingido! A orientadora (${agendamento.orientadora || 'Orientação'}) já possui 4 atendimentos agendados no turno ${agendamento.turno.toUpperCase()} nesta data.`);
         }
 
         agendamento.id = "op-" + Date.now();

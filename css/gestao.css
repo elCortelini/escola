@@ -1248,9 +1248,9 @@
 }
 
 .timeline-item-card {
-    flex: 1 1 300px;
-    min-width: 270px;
-    max-width: calc(50% - 6px);
+    flex: 1 1 calc(25% - 9px);
+    min-width: 210px;
+    max-width: calc(25% - 9px);
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 12px;
@@ -1260,6 +1260,27 @@
     justify-content: space-between;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     position: relative;
+}
+
+@media (max-width: 1200px) and (min-width: 769px) {
+    .timeline-item-card {
+        flex: 1 1 calc(50% - 6px);
+        max-width: calc(50% - 6px);
+    }
+}
+
+@media (max-width: 768px) {
+    .day-timeline-card {
+        grid-template-columns: 1fr;
+    }
+    .day-timeline-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .timeline-item-card {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
 }
 
 .timeline-item-card.clarinda-card {
