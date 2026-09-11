@@ -101,6 +101,14 @@ const defaultSystems = [
     }
 ];
 
+function getCustomSystems() {
+    try {
+        return JSON.parse(localStorage.getItem('pedro_rizzi_custom_systems') || '[]');
+    } catch (e) {
+        return [];
+    }
+}
+
 function loadSystems() {
     const grid = document.getElementById('systemsGrid');
     if (!grid) return;
@@ -108,33 +116,43 @@ function loadSystems() {
     grid.innerHTML = '';
 
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    const customSystems = getCustomSystems();
 
-    defaultSystems.forEach(sys => {
-        const finalUrl = savedUrls[sys.id] || sys.url;
+    const allSystems = [...defaultSystems, ...customSystems];
+
+    allSystems.forEach(sys => {
+        const finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);
         const isConfigured = finalUrl && finalUrl !== '#';
 
         const card = document.createElement('div');
-        card.className = `system-card ${sys.isLive ? 'featured' : ''}`;
+        card.className = `system-card ${sys.isLive ? 'featured' : (sys.isCustom ? 'custom-system-card' : '')}`;
         
         card.innerHTML = `
             <div>
                 <div class="card-top">
-                    <div class="card-icon-wrapper ${sys.bgClass}">
-                        <i class="${sys.iconClass}"></i>
+                    <div class="card-icon-wrapper ${sys.bgClass || 'icon-emerald'}">
+                        <i class="${sys.iconClass || 'fa-solid fa-globe'}"></i>
                     </div>
-                    ${sys.isLive ? 
+                    ${sys.isCustom ? `
+                        <span class="badge-tag-card b-live" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">
+                            <span class="b-live-dot" style="background:#9333ea;"></span>CUSTOMIZADO
+                        </span>
+                    ` : (sys.isLive ? 
                         `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>${sys.badge}</span>` : 
                         (isConfigured ? `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>ATIVO</span>` : `<span class="badge-tag-card b-config">${sys.badge}</span>`)
-                    }
+                    )}
                 </div>
                 <div style="font-size: 0.75rem; font-weight:700; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px;">${sys.tag}</div>
                 <h4 class="card-title">${sys.title}</h4>
                 <p class="card-desc">${sys.description}</p>
             </div>
-            <div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
                 <a href="${finalUrl}" ${isConfigured && !sys.isLive ? 'target="_blank"' : ''} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
-                    ${sys.isLive ? 'Acessar Dashboard Ao Vivo <i class="fa-solid fa-arrow-right"></i>' : (isConfigured ? 'Acessar Sistema <i class="fa-solid fa-arrow-up-right-from-square"></i>' : 'Em Breve (Configurar Link)')}
+                    ${sys.isLive ? 'Acessar Módulo <i class="fa-solid fa-arrow-right"></i>' : (isConfigured ? 'Acessar Sistema <i class="fa-solid fa-arrow-up-right-from-square"></i>' : 'Em Breve (Configurar Link)')}
                 </a>
+                ${sys.isCustom ? `
+                    <button onclick="deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
+                ` : ''}
             </div>
         `;
         
@@ -162,6 +180,72 @@ function closeConfigModal() {
     const modal = document.getElementById('configModal');
     if (modal) modal.style.display = 'none';
 }
+
+function openAddCustomSystemModal() {
+    const modal = document.getElementById('modalAddCustomSystem');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeAddCustomSystemModal() {
+    const modal = document.getElementById('modalAddCustomSystem');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitAddCustomSystem(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const title = document.getElementById('customSysTitle')?.value.trim();
+    const tag = document.getElementById('customSysTag')?.value.trim().toUpperCase();
+    const iconClass = document.getElementById('customSysIcon')?.value;
+    const url = document.getElementById('customSysUrl')?.value.trim();
+    const description = document.getElementById('customSysDesc')?.value.trim();
+
+    if (!title || !tag || !url || !description) return;
+
+    const customSystems = getCustomSystems();
+    const newSys = {
+        id: "custom-" + Date.now(),
+        title,
+        iconClass,
+        bgClass: "icon-emerald",
+        tag,
+        description,
+        url,
+        status: "online",
+        badge: "CUSTOMIZADO",
+        isLive: false,
+        isCustom: true
+    };
+
+    customSystems.push(newSys);
+    localStorage.setItem('pedro_rizzi_custom_systems', JSON.stringify(customSystems));
+
+    closeAddCustomSystemModal();
+    loadSystems();
+    alert(`Sistema "${title}" cadastrado com sucesso!`);
+
+    // Reset inputs
+    if (document.getElementById('customSysTitle')) document.getElementById('customSysTitle').value = "";
+    if (document.getElementById('customSysTag')) document.getElementById('customSysTag').value = "";
+    if (document.getElementById('customSysUrl')) document.getElementById('customSysUrl').value = "";
+    if (document.getElementById('customSysDesc')) document.getElementById('customSysDesc').value = "";
+}
+
+function deleteCustomSystem(id) {
+    if (confirm("Deseja realmente remover este sistema cadastrado?")) {
+        let customSystems = getCustomSystems();
+        customSystems = customSystems.filter(s => s.id !== id);
+        localStorage.setItem('pedro_rizzi_custom_systems', JSON.stringify(customSystems));
+        loadSystems();
+    }
+}
+
+window.openConfigModal = openConfigModal;
+window.closeConfigModal = closeConfigModal;
+window.openAddCustomSystemModal = openAddCustomSystemModal;
+window.closeAddCustomSystemModal = closeAddCustomSystemModal;
+window.submitAddCustomSystem = submitAddCustomSystem;
+window.deleteCustomSystem = deleteCustomSystem;
 
 const configForm = document.getElementById('configForm');
 if (configForm) {

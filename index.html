@@ -10,29 +10,10 @@
     <title>IntegraRizzi — Portal de Sistemas | C.E. Pedro Rizzi</title>
     <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260906">
+    <link rel="stylesheet" href="css/style.css?v=20260911_v2">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 </head>
 <body>
-
-    <!-- Header Navigation -->
-    <header class="header-nav">
-        <div class="nav-container">
-            <a href="index.html" class="brand">
-                <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" class="brand-header-logo">
-                <div class="brand-text">
-                    <h1>IntegraRizzi</h1>
-                    <p>Portal Integrado de Gestão Escolar | C.E. Pedro Rizzi</p>
-                </div>
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html" class="active"><i class="fa-solid fa-house"></i> Início</a></li>
-                <li><a href="sistema-gestao.html?aba=op"><i class="fa-solid fa-heart-pulse" style="color:#f43f5e;"></i> Orientação (OE)</a></li>
-                <li><a href="#sistemas-hub"><i class="fa-solid fa-layer-group"></i> Central de Módulos</a></li>
-                <li><a href="#config" onclick="openConfigModal()" class="btn-config"><i class="fa-solid fa-gear"></i> Configurações</a></li>
-            </ul>
-        </div>
-    </header>
 
     <!-- Hero Showcase com Logo Grande & IntegraRizzi -->
     <section class="hero-showcase">
@@ -86,10 +67,21 @@
 
     <!-- Main Container: Central de Modulos e Sistemas -->
     <main class="container" id="sistemas-hub">
-        <div class="section-header" style="margin-bottom: 2rem;">
-            <span class="badge-tag" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;"><i class="fa-solid fa-grid-2-plus"></i> CATÁLOGO COMPLETO</span>
-            <h3 style="font-size: 1.8rem; font-weight: 900; color: #0f172a; margin-top: 4px;">Módulos Escolares & Sistemas Desenvolvidos</h3>
-            <p style="font-size: 1rem; color: #64748b;">Acesse qualquer módulo do IntegraRizzi ou os sistemas complementares configurados para a escola.</p>
+        <!-- Banner Destaque para Configurações & Adicionar Novos Sistemas -->
+        <div style="background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 1.8rem 2rem; color: white; margin-bottom: 2.2rem; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25); border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+            <div style="max-width: 650px;">
+                <span class="badge-tag" style="background: rgba(255,255,255,0.15); color: #fde047; border-color: rgba(253,224,71,0.4); font-size: 0.78rem; font-weight: 800;"><i class="fa-solid fa-gear"></i> CENTRAL DE GESTÃO & CONFIGURAÇÕES</span>
+                <h3 style="font-size: 1.5rem; font-weight: 900; margin-top: 6px; color: white;">Catálogo de Módulos & Links dos Sistemas</h3>
+                <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 4px;">Cadastre manualmente novos sistemas desenvolvidos, configure os links externos ou acesse os módulos ativos da escola.</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="openAddCustomSystemModal()" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 800; font-size: 0.9rem; padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-plus-circle" style="font-size: 1.1rem;"></i> ➕ Adicionar Novo Sistema
+                </button>
+                <button onclick="openConfigModal()" class="btn" style="background: rgba(255,255,255,0.12); color: white; font-weight: 800; font-size: 0.9rem; padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; backdrop-filter: blur(4px); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-sliders"></i> Configurar Links Existentes
+                </button>
+            </div>
         </div>
 
         <div class="systems-grid" id="systemsGrid">
@@ -97,17 +89,17 @@
         </div>
     </main>
 
-    <!-- Config Modal -->
+    <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
         <div style="background:white; padding:2.2rem; border-radius:18px; max-width:560px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
                 <h3 style="color:var(--primary-dark); font-size:1.3rem; font-weight:800; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-sliders" style="color:var(--accent);"></i> Configuração de Links dos Sistemas
+                    <i class="fa-solid fa-sliders" style="color:var(--accent);"></i> Configuração de Links dos Sistemas Padrão
                 </h3>
                 <button type="button" onclick="closeConfigModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">Insira os links oficiais dos sistemas da escola (salvo no navegador):</p>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">Insira os links oficiais dos sistemas padrão da escola (salvo no navegador):</p>
             
             <form id="configForm" style="display:flex; flex-direction:column; gap:14px;">
                 <div>
@@ -115,7 +107,7 @@
                     <input type="url" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil:</label>
+                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil (APMF):</label>
                     <input type="url" id="url_contabil" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
@@ -139,6 +131,62 @@
         </div>
     </div>
 
+    <!-- Modal para Adicionar Novo Sistema Customizado -->
+    <div id="modalAddCustomSystem" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:560px; width:92%; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+                <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> Cadastrar Novo Sistema / Link Externo
+                </h3>
+                <button type="button" onclick="closeAddCustomSystemModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formAddCustomSystem" onsubmit="submitAddCustomSystem(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome do Sistema / Aplicação:</label>
+                    <input type="text" id="customSysTitle" placeholder="Ex: Sistema de Frequência Digital" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Categoria / Tag:</label>
+                        <input type="text" id="customSysTag" placeholder="Ex: GESTÃO / RH / ALUNOS" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Ícone Representativo:</label>
+                        <select id="customSysIcon" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; font-weight:700;">
+                            <option value="fa-solid fa-globe">🌐 Web / Link Externo</option>
+                            <option value="fa-solid fa-desktop">💻 Sistema Desktop / Web</option>
+                            <option value="fa-solid fa-chart-line">📊 Dashboard / Relatório</option>
+                            <option value="fa-solid fa-book-bookmark">📚 Biblioteca / Acervo</option>
+                            <option value="fa-solid fa-graduation-cap">🎓 Pedagógico / Alunos</option>
+                            <option value="fa-solid fa-calculator">💵 Financeiro / APMF</option>
+                            <option value="fa-solid fa-users-gear">👥 Gestão de Pessoas / RH</option>
+                            <option value="fa-solid fa-boxes-stacked">📦 Almoxarifado / Patrimônio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">URL / Link do Sistema:</label>
+                    <input type="url" id="customSysUrl" placeholder="https://meusistema.escola.gov.br ou https://..." required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; font-weight:600;">
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Descrição Resumida:</label>
+                    <textarea id="customSysDesc" rows="3" placeholder="Descreva sucintamente a finalidade deste sistema..." required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                    <button type="button" onclick="closeAddCustomSystemModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Sistema
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
@@ -146,6 +194,6 @@
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
-    <script src="js/main.js?v=20260906"></script>
+    <script src="js/main.js?v=20260911_v2"></script>
 </body>
 </html>
