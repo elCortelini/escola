@@ -722,17 +722,18 @@ const defaultSigeData = {
 // Gerenciador de Banco de Dados Local Storage & Firebase Cloud
 class SigeDatabase {
     constructor() {
-        this.data = this.load();
+        this.data = this.loadLocalOnly();
         this.fbApp = null;
         this.firestore = null;
         this.isSyncingFromRemote = false;
+        this.hasLoadedRemote = false;
         this.initFirebase();
+        this.setupAutoSyncListeners();
     }
 
     getFirebaseConfig() {
         if (!this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
             this.data.firebaseConfig = defaultSigeData.firebaseConfig;
-            this.saveData(this.data);
         }
         return this.data.firebaseConfig;
     }
@@ -762,49 +763,133 @@ class SigeDatabase {
 
             this.firestore = firebase.firestore();
 
+            // Real-Time Cloud Listener (Snapshot da Nuvem)
             this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
                 if (doc.exists) {
                     const remoteData = doc.data();
-                    if (remoteData && typeof remoteData === "object") {
+                    if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
                         this.isSyncingFromRemote = true;
-                        this.data = { ...this.data, ...remoteData };
+                        this.data = { ...defaultSigeData, ...this.data, ...remoteData };
                         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
                         this.isSyncingFromRemote = false;
-                        
+                        this.hasLoadedRemote = true;
+
+                        console.log("☁️ Dados sincronizados da Nuvem (Firebase) em tempo real!");
+                        this.updateCloudSyncBadge(true);
+
+                        if (typeof updateAllDynamicSelects === "function") {
+                            updateAllDynamicSelects();
+                        }
                         if (typeof renderAllModules === "function") {
                             renderAllModules();
                         } else if (typeof renderModuleAdministracao === "function") {
                             renderModuleAdministracao();
                         }
                     }
+                } else {
+                    this.hasLoadedRemote = true;
+                    this.syncToFirebase();
                 }
             }, (error) => {
                 console.warn("Aviso Firebase Firestore Sync:", error.message);
+                this.updateCloudSyncBadge(false);
             });
 
-            console.log("🔥 Firebase Firestore inicializado com sucesso!");
+            console.log("🔥 Firebase Firestore inicializado e sincronizando com a nuvem!");
         } catch (e) {
             console.error("Erro ao inicializar Firebase:", e);
         }
     }
 
     syncToFirebase() {
-        if (this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
+        if (!this.hasLoadedRemote || this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
             return;
         }
 
         try {
             this.firestore.collection("sige_pedro_rizzi").doc("database").set(this.data, { merge: true })
-                .catch(err => console.warn("Erro ao sincronizar com Firebase:", err.message));
+                .then(() => {
+                    console.log("💾 Dados sincronizados com sucesso para a Nuvem!");
+                    this.updateCloudSyncBadge(true);
+                })
+                .catch(err => {
+                    console.warn("Erro ao sincronizar com Firebase:", err.message);
+                    this.updateCloudSyncBadge(false);
+                });
         } catch (e) {
             console.warn("Exceção ao enviar para Firebase:", e);
         }
     }
 
-    load() {
+    forceFetchRemoteData() {
+        if (!this.firestore) {
+            if (typeof showToast === "function") showToast("⚠️ Conexão com a Nuvem não disponível.");
+            return;
+        }
+
+        this.updateCloudSyncBadge(null, "Buscando dados na nuvem...");
+
+        this.firestore.collection("sige_pedro_rizzi").doc("database").get()
+            .then(doc => {
+                if (doc.exists) {
+                    const remoteData = doc.data();
+                    if (remoteData && typeof remoteData === "object") {
+                        this.isSyncingFromRemote = true;
+                        this.data = { ...defaultSigeData, ...this.data, ...remoteData };
+                        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
+                        this.isSyncingFromRemote = false;
+                        this.hasLoadedRemote = true;
+
+                        if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
+                        if (typeof renderAllModules === "function") renderAllModules();
+
+                        if (typeof showToast === "function") showToast("☁️ Dados sincronizados com sucesso da Nuvem!");
+                        this.updateCloudSyncBadge(true);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Erro ao buscar dados na nuvem:", err);
+                if (typeof showToast === "function") showToast("❌ Falha ao buscar dados na nuvem.");
+                this.updateCloudSyncBadge(false);
+            });
+    }
+
+    setupAutoSyncListeners() {
+        if (typeof window === "undefined") return;
+
+        window.addEventListener("focus", () => {
+            if (this.firestore && this.hasLoadedRemote) {
+                this.forceFetchRemoteData();
+            }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && this.firestore && this.hasLoadedRemote) {
+                this.forceFetchRemoteData();
+            }
+        });
+    }
+
+    updateCloudSyncBadge(isSuccess, customMessage = "") {
+        const btnText = document.getElementById("cloudSyncBtnText");
+        if (!btnText) return;
+
+        if (customMessage) {
+            btnText.innerText = customMessage;
+            return;
+        }
+
+        if (isSuccess) {
+            btnText.innerText = "Nuvem Conectada (Tempo Real)";
+        } else {
+            btnText.innerText = "Modo Off-line";
+        }
+    }
+
+    loadLocalOnly() {
         const stored = localStorage.getItem(SIGE_STORAGE_KEY);
         if (!stored) {
-            this.saveData(defaultSigeData);
             return defaultSigeData;
         }
         try {
@@ -813,6 +898,10 @@ class SigeDatabase {
             console.error("Erro ao carregar banco de dados local do SIGE:", e);
             return defaultSigeData;
         }
+    }
+
+    load() {
+        return this.loadLocalOnly();
     }
 
     saveData(data) {
