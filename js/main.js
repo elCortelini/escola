@@ -70,10 +70,10 @@ const defaultSystems = [
         bgClass: "icon-amber",
         tag: "RECURSOS & ESPAÇOS",
         description: "Reserva de laboratórios de informática, projetores, quadra de esportes e auditório.",
-        url: "#",
-        status: "placeholder",
-        badge: "CONFIGURÁVEL",
-        isLive: false
+        url: "sistema-gestao.html?aba=op",
+        status: "online",
+        badge: "MÓDULO ATIVO",
+        isLive: true
     },
     {
         id: "biblioteca",
@@ -243,13 +243,12 @@ function deleteCustomSystem(id) {
 function openAgendamentoLabDirect(e) {
     if (e && e.preventDefault) e.preventDefault();
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
-    const labUrl = savedUrls['recursos'];
+    const labUrl = savedUrls['recursos'] || "sistema-gestao.html?aba=op";
     
-    if (labUrl && labUrl !== '#') {
+    if (labUrl.startsWith("http://") || labUrl.startsWith("https://")) {
         window.open(labUrl, '_blank');
     } else {
-        openConfigModal();
-        alert("O link do Agendamento do Laboratório / Recursos ainda não foi configurado. Insira a URL oficial no campo 'Agendamento de Recursos' no painel que abriu na tela.");
+        window.location.href = labUrl;
     }
 }
 

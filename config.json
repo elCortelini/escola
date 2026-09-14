@@ -27,9 +27,9 @@
       "title": "Sistema de Agendamento de Recursos",
       "icon": "📅",
       "description": "Reserva de laboratórios, projetores, quadra de esportes e auditório.",
-      "url": "#",
-      "status": "placeholder",
-      "badge": "EM BREVE / CONFIGURÁVEL"
+      "url": "sistema-gestao.html?aba=op",
+      "status": "online",
+      "badge": "MÓDULO ATIVO"
     },
     {
       "id": "biblioteca",
