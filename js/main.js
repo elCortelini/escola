@@ -70,7 +70,7 @@ const defaultSystems = [
         bgClass: "icon-amber",
         tag: "RECURSOS & ESPAÇOS",
         description: "Reserva de laboratórios de informática, projetores, quadra de esportes e auditório.",
-        url: "sistema-gestao.html?aba=op",
+        url: "https://elcortelini.github.io/agendamento-cepr/",
         status: "online",
         badge: "MÓDULO ATIVO",
         isLive: true
@@ -121,8 +121,19 @@ function loadSystems() {
     const allSystems = [...defaultSystems, ...customSystems];
 
     allSystems.forEach(sys => {
-        const finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);
+        let finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);
+        
+        // Se for recursos e tiver valor legado interno antigo, substituir pelo link oficial externo
+        if (sys.id === 'recursos' && (finalUrl === 'sistema-gestao.html?aba=op' || !finalUrl || finalUrl === '#')) {
+            finalUrl = "https://elcortelini.github.io/agendamento-cepr/";
+        }
+
         const isConfigured = finalUrl && finalUrl !== '#';
+        const isExternal = finalUrl && (finalUrl.startsWith("http://") || finalUrl.startsWith("https://"));
+        const targetAttr = isExternal || (!sys.isLive && isConfigured) ? 'target="_blank" rel="noopener noreferrer"' : '';
+        const linkIcon = isExternal 
+            ? '<i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.85em; margin-left:4px;"></i>' 
+            : '<i class="fa-solid fa-arrow-right"></i>';
 
         const card = document.createElement('div');
         card.className = `system-card ${sys.isLive ? 'featured' : (sys.isCustom ? 'custom-system-card' : '')}`;
@@ -147,8 +158,8 @@ function loadSystems() {
                 <p class="card-desc">${sys.description}</p>
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-                <a href="${finalUrl}" ${isConfigured && !sys.isLive ? 'target="_blank"' : ''} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
-                    ${sys.isLive ? 'Acessar Módulo <i class="fa-solid fa-arrow-right"></i>' : (isConfigured ? 'Acessar Sistema <i class="fa-solid fa-arrow-up-right-from-square"></i>' : 'Em Breve (Configurar Link)')}
+                <a href="${finalUrl}" ${targetAttr} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
+                    ${sys.isLive ? `Acessar Módulo ${linkIcon}` : (isConfigured ? `Acessar Sistema ${linkIcon}` : 'Em Breve (Configurar Link)')}
                 </a>
                 ${sys.isCustom ? `
                     <button onclick="deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
@@ -243,8 +254,12 @@ function deleteCustomSystem(id) {
 function openAgendamentoLabDirect(e) {
     if (e && e.preventDefault) e.preventDefault();
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
-    const labUrl = savedUrls['recursos'] || "sistema-gestao.html?aba=op";
+    let labUrl = savedUrls['recursos'] || "https://elcortelini.github.io/agendamento-cepr/";
     
+    if (!labUrl || labUrl === '#' || labUrl === 'sistema-gestao.html?aba=op') {
+        labUrl = "https://elcortelini.github.io/agendamento-cepr/";
+    }
+
     if (labUrl.startsWith("http://") || labUrl.startsWith("https://")) {
         window.open(labUrl, '_blank');
     } else {

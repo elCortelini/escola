@@ -27,7 +27,7 @@
       "title": "Sistema de Agendamento de Recursos",
       "icon": "📅",
       "description": "Reserva de laboratórios, projetores, quadra de esportes e auditório.",
-      "url": "sistema-gestao.html?aba=op",
+      "url": "https://elcortelini.github.io/agendamento-cepr/",
       "status": "online",
       "badge": "MÓDULO ATIVO"
     },
