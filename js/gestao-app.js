@@ -89,13 +89,6 @@ function checkSigeAuth() {
         }
     }
 
-    // Se o acesso veio do botão Desenvolvedor, abre diretamente o painel de cadastro de usuários e acessos
-    if (actionParam === 'dev' && isDev) {
-        setTimeout(() => {
-            openDevUserModal();
-        }, 200);
-    }
-
     return true;
 }
 

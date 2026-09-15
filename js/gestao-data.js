@@ -1371,7 +1371,67 @@ class SigeDatabase {
 
         this.data.alunosImportados = list;
         this.data.pdfImportMeta = metaInfo;
+        this.syncTurmasFromImportedAlunos();
         this.saveData(this.data);
+    }
+
+    syncTurmasFromImportedAlunos() {
+        const alunos = this.getAlunosImportados();
+        if (!alunos || alunos.length === 0) return;
+
+        if (!this.data.turmasEscola || !Array.isArray(this.data.turmasEscola)) {
+            this.data.turmasEscola = [];
+        }
+
+        const turmasMap = new Map();
+        this.data.turmasEscola.forEach(t => {
+            const cleanName = (t.nome || "").trim();
+            if (cleanName) turmasMap.set(cleanName.toLowerCase(), t);
+        });
+
+        let updated = false;
+
+        alunos.forEach(aluno => {
+            const code = (aluno.turma || "").trim();
+            if (!code) return;
+            const codeLower = code.toLowerCase();
+
+            if (!turmasMap.has(codeLower)) {
+                const turnoLower = (aluno.turno || "matutino").toLowerCase();
+                const firstDigit = code.charAt(0);
+                let nivel = "Ensino Fundamental I";
+                if (["6", "7", "8", "9"].includes(firstDigit)) {
+                    nivel = "Ensino Fundamental II";
+                } else if (["1", "2", "3", "4", "5"].includes(firstDigit)) {
+                    nivel = "Ensino Fundamental I";
+                }
+
+                const newTurma = {
+                    id: "turma-pdf-" + code.replace(/[^\w]/g, ""),
+                    nome: code,
+                    turno: turnoLower,
+                    anoLetivo: "2026",
+                    nivel: nivel,
+                    sala: "Sala Geral",
+                    capacidade: 35,
+                    regente: "Não definido"
+                };
+
+                this.data.turmasEscola.push(newTurma);
+                turmasMap.set(codeLower, newTurma);
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            this.data.turmasEscola.sort((a, b) => {
+                const numA = parseInt(a.nome.replace(/\D/g, ''), 10) || 0;
+                const numB = parseInt(b.nome.replace(/\D/g, ''), 10) || 0;
+                if (numA !== numB) return numA - numB;
+                return a.nome.localeCompare(b.nome);
+            });
+            this.saveData(this.data);
+        }
     }
 
     // Role Manager
@@ -1588,6 +1648,7 @@ class SigeDatabase {
             this.data.turmasEscola = defaultSigeData.turmasEscola || [];
             this.saveData(this.data);
         }
+        this.syncTurmasFromImportedAlunos();
         return this.data.turmasEscola;
     }
 

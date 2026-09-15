@@ -393,9 +393,12 @@ function confirmImportPdfData() {
         
         updateAdminPdfImportMetaInfoDisplay();
         
-        // Atualizar também o datalist de autocompletar na aba de OP se a função existir
+        // Atualizar também o datalist de autocompletar e a tabela de turmas de administração se existirem
         if (typeof window.updateAlunosDatalist === 'function') {
             window.updateAlunosDatalist();
+        }
+        if (typeof window.renderTurmasAdminTable === 'function') {
+            window.renderTurmasAdminTable();
         }
 
         alert(`✅ Importação Concluída com Sucesso!\n\nForam cadastrados/atualizados ${parsedPdfResult.totalAlunos} alunos e suas respectivas turmas/turnos/telefones.`);
