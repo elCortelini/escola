@@ -1765,6 +1765,7 @@ window.excluirProjetoOP = excluirProjetoOP;
 window.cobrarEtapaOPWhatsapp = cobrarEtapaOPWhatsapp;
 
 let currentDetailAppointmentId = null;
+window.currentDetailAppointmentId = null;
 
 function playArrivalChime() {
     try {
@@ -1792,6 +1793,7 @@ function openDetalhesModal(id) {
     if (!ag) return;
 
     currentDetailAppointmentId = id;
+    window.currentDetailAppointmentId = id;
 
     const isProf = ag.publico === "professor";
     document.getElementById("detalhesAlunoNome").innerText = isProf ? `👨‍🏫 ${ag.aluno}` : ag.aluno;
@@ -1865,7 +1867,11 @@ function closeDetalhesModal() {
     const modal = document.getElementById("modalDetalhesOP");
     if (modal) modal.style.display = "none";
     currentDetailAppointmentId = null;
+    window.currentDetailAppointmentId = null;
 }
+
+window.openDetalhesModal = openDetalhesModal;
+window.closeDetalhesModal = closeDetalhesModal;
 
 function detalhesMudarStatus(newStatus, customId = null) {
     const id = customId || currentDetailAppointmentId;
@@ -1943,7 +1949,8 @@ function addOneHour(timeStr) {
 }
 
 function gerarDeclaracaoComparecimento(id) {
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
+    const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag) return;
 
     const dataAtual = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
@@ -2094,10 +2101,11 @@ function closeProntuarioModal() {
 let currentReagendarId = null;
 
 function reagendarAluno(id) {
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === id);
+    const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag) return;
 
-    currentReagendarId = id;
+    currentReagendarId = targetId;
     
     const isProf = ag.publico === "professor";
     const elemAluno = document.getElementById("reagendarNomeAluno");
@@ -2368,13 +2376,14 @@ function toggleBloqueioDiaHandler(dateIso) {
 }
 
 function excluirAgendamentoDirect(id) {
-    if (!id) return;
+    const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
     const ags = sigeDB.getAgendamentosOP() || [];
-    const item = ags.find(a => a.id === id);
+    const item = ags.find(a => a.id === targetId);
     const nomeAluno = item ? item.aluno : 'este agendamento';
 
     if (confirm(`Tem certeza que deseja EXCLUIR permanentemente o agendamento de "${nomeAluno}"?`)) {
-        const deleted = sigeDB.deleteAgendamentoOP(id);
+        const deleted = sigeDB.deleteAgendamentoOP(targetId);
         if (deleted) {
             showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
             if (typeof closeVisaoDetalhadaDiaModal === "function") closeVisaoDetalhadaDiaModal();
@@ -3066,12 +3075,13 @@ function submitAgendamentoOP(e) {
 let currentEditingAppointmentId = null;
 
 function openEditarModal(id) {
-    if (!id) return;
+    const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
     const ags = sigeDB.getAgendamentosOP() || [];
-    const item = ags.find(a => a.id === id);
+    const item = ags.find(a => a.id === targetId);
     if (!item) return;
 
-    currentEditingAppointmentId = id;
+    currentEditingAppointmentId = targetId;
 
     const elPub = document.getElementById("editInputPublico");
     const elAluno = document.getElementById("editInputAluno");

@@ -1225,13 +1225,13 @@
 
             <!-- Ferramentas Rápidas (Editar, Reagendar, Declaração, Prontuário) -->
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.2rem;">
-                <button onclick="openEditarModal(currentDetailAppointmentId)" class="btn-sec" style="background:#0284c7; color:white; font-size:0.8rem; padding:8px 14px; font-weight:800; border-radius:8px;">
+                <button onclick="openEditarModal(window.currentDetailAppointmentId)" class="btn-sec" style="background:#0284c7; color:white; font-size:0.8rem; padding:8px 14px; font-weight:800; border-radius:8px;">
                     <i class="fa-solid fa-pen-to-square"></i> Editar Dados
                 </button>
-                <button onclick="reagendarAluno(currentDetailAppointmentId)" class="btn-sec" style="background:#4f46e5; color:white; font-size:0.8rem; padding:8px 14px; font-weight:800; border-radius:8px;">
+                <button onclick="reagendarAluno(window.currentDetailAppointmentId)" class="btn-sec" style="background:#4f46e5; color:white; font-size:0.8rem; padding:8px 14px; font-weight:800; border-radius:8px;">
                     <i class="fa-solid fa-calendar-plus"></i> Reagendar
                 </button>
-                <button onclick="gerarDeclaracaoComparecimento(currentDetailAppointmentId)" class="btn-sec" style="background:#0f172a; color:white; font-size:0.8rem; padding:8px 14px; border-radius:8px;">
+                <button onclick="gerarDeclaracaoComparecimento(window.currentDetailAppointmentId)" class="btn-sec" style="background:#0f172a; color:white; font-size:0.8rem; padding:8px 14px; border-radius:8px;">
                     <i class="fa-solid fa-file-contract"></i> Declaração
                 </button>
                 <button onclick="abrirProntuarioDoAlunoAtual()" class="btn-sec" style="background:#7c3aed; color:white; font-size:0.8rem; padding:8px 14px; border-radius:8px;">
@@ -1288,7 +1288,7 @@
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.2rem;">
-                <button type="button" onclick="excluirAgendamentoDirect(currentDetailAppointmentId)" class="btn btn-secondary" style="width:auto; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; cursor:pointer;" title="Excluir este agendamento permanentemente">
+                <button type="button" onclick="excluirAgendamentoDirect(window.currentDetailAppointmentId)" class="btn btn-secondary" style="width:auto; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; cursor:pointer;" title="Excluir este agendamento permanentemente">
                     <i class="fa-solid fa-trash-can"></i> Excluir Agendamento
                 </button>
                 <button type="button" onclick="closeDetalhesModal()" class="btn btn-secondary" style="width:auto;">Fechar Detalhes</button>
@@ -2345,8 +2345,8 @@
     </footer>
 
     <!-- JS Files -->
-    <script src="js/gestao-data.js?v=20260915_v8"></script>
-    <script src="js/gestao-app.js?v=20260915_v8"></script>
-    <script src="js/pdf-importer.js?v=20260915_v8"></script>
+    <script src="js/gestao-data.js?v=20260915_v9"></script>
+    <script src="js/gestao-app.js?v=20260915_v9"></script>
+    <script src="js/pdf-importer.js?v=20260915_v9"></script>
 </body>
 </html>
