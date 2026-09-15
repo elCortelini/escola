@@ -67,25 +67,18 @@
 
     <!-- Main Container: Central de Modulos e Sistemas -->
     <main class="container" id="sistemas-hub">
-        <!-- Banner Destaque para Configurações & Adicionar Novos Sistemas -->
-        <div style="background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 1.8rem 2rem; color: white; margin-bottom: 2.2rem; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25); border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
-            <div style="max-width: 650px;">
-                <span class="badge-tag" style="background: rgba(255,255,255,0.15); color: #fde047; border-color: rgba(253,224,71,0.4); font-size: 0.78rem; font-weight: 800;"><i class="fa-solid fa-gear"></i> CENTRAL DE GESTÃO & CONFIGURAÇÕES</span>
-                <h3 style="font-size: 1.5rem; font-weight: 900; margin-top: 6px; color: white;">Catálogo de Módulos & Links dos Sistemas</h3>
-                <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 4px;">Cadastre manualmente novos sistemas desenvolvidos, configure os links externos ou acesse os módulos ativos da escola.</p>
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="openAddCustomSystemModal()" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 800; font-size: 0.9rem; padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3); display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-plus-circle" style="font-size: 1.1rem;"></i> ➕ Adicionar Novo Sistema
-                </button>
-                <button onclick="openConfigModal()" class="btn" style="background: rgba(255,255,255,0.12); color: white; font-weight: 800; font-size: 0.9rem; padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; backdrop-filter: blur(4px); display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-sliders"></i> Configurar Links Existentes
-                </button>
-            </div>
-        </div>
-
         <div class="systems-grid" id="systemsGrid">
             <!-- Systems rendered dynamically via main.js -->
+        </div>
+
+        <!-- Barra Discreta de Configurações ao Final da Página -->
+        <div style="margin-top: 2rem; padding: 1.2rem 0; border-top: 1px dashed #cbd5e1; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button onclick="openAddCustomSystemModal()" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.82rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> ➕ Adicionar Novo Sistema
+            </button>
+            <button onclick="openConfigModal()" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.82rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <i class="fa-solid fa-sliders" style="color:#6366f1;"></i> ⚙️ Configurar Links Existentes
+            </button>
         </div>
     </main>
 
