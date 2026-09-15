@@ -283,6 +283,25 @@ function renderPdfPreview(result) {
     previewElem.style.display = "block";
 }
 
+function updateAdminPdfImportMetaInfoDisplay() {
+    const metaDiv = document.getElementById("adminPdfImportMetaInfo");
+    if (!metaDiv || !window.sigeDB) return;
+    const meta = window.sigeDB.getLastPdfImportMeta();
+    if (meta) {
+        metaDiv.innerHTML = `
+            <i class="fa-solid fa-clock-rotate-left"></i> Última Importação realizada: ${meta.importadoEm} 
+            (Relatório PDF impresso em: <strong>${meta.impressoEm}</strong>) — 
+            <strong>${meta.totalAlunos} Alunos</strong> cadastrados em <strong>${meta.totalTurmas} Turmas</strong>.
+        `;
+    } else {
+        metaDiv.innerHTML = `<i class="fa-solid fa-circle-info"></i> Nenhuma importação de PDF realizada ainda. Clique no botão verde ao lado para carregar o arquivo PDF oficial de Alunos Enturmados.`;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(updateAdminPdfImportMetaInfoDisplay, 400);
+});
+
 function confirmImportPdfData() {
     if (!parsedPdfResult || !parsedPdfResult.alunos || parsedPdfResult.alunos.length === 0) {
         alert("Nenhum aluno válido para importar.");
@@ -297,6 +316,7 @@ function confirmImportPdfData() {
             totalTurmas: parsedPdfResult.turmas.length
         });
         
+        updateAdminPdfImportMetaInfoDisplay();
         alert(`✅ Importação Concluída com Sucesso!\n\nForam cadastrados/atualizados ${parsedPdfResult.totalAlunos} alunos e suas respectivas turmas/turnos/telefones.`);
         closeImportPDFAlunosModal();
     } else {
@@ -308,3 +328,4 @@ window.openImportPDFAlunosModal = openImportPDFAlunosModal;
 window.closeImportPDFAlunosModal = closeImportPDFAlunosModal;
 window.handlePdfFileSelect = handlePdfFileSelect;
 window.confirmImportPdfData = confirmImportPdfData;
+window.updateAdminPdfImportMetaInfoDisplay = updateAdminPdfImportMetaInfoDisplay;
