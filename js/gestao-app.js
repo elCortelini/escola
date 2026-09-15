@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initApp() {
     checkSigeAuth();
+    initGoogleAuth();
     setupRoleSelector();
     setupTabNavigation();
     setupNotificationBell();
@@ -390,6 +391,85 @@ function getRoleIcon(role) {
     return icons[role] || "fa-solid fa-user";
 }
 
+// ==========================================
+// GOOGLE IDENTITY SERVICES (GIS) & AUTENTICAÇÃO
+// ==========================================
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Erro ao decodificar JWT do Google:", e);
+        return null;
+    }
+}
+
+function handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+    const payload = parseJwt(response.credential);
+    if (!payload || !payload.email) {
+        alert("Não foi possível validar as credenciais da conta do Google.");
+        return;
+    }
+    const email = payload.email.toLowerCase().trim();
+    processGoogleLogin(email, payload.name);
+}
+
+function processGoogleLogin(email, nomeOpcional) {
+    const user = sigeDB.loginWithEmail(email);
+    if (user) {
+        showToast(`Google Auth: Bem-vindo(a), ${user.nome}!`);
+        checkSigeAuth();
+        renderAllModules();
+    } else {
+        alert(`🔒 Acesso Negado\n\nA conta do Google (${email}) não possui permissão de acesso cadastrada.\n\nPor favor, solicite a inclusão do seu e-mail ao Desenvolvedor do Sistema (elcortelini@gmail.com).`);
+    }
+}
+
+function loginWithGooglePrompt() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+            window.google.accounts.id.prompt();
+            return;
+        } catch (e) {
+            console.log("GIS prompt fallback:", e);
+        }
+    }
+    
+    // Prompt de seleção ou digitação de e-mail do Google
+    const inputEmail = prompt("Autenticação via Google:\nInforme seu e-mail do Google / Gmail / Institucional cadastrado:");
+    if (inputEmail && inputEmail.trim()) {
+        processGoogleLogin(inputEmail.trim());
+    }
+}
+
+function initGoogleAuth() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+            window.google.accounts.id.initialize({
+                client_id: "873519405621-escola-integrarizzi.apps.googleusercontent.com",
+                callback: handleGoogleCredentialResponse,
+                auto_select: false
+            });
+            const container = document.getElementById("g_id_signin_container");
+            if (container) {
+                window.google.accounts.id.renderButton(container, {
+                    theme: "outline",
+                    size: "large",
+                    width: 380,
+                    text: "continue_with"
+                });
+            }
+        } catch (err) {
+            console.log("Inicialização do Google GIS:", err);
+        }
+    }
+}
+
 window.checkSigeAuth = checkSigeAuth;
 window.submitSigeLogin = submitSigeLogin;
 window.fillLoginEmail = fillLoginEmail;
@@ -399,6 +479,9 @@ window.closeDevUserModal = closeDevUserModal;
 window.submitAddDevUser = submitAddDevUser;
 window.deleteDevUser = deleteDevUser;
 window.marcarAguardandoSecretaria = marcarAguardandoSecretaria;
+window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
+window.loginWithGooglePrompt = loginWithGooglePrompt;
+window.processGoogleLogin = processGoogleLogin;
 
 // ==========================================
 // NAVEGAÇÃO POR ABAS

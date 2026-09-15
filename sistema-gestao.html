@@ -17,6 +17,9 @@
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Google Identity Services (GIS) API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -2157,13 +2160,28 @@
                 </div>
             </form>
         </div>
-    <!-- Modal de Login por E-mail Institucional -->
+    <!-- Modal de Login por E-mail Institucional & Google Auth -->
     <div id="modalSigeLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
         <div style="background:white; border-radius:20px; max-width:460px; width:92%; padding:2.2rem; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1; text-align:center;">
             <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" style="max-height:75px; margin-bottom:1rem; background:white; padding:6px 12px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
             
             <h3 style="color:#0f172a; font-size:1.4rem; font-weight:900; margin-bottom:4px;">Acesso ao IntegraRizzi</h3>
-            <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.5rem;">Insira seu e-mail profissional cadastrado para acessar seu perfil e atribuições.</p>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.4rem;">Autentique-se com sua Conta do Google ou E-mail Autorizado para acessar seu perfil.</p>
+
+            <!-- Container Oficial do Google Identity Services (GIS) -->
+            <div id="g_id_signin_container" style="margin-bottom:10px; display:flex; justify-content:center;"></div>
+
+            <!-- Botão com Estilo Oficial do Google (Acesso Direto) -->
+            <button type="button" onclick="loginWithGooglePrompt()" class="btn" style="width:100%; padding:11px; font-size:0.92rem; font-weight:800; background:#ffffff; color:#374151; border:1px solid #d1d5db; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; margin-bottom:12px; transition:all 0.2s;">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+                <span>Fazer Login com a Conta do Google</span>
+            </button>
+
+            <div style="display:flex; align-items:center; margin:12px 0; color:#94a3b8; font-size:0.75rem; font-weight:700;">
+                <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+                <span style="padding:0 8px; text-transform:uppercase;">ou digite seu e-mail</span>
+                <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+            </div>
 
             <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
                 <div>
@@ -2171,8 +2189,8 @@
                     <input type="email" id="loginEmailInput" placeholder="seu-email@escola.gov.br ou elcortelini@gmail.com" required style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem; font-weight:600; outline:none;">
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:0.95rem; font-weight:800; background:linear-gradient(135deg, #1e3a8a, #2563eb); border:none; margin-top:8px; border-radius:10px; box-shadow:0 4px 14px rgba(37,99,235,0.35);">
-                    <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:0.95rem; font-weight:800; background:linear-gradient(135deg, #1e3a8a, #2563eb); border:none; margin-top:4px; border-radius:10px; box-shadow:0 4px 14px rgba(37,99,235,0.35);">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar com E-mail
                 </button>
             </form>
 
