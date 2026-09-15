@@ -2093,3 +2093,4 @@ class SigeDatabase {
 
 // Instância Global
 const sigeDB = new SigeDatabase();
+window.sigeDB = sigeDB;

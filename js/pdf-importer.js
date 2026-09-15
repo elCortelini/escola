@@ -322,11 +322,16 @@ function renderPdfPreview(result) {
     previewElem.style.display = "block";
 }
 
+function getSigeDatabase() {
+    return window.sigeDB || (typeof sigeDB !== 'undefined' ? sigeDB : null);
+}
+
 function updateAdminPdfImportMetaInfoDisplay() {
     const metaDiv = document.getElementById("adminPdfImportMetaInfo");
-    if (!metaDiv || !window.sigeDB) return;
-    const meta = window.sigeDB.getLastPdfImportMeta();
-    const alunos = window.sigeDB.getAlunosImportados();
+    const db = getSigeDatabase();
+    if (!metaDiv || !db) return;
+    const meta = db.getLastPdfImportMeta();
+    const alunos = db.getAlunosImportados();
 
     if (meta && alunos && alunos.length > 0) {
         const turmasMap = {};
@@ -376,8 +381,10 @@ function confirmImportPdfData() {
         return;
     }
 
-    if (window.sigeDB && typeof window.sigeDB.saveAlunosImportados === 'function') {
-        window.sigeDB.saveAlunosImportados(parsedPdfResult.alunos, {
+    const db = getSigeDatabase();
+
+    if (db && typeof db.saveAlunosImportados === 'function') {
+        db.saveAlunosImportados(parsedPdfResult.alunos, {
             impressoEm: parsedPdfResult.impressoEm,
             importadoEm: parsedPdfResult.importadoEm,
             totalAlunos: parsedPdfResult.totalAlunos,
@@ -385,6 +392,12 @@ function confirmImportPdfData() {
         });
         
         updateAdminPdfImportMetaInfoDisplay();
+        
+        // Atualizar também o datalist de autocompletar na aba de OP se a função existir
+        if (typeof window.updateAlunosDatalist === 'function') {
+            window.updateAlunosDatalist();
+        }
+
         alert(`✅ Importação Concluída com Sucesso!\n\nForam cadastrados/atualizados ${parsedPdfResult.totalAlunos} alunos e suas respectivas turmas/turnos/telefones.`);
         closeImportPDFAlunosModal();
     } else {
