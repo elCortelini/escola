@@ -538,7 +538,10 @@ function renderAllModules() {
 
 function updateBadgesCounts() {
     const role = sigeDB.getRole();
-    const countOp = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria === "pendente").length;
+    const filterSelect = document.getElementById("opFilterOrientadora");
+    const filterVal = filterSelect ? filterSelect.value : "todas";
+
+    const countOp = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria === "pendente" && matchOrientadora(a, filterVal)).length;
     const countSup = sigeDB.getDemandasSupervisao().filter(d => d.status === "pendente").length;
     const countAdm = sigeDB.getDemandasAdmin().filter(d => d.status === "pendente").length;
 
@@ -702,19 +705,41 @@ function updateModalWhatsAppPreview() {
     }
 }
 
+function matchOrientadora(a, filterVal) {
+    if (!filterVal || filterVal === "todas") return true;
+    if (!a) return false;
+    
+    if (!a.orientadora) {
+        const t = (a.turma || "").toLowerCase();
+        if (t.includes("1º") || t.includes("2º") || t.includes("3º") || t.includes("4º") || t.includes("5º") || t.includes("matutino")) {
+            return filterVal.toLowerCase().includes("clarinda") || filterVal.toLowerCase().includes("carmen") || filterVal.includes("1");
+        }
+        if (t.includes("6º") || t.includes("7º") || t.includes("8º") || t.includes("9º") || t.includes("vespertino")) {
+            return filterVal.toLowerCase().includes("daiane") || filterVal.toLowerCase().includes("luciana") || filterVal.includes("2");
+        }
+        return filterVal.toLowerCase().includes("clarinda");
+    }
+    
+    const oriLower = a.orientadora.toLowerCase();
+    const filterLower = filterVal.toLowerCase();
+    
+    if (filterLower.includes("clarinda")) {
+        return oriLower.includes("clarinda") || oriLower.includes("carmen") || oriLower.includes("1");
+    }
+    if (filterLower.includes("daiane")) {
+        return oriLower.includes("daiane") || oriLower.includes("luciana") || oriLower.includes("2");
+    }
+    return oriLower.includes(filterLower) || filterLower.includes(oriLower);
+}
+window.matchOrientadora = matchOrientadora;
+
 function renderModuleOrientacaoPedagogica() {
     syncRoleFilters();
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-
     const todosAtendimentos = sigeDB.getAgendamentosOP().filter(a => {
-        if (filterOrientadora === "todas") return true;
-        if (filterOrientadora.includes("Clarinda")) return isClarinda(a);
-        if (filterOrientadora.includes("Daiane")) return isDaiane(a);
-        return true;
+        return matchOrientadora(a, filterOrientadora);
     });
 
     const cardClarinda = document.querySelector(".turno-card.matutino");
@@ -1704,15 +1729,17 @@ function openDetalhesModal(id) {
         }
     }
 
-    // Visibilidade dos botões conforme o perfil
+    // Visibilidade dos botões conforme o perfil (Orientadoras, Secretaria, Gestores, Admin e Dev)
     const role = sigeDB.getRole();
+    const canChangeStatus = role.startsWith("orientadora_") || ["orientacao", "secretaria", "admin", "direcao", "desenvolvedor", "supervisao"].includes(role) || role.startsWith("supervisora_");
+
     const btnAguardando = document.getElementById("btnAcaoAguardando");
     const btnAtendido = document.getElementById("btnAcaoAtendido");
     const btnNaoVeio = document.getElementById("btnAcaoNaoVeio");
 
-    if (btnAguardando) btnAguardando.style.display = ["secretaria", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
-    if (btnAtendido) btnAtendido.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
-    if (btnNaoVeio) btnNaoVeio.style.display = ["orientacao", "admin", "direcao"].includes(role) ? "inline-flex" : "none";
+    if (btnAguardando) btnAguardando.style.display = canChangeStatus ? "inline-flex" : "none";
+    if (btnAtendido) btnAtendido.style.display = canChangeStatus ? "inline-flex" : "none";
+    if (btnNaoVeio) btnNaoVeio.style.display = canChangeStatus ? "inline-flex" : "none";
 
     // Renderizar histórico de disparos de WhatsApp
     renderWhatsappDispatchHistory(ag);
@@ -2274,8 +2301,8 @@ function imprimirAtendimentosDoDia(dateIso) {
     `;
 
     if (filterVal !== "todas") {
+        dateAppointments = dateAppointments.filter(a => matchOrientadora(a, filterVal));
         if (filterVal.includes("Clarinda")) {
-            dateAppointments = dateAppointments.filter(isClarinda);
             subTitleText = "Orientação Educacional (OE) — Relatório Diário (Clarinda - Séries Iniciais)";
             signaturesHtml = `
                 <div class="sig-box" style="margin:0 auto; max-width:350px;">
@@ -2283,11 +2310,17 @@ function imprimirAtendimentosDoDia(dateIso) {
                 </div>
             `;
         } else if (filterVal.includes("Daiane")) {
-            dateAppointments = dateAppointments.filter(isDaiane);
             subTitleText = "Orientação Educacional (OE) — Relatório Diário (Daiane - Séries Finais)";
             signaturesHtml = `
                 <div class="sig-box" style="margin:0 auto; max-width:350px;">
                     Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
+                </div>
+            `;
+        } else {
+            subTitleText = `Orientação Educacional (OE) — Relatório Diário (${filterVal})`;
+            signaturesHtml = `
+                <div class="sig-box" style="margin:0 auto; max-width:350px;">
+                    ${filterVal}<br>Orientadora Educacional
                 </div>
             `;
         }
@@ -2526,20 +2559,8 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterVal = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-
-    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
-    let dateAppointments = todosAtendimentos.filter(a => 
-        a.data === dateIso && a.statusSecretaria !== 'cancelado'
-    );
-
     if (filterVal !== "todas") {
-        if (filterVal.includes("Clarinda")) {
-            dateAppointments = dateAppointments.filter(isClarinda);
-        } else if (filterVal.includes("Daiane")) {
-            dateAppointments = dateAppointments.filter(isDaiane);
-        }
+        dateAppointments = dateAppointments.filter(a => matchOrientadora(a, filterVal));
     }
 
     dateAppointments.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""));
