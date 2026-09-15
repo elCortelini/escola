@@ -4234,12 +4234,48 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 
     const linkRetornoOrientadora = orientadoraCleanPhone ? `\n\n💬 Retorno / Dúvidas diretamente para o WhatsApp da ${orientadoraNome}: https://wa.me/${orientadoraCleanPhone}` : "";
 
+    // Evento de Chegada na Recepção: Notifica APENAS a Orientadora (o pai já está fisicamente na escola)
+    if (tipoEvento === "aluno_chegou") {
+        const msgToOrientadora = `🔔 AVISO DE RECEPÇÃO OP: O responsável pelo aluno(a) ${agendamento.aluno} (${agendamento.turma}) acabou de chegar na recepção e aguarda atendimento (${agendamento.horario}).`;
+        let oriSuccess = false;
+
+        if (config.provider !== "simulated" && config.apiUrl && orientadoraCleanPhone) {
+            try {
+                const resp = await fetch(config.apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : ""
+                    },
+                    body: JSON.stringify({
+                        phone: orientadoraCleanPhone,
+                        message: msgToOrientadora
+                    })
+                });
+                oriSuccess = resp.ok;
+            } catch (e) {
+                console.warn("Falha no envio do gateway de WhatsApp à Orientadora:", e);
+                oriSuccess = false;
+            }
+        } else {
+            oriSuccess = true;
+        }
+
+        sigeDB.logWhatsappDispatch(agendamento.id, {
+            tipo: `Aviso na Caixa da ${orientadoraNome}`,
+            mensagem: msgToOrientadora,
+            modo: "automático",
+            status: oriSuccess ? "sucesso" : "falha",
+            destinatario: orientadoraCleanPhone || orientadoraNome
+        });
+
+        showToast(`🔔 Orientadora ${orientadoraNome} notificada da chegada na recepção!`);
+        return true;
+    }
+
     if (tipoEvento === "agendamento_criado") {
         tipoTitulo = "Confirmação de Agendamento";
         defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Confirmamos o agendamento da Orientação Pedagógica no Centro Educacional Pedro Rizzi para ${agendamento.aluno} (${agendamento.turma}) no dia ${formatDateBR(agendamento.data)} às ${agendamento.horario}. Orientadora: ${orientadoraNome}.${linkRetornoOrientadora}`;
-    } else if (tipoEvento === "aluno_chegou") {
-        tipoTitulo = "Aviso de Recepção / Chegada";
-        defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Registramos a sua chegada na recepção do Centro Educacional Pedro Rizzi. A orientadora ${orientadoraNome} já foi notificada e chamará em instantes.`;
     } else if (tipoEvento === "lembrete_24h") {
         tipoTitulo = "Lembrete de 24h";
         defaultText = `Olá ${agendamento.responsavel || 'Responsável'}! Lembramos da reunião da Orientação Pedagógica no Centro Educacional Pedro Rizzi AMANHÃ (${formatDateBR(agendamento.data)}) às ${agendamento.horario}. Orientadora: ${orientadoraNome}.${linkRetornoOrientadora}`;
@@ -4282,27 +4318,6 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
         status: success ? "sucesso" : "falha",
         destinatario: cleanPhone
     });
-
-    // Se for o aviso de chegada, também dispara para a caixa de entrada da Orientadora!
-    if (tipoEvento === "aluno_chegou" && orientadoraCleanPhone) {
-        const msgToOrientadora = `🔔 AVISO DE RECEPÇÃO OP: O responsável pelo aluno(a) ${agendamento.aluno} (${agendamento.turma}) acabou de chegar na recepção e aguarda atendimento (${agendamento.horario}).`;
-        if (config.provider !== "simulated" && config.apiUrl) {
-            try {
-                fetch(config.apiUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : "" },
-                    body: JSON.stringify({ phone: orientadoraCleanPhone, message: msgToOrientadora })
-                });
-            } catch(e) {}
-        }
-        sigeDB.logWhatsappDispatch(agendamento.id, {
-            tipo: `Aviso na Caixa da ${orientadoraNome}`,
-            mensagem: msgToOrientadora,
-            modo: "automático",
-            status: "sucesso",
-            destinatario: orientadoraCleanPhone
-        });
-    }
 
     if (success) {
         showToast(`🤖 WhatsApp automático enviado para ${agendamento.responsavel || agendamento.aluno}!`);
