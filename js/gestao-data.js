@@ -1451,10 +1451,11 @@ class SigeDatabase {
             this.data.agendamentosOP = defaultSigeData.agendamentosOP || [];
             this.saveData(this.data);
         } else {
+            const deletedSet = new Set(this.data.deletedOPIds || []);
             const existingIds = new Set(this.data.agendamentosOP.map(a => a.id));
             let addedNew = false;
             (defaultSigeData.agendamentosOP || []).forEach(defAg => {
-                if (!existingIds.has(defAg.id)) {
+                if (!existingIds.has(defAg.id) && !deletedSet.has(defAg.id)) {
                     this.data.agendamentosOP.push(defAg);
                     existingIds.add(defAg.id);
                     addedNew = true;
@@ -1469,6 +1470,13 @@ class SigeDatabase {
 
     deleteAgendamentoOP(id) {
         if (!id) return false;
+        if (!this.data) this.data = {};
+        if (!Array.isArray(this.data.deletedOPIds)) {
+            this.data.deletedOPIds = [];
+        }
+        if (!this.data.deletedOPIds.includes(id)) {
+            this.data.deletedOPIds.push(id);
+        }
         let list = this.getAgendamentosOP();
         const initialLen = list.length;
         this.data.agendamentosOP = list.filter(a => a.id !== id);
@@ -1847,17 +1855,6 @@ class SigeDatabase {
             if (chegadaEm) ag.chegadaEm = chegadaEm;
             this.saveData(this.data);
         }
-    }
-
-    deleteAgendamentoOP(id) {
-        if (!this.data.agendamentosOP) return false;
-        const index = this.data.agendamentosOP.findIndex(a => a.id === id);
-        if (index >= 0) {
-            this.data.agendamentosOP.splice(index, 1);
-            this.saveData(this.data);
-            return true;
-        }
-        return false;
     }
 
     // Demandas Supervisão
