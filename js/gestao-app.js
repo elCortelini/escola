@@ -2377,9 +2377,12 @@ function excluirAgendamentoDirect(id) {
         const deleted = sigeDB.deleteAgendamentoOP(id);
         if (deleted) {
             showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
-            closeVisaoDetalhadaDiaModal();
-            closeDetalhesModal();
-            renderModuleOrientacaoPedagogica();
+            if (typeof closeVisaoDetalhadaDiaModal === "function") closeVisaoDetalhadaDiaModal();
+            if (typeof closeDetalhesModal === "function") closeDetalhesModal();
+            if (typeof renderModuleOrientacaoPedagogica === "function") renderModuleOrientacaoPedagogica();
+            if (typeof renderAllModules === "function") renderAllModules();
+        } else {
+            alert("Erro ao excluir agendamento.");
         }
     }
 }

@@ -1467,6 +1467,23 @@ class SigeDatabase {
         return this.data.agendamentosOP;
     }
 
+    deleteAgendamentoOP(id) {
+        if (!id) return false;
+        let list = this.getAgendamentosOP();
+        const initialLen = list.length;
+        this.data.agendamentosOP = list.filter(a => a.id !== id);
+        if (this.data.agendamentosOP.length < initialLen) {
+            this.saveData(this.data);
+            this.logAuditEvent("Orientação", `Excluído agendamento ${id}`, "Orientação");
+            return true;
+        }
+        return false;
+    }
+
+    deleteAgendamento(id) {
+        return this.deleteAgendamentoOP(id);
+    }
+
     // Bloqueio de Dias / Feriados
     getDiasBloqueados() {
         return this.data.diasBloqueados || [];
