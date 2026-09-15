@@ -1697,10 +1697,23 @@ function openDetalhesModal(id) {
     document.getElementById("detalhesTurmaBadge").innerText = isProf ? `Docente: ${ag.turma}` : ag.turma;
     document.getElementById("detalhesResponsavelNome").innerText = ag.responsavel || (isProf ? 'Contato Direto' : '-');
     document.getElementById("detalhesOrientadora").innerText = ag.orientadora || "Orientação Educacional (OE)";
-    document.getElementById("detalhesDataHorario").innerText = `${formatDateBR(ag.data)} às ${ag.horario} (${ag.turno.toUpperCase()})`;
     
-    document.getElementById("detalhesTipoVaga").innerHTML = `<span class="op-type-tag ${ag.tipo}">${ag.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>`;
-    document.getElementById("detalhesStatusBadge").innerHTML = `<span class="secretaria-status-badge status-${ag.statusSecretaria}">${getSecretariaBadgeText(ag.statusSecretaria)}</span>`;
+    const elReg = document.getElementById("detalhesRegistradoPor");
+    if (elReg) {
+        elReg.innerText = ag.registradoPor || "Secretaria Escolar";
+    }
+
+    document.getElementById("detalhesDataHorario").innerText = `${formatDateBR(ag.data)} às ${ag.horario} (${ag.turno ? ag.turno.toUpperCase() : 'MATUTINO'})`;
+    
+    const elTipo = document.getElementById("detalhesTipoVaga");
+    if (elTipo) {
+        elTipo.innerHTML = `<span class="op-type-tag ${ag.tipo}">${ag.tipo === 'emergencial' ? '🚨 Emergencial' : '📅 Agendado'}</span>`;
+    }
+
+    const statusBadgeElem = document.getElementById("detalhesStatusBadge");
+    if (statusBadgeElem) {
+        statusBadgeElem.innerHTML = `<span class="secretaria-status-badge status-${ag.statusSecretaria}">${getSecretariaBadgeText(ag.statusSecretaria)}</span>`;
+    }
 
     const waBtn = document.getElementById("detalhesWaBtn");
     const waText = document.getElementById("detalhesTelefoneText");
