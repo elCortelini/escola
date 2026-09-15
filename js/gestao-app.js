@@ -236,6 +236,31 @@ function marcarAguardandoSecretaria(id) {
     showToast("🔔 Aluno marcado como AGUARDANDO na recepção! Notificação enviada à Orientadora.");
 }
 
+function isClarinda(a) {
+    if (!a) return false;
+    if (!a.orientadora) return true;
+    const ori = a.orientadora.toLowerCase();
+    return ori.includes("clarinda") || ori.includes("1") || ori.includes("carmen") || ori.includes("iniciais");
+}
+
+function isDaiane(a) {
+    if (!a || !a.orientadora) return false;
+    const ori = a.orientadora.toLowerCase();
+    return ori.includes("daiane") || ori.includes("2") || ori.includes("luciana") || ori.includes("finais");
+}
+
+function matchOrientadora(a, filterVal) {
+    if (!filterVal || filterVal === "todas") return true;
+    if (filterVal === "orientadora_clarinda" || filterVal.toLowerCase().includes("clarinda")) {
+        return isClarinda(a);
+    }
+    if (filterVal === "orientadora_daiane" || filterVal.toLowerCase().includes("daiane")) {
+        return isDaiane(a);
+    }
+    if (!a.orientadora) return true;
+    return a.orientadora === filterVal || a.orientadora.includes(filterVal);
+}
+
 // ==========================================
 // PERFIL E NÍVEIS DE ACESSO (RBAC)
 // ==========================================
@@ -2652,6 +2677,12 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
     const modal = document.getElementById("modalVisaoDetalhadaDia");
     if (!modal) return;
 
+    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
+    let dateAppointments = todosAtendimentos.filter(a => 
+        a.data === dateIso && 
+        a.statusSecretaria !== 'cancelado'
+    );
+
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterVal = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
@@ -2731,11 +2762,10 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
                         </div>
                         <div>
                             <select onchange="updateAgendamentoStatusDirect('${item.id}', this.value)" class="search-input" style="font-size:0.8rem; font-weight:800; padding:4px 8px; border-radius:8px; cursor:pointer;">
-                                <option value="agendado" ${item.statusSecretaria === 'agendado' ? 'selected' : ''}>🔵 Agendado</option>
-                                <option value="realizado" ${item.statusSecretaria === 'realizado' ? 'selected' : ''}>🟢 Realizado</option>
-                                <option value="faltou" ${item.statusSecretaria === 'faltou' ? 'selected' : ''}>🔴 Faltou</option>
-                                <option value="pendente" ${item.statusSecretaria === 'pendente' ? 'selected' : ''}>🟡 Pendente</option>
-                                <option value="cancelado" ${item.statusSecretaria === 'cancelado' ? 'selected' : ''}>⚪ Cancelado</option>
+                                <option value="agendado" ${(!item.statusSecretaria || item.statusSecretaria === 'agendado') ? 'selected' : ''}>🔵 Agendado</option>
+                                <option value="aguardando" ${item.statusSecretaria === 'aguardando' ? 'selected' : ''}>⏳ Aguardando na Recepção</option>
+                                <option value="atendido" ${(item.statusSecretaria === 'atendido' || item.statusSecretaria === 'realizado') ? 'selected' : ''}>🟢 Atendido</option>
+                                <option value="nao_veio" ${(item.statusSecretaria === 'nao_veio' || item.statusSecretaria === 'faltou') ? 'selected' : ''}>🔴 Não Veio</option>
                             </select>
                         </div>
                     </div>
@@ -2808,6 +2838,19 @@ function closeVisaoDetalhadaDiaModal() {
     if (modal) modal.style.display = "none";
 }
 
+function getSecretariaBadgeText(status) {
+    const labels = {
+        agendado: "Agendado",
+        aguardando: "Aguardando na Recepção",
+        atendido: "Atendido",
+        realizado: "Atendido",
+        nao_veio: "Não Veio",
+        faltou: "Não Veio",
+        cancelado: "Cancelado"
+    };
+    return labels[status] || status;
+}
+
 function updateAgendamentoStatusDirect(id, newStatus) {
     const ags = sigeDB.getAgendamentosOP() || [];
     const item = ags.find(a => a.id === id);
@@ -2823,6 +2866,7 @@ window.imprimirAtendimentosDoDia = imprimirAtendimentosDoDia;
 window.abrirVisaoDetalhadaDoDia = abrirVisaoDetalhadaDoDia;
 window.closeVisaoDetalhadaDiaModal = closeVisaoDetalhadaDiaModal;
 window.updateAgendamentoStatusDirect = updateAgendamentoStatusDirect;
+window.getSecretariaBadgeText = getSecretariaBadgeText;
 
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {
