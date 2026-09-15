@@ -3193,13 +3193,18 @@ function getFiltradosRelatorio() {
     if (dataIni) ags = ags.filter(a => a.data >= dataIni);
     if (dataFim) ags = ags.filter(a => a.data <= dataFim);
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
+    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen") || a.orientadora.toLowerCase().includes("iniciais");
+    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana") || a.orientadora.toLowerCase().includes("finais"));
 
-    if (oriFiltro === "Clarinda") {
-        ags = ags.filter(isClarinda);
-    } else if (oriFiltro === "Daiane") {
-        ags = ags.filter(isDaiane);
+    if (oriFiltro && oriFiltro !== "todas") {
+        const lowerFiltro = oriFiltro.toLowerCase();
+        if (lowerFiltro.includes("clarinda") || lowerFiltro.includes("iniciais")) {
+            ags = ags.filter(isClarinda);
+        } else if (lowerFiltro.includes("daiane") || lowerFiltro.includes("finais")) {
+            ags = ags.filter(isDaiane);
+        } else {
+            ags = ags.filter(a => (a.orientadora || "").toLowerCase().includes(lowerFiltro));
+        }
     }
 
     ags.sort((a, b) => (a.data + (a.horario || "")).localeCompare(b.data + (b.horario || "")));
