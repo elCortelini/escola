@@ -4,18 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const defaultSystems = [
     {
-        id: "orientacao",
-        title: "Orientação Educacional (OE)",
-        iconClass: "fa-solid fa-heart-pulse",
-        bgClass: "icon-rose",
-        tag: "AGENDA & PRONTUÁRIOS",
-        description: "Controle estrito de agendamentos por orientadora (4 por turno), prontuário único do aluno, declarações e acompanhamento de famílias.",
-        url: "sistema-gestao.html?aba=op",
-        status: "online",
-        badge: "MÓDULO PRINCIPAL / ATIVO",
-        isLive: true
-    },
-    {
         id: "desenvolvedor",
         title: "Desenvolvedor do Sistema",
         iconClass: "fa-solid fa-user-gear",
@@ -62,18 +50,6 @@ const defaultSystems = [
         status: "placeholder",
         badge: "CONFIGURÁVEL",
         isLive: false
-    },
-    {
-        id: "recursos",
-        title: "Agendamento de Recursos",
-        iconClass: "fa-solid fa-calendar-check",
-        bgClass: "icon-amber",
-        tag: "RECURSOS & ESPAÇOS",
-        description: "Reserva de laboratórios de informática, projetores, quadra de esportes e auditório.",
-        url: "https://elcortelini.github.io/agendamento-cepr/",
-        status: "online",
-        badge: "MÓDULO ATIVO",
-        isLive: true
     },
     {
         id: "biblioteca",

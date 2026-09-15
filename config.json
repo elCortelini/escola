@@ -23,15 +23,6 @@
       "badge": "EM BREVE / CONFIGURÁVEL"
     },
     {
-      "id": "recursos",
-      "title": "Sistema de Agendamento de Recursos",
-      "icon": "📅",
-      "description": "Reserva de laboratórios, projetores, quadra de esportes e auditório.",
-      "url": "https://elcortelini.github.io/agendamento-cepr/",
-      "status": "online",
-      "badge": "MÓDULO ATIVO"
-    },
-    {
       "id": "biblioteca",
       "title": "Sistema da Biblioteca",
       "icon": "📚",
