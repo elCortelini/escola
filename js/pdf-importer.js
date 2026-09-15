@@ -182,11 +182,47 @@ async function parseAlunosPdfFile(file) {
     };
 }
 
+function setupPdfDropZoneEvents() {
+    const dropZone = document.getElementById("pdfDropZone");
+    if (!dropZone || dropZone.dataset.eventsInit) return;
+    dropZone.dataset.eventsInit = "true";
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.style.borderColor = '#2563eb';
+            dropZone.style.background = '#eff6ff';
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.style.borderColor = '#94a3b8';
+            dropZone.style.background = '#f8fafc';
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt ? dt.files : null;
+        if (files && files.length > 0) {
+            handlePdfFileSelect({ target: { files: files } });
+        }
+    }, false);
+}
+
 function openImportPDFAlunosModal() {
     const modal = document.getElementById("modalImportPDFAlunos");
     if (modal) {
         modal.style.display = "flex";
         resetPdfImporterUI();
+        setupPdfDropZoneEvents();
     }
 }
 
