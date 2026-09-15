@@ -20,6 +20,10 @@
     
     <!-- Google Identity Services (GIS) API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- PDF.js API para Importação de Relatórios em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="js/pdf-importer.js?v=20260915_v1"></script>
 </head>
 <body>
 
@@ -897,14 +901,15 @@
                 </div>
 
                 <div>
-                    <label id="opLabelAluno" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno:</label>
-                    <input type="text" id="opInputAluno" required placeholder="Ex: Gabriel Souza" class="search-input" style="width:100%;">
+                    <label id="opLabelAluno" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno / Atendido:</label>
+                    <input type="text" id="opInputAluno" list="datalistAlunosImportados" oninput="autoCompleteAlunoData(this.value)" required placeholder="Digite para buscar aluno cadastrado..." class="search-input" style="width:100%;">
+                    <datalist id="datalistAlunosImportados"></datalist>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
                         <label id="opLabelTurma" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
-                        <input type="text" id="opInputTurma" required placeholder="Ex: 7º Ano A" class="search-input" style="width:100%;">
+                        <input type="text" id="opInputTurma" required placeholder="Ex: 101" class="search-input" style="width:100%;">
                     </div>
                     <div>
                         <label id="opLabelResponsavel" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
@@ -916,6 +921,8 @@
                     <label id="opLabelTelefone" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato:</label>
                     <input type="tel" id="opInputTelefone" oninput="updateModalWhatsAppPreview()" required placeholder="Ex: 47999887766" class="search-input" style="width:100%;">
                     
+                    <div id="alunoPhoneBadgesContainer" style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;"></div>
+
                     <div id="modalWaPreviewContainer" style="margin-top:8px; display:none;">
                         <a id="modalWaPreviewBtn" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:8px 12px;">
                             <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
@@ -2253,10 +2260,84 @@
                 </div>
             </form>
 
+            <!-- Seção de Importação de Alunos via PDF -->
+            <div style="background: linear-gradient(135deg, #0f172a, #1e3a8a); padding: 14px 18px; border-radius: 14px; color: white; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 14px rgba(15,23,42,0.2); border: 1px solid #334155;">
+                <div>
+                    <h4 style="font-size: 0.95rem; font-weight: 800; margin: 0; color: #fde047; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Importador de Alunos & Contatos (PDF)
+                    </h4>
+                    <p style="font-size: 0.8rem; color: #cbd5e1; margin: 3px 0 0 0;">Carregue o PDF oficial "Alunos Enturmados Contatos" para extrair turmas, e-mails e todos os telefones.</p>
+                </div>
+                <button type="button" onclick="openImportPDFAlunosModal()" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 800; font-size: 0.82rem; padding: 8px 14px; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(16,185,129,0.3);">
+                    <i class="fa-solid fa-file-import"></i> Abrir Importador PDF
+                </button>
+            </div>
+
             <!-- Lista de Usuários Autorizados -->
             <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:8px;"><i class="fa-solid fa-users-gear"></i> E-mails Cadastrados no Sistema</h4>
             <div id="devUsersListTableContainer" style="overflow-x:auto;">
                 <!-- Renderizado via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Importação de Alunos via PDF -->
+    <div id="modalImportPDFAlunos" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:9500; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:840px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
+                <div>
+                    <h3 style="color:#0f172a; font-size:1.3rem; font-weight:900; display:flex; align-items:center; gap:8px; margin:0;">
+                        <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Importador de PDF: Alunos Enturmados & Contatos
+                    </h3>
+                    <div style="font-size:0.83rem; color:#64748b; margin-top:2px;">Selecione o relatório oficial em PDF gerado pela Secretaria de Educação.</div>
+                </div>
+                <button type="button" onclick="closeImportPDFAlunosModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Área de Drop / Seleção do PDF -->
+            <div id="pdfDropZone" onclick="document.getElementById('pdfFileInput').click()" style="border:2px dashed #94a3b8; border-radius:14px; padding:2.2rem 1rem; text-align:center; background:#f8fafc; cursor:pointer; transition:all 0.2s; margin-bottom:1.2rem;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.8rem; color:#2563eb; margin-bottom:8px;"></i>
+                <div style="font-size:1.05rem; font-weight:800; color:#1e293b;">Clique aqui ou arraste o arquivo PDF de Alunos Enturmados</div>
+                <div style="font-size:0.82rem; color:#64748b; margin-top:4px;">Extrai automaticamente turmas, matrículas, e-mails e todos os telefones de contato.</div>
+                <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;" onchange="handlePdfFileSelect(event)">
+            </div>
+
+            <!-- Progresso de Leitura -->
+            <div id="pdfParsingProgress" style="display:none; text-align:center; padding:1.5rem; background:#eff6ff; border-radius:12px; margin-bottom:1.2rem; border:1px solid #bfdbfe;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:1.8rem; color:#2563eb; margin-bottom:8px;"></i>
+                <div id="pdfProgressText" style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">Processando documento PDF...</div>
+            </div>
+
+            <!-- Preview dos Dados Extraídos -->
+            <div id="pdfPreviewSection" style="display:none;">
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px 16px; border-radius:12px; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div style="font-size:0.9rem; font-weight:900; color:#166534;">
+                            ✅ PDF Processado com Sucesso!
+                        </div>
+                        <div style="font-size:0.8rem; color:#15803d; margin-top:2px;" id="pdfMetaDetails"></div>
+                    </div>
+                    <button type="button" onclick="confirmImportPdfData()" class="btn btn-primary" style="background:#10b981; border:none; width:auto; padding:8px 18px; font-weight:800; font-size:0.88rem; cursor:pointer; box-shadow:0 3px 10px rgba(16,185,129,0.3);">
+                        <i class="fa-solid fa-check-double"></i> Confirmar & Gravar no Sistema
+                    </button>
+                </div>
+
+                <h4 style="font-size:0.88rem; font-weight:800; color:#334155; margin-bottom:8px;"><i class="fa-solid fa-table-list"></i> Pré-visualização dos Alunos Detectados:</h4>
+                <div style="max-height:300px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:10px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
+                        <thead style="background:#f1f5f9; position:sticky; top:0; z-index:2;">
+                            <tr>
+                                <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Matrícula</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Aluno</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Turma</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Telefones Extraídos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdfPreviewTableBody">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

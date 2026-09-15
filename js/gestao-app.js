@@ -2862,17 +2862,79 @@ function updateAgendamentoStatusDirect(id, newStatus) {
     }
 }
 
+// AUTOCOMPLETAR DE ALUNOS IMPORTADOS DO PDF
+function updateAlunosDatalist() {
+    const datalist = document.getElementById("datalistAlunosImportados");
+    if (!datalist) return;
+    const alunos = sigeDB.getAlunosImportados() || [];
+    let html = "";
+    alunos.forEach(a => {
+        html += `<option value="${escapeHtml(a.nome)}">${escapeHtml(a.nome)} - Turma ${escapeHtml(a.turma)} (${escapeHtml(a.turno || 'Matutino')})</option>`;
+    });
+    datalist.innerHTML = html;
+}
+
+function autoCompleteAlunoData(nomeVal) {
+    if (!nomeVal || !nomeVal.trim()) return;
+    const cleanNome = nomeVal.trim().toLowerCase();
+    const alunos = sigeDB.getAlunosImportados() || [];
+    const found = alunos.find(a => a.nome.toLowerCase() === cleanNome || a.nome.toLowerCase().includes(cleanNome));
+
+    if (found) {
+        const inputTurma = document.getElementById("opInputTurma");
+        const inputTurno = document.getElementById("opInputTurno");
+        const inputTelefone = document.getElementById("opInputTelefone");
+        const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
+
+        if (inputTurma && found.turma) inputTurma.value = found.turma;
+        if (inputTurno && found.turno) inputTurno.value = found.turno.toLowerCase();
+
+        if (found.telefones && found.telefones.length > 0) {
+            if (inputTelefone) {
+                inputTelefone.value = found.telefones[0];
+                if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
+            }
+
+            if (phoneContainer) {
+                let badgeHtml = `<span style="font-size:0.75rem; font-weight:700; color:#475569; width:100%; margin-top:2px;">Telefones cadastrados no PDF (clique para escolher):</span>`;
+                found.telefones.forEach((p, idx) => {
+                    badgeHtml += `
+                        <button type="button" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">
+                            📞 Telefone ${idx + 1}: ${escapeHtml(p)}
+                        </button>
+                    `;
+                });
+                phoneContainer.innerHTML = badgeHtml;
+            }
+        } else {
+            if (phoneContainer) phoneContainer.innerHTML = "";
+        }
+    }
+}
+
+function selectModalPhone(phoneStr) {
+    const inputTelefone = document.getElementById("opInputTelefone");
+    if (inputTelefone) {
+        inputTelefone.value = phoneStr;
+        if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
+    }
+}
+
 window.imprimirAtendimentosDoDia = imprimirAtendimentosDoDia;
 window.abrirVisaoDetalhadaDoDia = abrirVisaoDetalhadaDoDia;
 window.closeVisaoDetalhadaDiaModal = closeVisaoDetalhadaDiaModal;
 window.updateAgendamentoStatusDirect = updateAgendamentoStatusDirect;
 window.getSecretariaBadgeText = getSecretariaBadgeText;
+window.updateAlunosDatalist = updateAlunosDatalist;
+window.autoCompleteAlunoData = autoCompleteAlunoData;
+window.selectModalPhone = selectModalPhone;
 
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {
     const modal = document.getElementById("modalAgendamentoOP");
     if (!modal) return;
     document.getElementById("formAgendamentoOP").reset();
+    updateAlunosDatalist();
 
     const selectPub = document.getElementById("opInputPublico");
     if (selectPub) selectPub.value = "aluno";

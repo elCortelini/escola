@@ -1333,6 +1333,47 @@ class SigeDatabase {
         localStorage.removeItem("sige_logged_email");
     }
 
+    // Gerenciador de Alunos e Turmas Importados via PDF
+    getAlunosImportados() {
+        if (!this.data.alunosImportados || !Array.isArray(this.data.alunosImportados)) {
+            this.data.alunosImportados = [];
+        }
+        return this.data.alunosImportados;
+    }
+
+    getLastPdfImportMeta() {
+        return this.data.pdfImportMeta || null;
+    }
+
+    saveAlunosImportados(novosAlunos, metaInfo) {
+        let list = this.getAlunosImportados();
+        const mapByMatricula = new Map();
+
+        list.forEach(a => {
+            if (a.matricula) mapByMatricula.set(a.matricula, a);
+        });
+
+        novosAlunos.forEach(novo => {
+            if (novo.matricula && mapByMatricula.has(novo.matricula)) {
+                const ext = mapByMatricula.get(novo.matricula);
+                ext.nome = novo.nome;
+                ext.turma = novo.turma;
+                ext.turno = novo.turno;
+                ext.email = novo.email;
+                ext.dataNasc = novo.dataNasc;
+                const combinedPhones = Array.from(new Set([...(ext.telefones || []), ...(novo.telefones || [])]));
+                ext.telefones = combinedPhones;
+            } else {
+                if (novo.matricula) mapByMatricula.set(novo.matricula, novo);
+                list.push(novo);
+            }
+        });
+
+        this.data.alunosImportados = list;
+        this.data.pdfImportMeta = metaInfo;
+        this.saveData(this.data);
+    }
+
     // Role Manager
     getRole() {
         return this.data.currentRole || "direcao";
