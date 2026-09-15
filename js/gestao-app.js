@@ -2871,7 +2871,14 @@ function autoCompleteAlunoData(nomeVal) {
     if (!nomeVal || !nomeVal.trim()) return;
     const cleanNome = nomeVal.trim().toLowerCase();
     const alunos = sigeDB.getAlunosImportados() || [];
-    const found = alunos.find(a => a.nome.toLowerCase() === cleanNome || a.nome.toLowerCase().includes(cleanNome));
+    
+    let found = alunos.find(a => (a.nome || "").toLowerCase() === cleanNome);
+    if (!found) {
+        found = alunos.find(a => (a.nome || "").toLowerCase().startsWith(cleanNome));
+    }
+    if (!found && cleanNome.length >= 3) {
+        found = alunos.find(a => (a.nome || "").toLowerCase().includes(cleanNome));
+    }
 
     if (found) {
         const inputTurma = document.getElementById("opInputTurma");
@@ -2879,24 +2886,45 @@ function autoCompleteAlunoData(nomeVal) {
         const inputTelefone = document.getElementById("opInputTelefone");
         const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
 
-        if (inputTurma && found.turma) inputTurma.value = found.turma;
-        if (inputTurno && found.turno) inputTurno.value = found.turno.toLowerCase();
+        if (inputTurma && found.turma) {
+            inputTurma.value = found.turma;
+        }
+
+        if (inputTurno && found.turno) {
+            inputTurno.value = found.turno.toLowerCase();
+        }
 
         if (found.telefones && found.telefones.length > 0) {
-            if (inputTelefone) {
+            if (inputTelefone && (!inputTelefone.value || inputTelefone.value.trim() === "")) {
                 inputTelefone.value = found.telefones[0];
                 if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
             }
 
             if (phoneContainer) {
-                let badgeHtml = `<span style="font-size:0.75rem; font-weight:700; color:#475569; width:100%; margin-top:2px;">Telefones cadastrados no PDF (clique para escolher):</span>`;
+                let badgeHtml = `
+                    <div style="font-size:0.78rem; font-weight:800; color:#1e3a8a; margin-top:4px; margin-bottom:2px;">
+                        <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> Telefones de Contato do Aluno (WhatsApp):
+                    </div>
+                `;
+
                 found.telefones.forEach((p, idx) => {
+                    const cleanDigits = p.replace(/[^\d]/g, '');
+                    const waNum = cleanDigits.startsWith('55') ? cleanDigits : ('55' + cleanDigits);
+                    const defaultMsg = encodeURIComponent(`Olá! Entramos em contato a respeito do agendamento escolar do(a) aluno(a) ${found.nome} (Turma ${found.turma}).`);
+                    const waUrl = `https://wa.me/${waNum}?text=${defaultMsg}`;
+
                     badgeHtml += `
-                        <button type="button" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">
-                            📞 Telefone ${idx + 1}: ${escapeHtml(p)}
-                        </button>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:#f0fdf4; padding:6px 10px; border-radius:10px; border:1px solid #bbf7d0;">
+                            <button type="button" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:800; cursor:pointer;" title="Usar este número no formulário">
+                                📌 Usar (${escapeHtml(p)})
+                            </button>
+                            <a href="${waUrl}" target="_blank" style="background:#22c55e; color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.78rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(34,197,94,0.3);" title="Abrir conversa direta no WhatsApp">
+                                <i class="fa-brands fa-whatsapp" style="font-size:0.9rem;"></i> WhatsApp (${escapeHtml(p)})
+                            </a>
+                        </div>
                     `;
                 });
+
                 phoneContainer.innerHTML = badgeHtml;
             }
         } else {
