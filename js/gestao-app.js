@@ -2902,9 +2902,10 @@ function autoCompleteAlunoData(nomeVal) {
 
             if (phoneContainer) {
                 let badgeHtml = `
-                    <div style="font-size:0.78rem; font-weight:800; color:#1e3a8a; margin-top:4px; margin-bottom:2px;">
-                        <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> Telefones de Contato do Aluno (WhatsApp):
+                    <div style="font-size:0.78rem; font-weight:800; color:#166534; margin-top:4px; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
+                        <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:0.95rem;"></i> Telefones de Contato do Aluno (WhatsApp):
                     </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
                 `;
 
                 found.telefones.forEach((p, idx) => {
@@ -2914,17 +2915,13 @@ function autoCompleteAlunoData(nomeVal) {
                     const waUrl = `https://wa.me/${waNum}?text=${defaultMsg}`;
 
                     badgeHtml += `
-                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:#f0fdf4; padding:6px 10px; border-radius:10px; border:1px solid #bbf7d0;">
-                            <button type="button" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:800; cursor:pointer;" title="Usar este número no formulário">
-                                📌 Usar (${escapeHtml(p)})
-                            </button>
-                            <a href="${waUrl}" target="_blank" style="background:#22c55e; color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.78rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(34,197,94,0.3);" title="Abrir conversa direta no WhatsApp">
-                                <i class="fa-brands fa-whatsapp" style="font-size:0.9rem;"></i> WhatsApp (${escapeHtml(p)})
-                            </a>
-                        </div>
+                        <a href="${waUrl}" target="_blank" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:8px 14px; border-radius:10px; font-size:0.83rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; justify-content:flex-start; gap:8px; box-shadow:0 2px 6px rgba(16,185,129,0.3); cursor:pointer; width:100%;" title="Selecionar número e abrir WhatsApp">
+                            <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i> <span>WhatsApp (${escapeHtml(p)})</span>
+                        </a>
                     `;
                 });
 
+                badgeHtml += `</div>`;
                 phoneContainer.innerHTML = badgeHtml;
             }
         } else {
@@ -2941,11 +2938,37 @@ function selectModalPhone(phoneStr) {
     }
 }
 
+function openDirectCustomWhatsApp() {
+    const inputTelefone = document.getElementById("opInputTelefone");
+    const alunoInput = document.getElementById("opInputAluno");
+    const turmaInput = document.getElementById("opInputTurma");
+
+    if (!inputTelefone || !inputTelefone.value.trim()) {
+        alert("Por favor, digite um número de telefone no campo de contato.");
+        return;
+    }
+
+    const rawPhone = inputTelefone.value.trim();
+    const cleanDigits = rawPhone.replace(/[^\d]/g, '');
+    if (cleanDigits.length < 8) {
+        alert("Por favor, digite um número de telefone válido com DDD.");
+        return;
+    }
+
+    const waNum = cleanDigits.startsWith('55') ? cleanDigits : ('55' + cleanDigits);
+    const alunoNome = alunoInput ? alunoInput.value.trim() : "aluno";
+    const turmaNome = turmaInput ? turmaInput.value.trim() : "";
+    const msgText = encodeURIComponent(`Olá! Entramos em contato a respeito do agendamento escolar do(a) aluno(a) ${alunoNome} ${turmaNome ? '(Turma ' + turmaNome + ')' : ''}.`);
+    
+    window.open(`https://wa.me/${waNum}?text=${msgText}`, '_blank');
+}
+
 window.imprimirAtendimentosDoDia = imprimirAtendimentosDoDia;
 window.abrirVisaoDetalhadaDoDia = abrirVisaoDetalhadaDoDia;
 window.closeVisaoDetalhadaDiaModal = closeVisaoDetalhadaDiaModal;
 window.updateAgendamentoStatusDirect = updateAgendamentoStatusDirect;
 window.getSecretariaBadgeText = getSecretariaBadgeText;
+window.openDirectCustomWhatsApp = openDirectCustomWhatsApp;
 window.updateAlunosDatalist = updateAlunosDatalist;
 window.autoCompleteAlunoData = autoCompleteAlunoData;
 window.selectModalPhone = selectModalPhone;
