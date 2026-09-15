@@ -183,38 +183,41 @@ async function parseAlunosPdfFile(file) {
 }
 
 function setupPdfDropZoneEvents() {
-    const dropZone = document.getElementById("pdfDropZone");
-    if (!dropZone || dropZone.dataset.eventsInit) return;
-    dropZone.dataset.eventsInit = "true";
+    ['pdfDropZone', 'inlinePdfDropZone'].forEach(id => {
+        const dropZone = document.getElementById(id);
+        if (!dropZone || dropZone.dataset.eventsInit) return;
+        dropZone.dataset.eventsInit = "true";
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = '#2563eb';
+                dropZone.style.background = '#eff6ff';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = '#94a3b8';
+                dropZone.style.background = '#f8fafc';
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt ? dt.files : null;
+            if (files && files.length > 0) {
+                openImportPDFAlunosModal();
+                handlePdfFileSelect({ target: { files: files } });
+            }
         }, false);
     });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.style.borderColor = '#2563eb';
-            dropZone.style.background = '#eff6ff';
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.style.borderColor = '#94a3b8';
-            dropZone.style.background = '#f8fafc';
-        }, false);
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt ? dt.files : null;
-        if (files && files.length > 0) {
-            handlePdfFileSelect({ target: { files: files } });
-        }
-    }, false);
 }
 
 function openImportPDFAlunosModal() {
@@ -291,7 +294,7 @@ function renderPdfPreview(result) {
     if (metaDetails) {
         metaDetails.innerHTML = `
             <strong>Data da Impressão do PDF:</strong> ${result.impressoEm} &nbsp;|&nbsp; 
-            <strong>Total de Turmas:</strong> ${result.turmas.length} (${result.turmas.slice(0, 8).join(", ")}...) &nbsp;|&nbsp; 
+            <strong>Total de Turmas:</strong> ${result.turmas.length} (${result.turmas.slice(0, 8).join(", ")}) &nbsp;|&nbsp; 
             <strong>Total de Alunos:</strong> ${result.totalAlunos}
         `;
     }
@@ -323,14 +326,43 @@ function updateAdminPdfImportMetaInfoDisplay() {
     const metaDiv = document.getElementById("adminPdfImportMetaInfo");
     if (!metaDiv || !window.sigeDB) return;
     const meta = window.sigeDB.getLastPdfImportMeta();
-    if (meta) {
+    const alunos = window.sigeDB.getAlunosImportados();
+
+    if (meta && alunos && alunos.length > 0) {
+        const turmasMap = {};
+        alunos.forEach(a => {
+            const t = a.turma || "Sem Turma";
+            turmasMap[t] = (turmasMap[t] || 0) + 1;
+        });
+
+        const sortedTurmas = Object.keys(turmasMap).sort();
+        const turmasBadges = sortedTurmas.map(t => 
+            `<span style="background:#e0e7ff; color:#3730a3; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.78rem; border:1px solid #c7d2fe;">Turma ${t}: ${turmasMap[t]} alunos</span>`
+        ).join(" ");
+
         metaDiv.innerHTML = `
-            <i class="fa-solid fa-clock-rotate-left"></i> Última Importação realizada: ${meta.importadoEm} 
-            (Relatório PDF impresso em: <strong>${meta.impressoEm}</strong>) — 
-            <strong>${meta.totalAlunos} Alunos</strong> cadastrados em <strong>${meta.totalTurmas} Turmas</strong>.
+            <div style="width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <span style="font-weight:800; color:#1e3a8a; font-size:0.92rem;">
+                        <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Base de Alunos Ativa: <strong>${alunos.length} Alunos</strong> cadastrados em <strong>${sortedTurmas.length} Turmas</strong>
+                    </span>
+                    <span style="font-size:0.78rem; color:#64748b; font-weight:600;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Última importação: ${meta.importadoEm || 'Hoje'} (PDF impresso em: <strong>${meta.impressoEm || 'N/A'}</strong>)
+                    </span>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:6px; border-top:1px dashed #cbd5e1; padding-top:8px;">
+                    <span style="font-size:0.78rem; font-weight:800; color:#475569;"><i class="fa-solid fa-graduation-cap"></i> Turmas Extraídas:</span>
+                    ${turmasBadges}
+                </div>
+            </div>
         `;
     } else {
-        metaDiv.innerHTML = `<i class="fa-solid fa-circle-info"></i> Nenhuma importação de PDF realizada ainda. Clique no botão verde ao lado para carregar o arquivo PDF oficial de Alunos Enturmados.`;
+        metaDiv.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                <i class="fa-solid fa-circle-info" style="color:#0284c7; font-size:1.1rem;"></i>
+                <span style="font-weight:700; color:#475569;">Nenhuma base de alunos importada ainda. Clique no botão acima para carregar o arquivo PDF oficial de Alunos Enturmados.</span>
+            </div>
+        `;
     }
 }
 

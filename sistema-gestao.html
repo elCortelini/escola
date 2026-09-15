@@ -23,7 +23,6 @@
     
     <!-- PDF.js API para Importação de Relatórios em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="js/pdf-importer.js?v=20260915_v1"></script>
 </head>
 <body>
 
@@ -483,6 +482,35 @@
                     <button onclick="downloadBackupSige()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; padding:8px 14px; background:#475569; color:white;">
                         <i class="fa-solid fa-download"></i> Backup JSON
                     </button>
+                </div>
+            </div>
+
+            <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+            <div style="background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 1.3rem;"></i> Painel de Importação de Alunos & Contatos (PDF)
+                        </h4>
+                        <p style="font-size: 0.83rem; color: #64748b; margin-top: 3px;">
+                            Carregue o relatório PDF <strong>"Alunos Enturmados Contatos"</strong> para cadastrar/atualizar alunos, turmas (ex: 101, 102), turnos, e-mails institucionais e telefones.
+                        </p>
+                    </div>
+                    <button onclick="openImportPDFAlunosModal()" class="btn btn-primary" style="width: auto; font-size: 0.88rem; padding: 9px 18px; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(16,185,129,0.35); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.1rem;"></i> <span>Abrir Importador PDF</span>
+                    </button>
+                </div>
+
+                <!-- Dropzone Direta na Página (Quick Upload) -->
+                <div id="inlinePdfDropZone" onclick="openImportPDFAlunosModal()" style="border: 2px dashed #94a3b8; border-radius: 14px; padding: 1.6rem 1rem; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-file-import" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 6px;"></i>
+                    <div style="font-size: 1rem; font-weight: 800; color: #1e293b;">Clique aqui para selecionar ou arraste o arquivo PDF de Alunos</div>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">O sistema processará as turmas (ex: 101, 102), turnos e telefones automaticamente.</div>
+                </div>
+
+                <!-- Status e Resumo de Dados Importados -->
+                <div id="adminPdfImportMetaInfo" style="background: #f1f5f9; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <!-- Renderizado dinamicamente via updateAdminPdfImportMetaInfoDisplay() -->
                 </div>
             </div>
 
@@ -2170,6 +2198,8 @@
                 </div>
             </form>
         </div>
+    </div>
+
     <!-- Modal de Login por E-mail Institucional & Google Auth -->
     <div id="modalSigeLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
         <div style="background:white; border-radius:20px; max-width:460px; width:92%; padding:2.2rem; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1; text-align:center;">
@@ -2354,8 +2384,8 @@
     </footer>
 
     <!-- JS Files -->
-    <script src="js/gestao-data.js?v=20260915_v1"></script>
-    <script src="js/gestao-app.js?v=20260915_v1"></script>
-    <script src="js/pdf-importer.js?v=20260915_v1"></script>
+    <script src="js/gestao-data.js?v=20260915_v2"></script>
+    <script src="js/gestao-app.js?v=20260915_v2"></script>
+    <script src="js/pdf-importer.js?v=20260915_v2"></script>
 </body>
 </html>
