@@ -222,11 +222,17 @@ function deleteDevUser(email) {
 }
 
 function marcarAguardandoSecretaria(id) {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
     const agora = new Date().toISOString();
     sigeDB.updateSecretariaStatusOP(id, "aguardando", "Aluno/Responsável aguardando na recepção.", agora);
-    renderNotifications();
-    renderModuleOrientacaoPedagogica();
     showToast("🔔 Aluno marcado como AGUARDANDO na recepção! Notificação enviada à Orientadora.");
+
+    setTimeout(() => {
+        renderNotifications();
+        renderModuleOrientacaoPedagogica();
+    }, 50);
 }
 
 function isClarinda(a) {
@@ -1860,10 +1866,19 @@ function openDetalhesModal(id) {
     // Renderizar histórico de disparos de WhatsApp
     renderWhatsappDispatchHistory(ag);
 
-    document.getElementById("modalDetalhesOP").style.display = "flex";
+    const modal = document.getElementById("modalDetalhesOP");
+    if (modal) {
+        modal.style.display = "flex";
+        modal.onclick = (e) => {
+            if (e.target === modal) closeDetalhesModal();
+        };
+    }
 }
 
 function closeDetalhesModal() {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
     const modal = document.getElementById("modalDetalhesOP");
     if (modal) modal.style.display = "none";
     currentDetailAppointmentId = null;
@@ -1876,6 +1891,10 @@ window.closeDetalhesModal = closeDetalhesModal;
 function detalhesMudarStatus(newStatus, customId = null) {
     const id = customId || window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!id) return;
+
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
 
     let obsPrompt = "";
     let chegadaEm = null;
@@ -1891,10 +1910,6 @@ function detalhesMudarStatus(newStatus, customId = null) {
 
     sigeDB.updateSecretariaStatusOP(id, newStatus, obsPrompt, chegadaEm);
 
-    renderModuleOrientacaoPedagogica();
-    updateBadgesCounts();
-    renderNotifications();
-
     if (newStatus === "aguardando") {
         showToast("🔔 Marcado como AGUARDANDO na recepção.");
     } else if (newStatus === "realizado" || newStatus === "atendido") {
@@ -1903,10 +1918,16 @@ function detalhesMudarStatus(newStatus, customId = null) {
         showToast("❌ Marcado como NÃO VEIO / Ausente.");
     }
 
-    const isModalOpen = document.getElementById("modalDetalhesOP") && document.getElementById("modalDetalhesOP").style.display === "flex";
-    if (isModalOpen && (window.currentDetailAppointmentId === id || currentDetailAppointmentId === id)) {
-        openDetalhesModal(id);
-    }
+    setTimeout(() => {
+        renderModuleOrientacaoPedagogica();
+        updateBadgesCounts();
+        renderNotifications();
+
+        const isModalOpen = document.getElementById("modalDetalhesOP") && document.getElementById("modalDetalhesOP").style.display === "flex";
+        if (isModalOpen && (window.currentDetailAppointmentId === id || currentDetailAppointmentId === id)) {
+            openDetalhesModal(id);
+        }
+    }, 50);
 }
 
 function salvarEncaminhamentoEDeliberacao() {
@@ -2195,11 +2216,16 @@ function submitReagendamentoOP(e) {
         destinatario: ag.telefone || ""
     });
 
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
     sigeDB.saveAgendamentosOP(ags);
 
     showToast(`📅 Agendamento de "${ag.aluno}" reagendado para ${formatDateBR(novaData)} às ${novoHorario}!`, "success");
     closeReagendarModal();
-    renderModuleOrientacaoPedagogica();
+    setTimeout(() => {
+        renderModuleOrientacaoPedagogica();
+    }, 50);
 }
 
 function aplicarTemplateMensagem(tipo) {
@@ -2384,6 +2410,11 @@ function toggleBloqueioDiaHandler(dateIso) {
 function excluirAgendamentoDirect(id) {
     const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!targetId) return;
+
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
+
     const ags = sigeDB.getAgendamentosOP() || [];
     const item = ags.find(a => a.id === targetId);
     const nomeAluno = item ? item.aluno : 'este agendamento';
@@ -2391,14 +2422,17 @@ function excluirAgendamentoDirect(id) {
     if (confirm(`Tem certeza que deseja EXCLUIR permanentemente o agendamento de "${nomeAluno}"?`)) {
         const deleted = sigeDB.deleteAgendamentoOP(targetId);
         if (deleted) {
-            showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
             if (typeof closeVisaoDetalhadaDiaModal === "function") closeVisaoDetalhadaDiaModal();
             if (typeof closeDetalhesModal === "function") closeDetalhesModal();
-            if (typeof renderAllModules === "function") {
-                renderAllModules();
-            } else if (typeof renderModuleOrientacaoPedagogica === "function") {
-                renderModuleOrientacaoPedagogica();
-            }
+            showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
+
+            setTimeout(() => {
+                if (typeof renderAllModules === "function") {
+                    renderAllModules();
+                } else if (typeof renderModuleOrientacaoPedagogica === "function") {
+                    renderModuleOrientacaoPedagogica();
+                }
+            }, 50);
         } else {
             alert("Erro ao excluir agendamento.");
         }
@@ -3068,11 +3102,16 @@ function submitAgendamentoOP(e) {
         // Disparo automático de WhatsApp sem intervenção humana
         sendAutomaticWhatsapp(novoAg, "agendamento_criado");
 
+        if (document.activeElement && typeof document.activeElement.blur === "function") {
+            document.activeElement.blur();
+        }
         closeAgendamentoModal();
-        renderModuleOrientacaoPedagogica();
-        updateBadgesCounts();
-        renderNotifications();
         showToast("✅ Agendamento de Orientação Educacional registrado com sucesso!");
+        setTimeout(() => {
+            renderModuleOrientacaoPedagogica();
+            updateBadgesCounts();
+            renderNotifications();
+        }, 50);
     } catch (err) {
         alert(err.message);
     }
@@ -3167,11 +3206,16 @@ function submitEditarAgendamentoOP(e) {
         turno
     };
 
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
     sigeDB.saveAgendamentosOP(ags);
     closeEditarModal();
     closeDetalhesModal();
-    renderModuleOrientacaoPedagogica();
     showToast("✅ Dados do agendamento editados e salvos!");
+    setTimeout(() => {
+        renderModuleOrientacaoPedagogica();
+    }, 50);
     return false;
 }
 
