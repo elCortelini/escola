@@ -1039,10 +1039,10 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         ${item.statusSecretaria === 'aguardando' ? `
                                             <div style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:800; display:flex; align-items:center; justify-content:space-between;">
                                                 <span><i class="fa-solid fa-bell" style="color:#d97706;"></i> ⏳ <strong>Esperando na Recepção</strong></span>
-                                                <button onclick="marcarAguardandoSecretaria('${item.id}')" style="background:#d97706; color:white; border:none; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800; cursor:pointer;" title="Notificar novamente">🔔 Reenviar</button>
+                                                <button onclick="event.stopPropagation(); marcarAguardandoSecretaria('${item.id}')" style="background:#d97706; color:white; border:none; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800; cursor:pointer;" title="Notificar novamente">🔔 Reenviar</button>
                                             </div>
                                         ` : `
-                                            <button onclick="marcarAguardandoSecretaria('${item.id}')" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; font-size:0.78rem; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(245,158,11,0.35); display:flex; align-items:center; justify-content:center; gap:6px;" title="Clique aqui para registrar que a pessoa chegou e está aguardando na recepção">
+                                            <button onclick="event.stopPropagation(); marcarAguardandoSecretaria('${item.id}')" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; font-size:0.78rem; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(245,158,11,0.35); display:flex; align-items:center; justify-content:center; gap:6px;" title="Clique aqui para registrar que a pessoa chegou e está aguardando na recepção">
                                                 <i class="fa-solid fa-bell" style="font-size:0.85rem;"></i> 🔔 Marcar: Chegou / Esperando
                                             </button>
                                         `}
@@ -1229,7 +1229,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                                     <i class="fa-solid fa-bell"></i> ⏳ Esperando
                                                 </div>
                                             ` : `
-                                                <button onclick="marcarAguardandoSecretaria('${item.id}')" style="background:#f59e0b; color:white; font-weight:900; font-size:0.7rem; padding:4px 6px; border-radius:6px; border:none; cursor:pointer; width:100%; text-align:center; box-shadow:0 2px 4px rgba(245,158,11,0.25);" title="Clique para registrar que a pessoa chegou">
+                                                <button onclick="event.stopPropagation(); marcarAguardandoSecretaria('${item.id}')" style="background:#f59e0b; color:white; font-weight:900; font-size:0.7rem; padding:4px 6px; border-radius:6px; border:none; cursor:pointer; width:100%; text-align:center; box-shadow:0 2px 4px rgba(245,158,11,0.25);" title="Clique para registrar que a pessoa chegou">
                                                     <i class="fa-solid fa-bell"></i> 🔔 Chegou / Esperando
                                                 </button>
                                             `}
@@ -1342,16 +1342,16 @@ function renderCardsView(todosAtendimentos) {
                         </div>
                     ` : ''}
 
-                    <div class="secretaria-action-btns" style="flex-wrap:wrap; margin-top:8px;">
-                        <button onclick="marcarAguardandoSecretaria('${a.id}')" class="btn-sec" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; width:100%; border:none; box-shadow:0 2px 4px rgba(245,158,11,0.3);">
+                    <div class="secretaria-action-btns" style="flex-wrap:wrap; margin-top:8px;" onclick="event.stopPropagation();">
+                        <button onclick="event.stopPropagation(); marcarAguardandoSecretaria('${a.id}')" class="btn-sec" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-weight:900; width:100%; border:none; box-shadow:0 2px 4px rgba(245,158,11,0.3);">
                             🔔 Marcar que Chegou / Está Esperando
                         </button>
 
                         ${isOrientadora ? `
-                            <button onclick="detalhesMudarStatus('realizado', '${a.id}')" class="btn-sec btn-sec-ok">
+                            <button onclick="event.stopPropagation(); detalhesMudarStatus('realizado', '${a.id}')" class="btn-sec btn-sec-ok">
                                 ✅ Atendido
                             </button>
-                            <button onclick="detalhesMudarStatus('ausente', '${a.id}')" class="btn-sec btn-sec-fail">
+                            <button onclick="event.stopPropagation(); detalhesMudarStatus('ausente', '${a.id}')" class="btn-sec btn-sec-fail">
                                 ❌ Não Veio
                             </button>
                         ` : ''}
@@ -1874,7 +1874,7 @@ window.openDetalhesModal = openDetalhesModal;
 window.closeDetalhesModal = closeDetalhesModal;
 
 function detalhesMudarStatus(newStatus, customId = null) {
-    const id = customId || currentDetailAppointmentId;
+    const id = customId || window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!id) return;
 
     let obsPrompt = "";
@@ -1897,32 +1897,35 @@ function detalhesMudarStatus(newStatus, customId = null) {
 
     if (newStatus === "aguardando") {
         showToast("🔔 Marcado como AGUARDANDO na recepção.");
-    } else if (newStatus === "realizado") {
+    } else if (newStatus === "realizado" || newStatus === "atendido") {
         showToast("✅ Atendimento marcado como CONCLUÍDO!");
-    } else if (newStatus === "ausente") {
+    } else if (newStatus === "ausente" || newStatus === "nao_veio") {
         showToast("❌ Marcado como NÃO VEIO / Ausente.");
     }
 
-    if (currentDetailAppointmentId === id) {
+    const isModalOpen = document.getElementById("modalDetalhesOP") && document.getElementById("modalDetalhesOP").style.display === "flex";
+    if (isModalOpen && (window.currentDetailAppointmentId === id || currentDetailAppointmentId === id)) {
         openDetalhesModal(id);
     }
 }
 
 function salvarEncaminhamentoEDeliberacao() {
-    if (!currentDetailAppointmentId) return;
+    const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
     const encElem = document.getElementById("detalhesInputEncaminhamento");
     const enc = encElem ? encElem.value : "Nenhum";
     const histElem = document.getElementById("detalhesInputHistoricoTratado");
     const hist = histElem ? histElem.value : "";
 
-    sigeDB.updateEncaminhamentoOP(currentDetailAppointmentId, enc, hist);
+    sigeDB.updateEncaminhamentoOP(targetId, enc, hist);
     showToast("💾 Relato da conversa e combinados salvos com sucesso!");
     renderModuleOrientacaoPedagogica();
 }
 
 function dispararLembrete24h() {
-    if (!currentDetailAppointmentId) return;
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
 
     sendAutomaticWhatsapp(ag, "lembrete_24h");
@@ -1930,8 +1933,9 @@ function dispararLembrete24h() {
 }
 
 function dispararLembreteHoje() {
-    if (!currentDetailAppointmentId) return;
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag || !ag.telefone) return alert("Sem telefone cadastrado!");
 
     sendAutomaticWhatsapp(ag, "lembrete_dia");
@@ -2199,8 +2203,9 @@ function submitReagendamentoOP(e) {
 }
 
 function aplicarTemplateMensagem(tipo) {
-    if (!currentDetailAppointmentId) return;
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag) return;
 
     const textarea = document.getElementById("detalhesMensagemEditavel");
@@ -2228,8 +2233,9 @@ function aplicarTemplateMensagem(tipo) {
 }
 
 function enviarMensagemPersonalizadaWhatsApp(e) {
-    if (!currentDetailAppointmentId) return;
-    const ag = sigeDB.getAgendamentosOP().find(a => a.id === currentDetailAppointmentId);
+    const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
+    if (!targetId) return;
+    const ag = sigeDB.getAgendamentosOP().find(a => a.id === targetId);
     if (!ag) return;
 
     const textarea = document.getElementById("detalhesMensagemEditavel");
@@ -2388,8 +2394,11 @@ function excluirAgendamentoDirect(id) {
             showToast(`Agendamento de "${nomeAluno}" excluído com sucesso!`, "success");
             if (typeof closeVisaoDetalhadaDiaModal === "function") closeVisaoDetalhadaDiaModal();
             if (typeof closeDetalhesModal === "function") closeDetalhesModal();
-            if (typeof renderModuleOrientacaoPedagogica === "function") renderModuleOrientacaoPedagogica();
-            if (typeof renderAllModules === "function") renderAllModules();
+            if (typeof renderAllModules === "function") {
+                renderAllModules();
+            } else if (typeof renderModuleOrientacaoPedagogica === "function") {
+                renderModuleOrientacaoPedagogica();
+            }
         } else {
             alert("Erro ao excluir agendamento.");
         }
@@ -4776,6 +4785,7 @@ function showToast(msg) {
             z-index: 9999;
             border: 1px solid #334155;
             transition: all 0.3s ease;
+            pointer-events: none;
         `;
         document.body.appendChild(toast);
     }
