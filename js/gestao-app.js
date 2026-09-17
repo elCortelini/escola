@@ -236,6 +236,21 @@ function marcarAguardandoSecretaria(id) {
     }, 50);
 }
 
+function marcarPresencaConfirmadaWhatsApp(id) {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+    }
+    const agora = new Date().toISOString();
+    sigeDB.updateSecretariaStatusOP(id, "confirmado", "Presença confirmada pelo responsável via WhatsApp.", agora);
+    showToast("🟢 Presença confirmada via WhatsApp com sucesso!");
+
+    setTimeout(() => {
+        renderNotifications();
+        renderModuleOrientacaoPedagogica();
+    }, 50);
+}
+window.marcarPresencaConfirmadaWhatsApp = marcarPresencaConfirmadaWhatsApp;
+
 function isClarinda(a) {
     if (!a) return false;
     if (!a.orientadora) return true;
@@ -1522,6 +1537,8 @@ function getSecretariaBadgeText(status) {
     const map = {
         pendente: "⏳ Pendente",
         aguardando: "🔔 Chegou / Aguardando",
+        confirmado: "🟢 Presença Confirmada (WhatsApp)",
+        confirmado_whatsapp: "🟢 Presença Confirmada (WhatsApp)",
         realizado: "✅ Atendido",
         ausente: "❌ Ausente / Não Veio",
         cancelado: "🚫 Cancelado"
@@ -1885,10 +1902,12 @@ function openDetalhesModal(id) {
     const role = sigeDB.getRole();
     const canChangeStatus = role.startsWith("orientadora_") || ["orientacao", "secretaria", "admin", "direcao", "desenvolvedor", "supervisao"].includes(role) || role.startsWith("supervisora_");
 
+    const btnConfirmadoWa = document.getElementById("btnAcaoConfirmadoWa");
     const btnAguardando = document.getElementById("btnAcaoAguardando");
     const btnAtendido = document.getElementById("btnAcaoAtendido");
     const btnNaoVeio = document.getElementById("btnAcaoNaoVeio");
 
+    if (btnConfirmadoWa) btnConfirmadoWa.style.display = canChangeStatus ? "inline-flex" : "none";
     if (btnAguardando) btnAguardando.style.display = canChangeStatus ? "inline-flex" : "none";
     if (btnAtendido) btnAtendido.style.display = canChangeStatus ? "inline-flex" : "none";
     if (btnNaoVeio) btnNaoVeio.style.display = canChangeStatus ? "inline-flex" : "none";
@@ -1942,6 +1961,8 @@ function detalhesMudarStatus(newStatus, customId = null) {
 
     if (newStatus === "aguardando") {
         showToast("🔔 Marcado como AGUARDANDO na recepção.");
+    } else if (newStatus === "confirmado" || newStatus === "confirmado_whatsapp") {
+        showToast("🟢 Presença confirmada via WhatsApp!");
     } else if (newStatus === "realizado" || newStatus === "atendido") {
         showToast("✅ Atendimento marcado como CONCLUÍDO!");
     } else if (newStatus === "ausente" || newStatus === "nao_veio") {
@@ -2272,14 +2293,15 @@ function aplicarTemplateMensagem(tipo) {
     const respNome = ag.responsavel || "Família";
     const oriNome = ag.orientadora || "Orientação Educacional";
     const hor = ag.horario || "";
+    const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
 
     let text = "";
     if (tipo === "lembrete_dia") {
-        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} HOJE, às ${hor}. Aguardamos vocês no Centro Educacional Pedro Rizzi.`;
+        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} HOJE, às ${hor}. Aguardamos vocês no Centro Educacional Pedro Rizzi.\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
     } else if (tipo === "lembrete_24h") {
-        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} amanhã, dia ${dataFmt} às ${hor}. Centro Educacional Pedro Rizzi.`;
+        text = `Olá ${respNome}! Lembramos do agendamento do estudante ${alunoNome} (${ag.turma}) com a Orientadora Educacional ${oriNome} amanhã, dia ${dataFmt} às ${hor}. Centro Educacional Pedro Rizzi.\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
     } else if (tipo === "reagendado") {
-        text = `Olá ${respNome}! Confirmamos o REAGENDAMENTO do atendimento do estudante ${alunoNome} (${ag.turma}) para o dia ${dataFmt} às ${hor} com a Orientação Educacional do Centro Educacional Pedro Rizzi.`;
+        text = `Olá ${respNome}! Confirmamos o REAGENDAMENTO do atendimento do estudante ${alunoNome} (${ag.turma}) para o dia ${dataFmt} às ${hor} com a Orientação Educacional do Centro Educacional Pedro Rizzi.\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
     } else if (tipo === "falta") {
         text = `Olá ${respNome}! Registramos a ausência no atendimento agendado do estudante ${alunoNome} (${ag.turma}) no dia ${dataFmt} às ${hor}. Por favor, entre em contato conosco para reagendarmos.`;
     }
@@ -2419,7 +2441,8 @@ function renderListLembretesHoje(atendimentosHoje, filterVal = "todas", filterTe
             `;
         }
 
-        const msgPreview = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+        const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+        const msgPreview = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
 
         html += `
             <div id="cardLembrete_${ag.id}" style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; gap:12px; align-items:flex-start;">
@@ -2497,7 +2520,8 @@ function enviarLembreteIndividualHoje(agId) {
     }
 
     const dataFmt = formatDateBR(ag.data);
-    const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+    const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+    const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
 
     sigeDB.logWhatsappDispatch(ag.id, {
         tipo: "🤖 Lembrete Automático do Dia",
@@ -2531,7 +2555,8 @@ function confirmarEnviarLembretesHoje() {
             const selectPhone = document.getElementById(`selectPhone_${agId}`);
             const phoneNum = selectPhone ? selectPhone.value : (ag.telefone || "");
             const dataFmt = formatDateBR(ag.data);
-            const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+            const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+            const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
             
             sigeDB.logWhatsappDispatch(ag.id, {
                 tipo: "🤖 Lembrete Automático do Dia",
@@ -3125,6 +3150,8 @@ function getSecretariaBadgeText(status) {
     const labels = {
         agendado: "Agendado",
         aguardando: "Aguardando na Recepção",
+        confirmado: "Presença Confirmada (WhatsApp)",
+        confirmado_whatsapp: "Presença Confirmada (WhatsApp)",
         atendido: "Atendido",
         realizado: "Atendido",
         nao_veio: "Não Veio",
@@ -6286,7 +6313,11 @@ function renderLotesSME() {
 
                 <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
                     <button onclick="imprimirRelatorioLoteSME('${l.id}')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 10px; background:#7c3aed; color:white; font-weight:800;" title="Imprimir relatório/ofício de pedido consolidado para a SME">
-                        <i class="fa-solid fa-file-pdf"></i> Relatório p/ SME
+                        <i class="fa-solid fa-file-pdf"></i> Ofício SME
+                    </button>
+
+                    <button onclick="imprimirListaEntregaLoteSME('${l.id}')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 10px; background:#d97706; color:white; font-weight:800;" title="Imprimir lista de entrega dos kits deste lote dividida por turma com campo para assinatura">
+                        <i class="fa-solid fa-file-signature"></i> Lista de Entrega do Lote
                     </button>
 
                     ${l.status !== "recebido_total" ? `
@@ -7058,6 +7089,232 @@ function imprimirTermoIndividualUniforme(pedidoId) {
             <div class="sign-line">
                 _________________________________________________________<br>
                 <strong>Assinatura do Aluno ou Responsável Legal</strong>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
+// ------------------------------------------
+// LISTA DE ENTREGA DO LOTE POR TURMA
+// ------------------------------------------
+
+function imprimirListaEntregaLoteSME(loteId) {
+    const lote = (sigeDB.getLotesSME() || []).find(l => l.id === loteId);
+    if (!lote) return;
+
+    const todosPedidos = sigeDB.getPedidosUniformes() || [];
+    const pedidosDoLote = todosPedidos.filter(p => lote.pedidosIds.includes(p.id));
+
+    if (pedidosDoLote.length === 0) {
+        showToast("⚠️ Nenhum pedido localizado para este lote.");
+        return;
+    }
+
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const dataCorteFmt = lote.dataCorte ? lote.dataCorte.split("-").reverse().join("/") : dataHoje;
+
+    // Agrupar estudantes por turma
+    const porTurma = {};
+    pedidosDoLote.forEach(p => {
+        const t = p.turma || "Sem Turma";
+        if (!porTurma[t]) porTurma[t] = [];
+        porTurma[t].push(p);
+    });
+
+    const turmasOrdenadas = Object.keys(porTurma).sort();
+
+    let turmasSectionsHtml = "";
+
+    turmasOrdenadas.forEach(turmaName => {
+        const lista = porTurma[turmaName];
+        lista.sort((a, b) => (a.aluno || "").localeCompare(b.aluno || ""));
+
+        let rowsHtml = "";
+        lista.forEach((p, idx) => {
+            let descPecas = p.tipoItem === "kit_completo" 
+                ? `Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})` 
+                : (p.pecasAvulsas || []).join(", ");
+
+            const statusDesc = p.status === "entregue" ? `✅ Entregue (${p.dataEntregaAluno ? p.dataEntregaAluno.split('-').reverse().join('/') : ''})` : "";
+
+            rowsHtml += `
+                <tr style="border-bottom:1px solid #cbd5e1;">
+                    <td style="padding:6px; text-align:center; font-weight:700;">${idx + 1}</td>
+                    <td style="padding:6px; font-weight:800; color:#0f172a;">${p.aluno}</td>
+                    <td style="padding:6px; text-align:center; font-weight:700; color:#0284c7;">Tam ${p.tamanho} (${p.genero || 'Unissex'})</td>
+                    <td style="padding:6px; font-size:0.78rem; color:#334155;">${descPecas}</td>
+                    <td style="padding:6px; text-align:center; width:110px;">
+                        ${p.dataEntregaAluno ? p.dataEntregaAluno.split('-').reverse().join('/') : '___/___/2026'}
+                    </td>
+                    <td style="padding:6px; min-width:210px; text-align:center;">
+                        ${statusDesc ? `<span style="color:#15803d; font-weight:800; font-size:0.75rem;">${statusDesc}</span>` : `<div style="border-bottom:1px solid #475569; width:100%; height:22px; margin-top:4px;"></div>`}
+                    </td>
+                </tr>
+            `;
+        });
+
+        turmasSectionsHtml += `
+            <div style="margin-top:1.5rem; page-break-inside:avoid;">
+                <div style="background:#f1f5f9; padding:6px 12px; border-left:5px solid #7c3aed; border-radius:4px; font-weight:900; font-size:0.95rem; color:#0f172a; margin-bottom:6px;">
+                    🏫 TURMA: ${turmaName.toUpperCase()} <span style="font-size:0.78rem; font-weight:600; color:#64748b;">(${lista.length} kit(s) no lote)</span>
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
+                    <thead>
+                        <tr style="background:#e2e8f0; color:#0f172a;">
+                            <th style="padding:6px; border:1px solid #cbd5e1; text-align:center; width:30px;">#</th>
+                            <th style="padding:6px; border:1px solid #cbd5e1;">Nome Completo do Aluno</th>
+                            <th style="padding:6px; border:1px solid #cbd5e1; text-align:center;">Tamanho / Gênero</th>
+                            <th style="padding:6px; border:1px solid #cbd5e1;">Itens do Kit</th>
+                            <th style="padding:6px; border:1px solid #cbd5e1; text-align:center; width:110px;">Data Recebimento</th>
+                            <th style="padding:6px; border:1px solid #cbd5e1; text-align:center;">Assinatura do Aluno / Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    const win = window.open("", "_blank", "width=920,height=750");
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Lista de Entrega do Lote SME — ${lote.codigoLote}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #0f172a; }
+                table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+                th, td { border: 1px solid #cbd5e1; padding: 6px; font-size: 12px; }
+                th { background-color: #f1f5f9; }
+                @media print { @page { margin: 12mm; size: portrait; } }
+            </style>
+        </head>
+        <body>
+            <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:17px; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                <h3 style="margin:4px 0 0 0; font-size:14px; color:#475569; font-weight:800;">LISTA DE ENTREGA DE KITS DE UNIFORME POR TURMA — REMESSA ${lote.codigoLote}</h3>
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">Data de Envio/Corte: ${dataCorteFmt} | Emissão em: ${dataHoje} | Total de Estudantes: ${pedidosDoLote.length}</div>
+            </div>
+
+            ${turmasSectionsHtml}
+
+            <div style="margin-top:2.5rem; display:flex; justify-content:space-around; text-align:center; font-size:11px; color:#475569;">
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Servidor Responsável pelas Entregas</strong>
+                </div>
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Visto da Secretaria Escolar / Direção</strong>
+                </div>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
+// ------------------------------------------
+// RELATÓRIO OFICIAL DE ENTREGAS REALIZADAS
+// ------------------------------------------
+
+function imprimirRelatorioEntregasConcluidas() {
+    let pedidos = sigeDB.getPedidosUniformes() || [];
+    pedidos = pedidos.filter(p => p.status === "entregue");
+
+    if (pedidos.length === 0) {
+        showToast("ℹ️ Nenhum pedido com entrega concluída localizado no momento.");
+        return;
+    }
+
+    pedidos.sort((a, b) => {
+        const da = a.dataEntregaAluno || "";
+        const db = b.dataEntregaAluno || "";
+        return db.localeCompare(da);
+    });
+
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+
+    let rowsHtml = "";
+    pedidos.forEach((p, idx) => {
+        let descPecas = p.tipoItem === "kit_completo" 
+            ? `Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})` 
+            : (p.pecasAvulsas || []).join(", ");
+
+        const dataEntFmt = p.dataEntregaAluno ? p.dataEntregaAluno.split("-").reverse().join("/") : "-";
+
+        rowsHtml += `
+            <tr style="border-bottom:1px solid #cbd5e1;">
+                <td style="padding:6px; text-align:center; font-weight:700;">${idx + 1}</td>
+                <td style="padding:6px; text-align:center; font-weight:800; color:#15803d;">${dataEntFmt}</td>
+                <td style="padding:6px; font-weight:800; color:#0f172a;">${p.aluno}</td>
+                <td style="padding:6px; font-weight:700; color:#334155;">${p.turma}</td>
+                <td style="padding:6px; text-align:center; font-weight:800; color:#0284c7;">Tam ${p.tamanho} (${p.genero || 'Unissex'})</td>
+                <td style="padding:6px; font-size:0.78rem; color:#475569;">${descPecas}</td>
+                <td style="padding:6px; font-size:0.78rem; color:#475569;">${p.recebidoPor || p.responsavelEntrega || 'Secretaria'}</td>
+            </tr>
+        `;
+    });
+
+    const win = window.open("", "_blank", "width=920,height=750");
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Relatório de Uniformes Entregues — C.E. Pedro Rizzi</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #0f172a; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th, td { border: 1px solid #cbd5e1; padding: 6px; font-size: 12px; }
+                th { background-color: #f1f5f9; }
+                @media print { @page { margin: 15mm; size: portrait; } }
+            </style>
+        </head>
+        <body>
+            <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:18px; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                <h3 style="margin:4px 0 0 0; font-size:15px; color:#166534; font-weight:800;">RELATÓRIO OFICIAL DE UNIFORMES ENTREGUES AOS ESTUDANTES</h3>
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">Emissão em: ${dataHoje} | Total de Entregas Concluídas: ${pedidos.length}</div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr style="background:#e2e8f0; color:#0f172a;">
+                        <th style="padding:6px; width:30px; text-align:center;">#</th>
+                        <th style="padding:6px; text-align:center;">Data Entrega</th>
+                        <th style="padding:6px;">Nome Completo do Estudante</th>
+                        <th style="padding:6px;">Turma</th>
+                        <th style="padding:6px; text-align:center;">Tamanho / Gênero</th>
+                        <th style="padding:6px;">Itens / Composição Entregue</th>
+                        <th style="padding:6px;">Entregue por / Servidor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>
+
+            <div style="margin-top:3rem; display:flex; justify-content:space-around; text-align:center; font-size:11px; color:#475569;">
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Responsável pelo Controle de Uniformes</strong>
+                </div>
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Direção / Gestão Escolar</strong>
+                </div>
             </div>
 
             <script>

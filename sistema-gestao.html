@@ -896,7 +896,10 @@
                         <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
                     </button>
                     <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
-                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação de Entrega (Turma)
+                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação por Turma
+                    </button>
+                    <button onclick="imprimirRelatorioEntregasConcluidas()" class="btn btn-secondary" style="width:auto; background:#16a34a; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Relatório de Uniformes Entregues aos alunos com histórico">
+                        <i class="fa-solid fa-square-check"></i> Relatório de Entregas Realizadas
                     </button>
                 </div>
             </div>
@@ -1448,6 +1451,11 @@
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <!-- Ação: Confirmado via WhatsApp -->
+                    <button id="btnAcaoConfirmadoWa" onclick="detalhesMudarStatus('confirmado')" class="btn-sec" style="background:#16a34a; color:white; padding:8px 16px; font-size:0.85rem; font-weight:800; border-radius:10px; border:none; cursor:pointer;" title="Registrar confirmação de presença">
+                        🟢 Presença Confirmada (WhatsApp)
+                    </button>
+
                     <!-- Ação: Aguardando na Recepção -->
                     <button id="btnAcaoAguardando" onclick="detalhesMudarStatus('aguardando')" class="btn-sec" style="background:#f59e0b; color:white; padding:8px 16px; font-size:0.85rem; font-weight:800; border-radius:10px; border:none; cursor:pointer;">
                         ⏳ Aguardando na Recepção

@@ -2405,8 +2405,11 @@ class SigeDatabase {
                             ped.dataChegadaEscola = lote.dataChegadaReal;
                         }
                     } else {
-                        ped.status = "pendente_sme_divergente";
-                        ped.observacoesDivergencia = `Divergência na remessa ${lote.codigoLote}: item não entregue pela SME.`;
+                        // O item não veio no lote da SME -> Fica em aberto para novo pedido de lote à SME
+                        ped.status = "pendente_envio";
+                        ped.loteAnteriorId = loteId;
+                        ped.loteSmeId = null;
+                        ped.observacoesDivergencia = `Não entregue no Lote ${lote.codigoLote} — Liberado e em aberto para novo pedido à SME.`;
                         temDivergencia = true;
                     }
                 }
@@ -2419,6 +2422,17 @@ class SigeDatabase {
             this.logAuditEvent("Uniformes Escolares", `Registrada chegada do Lote SME ${lote.codigoLote} na escola (${lote.status}).`, "Secretaria");
         }
         return lote;
+    }
+
+    reincluirPedidoEmNovoLoteSME(id) {
+        const ped = (this.getPedidosUniformes()).find(p => p.id === id);
+        if (ped) {
+            ped.status = "pendente_envio";
+            ped.loteSmeId = null;
+            this.saveData(this.data);
+            this.logAuditEvent("Uniformes Escolares", `Pedido ID: ${id} (${ped.aluno}) liberado para novo lote SME.`, "Secretaria");
+        }
+        return ped;
     }
 
     getEstoqueUniformes() {
