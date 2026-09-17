@@ -6,8 +6,8 @@ const defaultSystems = [
     {
         id: "desenvolvedor",
         title: "Desenvolvedor do Sistema",
-        iconClass: "fa-solid fa-user-gear",
-        bgClass: "icon-purple",
+        iconClass: "fa-solid fa-laptop-code",
+        bgClass: "theme-purple",
         tag: "CONTROLE TOTAL & GESTÃO DE ACESSOS",
         description: "Painel exclusivo do desenvolvedor para cadastro de e-mails autorizados, controle de permissões (RBAC) e alternador de perfil de testes.",
         url: "sistema-gestao.html?aba=admin&action=dev",
@@ -19,7 +19,7 @@ const defaultSystems = [
         id: "direcao",
         title: "Direção & Supervisão",
         iconClass: "fa-solid fa-crown",
-        bgClass: "icon-amber",
+        bgClass: "theme-amber",
         tag: "GESTÃO INSTITUCIONAL",
         description: "Acompanhamento pedagógico das turmas, demandas institucionais e relatórios gerenciais.",
         url: "sistema-gestao.html?aba=direcao",
@@ -31,7 +31,7 @@ const defaultSystems = [
         id: "dashboard",
         title: "Dashboard de Avaliação",
         iconClass: "fa-solid fa-chart-line",
-        bgClass: "icon-blue",
+        bgClass: "theme-emerald",
         tag: "PESQUISA & DIAGNÓSTICO",
         description: "Análise gráfica e estatística em tempo real da pesquisa de avaliação dos estudantes (6º ao 8º Ano).",
         url: "dashboard.html",
@@ -43,7 +43,7 @@ const defaultSystems = [
         id: "contabil",
         title: "Sistema Contábil (APMF)",
         iconClass: "fa-solid fa-calculator",
-        bgClass: "icon-blue",
+        bgClass: "theme-blue",
         tag: "GESTÃO FINANCEIRA",
         description: "Controle de receitas, despesas, fluxo de caixa e prestação de contas da APMF da escola.",
         url: "#",
@@ -55,7 +55,7 @@ const defaultSystems = [
         id: "biblioteca",
         title: "Sistema da Biblioteca",
         iconClass: "fa-solid fa-book-bookmark",
-        bgClass: "icon-purple",
+        bgClass: "theme-rose",
         tag: "ACERVO DIGITAL",
         description: "Gestão do acervo escolar, controle de empréstimos, devoluções e pesquisas acadêmicas.",
         url: "#",
@@ -67,7 +67,7 @@ const defaultSystems = [
         id: "uniformes",
         title: "Controle de Uniformes",
         iconClass: "fa-solid fa-shirt",
-        bgClass: "icon-blue",
+        bgClass: "theme-cyan",
         tag: "LOGÍSTICA & ENTREGAS",
         description: "Gestão de pedidos de uniformes, remessas para a SME, estoque local e emissão de listas de entrega por turma com assinatura.",
         url: "sistema-gestao.html?aba=uniformes",
@@ -79,7 +79,7 @@ const defaultSystems = [
         id: "patrimonio",
         title: "Sistema de Patrimônio",
         iconClass: "fa-solid fa-boxes-stacked",
-        bgClass: "icon-rose",
+        bgClass: "theme-orange",
         tag: "CONTROLE PATRIMONIAL",
         description: "Inventário de bens, móveis, equipamentos tecnológicos, tombamento e gestão de ativos.",
         url: "#",
@@ -128,10 +128,8 @@ function loadSystems() {
         
         card.innerHTML = `
             <div>
-                <div class="card-top">
-                    <div class="card-icon-wrapper ${sys.bgClass || 'icon-emerald'}">
-                        <i class="${sys.iconClass || 'fa-solid fa-globe'}"></i>
-                    </div>
+                <div class="card-top-bar">
+                    <div class="card-tag-subtitle">${sys.tag}</div>
                     ${sys.isCustom ? `
                         <span class="badge-tag-card b-live" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">
                             <span class="b-live-dot" style="background:#9333ea;"></span>CUSTOMIZADO
@@ -141,11 +139,16 @@ function loadSystems() {
                         (isConfigured ? `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>ATIVO</span>` : `<span class="badge-tag-card b-config">${sys.badge}</span>`)
                     )}
                 </div>
-                <div style="font-size: 0.75rem; font-weight:700; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px;">${sys.tag}</div>
+
+                <!-- BANDERIA / CONTAINER COM ÍCONE GIGANTE -->
+                <div class="giant-icon-wrapper ${sys.bgClass || 'theme-emerald'}">
+                    <i class="${sys.iconClass || 'fa-solid fa-cubes'}"></i>
+                </div>
+
                 <h4 class="card-title">${sys.title}</h4>
                 <p class="card-desc">${sys.description}</p>
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top: auto;">
                 <a href="${finalUrl}" ${targetAttr} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
                     ${sys.isLive ? `Acessar Módulo ${linkIcon}` : (isConfigured ? `Acessar Sistema ${linkIcon}` : 'Em Breve (Configurar Link)')}
                 </a>
