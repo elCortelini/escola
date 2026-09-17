@@ -2304,23 +2304,196 @@ function dispararLembretesDoDiaAutomated() {
         return;
     }
 
-    let count = 0;
+    renderListLembretesHoje(atendimentosHoje);
+
+    const modal = document.getElementById("modalDispararLembretesHoje");
+    if (modal) modal.style.display = "flex";
+}
+
+function renderListLembretesHoje(atendimentosHoje) {
+    const container = document.getElementById("listaLembretesHojeContainer");
+    if (!container) return;
+
+    const alunosImportados = sigeDB.getAlunosImportados() || [];
+    const chkSelectAll = document.getElementById("chkLembreteSelectAll");
+    if (chkSelectAll) chkSelectAll.checked = true;
+
+    let html = "";
     atendimentosHoje.forEach(ag => {
         const dataFmt = formatDateBR(ag.data);
-        const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+        const alunoNome = ag.aluno || "Aluno";
+        const cleanNome = alunoNome.trim().toLowerCase();
         
-        sigeDB.logWhatsappDispatch(ag.id, {
-            tipo: "🤖 Lembrete Automático do Dia",
-            mensagem: textAuto,
-            modo: "automático",
-            status: "sucesso",
-            destinatario: ag.telefone || ""
-        });
-        count++;
+        let alunoData = alunosImportados.find(a => (a.nome || "").toLowerCase() === cleanNome);
+        if (!alunoData) {
+            alunoData = alunosImportados.find(a => (a.nome || "").toLowerCase().startsWith(cleanNome));
+        }
+
+        let listaTelefones = [];
+        if (ag.telefone && ag.telefone.trim()) {
+            listaTelefones.push(ag.telefone.trim());
+        }
+        if (alunoData && alunoData.telefones && Array.isArray(alunoData.telefones)) {
+            alunoData.telefones.forEach(tel => {
+                if (!listaTelefones.includes(tel.trim())) {
+                    listaTelefones.push(tel.trim());
+                }
+            });
+        }
+
+        let phoneSelectHtml = "";
+        if (listaTelefones.length > 1) {
+            phoneSelectHtml = `
+                <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#166534;"><i class="fa-solid fa-phone"></i> Destinatário:</span>
+                    <select id="selectPhone_${ag.id}" style="font-size:0.78rem; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #86efac; background:#f0fdf4; color:#14532d; cursor:pointer;">
+            `;
+            listaTelefones.forEach((p, idx) => {
+                const isSelected = p === ag.telefone;
+                phoneSelectHtml += `<option value="${escapeHtml(p)}" ${isSelected ? 'selected' : ''}>${escapeHtml(p)}${idx === 0 && p === ag.telefone ? ' (Preferencial Agendado)' : ''}</option>`;
+            });
+            phoneSelectHtml += `</select></div>`;
+        } else {
+            const singleTel = listaTelefones[0] || ag.telefone || 'Não informado';
+            phoneSelectHtml = `
+                <input type="hidden" id="selectPhone_${ag.id}" value="${escapeHtml(singleTel)}">
+                <div style="font-size:0.78rem; font-weight:800; color:#334155; margin-top:4px;">
+                    <i class="fa-solid fa-phone" style="color:#166534;"></i> Destinatário: <span style="font-family:monospace; color:#0f172a;">${escapeHtml(singleTel)}</span>
+                </div>
+            `;
+        }
+
+        const msgPreview = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+
+        html += `
+            <div id="cardLembrete_${ag.id}" style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; gap:12px; align-items:flex-start;">
+                <div style="padding-top:4px;">
+                    <input type="checkbox" class="chk-lembrete-hoje" data-id="${ag.id}" checked onchange="updateLembretesHojeCounter()" style="width:20px; height:20px; accent-color:#166534; cursor:pointer;">
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <div style="font-weight:900; font-size:0.95rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <span>🎓 ${escapeHtml(ag.aluno)}</span>
+                            <span style="font-size:0.75rem; background:#e2e8f0; color:#334155; padding:2px 8px; border-radius:10px; font-weight:800;">Turma ${escapeHtml(ag.turma || '-')}</span>
+                        </div>
+                        <div style="font-weight:800; font-size:0.8rem; color:#1e293b; background:#f1f5f9; padding:4px 10px; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-clock" style="color:#4f46e5;"></i> ${escapeHtml(ag.horario)} | ${escapeHtml(ag.orientadora || 'Orientadora')}
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.8rem; color:#475569; margin-top:4px;">
+                        <strong>Responsável:</strong> ${escapeHtml(ag.responsavel || 'Não informado')}
+                    </div>
+
+                    ${phoneSelectHtml}
+
+                    <div style="margin-top:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:0.75rem; color:#334155;">
+                        <div style="font-weight:800; color:#15803d; margin-bottom:2px;"><i class="fa-solid fa-comment-dots"></i> Prévia da mensagem:</div>
+                        <div id="previewText_${ag.id}" style="font-style:italic; line-height:1.3;">${escapeHtml(msgPreview)}</div>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; justify-content:center; align-self:center; gap:6px;">
+                    <button type="button" onclick="enviarLembreteIndividualHoje('${ag.id}')" class="btn" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight:800; font-size:0.75rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;" title="Abrir e enviar no WhatsApp individualmente">
+                        <i class="fa-brands fa-whatsapp" style="font-size:0.95rem; color:#22c55e;"></i> Abrir WhatsApp
+                    </button>
+                </div>
+            </div>
+        `;
     });
 
-    showToast(`🤖 ${count} lembrete(s) automático(s) registrado(s) no histórico dos atendimentos de hoje!`, "success");
-    renderModuleOrientacaoPedagogica();
+    container.innerHTML = html;
+    updateLembretesHojeCounter();
+}
+
+function updateLembretesHojeCounter() {
+    const checkboxes = document.querySelectorAll(".chk-lembrete-hoje");
+    const checkedCount = Array.from(checkboxes).filter(c => c.checked).length;
+    const counterEl = document.getElementById("lembretesHojeCounter");
+    if (counterEl) {
+        counterEl.innerText = `${checkedCount} de ${checkboxes.length} lembrete(s) selecionado(s)`;
+    }
+}
+
+function toggleSelectAllLembretesHoje(isChecked) {
+    const checkboxes = document.querySelectorAll(".chk-lembrete-hoje");
+    checkboxes.forEach(c => c.checked = isChecked);
+    updateLembretesHojeCounter();
+}
+
+function closeDispararLembretesHojeModal() {
+    if (document.activeElement) document.activeElement.blur();
+    const modal = document.getElementById("modalDispararLembretesHoje");
+    if (modal) modal.style.display = "none";
+}
+
+function enviarLembreteIndividualHoje(agId) {
+    const todos = sigeDB.getAgendamentosOP() || [];
+    const ag = todos.find(a => a.id === agId);
+    if (!ag) return;
+
+    const selectPhone = document.getElementById(`selectPhone_${agId}`);
+    const phoneNum = selectPhone ? selectPhone.value : (ag.telefone || "");
+    const cleanPhone = phoneNum.replace(/[^\d]/g, '');
+
+    if (!cleanPhone || cleanPhone.length < 8) {
+        showToast("Número de telefone inválido para o aluno.", "error");
+        return;
+    }
+
+    const dataFmt = formatDateBR(ag.data);
+    const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+
+    sigeDB.logWhatsappDispatch(ag.id, {
+        tipo: "🤖 Lembrete Automático do Dia",
+        mensagem: customText,
+        modo: "individual_modal",
+        status: "sucesso",
+        destinatario: phoneNum
+    });
+
+    const waNum = cleanPhone.startsWith('55') ? cleanPhone : ('55' + cleanPhone);
+    const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(customText)}`;
+    window.open(waUrl, "_blank");
+
+    showToast(`📲 Lembrete registrado e WhatsApp aberto para ${ag.aluno}!`, "success");
+}
+
+function confirmarEnviarLembretesHoje() {
+    const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
+    const checkboxes = document.querySelectorAll(".chk-lembrete-hoje:checked");
+
+    if (checkboxes.length === 0) {
+        showToast("Nenhum atendimento selecionado para disparo.", "warning");
+        return;
+    }
+
+    let count = 0;
+    checkboxes.forEach(chk => {
+        const agId = chk.getAttribute("data-id");
+        const ag = todosAtendimentos.find(a => a.id === agId);
+        if (ag) {
+            const selectPhone = document.getElementById(`selectPhone_${agId}`);
+            const phoneNum = selectPhone ? selectPhone.value : (ag.telefone || "");
+            const dataFmt = formatDateBR(ag.data);
+            const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).`;
+            
+            sigeDB.logWhatsappDispatch(ag.id, {
+                tipo: "🤖 Lembrete Automático do Dia",
+                mensagem: textAuto,
+                modo: "em_lote_confirmado",
+                status: "sucesso",
+                destinatario: phoneNum
+            });
+            count++;
+        }
+    });
+
+    closeDispararLembretesHojeModal();
+    showToast(`🤖 ${count} lembrete(s) automático(s) auditado(s) e registrados com sucesso!`, "success");
+    
+    setTimeout(() => {
+        renderModuleOrientacaoPedagogica();
+    }, 50);
 }
 
 window.reagendarAluno = reagendarAluno;
@@ -2330,6 +2503,12 @@ window.submitReagendamentoOP = submitReagendamentoOP;
 window.aplicarTemplateMensagem = aplicarTemplateMensagem;
 window.enviarMensagemPersonalizadaWhatsApp = enviarMensagemPersonalizadaWhatsApp;
 window.dispararLembretesDoDiaAutomated = dispararLembretesDoDiaAutomated;
+window.renderListLembretesHoje = renderListLembretesHoje;
+window.updateLembretesHojeCounter = updateLembretesHojeCounter;
+window.toggleSelectAllLembretesHoje = toggleSelectAllLembretesHoje;
+window.closeDispararLembretesHojeModal = closeDispararLembretesHojeModal;
+window.enviarLembreteIndividualHoje = enviarLembreteIndividualHoje;
+window.confirmarEnviarLembretesHoje = confirmarEnviarLembretesHoje;
 
 function togglePublicoAgendamentoOP() {
     const selectPub = document.getElementById("opInputPublico");
@@ -2922,8 +3101,63 @@ function updateAlunosDatalist() {
     datalist.innerHTML = html;
 }
 
+function renderAlunoPhoneBadges(telefones, currentPhone, nomeAluno, turmaAluno) {
+    const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
+    if (!phoneContainer) return;
+
+    if (!telefones || telefones.length === 0) {
+        phoneContainer.innerHTML = "";
+        return;
+    }
+
+    const currentClean = (currentPhone || "").replace(/[^\d]/g, '');
+
+    let badgeHtml = `
+        <div style="font-size:0.78rem; font-weight:800; color:#166534; margin-top:6px; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
+            <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:0.95rem;"></i> Telefones de Contato do Aluno (Clique para definir o Preferencial):
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+    `;
+
+    telefones.forEach((p) => {
+        const cleanDigits = p.replace(/[^\d]/g, '');
+        const isSelected = currentClean && (cleanDigits === currentClean || currentClean.endsWith(cleanDigits) || cleanDigits.endsWith(currentClean));
+        const waNum = cleanDigits.startsWith('55') ? cleanDigits : ('55' + cleanDigits);
+        const defaultMsg = encodeURIComponent(`Olá! Entramos em contato a respeito do agendamento escolar do(a) aluno(a) ${nomeAluno || 'estudante'} (Turma ${turmaAluno || ''}).`);
+        const waUrl = `https://wa.me/${waNum}?text=${defaultMsg}`;
+
+        const bgStyle = isSelected 
+            ? "background: #f0fdf4; border: 2px solid #22c55e; box-shadow: 0 2px 6px rgba(34,197,94,0.2);" 
+            : "background: #f8fafc; border: 1px solid #cbd5e1;";
+
+        const badgeIcon = isSelected 
+            ? `<span style="background:#22c55e; color:white; padding:3px 8px; border-radius:12px; font-size:0.72rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-check"></i> Preferencial Selecionado</span>`
+            : `<button type="button" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:#e2e8f0; color:#334155; border:none; padding:3px 8px; border-radius:8px; font-size:0.72rem; font-weight:700; cursor:pointer;" title="Definir este número como preferencial para este agendamento">⚪ Definir como Preferencial</button>`;
+
+        badgeHtml += `
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:10px; ${bgStyle}">
+                <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; flex-wrap:wrap;">
+                    <i class="fa-solid fa-phone" style="color:${isSelected ? '#166534' : '#64748b'}; font-size:0.9rem;"></i>
+                    <span style="font-size:0.83rem; font-weight:800; color:${isSelected ? '#14532d' : '#334155'}; font-family:monospace;">${escapeHtml(p)}</span>
+                    ${badgeIcon}
+                </div>
+                <a href="${waUrl}" target="_blank" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(16,185,129,0.3); margin-left:8px;" title="Testar / Abrir conversa no WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        `;
+    });
+
+    badgeHtml += `</div>`;
+    phoneContainer.innerHTML = badgeHtml;
+}
+
 function autoCompleteAlunoData(nomeVal) {
-    if (!nomeVal || !nomeVal.trim()) return;
+    if (!nomeVal || !nomeVal.trim()) {
+        const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
+        if (phoneContainer) phoneContainer.innerHTML = "";
+        return;
+    }
     const cleanNome = nomeVal.trim().toLowerCase();
     const alunos = sigeDB.getAlunosImportados() || [];
     
@@ -2939,7 +3173,6 @@ function autoCompleteAlunoData(nomeVal) {
         const inputTurma = document.getElementById("opInputTurma");
         const inputTurno = document.getElementById("opInputTurno");
         const inputTelefone = document.getElementById("opInputTelefone");
-        const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
 
         if (inputTurma && found.turma) {
             inputTurma.value = found.turma;
@@ -2955,31 +3188,9 @@ function autoCompleteAlunoData(nomeVal) {
                 if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
             }
 
-            if (phoneContainer) {
-                let badgeHtml = `
-                    <div style="font-size:0.78rem; font-weight:800; color:#166534; margin-top:4px; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
-                        <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:0.95rem;"></i> Telefones de Contato do Aluno (WhatsApp):
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                `;
-
-                found.telefones.forEach((p, idx) => {
-                    const cleanDigits = p.replace(/[^\d]/g, '');
-                    const waNum = cleanDigits.startsWith('55') ? cleanDigits : ('55' + cleanDigits);
-                    const defaultMsg = encodeURIComponent(`Olá! Entramos em contato a respeito do agendamento escolar do(a) aluno(a) ${found.nome} (Turma ${found.turma}).`);
-                    const waUrl = `https://wa.me/${waNum}?text=${defaultMsg}`;
-
-                    badgeHtml += `
-                        <a href="${waUrl}" target="_blank" onclick="selectModalPhone('${escapeHtml(p)}')" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:8px 14px; border-radius:10px; font-size:0.83rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; justify-content:flex-start; gap:8px; box-shadow:0 2px 6px rgba(16,185,129,0.3); cursor:pointer; width:100%;" title="Selecionar número e abrir WhatsApp">
-                            <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i> <span>WhatsApp (${escapeHtml(p)})</span>
-                        </a>
-                    `;
-                });
-
-                badgeHtml += `</div>`;
-                phoneContainer.innerHTML = badgeHtml;
-            }
+            renderAlunoPhoneBadges(found.telefones, inputTelefone ? inputTelefone.value : "", found.nome, found.turma);
         } else {
+            const phoneContainer = document.getElementById("alunoPhoneBadgesContainer");
             if (phoneContainer) phoneContainer.innerHTML = "";
         }
     }
@@ -2990,6 +3201,18 @@ function selectModalPhone(phoneStr) {
     if (inputTelefone) {
         inputTelefone.value = phoneStr;
         if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
+    }
+    const inputAluno = document.getElementById("opInputAluno");
+    if (inputAluno && inputAluno.value) {
+        autoCompleteAlunoData(inputAluno.value);
+    }
+}
+
+function onTelefoneInputChange() {
+    if (typeof updateModalWhatsAppPreview === "function") updateModalWhatsAppPreview();
+    const inputAluno = document.getElementById("opInputAluno");
+    if (inputAluno && inputAluno.value) {
+        autoCompleteAlunoData(inputAluno.value);
     }
 }
 
@@ -3027,6 +3250,7 @@ window.openDirectCustomWhatsApp = openDirectCustomWhatsApp;
 window.updateAlunosDatalist = updateAlunosDatalist;
 window.autoCompleteAlunoData = autoCompleteAlunoData;
 window.selectModalPhone = selectModalPhone;
+window.onTelefoneInputChange = onTelefoneInputChange;
 
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {
