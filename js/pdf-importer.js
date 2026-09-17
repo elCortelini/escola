@@ -120,7 +120,8 @@ async function parseAlunosPdfFile(file) {
 
             if (rowMatch) {
                 const matricula = rowMatch[1];
-                const nome = rowMatch[2].trim();
+                const rawNome = rowMatch[2].trim();
+                const nome = typeof cleanStudentName === 'function' ? cleanStudentName(rawNome) : rawNome;
                 const dataNasc = rowMatch[3];
                 const email = rowMatch[4] || "";
                 let restoLinha = rowMatch[5] || "";

@@ -5,6 +5,25 @@
 
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
+/**
+ * Higieniza o nome do aluno removendo número sequencial de lista (ex: "4 ") 
+ * e número de matrícula (ex: "20261000214") do início ou meio do nome.
+ */
+function cleanStudentName(nomeStr) {
+    if (!nomeStr || typeof nomeStr !== "string") return "";
+    let clean = nomeStr.trim();
+    // 1. Remover numeração sequencial de lista e matrícula no início do nome antes da primeira letra
+    clean = clean.replace(/^[\d\s\-\.\/]+(?=[A-Za-zÀ-ÖØ-öø-ÿ])/g, '');
+    // 2. Remover matrícula solta de 7 a 14 dígitos que possa ter permanecido no texto
+    clean = clean.replace(/\b\d{7,14}\b/g, '');
+    // 3. Normalizar múltiplos espaços em branco
+    clean = clean.replace(/\s+/g, ' ').trim();
+    return clean;
+}
+if (typeof window !== "undefined") {
+    window.cleanStudentName = cleanStudentName;
+}
+
 // Estrutura Padrão Inicial
 const defaultSigeData = {
     currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
@@ -1074,8 +1093,42 @@ class SigeDatabase {
         this.firestore = null;
         this.isSyncingFromRemote = false;
         this.hasLoadedRemote = false;
+        this.sanitizeStudentNames();
         this.initFirebase();
         this.setupAutoSyncListeners();
+    }
+
+    sanitizeStudentNames() {
+        if (!this.data) return;
+        let changed = false;
+
+        if (Array.isArray(this.data.alunosImportados)) {
+            this.data.alunosImportados.forEach(a => {
+                if (a.nome) {
+                    const cleaned = cleanStudentName(a.nome);
+                    if (cleaned !== a.nome) {
+                        a.nome = cleaned;
+                        changed = true;
+                    }
+                }
+            });
+        }
+
+        if (Array.isArray(this.data.agendamentosOP)) {
+            this.data.agendamentosOP.forEach(a => {
+                if (a.aluno) {
+                    const cleaned = cleanStudentName(a.aluno);
+                    if (cleaned !== a.aluno) {
+                        a.aluno = cleaned;
+                        changed = true;
+                    }
+                }
+            });
+        }
+
+        if (changed) {
+            this.saveData(this.data);
+        }
     }
 
     getFirebaseConfig() {
@@ -1128,6 +1181,8 @@ class SigeDatabase {
                             const delSet = new Set(combinedDeletedIds);
                             this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !delSet.has(a.id));
                         }
+
+                        this.sanitizeStudentNames();
 
                         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
                         this.isSyncingFromRemote = false;
@@ -1195,6 +1250,7 @@ class SigeDatabase {
                     if (remoteData && typeof remoteData === "object") {
                         this.isSyncingFromRemote = true;
                         this.data = { ...defaultSigeData, ...this.data, ...remoteData };
+                        this.sanitizeStudentNames();
                         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
                         this.isSyncingFromRemote = false;
                         this.hasLoadedRemote = true;
@@ -1362,10 +1418,12 @@ class SigeDatabase {
         const mapByMatricula = new Map();
 
         list.forEach(a => {
+            if (a.nome) a.nome = cleanStudentName(a.nome);
             if (a.matricula) mapByMatricula.set(a.matricula, a);
         });
 
         novosAlunos.forEach(novo => {
+            if (novo.nome) novo.nome = cleanStudentName(novo.nome);
             if (novo.matricula && mapByMatricula.has(novo.matricula)) {
                 const ext = mapByMatricula.get(novo.matricula);
                 ext.nome = novo.nome;
@@ -1383,6 +1441,7 @@ class SigeDatabase {
 
         this.data.alunosImportados = list;
         this.data.pdfImportMeta = metaInfo;
+        this.sanitizeStudentNames();
         this.syncTurmasFromImportedAlunos();
         this.saveData(this.data);
     }
@@ -1854,6 +1913,9 @@ class SigeDatabase {
 
         agendamento.id = "op-" + Date.now();
         agendamento.criadoEm = new Date().toISOString();
+        if (agendamento.aluno) {
+            agendamento.aluno = cleanStudentName(agendamento.aluno);
+        }
         if (!agendamento.historicoWhatsapp) agendamento.historicoWhatsapp = [];
         if (!agendamento.anexos) agendamento.anexos = [];
         

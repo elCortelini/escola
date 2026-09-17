@@ -3328,7 +3328,8 @@ function submitAgendamentoOP(e) {
     if (e && e.preventDefault) e.preventDefault();
     const publicoSelect = document.getElementById("opInputPublico");
     const publico = publicoSelect ? publicoSelect.value : "aluno";
-    const aluno = document.getElementById("opInputAluno").value;
+    const rawAluno = document.getElementById("opInputAluno").value;
+    const aluno = typeof cleanStudentName === 'function' ? cleanStudentName(rawAluno) : rawAluno.trim();
     const turma = document.getElementById("opInputTurma").value;
     const responsavel = document.getElementById("opInputResponsavel").value;
     const telefone = document.getElementById("opInputTelefone").value;
@@ -3444,7 +3445,7 @@ function submitEditarAgendamentoOP(e) {
     ags[itemIndex] = {
         ...ags[itemIndex],
         publico: elPub ? elPub.value : ags[itemIndex].publico,
-        aluno: elAluno ? elAluno.value.trim() : ags[itemIndex].aluno,
+        aluno: elAluno ? (typeof cleanStudentName === 'function' ? cleanStudentName(elAluno.value) : elAluno.value.trim()) : ags[itemIndex].aluno,
         turma: elTurma ? elTurma.value.trim() : ags[itemIndex].turma,
         responsavel: elResp ? elResp.value.trim() : ags[itemIndex].responsavel,
         telefone: elTel ? elTel.value.trim() : ags[itemIndex].telefone,
