@@ -114,6 +114,7 @@ function fillLoginEmail(email) {
     if (emailInput) {
         emailInput.value = email;
     }
+    processGoogleLogin(email);
 }
 
 function handleSigeLogout() {
@@ -455,20 +456,39 @@ function processGoogleLogin(email, nomeOpcional) {
 }
 
 function loginWithGooglePrompt() {
+    let fallbackTriggered = false;
+
+    function triggerFallback() {
+        if (fallbackTriggered) return;
+        fallbackTriggered = true;
+        const inputEmail = prompt("Autenticação Google / IntegraRizzi:\n\nInforme seu e-mail da Conta do Google (ex: daiane.aquino04548@edu.itajai.sc.gov.br):", "daiane.aquino04548@edu.itajai.sc.gov.br");
+        if (inputEmail && inputEmail.trim()) {
+            processGoogleLogin(inputEmail.trim());
+        }
+    }
+
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
-            window.google.accounts.id.prompt();
+            window.google.accounts.id.prompt((notification) => {
+                if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment())) {
+                    console.log("GIS prompt not displayed:", notification.getNotDisplayedReason ? notification.getNotDisplayedReason() : notification);
+                    triggerFallback();
+                }
+            });
+
+            setTimeout(() => {
+                const pickerIframe = document.querySelector("iframe[id^='credential_picker_iframe']");
+                if (!pickerIframe || pickerIframe.style.display === "none") {
+                    triggerFallback();
+                }
+            }, 500);
             return;
         } catch (e) {
-            console.log("GIS prompt fallback:", e);
+            console.log("GIS prompt fallback error:", e);
         }
     }
     
-    // Prompt de seleção ou digitação de e-mail do Google
-    const inputEmail = prompt("Autenticação via Google:\nInforme seu e-mail do Google / Gmail / Institucional cadastrado:");
-    if (inputEmail && inputEmail.trim()) {
-        processGoogleLogin(inputEmail.trim());
-    }
+    triggerFallback();
 }
 
 function initGoogleAuth() {

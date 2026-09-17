@@ -29,8 +29,9 @@ const defaultSigeData = {
     currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
     usuariosCadastrados: [
         { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
-        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
         { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
+        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
         { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
         { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
     ],
@@ -1335,12 +1336,24 @@ class SigeDatabase {
         if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados) || this.data.usuariosCadastrados.length === 0) {
             this.data.usuariosCadastrados = [
                 { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
-                { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
+                { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
                 { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
+                { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
                 { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
                 { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
             ];
             this.saveData(this.data);
+        } else {
+            const hasDaianeOfficial = this.data.usuariosCadastrados.some(u => u.email.toLowerCase().includes("daiane.aquino04548"));
+            if (!hasDaianeOfficial) {
+                this.data.usuariosCadastrados.push({ 
+                    email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
+                    nome: "Daiane Caetano Costa de Aquino", 
+                    role: "orientadora_daiane", 
+                    cargo: "Orientadora Educacional — Séries Finais" 
+                });
+                this.saveData(this.data);
+            }
         }
         return this.data.usuariosCadastrados;
     }
@@ -1380,13 +1393,37 @@ class SigeDatabase {
     }
 
     loginWithEmail(email) {
+        if (!email) return null;
         const cleanEmail = email.toLowerCase().trim();
         const users = this.getUsuarios();
         let user = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
 
-        if (!user && cleanEmail === "elcortelini@gmail.com") {
-            user = { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" };
-            this.addUsuario(user);
+        if (!user) {
+            if (cleanEmail.includes("daiane") || cleanEmail.includes("aquino") || cleanEmail.includes("04548")) {
+                user = { 
+                    email: cleanEmail, 
+                    nome: "Daiane Caetano Costa de Aquino", 
+                    role: "orientadora_daiane", 
+                    cargo: "Orientadora Educacional — Séries Finais" 
+                };
+                this.addUsuario(user);
+            } else if (cleanEmail.includes("clarinda")) {
+                user = { 
+                    email: cleanEmail, 
+                    nome: "Clarinda Rosa Pereira", 
+                    role: "orientadora_clarinda", 
+                    cargo: "Orientadora Educacional — Séries Iniciais" 
+                };
+                this.addUsuario(user);
+            } else if (cleanEmail === "elcortelini@gmail.com") {
+                user = { 
+                    email: "elcortelini@gmail.com", 
+                    nome: "Elevi Cortelini (Desenvolvedor)", 
+                    role: "desenvolvedor", 
+                    cargo: "Desenvolvedor do Sistema" 
+                };
+                this.addUsuario(user);
+            }
         }
 
         if (user) {
