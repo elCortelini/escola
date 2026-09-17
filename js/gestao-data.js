@@ -2342,6 +2342,20 @@ class SigeDatabase {
             throw new Error("Selecione ao menos um pedido de uniforme para fechar a remessa!");
         }
 
+        const pedidosValidados = [];
+        pedidosIds.forEach(id => {
+            const ped = this.data.pedidosUniformes.find(p => p.id === id);
+            if (!ped) return;
+            if (ped.loteSmeId || ped.status !== "pendente_envio") {
+                throw new Error(`O pedido de ${ped.aluno} (${ped.turma}) já pertence ao Lote ${ped.loteSmeId || 'anterior'} e não pode ser incluído em uma nova remessa!`);
+            }
+            pedidosValidados.push(ped);
+        });
+
+        if (pedidosValidados.length === 0) {
+            throw new Error("Nenhum pedido pendente válido selecionado!");
+        }
+
         const loteId = "lote-sme-" + Date.now();
         const codigoLote = "REMESSA-" + new Date().toISOString().substring(0,7) + "-" + Math.floor(10 + Math.random()*90);
 
@@ -2354,7 +2368,7 @@ class SigeDatabase {
             dataChegadaReal: null,
             status: "enviado_sme",
             observacoes: observacoes,
-            pedidosIds: pedidosIds,
+            pedidosIds: pedidosValidados.map(p => p.id),
             responsavelFechamento: this.getRoleFormatted(),
             criadoEm: new Date().toISOString()
         };
@@ -2363,74 +2377,94 @@ class SigeDatabase {
         this.data.lotesSME.unshift(lote);
 
         // Atualizar status dos pedidos vinculados ao lote
-        pedidosIds.forEach(id => {
-            const ped = this.data.pedidosUniformes.find(p => p.id === id);
-            if (ped) {
-                ped.status = "enviado_sme";
-                ped.loteSmeId = loteId;
-                ped.dataEnvioSme = lote.dataEnvioSme;
-                ped.previsaoRecebimentoSme = lote.previsaoRecebimento;
-            }
+        pedidosValidados.forEach(ped => {
+            ped.status = "enviado_sme";
+            ped.loteSmeId = loteId;
+            ped.dataEnvioSme = lote.dataEnvioSme;
+            ped.previsaoRecebimentoSme = lote.previsaoRecebimento;
         });
 
         this.saveData(this.data);
-        this.logAuditEvent("Uniformes Escolares", `Fechado Lote SME ${codigoLote} com ${pedidosIds.length} pedidos.`, "Secretaria");
+        this.logAuditEvent("Uniformes Escolares", `Fechado Lote SME ${codigoLote} com ${pedidosValidados.length} pedidos.`, "Secretaria");
         return lote;
     }
 
-    registrarRecebimentoLoteSME(loteId, dataChegadaReal, observacoes = "") {
+    registrarRecebimentoLoteSME(loteId, dataChegadaReal, observacoes = "", mapaConferencia = {}) {
         const lote = (this.getLotesSME()).find(l => l.id === loteId);
         if (lote) {
             lote.dataChegadaReal = dataChegadaReal || new Date().toISOString().split("T")[0];
-            lote.status = "recebido_total";
-            if (observacoes) lote.observacoes = (lote.observacoes ? lote.observacoes + " | " : "") + observacoes;
+            let temDivergencia = false;
 
-            // Atualizar pedidos do lote para disponivel_estoque
             lote.pedidosIds.forEach(id => {
                 const ped = this.data.pedidosUniformes.find(p => p.id === id);
-                if (ped && ped.status !== "entregue") {
-                    ped.status = "disponivel_estoque";
-                    ped.dataChegadaEscola = lote.dataChegadaReal;
+                if (ped) {
+                    const statusConf = mapaConferencia[id] || "recebido"; // "recebido" ou "divergente"
+                    if (statusConf === "recebido") {
+                        if (ped.status !== "entregue") {
+                            ped.status = "disponivel_estoque";
+                            ped.dataChegadaEscola = lote.dataChegadaReal;
+                        }
+                    } else {
+                        ped.status = "pendente_sme_divergente";
+                        ped.observacoesDivergencia = `Divergência na remessa ${lote.codigoLote}: item não entregue pela SME.`;
+                        temDivergencia = true;
+                    }
                 }
             });
 
+            lote.status = temDivergencia ? "recebido_parcial" : "recebido_total";
+            if (observacoes) lote.observacoes = (lote.observacoes ? lote.observacoes + " | " : "") + observacoes;
+
             this.saveData(this.data);
-            this.logAuditEvent("Uniformes Escolares", `Registrada chegada do Lote SME ${lote.codigoLote} na escola.`, "Secretaria");
+            this.logAuditEvent("Uniformes Escolares", `Registrada chegada do Lote SME ${lote.codigoLote} na escola (${lote.status}).`, "Secretaria");
         }
         return lote;
     }
 
     getEstoqueUniformes() {
-        if (!this.data.estoqueUniformes || typeof this.data.estoqueUniformes !== "object") {
+        if (!this.data.estoqueUniformes || typeof this.data.estoqueUniformes !== "object" || !this.data.estoqueUniformes.masculino) {
             this.data.estoqueUniformes = defaultSigeData.estoqueUniformes || {
-                "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-                "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-                "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-                "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-                "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+                masculino: {
+                    "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+                },
+                feminino: {
+                    "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                    "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+                }
             };
             this.saveData(this.data);
         }
         return this.data.estoqueUniformes;
     }
 
-    ajustarEstoqueUniforme(peca, tamanho, quantidade, acao = "somar") {
+    ajustarEstoqueUniforme(peca, tamanho, quantidade, acao = "somar", genero = "Masculino") {
         const est = this.getEstoqueUniformes();
-        if (!est[peca]) est[peca] = {};
-        const atual = est[peca][tamanho] || 0;
+        const genKey = (genero && genero.toLowerCase().includes("fem")) ? "feminino" : "masculino";
+
+        if (!est[genKey]) est[genKey] = {};
+        if (!est[genKey][peca]) est[genKey][peca] = {};
+
+        const atual = est[genKey][peca][tamanho] || 0;
         const val = parseInt(quantidade) || 0;
 
         if (acao === "somar") {
-            est[peca][tamanho] = atual + val;
+            est[genKey][peca][tamanho] = atual + val;
         } else if (acao === "subtrair") {
-            est[peca][tamanho] = Math.max(0, atual - val);
+            est[genKey][peca][tamanho] = Math.max(0, atual - val);
         } else if (acao === "definir") {
-            est[peca][tamanho] = Math.max(0, val);
+            est[genKey][peca][tamanho] = Math.max(0, val);
         }
 
         this.saveData(this.data);
-        this.logAuditEvent("Uniformes Escolares", `Ajuste de estoque: ${peca.toUpperCase()} Tam ${tamanho} -> Novo Saldo: ${est[peca][tamanho]} (${acao})`, "Secretaria");
-        return est[peca][tamanho];
+        this.logAuditEvent("Uniformes Escolares", `Ajuste de estoque (${genKey}): ${peca.toUpperCase()} Tam ${tamanho} -> Novo Saldo: ${est[genKey][peca][tamanho]} (${acao})`, "Secretaria");
+        return est[genKey][peca][tamanho];
     }
 
     darBaixaEntregaUniforme(pedidoId, entreguePor, darBaixaEstoque = false) {
@@ -2443,18 +2477,20 @@ class SigeDatabase {
 
         if (darBaixaEstoque) {
             const tam = ped.tamanho;
+            const gen = ped.genero || "Masculino";
+
             if (ped.tipoItem === "kit_completo") {
                 if (ped.estacao === "verao") {
-                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair");
-                    this.ajustarEstoqueUniforme("bermuda", tam, 2, "subtrair");
+                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair", gen);
+                    this.ajustarEstoqueUniforme("bermuda", tam, 2, "subtrair", gen);
                 } else {
-                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair");
-                    this.ajustarEstoqueUniforme("calca", tam, 2, "subtrair");
-                    this.ajustarEstoqueUniforme("moleton", tam, 1, "subtrair");
+                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair", gen);
+                    this.ajustarEstoqueUniforme("calca", tam, 2, "subtrair", gen);
+                    this.ajustarEstoqueUniforme("moleton", tam, 1, "subtrair", gen);
                 }
             } else if (ped.pecasAvulsas && Array.isArray(ped.pecasAvulsas)) {
                 ped.pecasAvulsas.forEach(peca => {
-                    this.ajustarEstoqueUniforme(peca, tam, 1, "subtrair");
+                    this.ajustarEstoqueUniforme(peca, tam, 1, "subtrair", gen);
                 });
             }
         }

@@ -1019,13 +1019,21 @@
                 
                 <!-- Painel de Estoque Escolar Local -->
                 <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
                         <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
                             <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
                         </h4>
-                        <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
-                            <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
-                        </button>
+                        
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <div class="est-gender-tabs" style="display:inline-flex; background:#e2e8f0; border-radius:8px; padding:2px; font-size:0.75rem; font-weight:800;">
+                                <button type="button" class="btn-est-gen active" id="btnEstGenMasc" onclick="switchEstoqueGenero('masculino')" style="padding:3px 8px; border-radius:6px; border:none; background:#059669; color:white; cursor:pointer;">👨 Masc</button>
+                                <button type="button" class="btn-est-gen" id="btnEstGenFem" onclick="switchEstoqueGenero('feminino')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">👩 Fem</button>
+                                <button type="button" class="btn-est-gen" id="btnEstGenTodos" onclick="switchEstoqueGenero('todos')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">🌐 Total</button>
+                            </div>
+                            <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
+                                <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
+                            </button>
+                        </div>
                     </div>
                     <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
                         Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
@@ -2760,7 +2768,14 @@
             </div>
 
             <form id="formAjustarEstoque" onsubmit="salvarAjusteEstoque(event)" style="display:flex; flex-direction:column; gap:12px;">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Gênero / Modelo *</label>
+                        <select id="estInputGenero" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="Masculino">👨 Masculino</option>
+                            <option value="Feminino">👩 Feminino</option>
+                        </select>
+                    </div>
                     <div>
                         <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Peça de Uniforme *</label>
                         <select id="estInputPeca" required class="search-input" style="width:100%; box-sizing:border-box;">
@@ -2892,6 +2907,52 @@
             <div id="areaPrintRelacaoEntregaTurma" style="background:white; padding:1.5rem; border:1px solid #cbd5e1; border-radius:12px;">
                 <!-- Renderizado via JS -->
             </div>
+        </div>
+    </div>
+
+    <!-- 6. MODAL DE CONFERÊNCIA E DIVERGÊNCIA DE RECEBIMENTO DE LOTE SME -->
+    <div id="modalConferirLoteSME" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:750px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                        <i class="fa-solid fa-clipboard-check" style="color:#16a34a;"></i> Conferência de Recebimento da SME (Pedido vs Recebido)
+                    </h3>
+                    <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;" id="confLoteSubHeader">Verifique os itens entregues pela SME para registrar a chegada e sinalizar eventuais faltas.</p>
+                </div>
+                <button type="button" onclick="closeConferirLoteSMEModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formConferirLoteSME" onsubmit="salvarConferenciaLoteSME(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="confLoteId">
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data de Chegada dos Uniformes *</label>
+                        <input type="date" id="confLoteDataChegada" required class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações de Recebimento</label>
+                        <input type="text" id="confLoteObs" placeholder="Ex: Entregue via guia nº 1234 pela SME..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="font-weight:800; font-size:0.88rem; color:#0f172a; margin-top:6px;">
+                    <i class="fa-solid fa-list-check" style="color:#7c3aed;"></i> Conferência Item a Item do Lote:
+                </div>
+                <p style="font-size:0.78rem; color:#64748b; margin-top:-6px;">Marque os itens que CHEGARAM. Itens desmarcados serão sinalizados como <strong>Divergência / Saldo Faltante da SME</strong>.</p>
+
+                <div id="confLoteItensBody" style="max-height:300px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:10px; padding:10px; background:#f8fafc;">
+                    <!-- Preenchido via JS -->
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <button type="button" onclick="closeConferirLoteSMEModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#16a34a; border-color:#16a34a; color:white;">
+                        <i class="fa-solid fa-box-archive"></i> Salvar Conferência & Entrar no Estoque
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

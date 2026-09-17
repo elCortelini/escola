@@ -5907,6 +5907,40 @@ function salvarConfiguracoesFirebase(e) {
 // MÓDULO 6: CONTROLE DE UNIFORMES ESCOLARES
 // ==========================================
 
+let currentEstoqueGeneroFilter = "masculino";
+
+function switchEstoqueGenero(genero) {
+    currentEstoqueGeneroFilter = genero;
+
+    const bMasc = document.getElementById("btnEstGenMasc");
+    const bFem = document.getElementById("btnEstGenFem");
+    const bTodos = document.getElementById("btnEstGenTodos");
+
+    [bMasc, bFem, bTodos].forEach(b => {
+        if (b) {
+            b.style.background = "transparent";
+            b.style.color = "#475569";
+            b.classList.remove("active");
+        }
+    });
+
+    if (genero === "masculino" && bMasc) {
+        bMasc.style.background = "#059669";
+        bMasc.style.color = "white";
+        bMasc.classList.add("active");
+    } else if (genero === "feminino" && bFem) {
+        bFem.style.background = "#ec4899";
+        bFem.style.color = "white";
+        bFem.classList.add("active");
+    } else if (genero === "todos" && bTodos) {
+        bTodos.style.background = "#0284c7";
+        bTodos.style.color = "white";
+        bTodos.classList.add("active");
+    }
+
+    renderPainelEstoqueUniformes();
+}
+
 function renderModuleUniformes() {
     populaDropdownTurmasUniformes();
     renderTabelaPedidosUniformes();
@@ -6025,6 +6059,8 @@ function renderTabelaPedidosUniformes() {
             statusBadge = `<span style="background:#f3e8ff; color:#7e22ce; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-truck"></i> Em Remessa SME</span>`;
         } else if (p.status === "disponivel_estoque") {
             statusBadge = `<span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-box-open"></i> Disponível p/ Entrega</span>`;
+        } else if (p.status === "pendente_sme_divergente") {
+            statusBadge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-triangle-exclamation"></i> Pendente SME (Divergência)</span>`;
         } else if (p.status === "entregue") {
             const dataEntFmt = p.dataEntregaAluno ? p.dataEntregaAluno.split("-").reverse().join("/") : "";
             statusBadge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Entregue (${dataEntFmt})</span>`;
@@ -6062,7 +6098,8 @@ function renderTabelaPedidosUniformes() {
             loteStr = `<strong style="color:#7c3aed;">${codLote}</strong>${prevFmt ? `<br><small style="color:#64748b;">Prev: ${prevFmt}</small>` : ''}`;
         }
 
-        const canSelectForLote = (p.status === "pendente_envio");
+        // Trava estrita: apenas pedidos com status pendente_envio e SEM lote atrelado podem ser selecionados para novas remessas!
+        const canSelectForLote = (p.status === "pendente_envio" && !p.loteSmeId);
 
         html += `
             <tr style="border-bottom:1px solid #e2e8f0; hover:background:#f8fafc;">
@@ -6140,7 +6177,15 @@ function renderPainelEstoqueUniformes() {
         { key: "jaqueta", label: "🧥 Jaqueta" }
     ];
 
+    const genFilter = currentEstoqueGeneroFilter || "masculino";
+    let genLabel = "👨 Uniformes Masculinos";
+    if (genFilter === "feminino") genLabel = "👩 Uniformes Femininos";
+    else if (genFilter === "todos") genLabel = "🌐 Consolidado (Masc + Fem)";
+
     let html = `
+        <div style="font-size:0.8rem; font-weight:800; color:#334155; margin-bottom:6px;">
+            Exibindo: <span style="color:#059669;">${genLabel}</span>
+        </div>
         <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:center; font-size:0.8rem;">
             <thead>
                 <tr style="background:#f1f5f9; color:#334155;">
@@ -6155,7 +6200,16 @@ function renderPainelEstoqueUniformes() {
     pecas.forEach(p => {
         let totalPeca = 0;
         const celulas = tamanhos.map(t => {
-            const qtd = (estoque[p.key] && estoque[p.key][t]) ? estoque[p.key][t] : 0;
+            let qtd = 0;
+            if (genFilter === "todos") {
+                const qMasc = (estoque.masculino && estoque.masculino[p.key] && estoque.masculino[p.key][t]) ? estoque.masculino[p.key][t] : 0;
+                const qFem = (estoque.feminino && estoque.feminino[p.key] && estoque.feminino[p.key][t]) ? estoque.feminino[p.key][t] : 0;
+                qtd = qMasc + qFem;
+            } else {
+                const subEst = estoque[genFilter] || {};
+                qtd = (subEst[p.key] && subEst[p.key][t]) ? subEst[p.key][t] : 0;
+            }
+
             totalPeca += qtd;
             let badgeStyle = "background:#f1f5f9; color:#94a3b8;";
             if (qtd > 0) badgeStyle = "background:#dcfce7; color:#166534; font-weight:800;";
@@ -6203,8 +6257,10 @@ function renderLotesSME() {
         const chegadaFmt = l.dataChegadaReal ? l.dataChegadaReal.split("-").reverse().join("/") : null;
 
         let statusTag = "";
-        if (l.status === "recebido_total" || l.status === "recebido_parcial") {
-            statusTag = `<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Recebido na Escola (${chegadaFmt})</span>`;
+        if (l.status === "recebido_total") {
+            statusTag = `<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Recebido Total (${chegadaFmt})</span>`;
+        } else if (l.status === "recebido_parcial") {
+            statusTag = `<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-triangle-exclamation"></i> Recebido c/ Divergência (${chegadaFmt})</span>`;
         } else {
             statusTag = `<span style="background:#f3e8ff; color:#7e22ce; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-truck-arrow-right"></i> Em Trânsito / SME</span>`;
         }
@@ -6228,13 +6284,17 @@ function renderLotesSME() {
 
                 ${l.observacoes ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px; font-style:italic;">Obs: ${l.observacoes}</div>` : ''}
 
-                ${l.status !== "recebido_total" ? `
-                    <div style="margin-top:8px; text-align:right;">
-                        <button onclick="confirmarChegadaLoteSME('${l.id}')" class="btn btn-primary" style="font-size:0.72rem; padding:4px 10px; background:#16a34a; border-color:#16a34a; font-weight:800;">
-                            <i class="fa-solid fa-box-archive"></i> Confirmar Chegada na Escola
+                <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+                    <button onclick="imprimirRelatorioLoteSME('${l.id}')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 10px; background:#7c3aed; color:white; font-weight:800;" title="Imprimir relatório/ofício de pedido consolidado para a SME">
+                        <i class="fa-solid fa-file-pdf"></i> Relatório p/ SME
+                    </button>
+
+                    ${l.status !== "recebido_total" ? `
+                        <button onclick="openModalConferirLoteSME('${l.id}')" class="btn btn-primary" style="font-size:0.72rem; padding:4px 10px; background:#16a34a; border-color:#16a34a; font-weight:800;" title="Conferir recebimento dos itens e registrar pendências">
+                            <i class="fa-solid fa-clipboard-check"></i> Conferir Recebimento
                         </button>
-                    </div>
-                ` : ''}
+                    ` : ''}
+                </div>
             </div>
         `;
     });
@@ -6414,21 +6474,11 @@ function salvarFechamentoLoteSME(e) {
     }
 }
 
-function confirmarChegadaLoteSME(loteId) {
-    if (!confirm("Confirmar que esta remessa de uniformes chegou da SME e está disponível na escola?")) return;
-
-    const dataChegada = prompt("Informe a data de chegada dos uniformes na escola (YYYY-MM-DD):", new Date().toISOString().split("T")[0]);
-    if (!dataChegada) return;
-
-    sigeDB.registrarRecebimentoLoteSME(loteId, dataChegada, "Recebimento confirmado via painel.");
-    renderModuleUniformes();
-    showToast("📦 Recebimento registrado! Os pedidos do lote foram marcados como disponíveis na escola.");
-}
-
 function openModalAjustarEstoque() {
     const modal = document.getElementById("modalAjustarEstoque");
     if (!modal) return;
 
+    document.getElementById("estInputGenero").value = "Masculino";
     document.getElementById("estInputPeca").value = "camiseta";
     document.getElementById("estInputTamanho").value = "10";
     document.getElementById("estInputAcao").value = "somar";
@@ -6445,15 +6495,16 @@ function closeAjustarEstoqueModal() {
 function salvarAjusteEstoque(e) {
     e.preventDefault();
 
+    const genero = document.getElementById("estInputGenero").value;
     const peca = document.getElementById("estInputPeca").value;
     const tamanho = document.getElementById("estInputTamanho").value;
     const acao = document.getElementById("estInputAcao").value;
     const quantidade = parseInt(document.getElementById("estInputQuantidade").value) || 0;
 
-    const novoSaldo = sigeDB.ajustarEstoqueUniforme(peca, tamanho, quantidade, acao);
+    const novoSaldo = sigeDB.ajustarEstoqueUniforme(peca, tamanho, quantidade, acao, genero);
     closeAjustarEstoqueModal();
     renderPainelEstoqueUniformes();
-    showToast(`✅ Saldo atualizado: ${peca.toUpperCase()} Tam ${tamanho} -> ${novoSaldo} unidades!`);
+    showToast(`✅ Saldo atualizado (${genero}): ${peca.toUpperCase()} Tam ${tamanho} -> ${novoSaldo} unidades!`);
 }
 
 function openModalConfirmarEntrega(pedidoId) {
@@ -6479,7 +6530,7 @@ function openModalConfirmarEntrega(pedidoId) {
             <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
                 <div style="font-weight:900; font-size:1rem; color:#0f172a;">${ped.aluno}</div>
                 <div style="font-size:0.82rem; color:#475569; margin-top:2px;">
-                    <strong>Turma:</strong> ${ped.turma} | <strong>Tamanho:</strong> ${ped.tamanho} (${ped.genero || 'Unissex'})
+                    <strong>Turma:</strong> ${ped.turma} | <strong>Modelo/Gênero:</strong> ${ped.genero || 'Unissex'} | <strong>Tamanho:</strong> ${ped.tamanho}
                 </div>
                 <div style="font-size:0.82rem; color:#0284c7; margin-top:4px; font-weight:700;">
                     ${pecasText}
@@ -6528,6 +6579,281 @@ function limparFiltrosUniformes() {
     if (document.getElementById("filterUniDataInicio")) document.getElementById("filterUniDataInicio").value = "";
     if (document.getElementById("filterUniDataFim")) document.getElementById("filterUniDataFim").value = "";
     renderTabelaPedidosUniformes();
+}
+
+// ------------------------------------------
+// CONFERÊNCIA DE RECEBIMENTO DO LOTE SME
+// ------------------------------------------
+
+function openModalConferirLoteSME(loteId) {
+    const lote = (sigeDB.getLotesSME() || []).find(l => l.id === loteId);
+    if (!lote) return;
+
+    const modal = document.getElementById("modalConferirLoteSME");
+    if (!modal) return;
+
+    document.getElementById("confLoteId").value = loteId;
+    document.getElementById("confLoteDataChegada").value = new Date().toISOString().split("T")[0];
+    document.getElementById("confLoteObs").value = "";
+
+    const subHeader = document.getElementById("confLoteSubHeader");
+    if (subHeader) {
+        subHeader.innerText = `Lote: ${lote.codigoLote} (${lote.pedidosIds.length} pedidos) | Enfiado em: ${lote.dataEnvioSme ? lote.dataEnvioSme.split("-").reverse().join("/") : '-'}`;
+    }
+
+    const container = document.getElementById("confLoteItensBody");
+    if (container) {
+        const todosPedidos = sigeDB.getPedidosUniformes() || [];
+        const pedidosDoLote = todosPedidos.filter(p => lote.pedidosIds.includes(p.id));
+
+        let html = "";
+        pedidosDoLote.forEach(p => {
+            let descPecas = p.tipoItem === "kit_completo" 
+                ? `Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})` 
+                : (p.pecasAvulsas || []).join(", ");
+
+            html += `
+                <div style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:#0f172a;">${p.aluno}</strong> <span style="font-size:0.75rem; color:#64748b;">(${p.turma})</span><br>
+                        <span style="font-size:0.78rem; color:#0284c7; font-weight:700;">Gênero: ${p.genero || 'Unissex'} | Tam: ${p.tamanho} | ${descPecas}</span>
+                    </div>
+                    <label style="font-size:0.83rem; font-weight:800; color:#166534; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="checkbox" class="chk-conf-item" data-pedido-id="${p.id}" checked>
+                        Item Entregue
+                    </label>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeConferirLoteSMEModal() {
+    const modal = document.getElementById("modalConferirLoteSME");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarConferenciaLoteSME(e) {
+    e.preventDefault();
+
+    const loteId = document.getElementById("confLoteId").value;
+    const dataChegada = document.getElementById("confLoteDataChegada").value;
+    const obs = document.getElementById("confLoteObs").value.trim();
+
+    const checkboxes = document.querySelectorAll(".chk-conf-item");
+    const mapaConferencia = {};
+
+    checkboxes.forEach(chk => {
+        const pId = chk.getAttribute("data-pedido-id");
+        mapaConferencia[pId] = chk.checked ? "recebido" : "divergente";
+    });
+
+    sigeDB.registrarRecebimentoLoteSME(loteId, dataChegada, obs, mapaConferencia);
+    closeConferirLoteSMEModal();
+    renderModuleUniformes();
+    showToast("📦 Conferência salva com sucesso! Uniformes recebidos foram adicionados ao estoque.");
+}
+
+// ------------------------------------------
+// RELATÓRIO OFICIAL DE REMESSA PARA A SME
+// ------------------------------------------
+
+function imprimirRelatorioLoteSME(loteId) {
+    const lote = (sigeDB.getLotesSME() || []).find(l => l.id === loteId);
+    if (!lote) return;
+
+    const todosPedidos = sigeDB.getPedidosUniformes() || [];
+    const pedidosDoLote = todosPedidos.filter(p => lote.pedidosIds.includes(p.id));
+
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const dataCorteFmt = lote.dataCorte ? lote.dataCorte.split("-").reverse().join("/") : dataHoje;
+    const prevFmt = lote.previsaoRecebimento ? lote.previsaoRecebimento.split("-").reverse().join("/") : "-";
+
+    // Matriz de Resumo Quantitativo por Item, Gênero e Tamanho
+    const tamanhos = ["8", "10", "12", "14", "16", "P", "M", "G", "GG", "G1", "G2"];
+    const pecas = [
+        { key: "kit_verao", label: "Kit Completo Verão (2 camisetas, 2 bermudas)" },
+        { key: "kit_inverno", label: "Kit Completo Inverno (2 camisetas, 2 calças, 1 casaco)" },
+        { key: "camiseta", label: "Camiseta / Blusa Avulsa" },
+        { key: "bermuda", label: "Bermuda Avulsa" },
+        { key: "calca", label: "Calça Avulsa" },
+        { key: "moleton", label: "Moletom / Casaco Avulso" },
+        { key: "jaqueta", label: "Jaqueta Avulsa" }
+    ];
+
+    const resumo = {
+        masculino: {},
+        feminino: {}
+    };
+
+    pecas.forEach(p => {
+        resumo.masculino[p.key] = {};
+        resumo.feminino[p.key] = {};
+        tamanhos.forEach(t => {
+            resumo.masculino[p.key][t] = 0;
+            resumo.feminino[p.key][t] = 0;
+        });
+    });
+
+    pedidosDoLote.forEach(p => {
+        const genKey = (p.genero && p.genero.toLowerCase().includes("fem")) ? "feminino" : "masculino";
+        const tam = p.tamanho;
+
+        if (p.tipoItem === "kit_completo") {
+            const kitKey = p.estacao === "verao" ? "kit_verao" : "kit_inverno";
+            if (resumo[genKey][kitKey] && resumo[genKey][kitKey][tam] !== undefined) {
+                resumo[genKey][kitKey][tam] += 1;
+            }
+        } else if (p.pecasAvulsas && Array.isArray(p.pecasAvulsas)) {
+            p.pecasAvulsas.forEach(peca => {
+                if (resumo[genKey][peca] && resumo[genKey][peca][tam] !== undefined) {
+                    resumo[genKey][peca][tam] += 1;
+                }
+            });
+        }
+    });
+
+    // Construção das tabelas de resumo quantitativo
+    function buildResumoTableHtml(genKey, genTitle) {
+        let rows = "";
+        pecas.forEach(p => {
+            let total = 0;
+            const cells = tamanhos.map(t => {
+                const q = resumo[genKey][p.key][t] || 0;
+                total += q;
+                return `<td style="border:1px solid #cbd5e1; padding:6px; text-align:center; ${q>0 ? 'font-weight:bold; background:#e0f2fe;' : 'color:#cbd5e1;'}">${q > 0 ? q : 0}</td>`;
+            }).join("");
+
+            if (total > 0) {
+                rows += `
+                    <tr>
+                        <td style="border:1px solid #cbd5e1; padding:6px; font-weight:bold;">${p.label}</td>
+                        ${cells}
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-weight:bold; background:#f1f5f9;">${total}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        if (!rows) return `<div style="font-size:12px; color:#64748b; font-style:italic;">Nenhum item ${genTitle.toLowerCase()} nesta remessa.</div>`;
+
+        return `
+            <h5 style="margin:12px 0 4px 0; color:#0f172a;">${genTitle}</h5>
+            <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #cbd5e1; padding:6px; text-align:left;">Item / Composição</th>
+                        ${tamanhos.map(t => `<th style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${t}</th>`).join('')}
+                        <th style="border:1px solid #cbd5e1; padding:6px; text-align:center; background:#e2e8f0;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    }
+
+    const resumoMascHtml = buildResumoTableHtml("masculino", "👨 Resumo de Uniformes Masculinos");
+    const resumoFemHtml = buildResumoTableHtml("feminino", "👩 Resumo de Uniformes Femininos");
+
+    // Lista nominal dos estudantes
+    let nominalRows = "";
+    pedidosDoLote.forEach((p, idx) => {
+        let descItem = p.tipoItem === "kit_completo" 
+            ? `Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})` 
+            : `Avulso: ${(p.pecasAvulsas || []).join(', ')}`;
+
+        nominalRows += `
+            <tr>
+                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${idx + 1}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px; font-weight:bold;">${p.aluno}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px;">${p.turma}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px;">${p.genero || 'Unissex'}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-weight:bold;">${p.tamanho}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px;">${descItem}</td>
+                <td style="border:1px solid #cbd5e1; padding:6px; font-size:11px;">${p.motivoDesc || p.motivo}</td>
+            </tr>
+        `;
+    });
+
+    const win = window.open("", "_blank", "width=900,height=750");
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Relatório de Pedido à SME — ${lote.codigoLote}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; color: #0f172a; line-height: 1.5; }
+                .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 15px; }
+                .meta-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; font-size: 13px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 12px; }
+                th, td { border: 1px solid #cbd5e1; padding: 6px; }
+                th { background-color: #f1f5f9; }
+                @media print { @page { margin: 15mm; size: portrait; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                <h3 style="margin:4px 0 0 0; font-size:15px; color:#475569;">SOLICITAÇÃO OFICIAL DE UNIFORMES À SME — ${lote.codigoLote}</h3>
+                <div style="font-size:11px; color:#64748b;">Secretaria Municipal de Educação — Itajaí / SC</div>
+            </div>
+
+            <div class="meta-box">
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                    <div><strong>Código da Remessa:</strong> ${lote.codigoLote}</div>
+                    <div><strong>Data de Corte / Envio:</strong> ${dataCorteFmt}</div>
+                    <div><strong>Previsão de Entrega:</strong> ${prevFmt}</div>
+                    <div><strong>Total de Estudantes:</strong> ${pedidosDoLote.length}</div>
+                </div>
+                ${lote.observacoes ? `<div style="margin-top:6px; font-style:italic; font-size:12px; color:#475569;">Observações: ${lote.observacoes}</div>` : ''}
+            </div>
+
+            <h4 style="margin:15px 0 5px 0; border-bottom:1px solid #94a3b8; padding-bottom:3px;">1. RESUMO QUANTITATIVO CONSOLIDADO (PARA PRODUÇÃO SME)</h4>
+            ${resumoMascHtml}
+            ${resumoFemHtml}
+
+            <h4 style="margin:20px 0 5px 0; border-bottom:1px solid #94a3b8; padding-bottom:3px;">2. RELAÇÃO NOMINAL DOS ESTUDANTES CONTEMPLADOS</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:30px; text-align:center;">#</th>
+                        <th>Nome Completo do Estudante</th>
+                        <th>Turma</th>
+                        <th>Gênero</th>
+                        <th style="text-align:center;">Tamanho</th>
+                        <th>Item / Composição</th>
+                        <th>Motivo da Solicitação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${nominalRows}
+                </tbody>
+            </table>
+
+            <div style="margin-top:40px; display:flex; justify-content:space-around; text-align:center; font-size:12px;">
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Secretaria Escolar / Responsável</strong>
+                </div>
+                <div>
+                    ___________________________________________________<br>
+                    <strong>Direção / Gestão Escolar</strong>
+                </div>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
 }
 
 // ------------------------------------------
@@ -6600,7 +6926,7 @@ function renderPreviewRelacaoEntregaTurma() {
                     <td style="padding:8px; text-align:center; font-weight:700;">${idx + 1}</td>
                     <td style="padding:8px; font-weight:800; color:#0f172a;">${p.aluno}</td>
                     <td style="padding:8px; font-weight:700; color:#334155;">${p.turma}</td>
-                    <td style="padding:8px; text-align:center; font-weight:900; color:#0284c7;">Tam ${p.tamanho}</td>
+                    <td style="padding:8px; text-align:center; font-weight:900; color:#0284c7;">Tam ${p.tamanho} (${p.genero || 'Unissex'})</td>
                     <td style="padding:8px; font-size:0.8rem; color:#475569;">${descPecas}</td>
                     <td style="padding:8px; min-width:220px; text-align:center;">${assinaCol}</td>
                 </tr>
@@ -6621,7 +6947,7 @@ function renderPreviewRelacaoEntregaTurma() {
                     <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center; width:40px;">#</th>
                     <th style="padding:8px; border-bottom:2px solid #0f172a;">Nome Completo do Aluno</th>
                     <th style="padding:8px; border-bottom:2px solid #0f172a;">Turma</th>
-                    <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center;">Tamanho</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center;">Tamanho & Gênero</th>
                     <th style="padding:8px; border-bottom:2px solid #0f172a;">Itens / Composição</th>
                     <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center;">Assinatura do Aluno / Responsável</th>
                 </tr>
