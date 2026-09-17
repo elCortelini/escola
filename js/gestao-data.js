@@ -35,6 +35,99 @@ const defaultSigeData = {
         { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
         { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
     ],
+    pedidosUniformes: [
+        {
+            id: "uni-101",
+            dataSolicitacao: "2026-09-12",
+            aluno: "Enzo Gabriel Santos",
+            turma: "1º Ano A",
+            genero: "Masculino",
+            motivo: "aluno_novo",
+            motivoDesc: "Aluno Novo na Escola",
+            tipoItem: "kit_completo",
+            estacao: "verao",
+            tamanho: "8",
+            pecasAvulsas: [],
+            observacoes: "Matrícula recente realizada na secretaria.",
+            responsavelPedido: "secretaria",
+            status: "enviado_sme",
+            loteSmeId: "lote-sme-01",
+            dataEnvioSme: "2026-09-15",
+            previsaoRecebimentoSme: "2026-09-25",
+            dataChegadaEscola: null,
+            dataEntregaAluno: null,
+            entreguePor: null,
+            criadoEm: "2026-09-12T10:00:00"
+        },
+        {
+            id: "uni-102",
+            dataSolicitacao: "2026-09-14",
+            aluno: "Isabella Rocha Lima",
+            turma: "4º Ano B",
+            genero: "Feminino",
+            motivo: "troca_tamanho",
+            motivoDesc: "Troca por tamanho maior",
+            tipoItem: "avulso",
+            estacao: "inverno",
+            tamanho: "12",
+            pecasAvulsas: ["moleton", "calca"],
+            observacoes: "Calça antiga ficou curta.",
+            responsavelPedido: "direcao",
+            status: "pendente_envio",
+            loteSmeId: null,
+            dataEnvioSme: null,
+            previsaoRecebimentoSme: null,
+            dataChegadaEscola: null,
+            dataEntregaAluno: null,
+            entreguePor: null,
+            criadoEm: "2026-09-14T14:20:00"
+        },
+        {
+            id: "uni-103",
+            dataSolicitacao: "2026-09-10",
+            aluno: "Matheus Henrique Alves",
+            turma: "7º Ano B",
+            genero: "Masculino",
+            motivo: "aluno_novo",
+            motivoDesc: "Aluno Novo",
+            tipoItem: "kit_completo",
+            estacao: "inverno",
+            tamanho: "14",
+            pecasAvulsas: [],
+            observacoes: "Transferência da rede municipal.",
+            responsavelPedido: "orientacao",
+            status: "disponivel_estoque",
+            loteSmeId: "lote-sme-01",
+            dataEnvioSme: "2026-09-15",
+            previsaoRecebimentoSme: "2026-09-25",
+            dataChegadaEscola: "2026-09-17",
+            dataEntregaAluno: null,
+            entreguePor: null,
+            criadoEm: "2026-09-10T09:00:00"
+        }
+    ],
+    lotesSME: [
+        {
+            id: "lote-sme-01",
+            codigoLote: "REMESSA-2026-09-A",
+            dataCorte: "2026-09-15",
+            dataEnvioSme: "2026-09-15",
+            previsaoRecebimento: "2026-09-25",
+            dataChegadaReal: "2026-09-17",
+            status: "recebido_parcial",
+            observacoes: "Remessa enviada via Ofício nº 42/2026 para SME.",
+            pedidosIds: ["uni-101", "uni-103"],
+            responsavelFechamento: "Secretaria Escolar",
+            criadoEm: "2026-09-15T16:00:00"
+        }
+    ],
+    estoqueUniformes: {
+        "camiseta": { "8": 2, "10": 4, "12": 1, "14": 0, "16": 3, "P": 2, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+        "bermuda": { "8": 1, "10": 2, "12": 0, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+        "calca": { "8": 3, "10": 1, "12": 2, "14": 0, "16": 1, "P": 0, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+        "moleton": { "8": 0, "10": 2, "12": 1, "14": 0, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+        "jaqueta": { "8": 1, "10": 0, "12": 1, "14": 1, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+    },
     agendamentosOP: [
         // Clarinda Rosa Pereira (Séries Iniciais: 1º ao 5º Anos) - 5 Atendimentos na Semana (07/09 a 11/09)
         {
@@ -2187,11 +2280,216 @@ class SigeDatabase {
         }
     }
 
-    // Notificações Inteligentes Filtadas por Perfil
+    // ==========================================
+    // MÓDULO DE UNIFORMES ESCOLARES
+    // ==========================================
+    getPedidosUniformes() {
+        if (!this.data.pedidosUniformes || !Array.isArray(this.data.pedidosUniformes)) {
+            this.data.pedidosUniformes = defaultSigeData.pedidosUniformes || [];
+            this.saveData(this.data);
+        }
+        return this.data.pedidosUniformes;
+    }
+
+    addPedidoUniforme(pedido) {
+        pedido.id = "uni-" + Date.now();
+        pedido.criadoEm = new Date().toISOString();
+        if (!pedido.status) pedido.status = "pendente_envio";
+        if (pedido.aluno) {
+            pedido.aluno = cleanStudentName(pedido.aluno);
+        }
+        if (!this.data.pedidosUniformes) this.data.pedidosUniformes = [];
+        this.data.pedidosUniformes.unshift(pedido);
+        this.saveData(this.data);
+        this.logAuditEvent("Uniformes Escolares", `Registrado pedido de uniforme para ${pedido.aluno} (${pedido.turma})`, pedido.responsavelPedido || "Secretaria");
+        return pedido;
+    }
+
+    updatePedidoUniforme(id, dados) {
+        const ped = (this.getPedidosUniformes()).find(p => p.id === id);
+        if (ped) {
+            Object.assign(ped, dados);
+            this.saveData(this.data);
+        }
+        return ped;
+    }
+
+    cancelarPedidoUniforme(id) {
+        const ped = (this.getPedidosUniformes()).find(p => p.id === id);
+        if (ped) {
+            ped.status = "cancelado";
+            this.saveData(this.data);
+            this.logAuditEvent("Uniformes Escolares", `Cancelado pedido ID: ${id} (${ped.aluno})`, "Secretaria");
+        }
+    }
+
+    getLotesSME() {
+        if (!this.data.lotesSME || !Array.isArray(this.data.lotesSME)) {
+            this.data.lotesSME = defaultSigeData.lotesSME || [];
+            this.saveData(this.data);
+        }
+        return this.data.lotesSME;
+    }
+
+    fecharLoteSME(pedidosIds, dataEnvioSme, previsaoRecebimento, observacoes = "") {
+        if (!pedidosIds || pedidosIds.length === 0) {
+            throw new Error("Selecione ao menos um pedido de uniforme para fechar a remessa!");
+        }
+
+        const loteId = "lote-sme-" + Date.now();
+        const codigoLote = "REMESSA-" + new Date().toISOString().substring(0,7) + "-" + Math.floor(10 + Math.random()*90);
+
+        const lote = {
+            id: loteId,
+            codigoLote: codigoLote,
+            dataCorte: dataEnvioSme || new Date().toISOString().split("T")[0],
+            dataEnvioSme: dataEnvioSme || new Date().toISOString().split("T")[0],
+            previsaoRecebimento: previsaoRecebimento || "",
+            dataChegadaReal: null,
+            status: "enviado_sme",
+            observacoes: observacoes,
+            pedidosIds: pedidosIds,
+            responsavelFechamento: this.getRoleFormatted(),
+            criadoEm: new Date().toISOString()
+        };
+
+        if (!this.data.lotesSME) this.data.lotesSME = [];
+        this.data.lotesSME.unshift(lote);
+
+        // Atualizar status dos pedidos vinculados ao lote
+        pedidosIds.forEach(id => {
+            const ped = this.data.pedidosUniformes.find(p => p.id === id);
+            if (ped) {
+                ped.status = "enviado_sme";
+                ped.loteSmeId = loteId;
+                ped.dataEnvioSme = lote.dataEnvioSme;
+                ped.previsaoRecebimentoSme = lote.previsaoRecebimento;
+            }
+        });
+
+        this.saveData(this.data);
+        this.logAuditEvent("Uniformes Escolares", `Fechado Lote SME ${codigoLote} com ${pedidosIds.length} pedidos.`, "Secretaria");
+        return lote;
+    }
+
+    registrarRecebimentoLoteSME(loteId, dataChegadaReal, observacoes = "") {
+        const lote = (this.getLotesSME()).find(l => l.id === loteId);
+        if (lote) {
+            lote.dataChegadaReal = dataChegadaReal || new Date().toISOString().split("T")[0];
+            lote.status = "recebido_total";
+            if (observacoes) lote.observacoes = (lote.observacoes ? lote.observacoes + " | " : "") + observacoes;
+
+            // Atualizar pedidos do lote para disponivel_estoque
+            lote.pedidosIds.forEach(id => {
+                const ped = this.data.pedidosUniformes.find(p => p.id === id);
+                if (ped && ped.status !== "entregue") {
+                    ped.status = "disponivel_estoque";
+                    ped.dataChegadaEscola = lote.dataChegadaReal;
+                }
+            });
+
+            this.saveData(this.data);
+            this.logAuditEvent("Uniformes Escolares", `Registrada chegada do Lote SME ${lote.codigoLote} na escola.`, "Secretaria");
+        }
+        return lote;
+    }
+
+    getEstoqueUniformes() {
+        if (!this.data.estoqueUniformes || typeof this.data.estoqueUniformes !== "object") {
+            this.data.estoqueUniformes = defaultSigeData.estoqueUniformes || {
+                "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+                "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+            };
+            this.saveData(this.data);
+        }
+        return this.data.estoqueUniformes;
+    }
+
+    ajustarEstoqueUniforme(peca, tamanho, quantidade, acao = "somar") {
+        const est = this.getEstoqueUniformes();
+        if (!est[peca]) est[peca] = {};
+        const atual = est[peca][tamanho] || 0;
+        const val = parseInt(quantidade) || 0;
+
+        if (acao === "somar") {
+            est[peca][tamanho] = atual + val;
+        } else if (acao === "subtrair") {
+            est[peca][tamanho] = Math.max(0, atual - val);
+        } else if (acao === "definir") {
+            est[peca][tamanho] = Math.max(0, val);
+        }
+
+        this.saveData(this.data);
+        this.logAuditEvent("Uniformes Escolares", `Ajuste de estoque: ${peca.toUpperCase()} Tam ${tamanho} -> Novo Saldo: ${est[peca][tamanho]} (${acao})`, "Secretaria");
+        return est[peca][tamanho];
+    }
+
+    darBaixaEntregaUniforme(pedidoId, entreguePor, darBaixaEstoque = false) {
+        const ped = (this.getPedidosUniformes()).find(p => p.id === pedidoId);
+        if (!ped) throw new Error("Pedido de uniforme não encontrado!");
+
+        ped.status = "entregue";
+        ped.dataEntregaAluno = new Date().toISOString().split("T")[0];
+        ped.entreguePor = entreguePor || this.getRoleFormatted();
+
+        if (darBaixaEstoque) {
+            const tam = ped.tamanho;
+            if (ped.tipoItem === "kit_completo") {
+                if (ped.estacao === "verao") {
+                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair");
+                    this.ajustarEstoqueUniforme("bermuda", tam, 2, "subtrair");
+                } else {
+                    this.ajustarEstoqueUniforme("camiseta", tam, 2, "subtrair");
+                    this.ajustarEstoqueUniforme("calca", tam, 2, "subtrair");
+                    this.ajustarEstoqueUniforme("moleton", tam, 1, "subtrair");
+                }
+            } else if (ped.pecasAvulsas && Array.isArray(ped.pecasAvulsas)) {
+                ped.pecasAvulsas.forEach(peca => {
+                    this.ajustarEstoqueUniforme(peca, tam, 1, "subtrair");
+                });
+            }
+        }
+
+        this.saveData(this.data);
+        this.logAuditEvent("Uniformes Escolares", `Uniforme entregue ao aluno ${ped.aluno} (${ped.turma}) por ${ped.entreguePor}`, ped.entreguePor);
+        return ped;
+    }
+
+    // Notificações Inteligentes Filtradas por Perfil
     getNotificacoesPertinentes() {
         const role = this.getRole();
         const list = [];
         const hojeStr = new Date().toISOString().split("T")[0];
+
+        // 0. Uniformes Escolares (Secretaria, Direção, Admin)
+        if (role === "secretaria" || role === "direcao" || role === "admin" || role === "desenvolvedor") {
+            const pendentesSme = this.getPedidosUniformes().filter(p => p.status === "pendente_envio");
+            if (pendentesSme.length > 0) {
+                list.push({
+                    id: `notif-uni-sme`,
+                    title: `👕 Pedidos de Uniforme Pendentes de Envio à SME (${pendentesSme.length})`,
+                    desc: `Existem pedidos aguardando fechamento de lote para remessa à SME.`,
+                    time: `Ação necessária`,
+                    targetTab: "uniformes",
+                    unread: !this.data.notificacoesLidas.includes(`notif-uni-sme`)
+                });
+            }
+
+            const disponiveisEntrega = this.getPedidosUniformes().filter(p => p.status === "disponivel_estoque");
+            if (disponiveisEntrega.length > 0) {
+                list.push({
+                    id: `notif-uni-entrega`,
+                    title: `📦 Uniformes Prontos para Entrega aos Alunos (${disponiveisEntrega.length})`,
+                    desc: `Uniformes chegaram da SME ou estão disponíveis no estoque local para distribuição.`,
+                    time: `Pronto para entrega`,
+                    targetTab: "uniformes",
+                    unread: !this.data.notificacoesLidas.includes(`notif-uni-entrega`)
+                });
+            }
+        }
 
         // 1. Orientação Pedagógica
         if (role === "orientacao" || role === "direcao" || role === "admin") {

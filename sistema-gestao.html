@@ -121,6 +121,10 @@
         <button class="sige-tab-btn" data-tab="direcao">
             <i class="fa-solid fa-crown" style="color:var(--direcao-color);"></i> Direção & Painel
         </button>
+        <button class="sige-tab-btn" data-tab="uniformes">
+            <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Uniformes
+            <span class="tab-badge" id="badgeTabUniformes" style="display:none;">0</span>
+        </button>
     </nav>
 
     <!-- Main Container -->
@@ -866,6 +870,189 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- ABA 6: CONTROLE DE UNIFORMES ESCOLARES -->
+        <!-- ========================================== -->
+        <section id="tab-uniformes" class="tab-content-section">
+            <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
+                    </h3>
+                    <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Gestão de solicitações de alunos novos, trocas, remessas para a SME, estoque local e emissão de listas de entrega por turma.</p>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <button onclick="openModalNovoPedidoUniforme()" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-plus-circle"></i> Nova Solicitação de Uniforme
+                    </button>
+                    <button onclick="openModalFecharLoteSME()" class="btn btn-secondary" style="width:auto; background:#7c3aed; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-truck-ramp-box"></i> Fechar Remessa / Lote SME
+                    </button>
+                    <button onclick="openModalAjustarEstoque()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
+                    </button>
+                    <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
+                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação de Entrega (Turma)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards Sintéticos de Métricas do Módulo -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #f59e0b; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando Envio à SME</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:4px;" id="statUniPendentesSme">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Pedidos aguardando lote</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #7c3aed; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Em Remessa / Lote SME</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#7c3aed; margin-top:4px;" id="statUniEnviadosSme">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Aguardando chegada da SME</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Disponível p/ Entrega</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:4px;" id="statUniDisponiveisEntrega">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Na escola pronto para o aluno</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Entregues aos Alunos</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:4px;" id="statUniEntregues">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Total de entregas concluídas</div>
+                </div>
+            </div>
+
+            <!-- Filtros Principais & Tabela -->
+            <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-filter" style="color:#0284c7;"></i>
+                        <strong style="color:#0f172a; font-size:1rem;">Filtros de Pesquisa & Relatórios</strong>
+                    </div>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="limparFiltrosUniformes()" class="btn btn-secondary" style="font-size:0.78rem; padding:4px 10px;">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
+                        <input type="text" id="filterUniSearch" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
+                        <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todas">Todas as Turmas</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
+                        <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todos">Todos os Status</option>
+                            <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
+                            <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
+                            <option value="disponivel_estoque">📦 Disponível para Entrega</option>
+                            <option value="entregue">✅ Entregue ao Aluno</option>
+                            <option value="cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
+                        <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todos">Todos os Motivos</option>
+                            <option value="aluno_novo">Aluno Novo</option>
+                            <option value="troca_tamanho">Troca de Tamanho</option>
+                            <option value="danificado">Uniforme Danificado</option>
+                            <option value="perda">Perda do Uniforme</option>
+                            <option value="outro">Outro Motivo</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
+                        <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
+                        <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <!-- Tabela de Pedidos de Uniformes -->
+                <div style="overflow-x:auto;">
+                    <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background:#f1f5f9; color:#334155;">
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;"><input type="checkbox" id="chkSelectAllUni" onchange="toggleSelectAllPedidosUni(this)"></th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Data</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Aluno & Turma</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Motivo</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Solicitação & Tamanho</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Responsável</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Remessa SME / Previsão</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Status</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1; text-align:center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPedidosUniformesBody">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção Dupla: Painel de Estoque Local + Histórico de Lotes SME -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.5rem;">
+                
+                <!-- Painel de Estoque Escolar Local -->
+                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
+                        </h4>
+                        <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
+                            <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
+                        </button>
+                    </div>
+                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                        Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
+                    </p>
+                    <div id="painelEstoqueUniformesContainer" style="overflow-x:auto;">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
+                <!-- Painel de Remessas / Lotes EnViados à SME -->
+                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-truck-fast" style="color:#7c3aed;"></i> Lotes & Remessas Enviadas para a SME
+                        </h4>
+                        <button onclick="openModalFecharLoteSME()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#7c3aed; border-color:#7c3aed;">
+                            <i class="fa-solid fa-plus"></i> Novo Lote SME
+                        </button>
+                    </div>
+                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                        Remessas agrupadas com data de corte, acompanhamento de entrega e registro de recebimento.
+                    </p>
+                    <div id="painelLotesSMEContainer">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -2383,6 +2570,330 @@
         </div>
     </div>
 
+
+    <!-- ========================================== -->
+    <!-- MODAIS DO MÓDULO DE UNIFORMES ESCOLARES -->
+    <!-- ========================================== -->
+
+    <!-- 1. MODAL DE NOVA SOLICITAÇÃO DE UNIFORME -->
+    <div id="modalNovoPedidoUniforme" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:650px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Nova Solicitação de Uniforme Escolar
+                </h3>
+                <button type="button" onclick="closeNovoPedidoUniformeModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formNovoPedidoUniforme" onsubmit="salvarNovoPedidoUniforme(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data da Solicitação *</label>
+                        <input type="date" id="uniInputDataSolicitacao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Responsável pelo Pedido *</label>
+                        <select id="uniInputResponsavelPedido" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="secretaria">📝 Secretaria Escolar</option>
+                            <option value="direcao">👑 Direção / Gestão Escolar</option>
+                            <option value="orientacao">💛 Orientação Educacional</option>
+                            <option value="supervisao">📋 Supervisão Pedagógica</option>
+                            <option value="administradora">⚙️ Administradora do Sistema</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Nome Completo do Aluno *</label>
+                        <input type="text" id="uniInputAluno" required placeholder="Digite o nome do estudante..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Turma *</label>
+                        <select id="uniInputTurma" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <!-- Preenchido dinamicamente via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Gênero / Modelo *</label>
+                        <select id="uniInputGenero" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Unissex">Unissex</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tamanho do Uniforme *</label>
+                        <select id="uniInputTamanho" required class="search-input" style="width:100%; box-sizing:border-box; font-weight:800; color:#0284c7;">
+                            <option value="8">Tamanho 8</option>
+                            <option value="10">Tamanho 10</option>
+                            <option value="12">Tamanho 12</option>
+                            <option value="14">Tamanho 14</option>
+                            <option value="16">Tamanho 16</option>
+                            <option value="P">Tamanho P</option>
+                            <option value="M">Tamanho M</option>
+                            <option value="G">Tamanho G</option>
+                            <option value="GG">Tamanho GG</option>
+                            <option value="G1">Tamanho G1</option>
+                            <option value="G2">Tamanho G2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Estação / Linha *</label>
+                        <select id="uniInputEstacao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="verao">☀️ Verão</option>
+                            <option value="inverno">❄️ Inverno</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Motivo da Solicitação *</label>
+                        <select id="uniInputMotivo" onchange="toggleMotivoOutroInput(this.value)" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="aluno_novo">🎒 Aluno Novo na Escola</option>
+                            <option value="troca_tamanho">📏 Troca por Motivo de Tamanho</option>
+                            <option value="danificado">⚠️ Uniforme Danificado</option>
+                            <option value="perda">❓ Perda do Uniforme</option>
+                            <option value="outro">✏️ Outro Motivo (Especificar)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tipo de Composição *</label>
+                        <select id="uniInputTipoItem" onchange="togglePecasAvulsasForm(this.value)" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="kit_completo">🎁 Kit Completo</option>
+                            <option value="avulso">🧩 Peças Avulsas Específicas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="uniContainerMotivoOutro" style="display:none;">
+                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Especifique o Outro Motivo *</label>
+                    <input type="text" id="uniInputMotivoOutro" placeholder="Descreva o motivo da solicitação..." class="search-input" style="width:100%; box-sizing:border-box;">
+                </div>
+
+                <div id="uniContainerPecasAvulsas" style="display:none; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                    <label style="font-weight:800; font-size:0.83rem; color:#0f172a; display:block; margin-bottom:6px;">
+                        <i class="fa-solid fa-square-check" style="color:#0284c7;"></i> Selecione as Peças Avulsas Necessárias:
+                    </label>
+                    <div style="display:flex; flex-wrap:wrap; gap:15px; font-size:0.85rem; color:#334155;">
+                        <label style="cursor:pointer;"><input type="checkbox" name="uniPecaAvulsaCheck" value="camiseta"> 👕 Camiseta / Blusa</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="uniPecaAvulsaCheck" value="bermuda"> 🩳 Bermuda</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="uniPecaAvulsaCheck" value="calca"> 👖 Calça</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="uniPecaAvulsaCheck" value="moleton"> 🧥 Moletom / Casaco</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="uniPecaAvulsaCheck" value="jaqueta"> 🧥 Jaqueta</label>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações Internas</label>
+                    <textarea id="uniInputObservacoes" rows="2" placeholder="Detalhes adicionais do pedido ou situação do estudante..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <button type="button" onclick="closeNovoPedidoUniformeModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; color:white;">
+                        <i class="fa-solid fa-check"></i> Salvar Solicitação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MODAL DE FECHAMENTO DE LOTE / REMESSA PARA SME -->
+    <div id="modalFecharLoteSME" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:600px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-truck-ramp-box" style="color:#7c3aed;"></i> Fechar Remessa / Lote para a SME
+                </h3>
+                <button type="button" onclick="closeFecharLoteSMEModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formFecharLoteSME" onsubmit="salvarFechamentoLoteSME(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div style="background:#f3e8ff; padding:12px; border-radius:10px; border:1px solid #d8b4fe;">
+                    <div style="font-weight:800; font-size:0.85rem; color:#6b21a8;" id="lotePedidosCountInfo">
+                        <i class="fa-solid fa-list-check"></i> 0 Pedidos Selecionados para esta Remessa
+                    </div>
+                    <div style="font-size:0.78rem; color:#7e22ce; margin-top:2px;">
+                        A data de envio funcionará como Data de Corte dos pedidos selecionados.
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data de Envio à SME (Data de Corte) *</label>
+                        <input type="date" id="loteInputDataEnvio" required class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Previsão de Recebimento</label>
+                        <input type="date" id="loteInputPrevisao" class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações do Lote / Nº Ofício</label>
+                    <textarea id="loteInputObservacoes" rows="3" placeholder="Ex: Ofício nº 45/2026 encaminhado à SME via protocolo digital..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <button type="button" onclick="closeFecharLoteSMEModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#7c3aed; border-color:#7c3aed; color:white;">
+                        <i class="fa-solid fa-paper-plane"></i> Confirmar Fechamento de Lote
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAL DE AJUSTE E ENTRADA DE ESTOQUE LOCAL -->
+    <div id="modalAjustarEstoque" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:550px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Ajustar Estoque Local da Escola
+                </h3>
+                <button type="button" onclick="closeAjustarEstoqueModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formAjustarEstoque" onsubmit="salvarAjusteEstoque(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Peça de Uniforme *</label>
+                        <select id="estInputPeca" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="camiseta">👕 Camiseta / Blusa</option>
+                            <option value="bermuda">🩳 Bermuda</option>
+                            <option value="calca">👖 Calça</option>
+                            <option value="moleton">🧥 Moletom / Casaco</option>
+                            <option value="jaqueta">🧥 Jaqueta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tamanho *</label>
+                        <select id="estInputTamanho" required class="search-input" style="width:100%; box-sizing:border-box; font-weight:800;">
+                            <option value="8">Tamanho 8</option>
+                            <option value="10">Tamanho 10</option>
+                            <option value="12">Tamanho 12</option>
+                            <option value="14">Tamanho 14</option>
+                            <option value="16">Tamanho 16</option>
+                            <option value="P">Tamanho P</option>
+                            <option value="M">Tamanho M</option>
+                            <option value="G">Tamanho G</option>
+                            <option value="GG">Tamanho GG</option>
+                            <option value="G1">Tamanho G1</option>
+                            <option value="G2">Tamanho G2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Ação no Saldo *</label>
+                        <select id="estInputAcao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="somar">➕ Adicionar Item (Entrada)</option>
+                            <option value="subtrair">➖ Dar Baixa (Saída Manual)</option>
+                            <option value="definir">🎯 Definir Saldo Exato</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Quantidade *</label>
+                        <input type="number" id="estInputQuantidade" required min="1" value="1" class="search-input" style="width:100%; box-sizing:border-box; font-weight:800;">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <button type="button" onclick="closeAjustarEstoqueModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#059669; border-color:#059669; color:white;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Saldo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. MODAL DE CONFIRMAÇÃO DE ENTREGA DE UNIFORME -->
+    <div id="modalConfirmarEntregaUniforme" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:520px; width:94%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-box-open" style="color:#16a34a;"></i> Registrar Entrega de Uniforme
+                </h3>
+                <button type="button" onclick="closeConfirmarEntregaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="entregaModalInfoBody" style="margin-bottom:1rem; font-size:0.88rem; color:#334155;">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+
+            <form id="formConfirmarEntregaUniforme" onsubmit="salvarEntregaUniforme(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="entregaPedidoId">
+
+                <div>
+                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Responsável pela Entrega na Escola *</label>
+                    <input type="text" id="entregaResponsavelNome" required class="search-input" style="width:100%; box-sizing:border-box;">
+                </div>
+
+                <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0;">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:700; color:#166534; cursor:pointer;">
+                        <input type="checkbox" id="entregaDarBaixaEstoque" checked>
+                        Dar baixa automática nos itens correspondentes do estoque local
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <button type="button" onclick="closeConfirmarEntregaModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; background:#16a34a; border-color:#16a34a; color:white;">
+                        <i class="fa-solid fa-check-double"></i> Confirmar Entrega
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. MODAL DE RELAÇÃO DE ENTREGA POR TURMA (IMPRESSÃO COM ASSINATURA) -->
+    <div id="modalRelacaoEntregaTurma" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:900px; width:95%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                        <i class="fa-solid fa-file-signature" style="color:#d97706;"></i> Relação de Entregas por Turma (Para Assinatura)
+                    </h3>
+                    <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Selecione a turma para gerar a folha oficial de entrega e coleta de assinaturas.</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button type="button" onclick="imprimirFolhaRelacaoEntrega()" class="btn btn-primary" style="background:#d97706; border-color:#d97706; width:auto; font-size:0.85rem;">
+                        <i class="fa-solid fa-print"></i> Imprimir Folha de Assinatura
+                    </button>
+                    <button type="button" onclick="closeRelacaoEntregaTurmaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.2rem; background:#f8fafc; padding:10px 14px; border-radius:10px; flex-wrap:wrap;">
+                <label style="font-weight:800; font-size:0.85rem; color:#0f172a; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-users-rectangle"></i> Turma:
+                </label>
+                <select id="relacaoSelectTurma" onchange="renderPreviewRelacaoEntregaTurma()" class="search-input" style="font-weight:800; color:#1e3a8a;">
+                    <!-- Preenchido via JS -->
+                </select>
+                <label style="font-weight:800; font-size:0.85rem; color:#0f172a; display:flex; align-items:center; gap:6px; margin-left:15px;">
+                    Filtro Status:
+                </label>
+                <select id="relacaoSelectStatus" onchange="renderPreviewRelacaoEntregaTurma()" class="search-input">
+                    <option value="todos">Todos (Disponíveis & Entregues)</option>
+                    <option value="disponivel_estoque">Apenas Prontos p/ Entrega</option>
+                    <option value="entregue">Apenas Já Entregues</option>
+                </select>
+            </div>
+
+            <!-- Área de Preview Imprimível -->
+            <div id="areaPrintRelacaoEntregaTurma" style="background:white; padding:1.5rem; border:1px solid #cbd5e1; border-radius:12px;">
+                <!-- Renderizado via JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer>

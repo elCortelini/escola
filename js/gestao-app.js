@@ -660,6 +660,7 @@ function renderAllModules() {
     renderModuleSupervisao();
     renderModuleAdministracao();
     renderModuleDirecao();
+    renderModuleUniformes();
     updateBadgesCounts();
 }
 
@@ -672,13 +673,22 @@ function updateBadgesCounts() {
     const countSup = sigeDB.getDemandasSupervisao().filter(d => d.status === "pendente").length;
     const countAdm = sigeDB.getDemandasAdmin().filter(d => d.status === "pendente").length;
 
+    const countUni = (typeof sigeDB.getPedidosUniformes === "function") 
+        ? sigeDB.getPedidosUniformes().filter(p => p.status === "pendente_envio" || p.status === "disponivel_estoque").length 
+        : 0;
+
     const bOp = document.getElementById("badgeTabOP");
     const bSup = document.getElementById("badgeTabSup");
     const bAdm = document.getElementById("badgeTabAdm");
+    const bUni = document.getElementById("badgeTabUniformes");
 
     if (bOp) bOp.innerText = countOp;
     if (bSup) bSup.innerText = countSup;
     if (bAdm) bAdm.innerText = countAdm;
+    if (bUni) {
+        bUni.innerText = countUni;
+        bUni.style.display = countUni > 0 ? "inline-block" : "none";
+    }
 }
 
 // ==========================================
@@ -5891,4 +5901,846 @@ function salvarConfiguracoesFirebase(e) {
     sigeDB.logAuditEvent("Firebase", "Credenciais do Firebase salvas e sincronização ativada", "Administração");
     showToast("🔥 Credenciais do Firebase salvas! Conexão iniciada.");
 }
+
+
+// ==========================================
+// MÓDULO 6: CONTROLE DE UNIFORMES ESCOLARES
+// ==========================================
+
+function renderModuleUniformes() {
+    populaDropdownTurmasUniformes();
+    renderTabelaPedidosUniformes();
+    renderPainelEstoqueUniformes();
+    renderLotesSME();
+}
+
+function populaDropdownTurmasUniformes() {
+    const turmas = sigeDB.getTurmasEscola() || [];
+    const idsTurmas = [
+        "filterUniTurma",
+        "uniInputTurma",
+        "relacaoSelectTurma"
+    ];
+
+    idsTurmas.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const valSalvo = select.value;
+
+        if (id === "filterUniTurma") {
+            select.innerHTML = `<option value="todas">Todas as Turmas</option>`;
+        } else if (id === "relacaoSelectTurma") {
+            select.innerHTML = `<option value="todas">Todas as Turmas (Consolidado)</option>`;
+        } else {
+            select.innerHTML = `<option value="">-- Selecione a Turma --</option>`;
+        }
+
+        turmas.forEach(t => {
+            const nomeTurma = typeof t === "string" ? t : (t.nome || t.turma);
+            if (nomeTurma) {
+                const opt = document.createElement("option");
+                opt.value = nomeTurma;
+                opt.textContent = nomeTurma;
+                select.appendChild(opt);
+            }
+        });
+
+        if (valSalvo && Array.from(select.options).some(o => o.value === valSalvo)) {
+            select.value = valSalvo;
+        }
+    });
+}
+
+function renderTabelaPedidosUniformes() {
+    const tbody = document.getElementById("tabelaPedidosUniformesBody");
+    if (!tbody) return;
+
+    let pedidos = sigeDB.getPedidosUniformes() || [];
+    const lotes = sigeDB.getLotesSME() || [];
+
+    // Atualização dos Cards de Métricas
+    const countPendenteSme = pedidos.filter(p => p.status === "pendente_envio").length;
+    const countEnviadosSme = pedidos.filter(p => p.status === "enviado_sme").length;
+    const countDisponiveis = pedidos.filter(p => p.status === "disponivel_estoque").length;
+    const countEntregues = pedidos.filter(p => p.status === "entregue").length;
+
+    const elP = document.getElementById("statUniPendentesSme");
+    const elE = document.getElementById("statUniEnviadosSme");
+    const elD = document.getElementById("statUniDisponiveisEntrega");
+    const elT = document.getElementById("statUniEntregues");
+
+    if (elP) elP.innerText = countPendenteSme;
+    if (elE) elE.innerText = countEnviadosSme;
+    if (elD) elD.innerText = countDisponiveis;
+    if (elT) elT.innerText = countEntregues;
+
+    // Leitura dos Filtros
+    const searchVal = (document.getElementById("filterUniSearch")?.value || "").toLowerCase().trim();
+    const turmaVal = document.getElementById("filterUniTurma")?.value || "todas";
+    const statusVal = document.getElementById("filterUniStatus")?.value || "todos";
+    const motivoVal = document.getElementById("filterUniMotivo")?.value || "todos";
+    const dataInicioVal = document.getElementById("filterUniDataInicio")?.value;
+    const dataFimVal = document.getElementById("filterUniDataFim")?.value;
+
+    // Aplicação dos Filtros
+    pedidos = pedidos.filter(p => {
+        if (searchVal) {
+            const matchesAluno = (p.aluno || "").toLowerCase().includes(searchVal);
+            const matchesTurma = (p.turma || "").toLowerCase().includes(searchVal);
+            const matchesObs = (p.observacoes || "").toLowerCase().includes(searchVal);
+            if (!matchesAluno && !matchesTurma && !matchesObs) return false;
+        }
+
+        if (turmaVal !== "todas" && p.turma !== turmaVal) return false;
+        if (statusVal !== "todos" && p.status !== statusVal) return false;
+        if (motivoVal !== "todos" && p.motivo !== motivoVal) return false;
+
+        if (dataInicioVal && p.dataSolicitacao < dataInicioVal) return false;
+        if (dataFimVal && p.dataSolicitacao > dataFimVal) return false;
+
+        return true;
+    });
+
+    if (pedidos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align:center; padding:2rem; color:#64748b;">
+                    <i class="fa-solid fa-shirt" style="font-size:2rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                    Nenhuma solicitação de uniforme encontrada para os filtros aplicados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = "";
+    pedidos.forEach(p => {
+        const dataFmt = p.dataSolicitacao ? p.dataSolicitacao.split("-").reverse().join("/") : "-";
+
+        let statusBadge = "";
+        if (p.status === "pendente_envio") {
+            statusBadge = `<span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-hourglass-half"></i> Pendente Envio SME</span>`;
+        } else if (p.status === "enviado_sme") {
+            statusBadge = `<span style="background:#f3e8ff; color:#7e22ce; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-truck"></i> Em Remessa SME</span>`;
+        } else if (p.status === "disponivel_estoque") {
+            statusBadge = `<span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-box-open"></i> Disponível p/ Entrega</span>`;
+        } else if (p.status === "entregue") {
+            const dataEntFmt = p.dataEntregaAluno ? p.dataEntregaAluno.split("-").reverse().join("/") : "";
+            statusBadge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Entregue (${dataEntFmt})</span>`;
+        } else if (p.status === "cancelado") {
+            statusBadge = `<span style="background:#f1f5f9; color:#64748b; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-ban"></i> Cancelado</span>`;
+        }
+
+        let motivoLabel = "";
+        if (p.motivo === "aluno_novo") motivoLabel = "🎒 Aluno Novo";
+        else if (p.motivo === "troca_tamanho") motivoLabel = "📏 Troca Tamanho";
+        else if (p.motivo === "danificado") motivoLabel = "⚠️ Danificado";
+        else if (p.motivo === "perda") motivoLabel = "❓ Perda";
+        else motivoLabel = `✏️ ${p.motivoDesc || 'Outro'}`;
+
+        let itensDesc = "";
+        if (p.tipoItem === "kit_completo") {
+            itensDesc = `<strong>🎁 Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})</strong><br><small style="color:#64748b;">${p.estacao === 'verao' ? '2 camisetas, 2 bermudas' : '2 camisetas, 2 calças, 1 casaco'}</small>`;
+        } else {
+            const pecasStr = (p.pecasAvulsas || []).map(peca => {
+                if (peca === 'camiseta') return 'Camiseta';
+                if (peca === 'bermuda') return 'Bermuda';
+                if (peca === 'calca') return 'Calça';
+                if (peca === 'moleton') return 'Moletom';
+                if (peca === 'jaqueta') return 'Jaqueta';
+                return peca;
+            }).join(", ") || "Peças avulsas";
+            itensDesc = `<strong>🧩 Avulso:</strong> ${pecasStr}`;
+        }
+
+        let loteStr = "<span style='color:#94a3b8;'>Sem lote</span>";
+        if (p.loteSmeId) {
+            const loteObj = lotes.find(l => l.id === p.loteSmeId);
+            const codLote = loteObj ? loteObj.codigoLote : "Lote SME";
+            const prevFmt = p.previsaoRecebimentoSme ? p.previsaoRecebimentoSme.split("-").reverse().join("/") : "";
+            loteStr = `<strong style="color:#7c3aed;">${codLote}</strong>${prevFmt ? `<br><small style="color:#64748b;">Prev: ${prevFmt}</small>` : ''}`;
+        }
+
+        const canSelectForLote = (p.status === "pendente_envio");
+
+        html += `
+            <tr style="border-bottom:1px solid #e2e8f0; hover:background:#f8fafc;">
+                <td style="padding:10px;">
+                    <input type="checkbox" class="chk-pedido-uni" value="${p.id}" ${canSelectForLote ? '' : 'disabled'} onchange="updateSelectedCountLoteSME()">
+                </td>
+                <td style="padding:10px; font-weight:700; color:#334155;">${dataFmt}</td>
+                <td style="padding:10px;">
+                    <div style="font-weight:800; color:#0f172a; font-size:0.9rem;">${p.aluno}</div>
+                    <span style="background:#e2e8f0; color:#334155; padding:2px 8px; border-radius:6px; font-weight:700; font-size:0.75rem;">${p.turma}</span>
+                    <span style="font-size:0.75rem; color:#64748b; margin-left:4px;">(${p.genero || 'Unissex'})</span>
+                </td>
+                <td style="padding:10px; font-weight:600; font-size:0.8rem; color:#475569;">${motivoLabel}</td>
+                <td style="padding:10px;">
+                    ${itensDesc}
+                    <div style="margin-top:2px;"><span style="background:#0284c7; color:white; padding:2px 8px; border-radius:6px; font-weight:900; font-size:0.78rem;">Tam: ${p.tamanho}</span></div>
+                </td>
+                <td style="padding:10px; font-size:0.8rem; color:#64748b; text-transform:capitalize;">
+                    <i class="fa-solid fa-user-tag"></i> ${p.responsavelPedido || 'Secretaria'}
+                </td>
+                <td style="padding:10px; font-size:0.8rem;">${loteStr}</td>
+                <td style="padding:10px;">${statusBadge}</td>
+                <td style="padding:10px; text-align:center;">
+                    <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                        ${p.status !== "entregue" && p.status !== "cancelado" ? `
+                            <button onclick="openModalConfirmarEntrega('${p.id}')" class="btn btn-primary" style="font-size:0.72rem; padding:4px 8px; background:#16a34a; border-color:#16a34a; font-weight:800;" title="Registrar entrega do uniforme ao aluno">
+                                <i class="fa-solid fa-box-open"></i> Entregar
+                            </button>
+                        ` : ''}
+
+                        <button onclick="imprimirTermoIndividualUniforme('${p.id}')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 8px; background:#0284c7; color:white; font-weight:800;" title="Imprimir comprovante/termo de recebimento individual">
+                            <i class="fa-solid fa-print"></i> Termo
+                        </button>
+
+                        ${p.status !== "entregue" && p.status !== "cancelado" ? `
+                            <button onclick="cancelarPedidoUniformeAction('${p.id}')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 8px; background:#fee2e2; color:#991b1b; border:none; font-weight:800;" title="Cancelar este pedido">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    updateSelectedCountLoteSME();
+}
+
+function toggleSelectAllPedidosUni(master) {
+    const checkboxes = document.querySelectorAll(".chk-pedido-uni:not(:disabled)");
+    checkboxes.forEach(c => c.checked = master.checked);
+    updateSelectedCountLoteSME();
+}
+
+function updateSelectedCountLoteSME() {
+    const selected = document.querySelectorAll(".chk-pedido-uni:checked");
+    const countInfo = document.getElementById("lotePedidosCountInfo");
+    if (countInfo) {
+        countInfo.innerHTML = `<i class="fa-solid fa-list-check"></i> ${selected.length} Pedido(s) Selecionado(s) para esta Remessa`;
+    }
+}
+
+function renderPainelEstoqueUniformes() {
+    const container = document.getElementById("painelEstoqueUniformesContainer");
+    if (!container) return;
+
+    const estoque = sigeDB.getEstoqueUniformes();
+    const tamanhos = ["8", "10", "12", "14", "16", "P", "M", "G", "GG", "G1", "G2"];
+    const pecas = [
+        { key: "camiseta", label: "👕 Camiseta / Blusa" },
+        { key: "bermuda", label: "🩳 Bermuda" },
+        { key: "calca", label: "👖 Calça" },
+        { key: "moleton", label: "🧥 Moletom / Casaco" },
+        { key: "jaqueta", label: "🧥 Jaqueta" }
+    ];
+
+    let html = `
+        <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:center; font-size:0.8rem;">
+            <thead>
+                <tr style="background:#f1f5f9; color:#334155;">
+                    <th style="padding:8px; border-bottom:2px solid #cbd5e1; text-align:left;">Peça / Item</th>
+                    ${tamanhos.map(t => `<th style="padding:8px; border-bottom:2px solid #cbd5e1; font-weight:900;">${t}</th>`).join('')}
+                    <th style="padding:8px; border-bottom:2px solid #cbd5e1; font-weight:900; background:#e2e8f0;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    pecas.forEach(p => {
+        let totalPeca = 0;
+        const celulas = tamanhos.map(t => {
+            const qtd = (estoque[p.key] && estoque[p.key][t]) ? estoque[p.key][t] : 0;
+            totalPeca += qtd;
+            let badgeStyle = "background:#f1f5f9; color:#94a3b8;";
+            if (qtd > 0) badgeStyle = "background:#dcfce7; color:#166534; font-weight:800;";
+
+            return `<td style="padding:8px;"><span style="display:inline-block; min-width:24px; padding:2px 6px; border-radius:6px; font-size:0.78rem; ${badgeStyle}">${qtd}</span></td>`;
+        }).join('');
+
+        html += `
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px; text-align:left; font-weight:700; color:#0f172a;">${p.label}</td>
+                ${celulas}
+                <td style="padding:8px; font-weight:900; color:#059669; background:#f8fafc;">${totalPeca}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+}
+
+function renderLotesSME() {
+    const container = document.getElementById("painelLotesSMEContainer");
+    if (!container) return;
+
+    const lotes = sigeDB.getLotesSME() || [];
+
+    if (lotes.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.85rem;">
+                <i class="fa-solid fa-truck-ramp-box" style="font-size:2rem; margin-bottom:6px; display:block;"></i>
+                Nenhum lote ou remessa enviada para a SME até o momento.
+            </div>
+        `;
+        return;
+    }
+
+    let html = "";
+    lotes.forEach(l => {
+        const dataCorteFmt = l.dataCorte ? l.dataCorte.split("-").reverse().join("/") : "-";
+        const prevFmt = l.previsaoRecebimento ? l.previsaoRecebimento.split("-").reverse().join("/") : "-";
+        const chegadaFmt = l.dataChegadaReal ? l.dataChegadaReal.split("-").reverse().join("/") : null;
+
+        let statusTag = "";
+        if (l.status === "recebido_total" || l.status === "recebido_parcial") {
+            statusTag = `<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Recebido na Escola (${chegadaFmt})</span>`;
+        } else {
+            statusTag = `<span style="background:#f3e8ff; color:#7e22ce; padding:2px 8px; border-radius:8px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-truck-arrow-right"></i> Em Trânsito / SME</span>`;
+        }
+
+        const countPedidos = (l.pedidosIds || []).length;
+
+        html += `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <strong style="color:#7c3aed; font-size:0.95rem;">${l.codigoLote}</strong>
+                        <span style="font-size:0.78rem; color:#64748b; margin-left:8px;">(${countPedidos} pedidos)</span>
+                    </div>
+                    <div>${statusTag}</div>
+                </div>
+
+                <div style="font-size:0.8rem; color:#475569; margin-top:6px; display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div>📅 Data de Corte (Envio): <strong>${dataCorteFmt}</strong></div>
+                    <div>⏳ Previsão Chegada: <strong>${prevFmt}</strong></div>
+                </div>
+
+                ${l.observacoes ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px; font-style:italic;">Obs: ${l.observacoes}</div>` : ''}
+
+                ${l.status !== "recebido_total" ? `
+                    <div style="margin-top:8px; text-align:right;">
+                        <button onclick="confirmarChegadaLoteSME('${l.id}')" class="btn btn-primary" style="font-size:0.72rem; padding:4px 10px; background:#16a34a; border-color:#16a34a; font-weight:800;">
+                            <i class="fa-solid fa-box-archive"></i> Confirmar Chegada na Escola
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// ------------------------------------------
+// MODAIS E AÇÕES DO MÓDULO DE UNIFORMES
+// ------------------------------------------
+
+function openModalNovoPedidoUniforme() {
+    const modal = document.getElementById("modalNovoPedidoUniforme");
+    if (!modal) return;
+
+    populaDropdownTurmasUniformes();
+
+    const dtInput = document.getElementById("uniInputDataSolicitacao");
+    if (dtInput) dtInput.value = new Date().toISOString().split("T")[0];
+
+    const respSelect = document.getElementById("uniInputResponsavelPedido");
+    if (respSelect) {
+        const role = sigeDB.getRole();
+        if (role === "orientacao" || role.includes("orientadora")) respSelect.value = "orientacao";
+        else if (role === "supervisao") respSelect.value = "supervisao";
+        else if (role === "direcao") respSelect.value = "direcao";
+        else respSelect.value = "secretaria";
+    }
+
+    document.getElementById("uniInputAluno").value = "";
+    document.getElementById("uniInputGenero").value = "Masculino";
+    document.getElementById("uniInputTamanho").value = "10";
+    document.getElementById("uniInputEstacao").value = "verao";
+    document.getElementById("uniInputMotivo").value = "aluno_novo";
+    document.getElementById("uniInputTipoItem").value = "kit_completo";
+    document.getElementById("uniInputObservacoes").value = "";
+
+    toggleMotivoOutroInput("aluno_novo");
+    togglePecasAvulsasForm("kit_completo");
+
+    modal.style.display = "flex";
+}
+
+function closeNovoPedidoUniformeModal() {
+    const modal = document.getElementById("modalNovoPedidoUniforme");
+    if (modal) modal.style.display = "none";
+}
+
+function toggleMotivoOutroInput(val) {
+    const container = document.getElementById("uniContainerMotivoOutro");
+    if (container) {
+        container.style.display = (val === "outro") ? "block" : "none";
+    }
+}
+
+function togglePecasAvulsasForm(val) {
+    const container = document.getElementById("uniContainerPecasAvulsas");
+    if (container) {
+        container.style.display = (val === "avulso") ? "block" : "none";
+    }
+}
+
+function salvarNovoPedidoUniforme(e) {
+    e.preventDefault();
+
+    const dataSolicitacao = document.getElementById("uniInputDataSolicitacao").value;
+    const responsavelPedido = document.getElementById("uniInputResponsavelPedido").value;
+    const aluno = document.getElementById("uniInputAluno").value.trim();
+    const turma = document.getElementById("uniInputTurma").value;
+    const genero = document.getElementById("uniInputGenero").value;
+    const tamanho = document.getElementById("uniInputTamanho").value;
+    const estacao = document.getElementById("uniInputEstacao").value;
+    const motivo = document.getElementById("uniInputMotivo").value;
+    const motivoOutro = document.getElementById("uniInputMotivoOutro")?.value.trim();
+    const tipoItem = document.getElementById("uniInputTipoItem").value;
+    const observacoes = document.getElementById("uniInputObservacoes").value.trim();
+
+    if (!aluno || !turma) {
+        showToast("⚠️ Por favor preencha o Nome do Aluno e a Turma!");
+        return;
+    }
+
+    let pecasAvulsas = [];
+    if (tipoItem === "avulso") {
+        const checkboxes = document.querySelectorAll("input[name='uniPecaAvulsaCheck']:checked");
+        checkboxes.forEach(c => pecasAvulsas.push(c.value));
+        if (pecasAvulsas.length === 0) {
+            showToast("⚠️ Selecione pelo menos uma peça avulsa para a solicitação!");
+            return;
+        }
+    }
+
+    let motivoDesc = "";
+    if (motivo === "aluno_novo") motivoDesc = "Aluno Novo na Escola";
+    else if (motivo === "troca_tamanho") motivoDesc = "Troca por Motivo de Tamanho";
+    else if (motivo === "danificado") motivoDesc = "Uniforme Danificado";
+    else if (motivo === "perda") motivoDesc = "Perda do Uniforme";
+    else motivoDesc = motivoOutro || "Outro Motivo";
+
+    const novoPedido = {
+        dataSolicitacao,
+        responsavelPedido,
+        aluno,
+        turma,
+        genero,
+        tamanho,
+        estacao,
+        motivo,
+        motivoDesc,
+        tipoItem,
+        pecasAvulsas,
+        observacoes,
+        status: "pendente_envio",
+        loteSmeId: null,
+        dataEnvioSme: null,
+        previsaoRecebimentoSme: null,
+        dataChegadaEscola: null,
+        dataEntregaAluno: null,
+        entreguePor: null
+    };
+
+    sigeDB.addPedidoUniforme(novoPedido);
+    closeNovoPedidoUniformeModal();
+    renderModuleUniformes();
+    showToast(`✅ Solicitação de uniforme cadastrada com sucesso para ${aluno}!`);
+}
+
+function openModalFecharLoteSME() {
+    const selected = document.querySelectorAll(".chk-pedido-uni:checked");
+    if (selected.length === 0) {
+        showToast("⚠️ Selecione ao menos um pedido pendente na tabela para fechar a remessa!");
+        return;
+    }
+
+    const modal = document.getElementById("modalFecharLoteSME");
+    if (!modal) return;
+
+    document.getElementById("loteInputDataEnvio").value = new Date().toISOString().split("T")[0];
+    
+    const dPrev = new Date();
+    dPrev.setDate(dPrev.getDate() + 15);
+    document.getElementById("loteInputPrevisao").value = dPrev.toISOString().split("T")[0];
+
+    document.getElementById("loteInputObservacoes").value = "";
+    updateSelectedCountLoteSME();
+
+    modal.style.display = "flex";
+}
+
+function closeFecharLoteSMEModal() {
+    const modal = document.getElementById("modalFecharLoteSME");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarFechamentoLoteSME(e) {
+    e.preventDefault();
+
+    const selected = document.querySelectorAll(".chk-pedido-uni:checked");
+    const pedidosIds = Array.from(selected).map(c => c.value);
+
+    if (pedidosIds.length === 0) {
+        showToast("⚠️ Nenhum pedido selecionado!");
+        return;
+    }
+
+    const dataEnvio = document.getElementById("loteInputDataEnvio").value;
+    const previsao = document.getElementById("loteInputPrevisao").value;
+    const obs = document.getElementById("loteInputObservacoes").value.trim();
+
+    try {
+        const lote = sigeDB.fecharLoteSME(pedidosIds, dataEnvio, previsao, obs);
+        closeFecharLoteSMEModal();
+        renderModuleUniformes();
+        showToast(`🎉 Remessa ${lote.codigoLote} fechada com sucesso (${pedidosIds.length} pedidos)!`);
+    } catch (err) {
+        showToast(`❌ Erro ao fechar remessa: ${err.message}`);
+    }
+}
+
+function confirmarChegadaLoteSME(loteId) {
+    if (!confirm("Confirmar que esta remessa de uniformes chegou da SME e está disponível na escola?")) return;
+
+    const dataChegada = prompt("Informe a data de chegada dos uniformes na escola (YYYY-MM-DD):", new Date().toISOString().split("T")[0]);
+    if (!dataChegada) return;
+
+    sigeDB.registrarRecebimentoLoteSME(loteId, dataChegada, "Recebimento confirmado via painel.");
+    renderModuleUniformes();
+    showToast("📦 Recebimento registrado! Os pedidos do lote foram marcados como disponíveis na escola.");
+}
+
+function openModalAjustarEstoque() {
+    const modal = document.getElementById("modalAjustarEstoque");
+    if (!modal) return;
+
+    document.getElementById("estInputPeca").value = "camiseta";
+    document.getElementById("estInputTamanho").value = "10";
+    document.getElementById("estInputAcao").value = "somar";
+    document.getElementById("estInputQuantidade").value = "1";
+
+    modal.style.display = "flex";
+}
+
+function closeAjustarEstoqueModal() {
+    const modal = document.getElementById("modalAjustarEstoque");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarAjusteEstoque(e) {
+    e.preventDefault();
+
+    const peca = document.getElementById("estInputPeca").value;
+    const tamanho = document.getElementById("estInputTamanho").value;
+    const acao = document.getElementById("estInputAcao").value;
+    const quantidade = parseInt(document.getElementById("estInputQuantidade").value) || 0;
+
+    const novoSaldo = sigeDB.ajustarEstoqueUniforme(peca, tamanho, quantidade, acao);
+    closeAjustarEstoqueModal();
+    renderPainelEstoqueUniformes();
+    showToast(`✅ Saldo atualizado: ${peca.toUpperCase()} Tam ${tamanho} -> ${novoSaldo} unidades!`);
+}
+
+function openModalConfirmarEntrega(pedidoId) {
+    const ped = (sigeDB.getPedidosUniformes() || []).find(p => p.id === pedidoId);
+    if (!ped) return;
+
+    const modal = document.getElementById("modalConfirmarEntregaUniforme");
+    if (!modal) return;
+
+    document.getElementById("entregaPedidoId").value = pedidoId;
+    document.getElementById("entregaResponsavelNome").value = sigeDB.getUserName() || sigeDB.getRoleFormatted();
+
+    let pecasText = "";
+    if (ped.tipoItem === "kit_completo") {
+        pecasText = `Kit Completo (${ped.estacao === 'verao' ? 'Verão: 2 camisetas, 2 bermudas' : 'Inverno: 2 camisetas, 2 calças, 1 moleton'})`;
+    } else {
+        pecasText = `Peças Avulsas (${(ped.pecasAvulsas || []).join(', ')})`;
+    }
+
+    const infoBody = document.getElementById("entregaModalInfoBody");
+    if (infoBody) {
+        infoBody.innerHTML = `
+            <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
+                <div style="font-weight:900; font-size:1rem; color:#0f172a;">${ped.aluno}</div>
+                <div style="font-size:0.82rem; color:#475569; margin-top:2px;">
+                    <strong>Turma:</strong> ${ped.turma} | <strong>Tamanho:</strong> ${ped.tamanho} (${ped.genero || 'Unissex'})
+                </div>
+                <div style="font-size:0.82rem; color:#0284c7; margin-top:4px; font-weight:700;">
+                    ${pecasText}
+                </div>
+            </div>
+        `;
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeConfirmarEntregaModal() {
+    const modal = document.getElementById("modalConfirmarEntregaUniforme");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarEntregaUniforme(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("entregaPedidoId").value;
+    const responsavel = document.getElementById("entregaResponsavelNome").value.trim();
+    const darBaixa = document.getElementById("entregaDarBaixaEstoque").checked;
+
+    try {
+        const ped = sigeDB.darBaixaEntregaUniforme(id, responsavel, darBaixa);
+        closeConfirmarEntregaModal();
+        renderModuleUniformes();
+        showToast(`🎉 Entrega confirmada com sucesso para ${ped.aluno}!`);
+    } catch (err) {
+        showToast(`❌ Erro ao registrar entrega: ${err.message}`);
+    }
+}
+
+function cancelarPedidoUniformeAction(id) {
+    if (!confirm("Deseja realmente cancelar este pedido de uniforme?")) return;
+    sigeDB.cancelarPedidoUniforme(id);
+    renderModuleUniformes();
+    showToast("Pedido de uniforme cancelado.");
+}
+
+function limparFiltrosUniformes() {
+    if (document.getElementById("filterUniSearch")) document.getElementById("filterUniSearch").value = "";
+    if (document.getElementById("filterUniTurma")) document.getElementById("filterUniTurma").value = "todas";
+    if (document.getElementById("filterUniStatus")) document.getElementById("filterUniStatus").value = "todos";
+    if (document.getElementById("filterUniMotivo")) document.getElementById("filterUniMotivo").value = "todos";
+    if (document.getElementById("filterUniDataInicio")) document.getElementById("filterUniDataInicio").value = "";
+    if (document.getElementById("filterUniDataFim")) document.getElementById("filterUniDataFim").value = "";
+    renderTabelaPedidosUniformes();
+}
+
+// ------------------------------------------
+// RELAÇÃO E IMPRESSÃO DE ENTREGAS POR TURMA
+// ------------------------------------------
+
+function openModalRelacaoEntregaTurma() {
+    populaDropdownTurmasUniformes();
+    const modal = document.getElementById("modalRelacaoEntregaTurma");
+    if (!modal) return;
+
+    renderPreviewRelacaoEntregaTurma();
+    modal.style.display = "flex";
+}
+
+function closeRelacaoEntregaTurmaModal() {
+    const modal = document.getElementById("modalRelacaoEntregaTurma");
+    if (modal) modal.style.display = "none";
+}
+
+function renderPreviewRelacaoEntregaTurma() {
+    const area = document.getElementById("areaPrintRelacaoEntregaTurma");
+    if (!area) return;
+
+    const turmaFiltro = document.getElementById("relacaoSelectTurma")?.value || "todas";
+    const statusFiltro = document.getElementById("relacaoSelectStatus")?.value || "todos";
+
+    let pedidos = sigeDB.getPedidosUniformes() || [];
+
+    if (turmaFiltro !== "todas") {
+        pedidos = pedidos.filter(p => p.turma === turmaFiltro);
+    }
+
+    if (statusFiltro !== "todos") {
+        pedidos = pedidos.filter(p => p.status === statusFiltro);
+    } else {
+        pedidos = pedidos.filter(p => p.status === "disponivel_estoque" || p.status === "entregue" || p.status === "enviado_sme");
+    }
+
+    pedidos.sort((a, b) => (a.aluno || "").localeCompare(b.aluno || ""));
+
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const tituloTurma = turmaFiltro === "todas" ? "Consolidado de Turmas" : `Turma ${turmaFiltro}`;
+
+    let rowsHtml = "";
+    if (pedidos.length === 0) {
+        rowsHtml = `
+            <tr>
+                <td colspan="6" style="text-align:center; padding:1.5rem; color:#94a3b8;">
+                    Nenhum pedido de uniforme localizado para os critérios da turma selecionada.
+                </td>
+            </tr>
+        `;
+    } else {
+        pedidos.forEach((p, idx) => {
+            let descPecas = "";
+            if (p.tipoItem === "kit_completo") {
+                descPecas = `Kit Completo (${p.estacao === 'verao' ? 'Verão' : 'Inverno'})`;
+            } else {
+                descPecas = (p.pecasAvulsas || []).join(", ");
+            }
+
+            const dataEnt = p.dataEntregaAluno ? p.dataEntregaAluno.split("-").reverse().join("/") : "";
+            const assinaCol = p.status === "entregue" 
+                ? `<span style="color:#15803d; font-weight:800; font-size:0.75rem;">✅ Entregue em ${dataEnt}</span>` 
+                : `<div style="border-bottom:1px solid #475569; width:100%; height:24px;"></div>`;
+
+            rowsHtml += `
+                <tr style="border-bottom:1px solid #cbd5e1;">
+                    <td style="padding:8px; text-align:center; font-weight:700;">${idx + 1}</td>
+                    <td style="padding:8px; font-weight:800; color:#0f172a;">${p.aluno}</td>
+                    <td style="padding:8px; font-weight:700; color:#334155;">${p.turma}</td>
+                    <td style="padding:8px; text-align:center; font-weight:900; color:#0284c7;">Tam ${p.tamanho}</td>
+                    <td style="padding:8px; font-size:0.8rem; color:#475569;">${descPecas}</td>
+                    <td style="padding:8px; min-width:220px; text-align:center;">${assinaCol}</td>
+                </tr>
+            `;
+        });
+    }
+
+    area.innerHTML = `
+        <div style="text-align:center; margin-bottom:1.2rem; border-bottom:2px solid #0f172a; padding-bottom:10px;">
+            <h2 style="margin:0; font-size:1.3rem; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+            <h4 style="margin:4px 0 0 0; font-size:1rem; color:#475569; font-weight:800;">RELAÇÃO DE ENTREGA DE UNIFORME ESCOLAR — ${tituloTurma.toUpperCase()}</h4>
+            <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">Emissão em: ${dataHoje} | Via Oficial de Distribuição & Assinatura de Recebimento</div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+            <thead>
+                <tr style="background:#f1f5f9; color:#0f172a;">
+                    <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center; width:40px;">#</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a;">Nome Completo do Aluno</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a;">Turma</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center;">Tamanho</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a;">Itens / Composição</th>
+                    <th style="padding:8px; border-bottom:2px solid #0f172a; text-align:center;">Assinatura do Aluno / Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>
+
+        <div style="margin-top:2.5rem; display:flex; justify-content:space-around; text-align:center; font-size:0.78rem; color:#475569;">
+            <div>
+                ___________________________________________________<br>
+                <strong>Responsável pela Entrega / Servidor</strong>
+            </div>
+            <div>
+                ___________________________________________________<br>
+                <strong>Visto da Secretaria Escolar / Direção</strong>
+            </div>
+        </div>
+    `;
+}
+
+function imprimirFolhaRelacaoEntrega() {
+    const content = document.getElementById("areaPrintRelacaoEntregaTurma")?.innerHTML;
+    if (!content) return;
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Relação de Entrega de Uniforme Escolar — C.E. Pedro Rizzi</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #0f172a; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 13px; }
+                th { background-color: #f1f5f9; }
+                @media print {
+                    @page { margin: 15mm; size: portrait; }
+                }
+            </style>
+        </head>
+        <body>
+            ${content}
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
+function imprimirTermoIndividualUniforme(pedidoId) {
+    const ped = (sigeDB.getPedidosUniformes() || []).find(p => p.id === pedidoId);
+    if (!ped) return;
+
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const dataSolFmt = ped.dataSolicitacao ? ped.dataSolicitacao.split("-").reverse().join("/") : dataHoje;
+
+    let descItens = "";
+    if (ped.tipoItem === "kit_completo") {
+        descItens = `01 Kit Completo de Uniforme Escolar (${ped.estacao === 'verao' ? 'Verão' : 'Inverno'}) — Tamanho ${ped.tamanho}`;
+    } else {
+        const pecas = (ped.pecasAvulsas || []).join(", ");
+        descItens = `Peça(s) Avulsa(s): ${pecas} — Tamanho ${ped.tamanho}`;
+    }
+
+    const win = window.open("", "_blank", "width=800,height=650");
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Termo de Recebimento de Uniforme — ${ped.aluno}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #0f172a; line-height: 1.6; }
+                .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+                .box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: #f8fafc; }
+                .sign-line { margin-top: 60px; text-align: center; font-size: 13px; }
+                @media print { @page { margin: 20mm; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                <h4 style="margin:5px 0 0 0; font-size:15px; color:#334155;">TERMO DE RECEBIMENTO DE UNIFORME ESCOLAR</h4>
+                <div style="font-size:12px; color:#64748b;">Itajaí / SC — Secretaria Escolar</div>
+            </div>
+
+            <p>Declaramos que o(a) estudante abaixo discriminado(a) recebeu da escola os itens de uniforme escolar especificados:</p>
+
+            <div class="box">
+                <p style="margin:4px 0;"><strong>Nome do Aluno:</strong> ${ped.aluno}</p>
+                <p style="margin:4px 0;"><strong>Turma:</strong> ${ped.turma} | <strong>Gênero/Modelo:</strong> ${ped.genero || 'Unissex'}</p>
+                <p style="margin:4px 0;"><strong>Data da Solicitação:</strong> ${dataSolFmt}</p>
+                <p style="margin:4px 0;"><strong>Motivo:</strong> ${ped.motivoDesc || ped.motivo}</p>
+                <p style="margin:4px 0; font-size:15px; color:#0284c7;"><strong>Itens Entregues:</strong> ${descItens}</p>
+            </div>
+
+            <p style="font-size:13px; color:#475569;">
+                O responsável se compromete a zelar pela conservação e uso adequado do uniforme durante as atividades escolares do estudante.
+            </p>
+
+            <div style="margin-top: 40px; font-size:13px; text-align:right;">
+                Itajaí (SC), ${dataHoje}.
+            </div>
+
+            <div class="sign-line">
+                _________________________________________________________<br>
+                <strong>Assinatura do Aluno ou Responsável Legal</strong>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
 

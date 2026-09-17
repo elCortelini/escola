@@ -64,6 +64,18 @@ const defaultSystems = [
         isLive: false
     },
     {
+        id: "uniformes",
+        title: "Controle de Uniformes",
+        iconClass: "fa-solid fa-shirt",
+        bgClass: "icon-blue",
+        tag: "LOGÍSTICA & ENTREGAS",
+        description: "Gestão de pedidos de uniformes, remessas para a SME, estoque local e emissão de listas de entrega por turma com assinatura.",
+        url: "sistema-gestao.html?aba=uniformes",
+        status: "online",
+        badge: "NOVO MÓDULO",
+        isLive: true
+    },
+    {
         id: "patrimonio",
         title: "Sistema de Patrimônio",
         iconClass: "fa-solid fa-boxes-stacked",
