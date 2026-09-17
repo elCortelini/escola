@@ -1116,7 +1116,19 @@ class SigeDatabase {
                     const remoteData = doc.data();
                     if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
                         this.isSyncingFromRemote = true;
+
+                        const localDeletedOPIds = this.data?.deletedOPIds || [];
+                        const remoteDeletedOPIds = remoteData.deletedOPIds || [];
+                        const combinedDeletedIds = Array.from(new Set([...localDeletedOPIds, ...remoteDeletedOPIds]));
+
                         this.data = { ...defaultSigeData, ...this.data, ...remoteData };
+                        this.data.deletedOPIds = combinedDeletedIds;
+
+                        if (Array.isArray(this.data.agendamentosOP) && combinedDeletedIds.length > 0) {
+                            const delSet = new Set(combinedDeletedIds);
+                            this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !delSet.has(a.id));
+                        }
+
                         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
                         this.isSyncingFromRemote = false;
                         this.hasLoadedRemote = true;
@@ -1461,6 +1473,13 @@ class SigeDatabase {
                     addedNew = true;
                 }
             });
+            if (deletedSet.size > 0) {
+                const initLen = this.data.agendamentosOP.length;
+                this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !deletedSet.has(a.id));
+                if (this.data.agendamentosOP.length !== initLen) {
+                    addedNew = true;
+                }
+            }
             if (addedNew) {
                 this.saveData(this.data);
             }
@@ -1478,14 +1497,10 @@ class SigeDatabase {
             this.data.deletedOPIds.push(id);
         }
         let list = this.getAgendamentosOP();
-        const initialLen = list.length;
         this.data.agendamentosOP = list.filter(a => a.id !== id);
-        if (this.data.agendamentosOP.length < initialLen) {
-            this.saveData(this.data);
-            this.logAuditEvent("Orientação", `Excluído agendamento ${id}`, "Orientação");
-            return true;
-        }
-        return false;
+        this.saveData(this.data);
+        this.logAuditEvent("Orientação", `Excluído agendamento ${id}`, "Orientação");
+        return true;
     }
 
     deleteAgendamento(id) {
