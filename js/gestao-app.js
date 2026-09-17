@@ -3287,6 +3287,18 @@ function openDirectCustomWhatsApp() {
     window.open(`https://wa.me/${waNum}?text=${msgText}`, '_blank');
 }
 
+function confirmarLimparAlunosImportados() {
+    if (confirm("⚠️ Tem certeza que deseja EXCLUIR TODOS OS ALUNOS da base de dados?\n\nOs alunos passarão a ser digitados manualmente em cada agendamento.")) {
+        sigeDB.clearAlunosImportados();
+        updateAlunosDatalist();
+        showToast("🗑️ Todos os alunos cadastrados na base foram excluídos com sucesso!", "success");
+        setTimeout(() => {
+            renderModuleOrientacaoPedagogica();
+            if (typeof renderModuleAdministracao === "function") renderModuleAdministracao();
+        }, 50);
+    }
+}
+
 window.imprimirAtendimentosDoDia = imprimirAtendimentosDoDia;
 window.abrirVisaoDetalhadaDoDia = abrirVisaoDetalhadaDoDia;
 window.closeVisaoDetalhadaDiaModal = closeVisaoDetalhadaDiaModal;
@@ -3297,6 +3309,7 @@ window.updateAlunosDatalist = updateAlunosDatalist;
 window.autoCompleteAlunoData = autoCompleteAlunoData;
 window.selectModalPhone = selectModalPhone;
 window.onTelefoneInputChange = onTelefoneInputChange;
+window.confirmarLimparAlunosImportados = confirmarLimparAlunosImportados;
 
 // MODAL AGENDAMENTO OE
 function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNome = "") {

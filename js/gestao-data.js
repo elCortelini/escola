@@ -1090,6 +1090,9 @@ const defaultSigeData = {
 class SigeDatabase {
     constructor() {
         this.data = this.loadLocalOnly();
+        this.data.alunosImportados = [];
+        this.data.pdfImportMeta = null;
+        this.saveData(this.data);
         this.fbApp = null;
         this.firestore = null;
         this.isSyncingFromRemote = false;
@@ -1444,6 +1447,13 @@ class SigeDatabase {
             this.data.alunosImportados = [];
         }
         return this.data.alunosImportados;
+    }
+
+    clearAlunosImportados() {
+        if (!this.data) this.data = {};
+        this.data.alunosImportados = [];
+        this.data.pdfImportMeta = null;
+        this.saveData(this.data);
     }
 
     getLastPdfImportMeta() {
