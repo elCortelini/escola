@@ -731,6 +731,12 @@ body {
     border-color: #cbd5e1;
 }
 
+.system-card:active {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    transition: all 0.1s ease;
+}
+
 .card-top-bar {
     display: flex;
     justify-content: space-between;

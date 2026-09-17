@@ -125,22 +125,22 @@ function loadSystems() {
 
         const card = document.createElement('div');
         card.className = `system-card ${sys.isLive ? 'featured' : (sys.isCustom ? 'custom-system-card' : '')}`;
-        
+        card.style.cursor = 'pointer';
+
+        // Clique no card inteiro navega para o sistema
+        card.addEventListener('click', function() {
+            if (finalUrl && finalUrl !== '#') {
+                if (isExternal || (!sys.isLive && isConfigured)) {
+                    window.open(finalUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                    window.location.href = finalUrl;
+                }
+            }
+        });
+
         card.innerHTML = `
             <div>
-                <div class="card-top-bar">
-                    <div class="card-tag-subtitle">${sys.tag}</div>
-                    ${sys.isCustom ? `
-                        <span class="badge-tag-card b-live" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">
-                            <span class="b-live-dot" style="background:#9333ea;"></span>CUSTOMIZADO
-                        </span>
-                    ` : (sys.isLive ? 
-                        `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>${sys.badge}</span>` : 
-                        (isConfigured ? `<span class="badge-tag-card b-live"><span class="b-live-dot"></span>ATIVO</span>` : `<span class="badge-tag-card b-config">${sys.badge}</span>`)
-                    )}
-                </div>
-
-                <!-- BANDERIA / CONTAINER COM ÍCONE GIGANTE -->
+                <!-- ÍCONE GIGANTE -->
                 <div class="giant-icon-wrapper ${sys.bgClass || 'theme-emerald'}">
                     <i class="${sys.iconClass || 'fa-solid fa-cubes'}"></i>
                 </div>
@@ -148,14 +148,11 @@ function loadSystems() {
                 <h4 class="card-title">${sys.title}</h4>
                 <p class="card-desc">${sys.description}</p>
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px; margin-top: auto;">
-                <a href="${finalUrl}" ${targetAttr} class="btn ${sys.isLive ? 'btn-live' : (isConfigured ? 'btn-primary' : 'btn-secondary')}">
-                    ${sys.isLive ? `Acessar Módulo ${linkIcon}` : (isConfigured ? `Acessar Sistema ${linkIcon}` : 'Em Breve (Configurar Link)')}
-                </a>
-                ${sys.isCustom ? `
-                    <button onclick="deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
-                ` : ''}
-            </div>
+            ${sys.isCustom ? `
+                <div style="display:flex; flex-direction:column; gap:6px; margin-top: auto;">
+                    <button onclick="event.stopPropagation(); deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
+                </div>
+            ` : ''}
         `;
         
         grid.appendChild(card);
