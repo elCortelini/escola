@@ -2295,24 +2295,50 @@ function enviarMensagemPersonalizadaWhatsApp(e) {
 }
 
 function dispararLembretesDoDiaAutomated() {
+    const filterSelect = document.getElementById("opFilterOrientadora");
+    const filterVal = filterSelect ? filterSelect.value : "todas";
+    let filterText = "Visão Consolidada (Todas as Orientadoras)";
+    if (filterSelect && filterSelect.options && filterSelect.selectedIndex >= 0) {
+        filterText = filterSelect.options[filterSelect.selectedIndex].text;
+    }
+
     const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
     const hojeIso = new Date().toISOString().split("T")[0];
-    const atendimentosHoje = todosAtendimentos.filter(a => a.data === hojeIso && a.statusSecretaria !== "cancelado");
+    
+    const atendimentosHoje = todosAtendimentos.filter(a => 
+        a.data === hojeIso && 
+        a.statusSecretaria !== "cancelado" && 
+        matchOrientadora(a, filterVal)
+    );
 
     if (atendimentosHoje.length === 0) {
-        showToast("Nenhum agendamento cadastrado para hoje para disparar lembretes.", "info");
+        if (filterVal !== "todas") {
+            const shortName = filterVal.split(" ")[0];
+            showToast(`Nenhum agendamento ativo cadastrado para HOJE para a orientadora ${shortName}.`, "info");
+        } else {
+            showToast("Nenhum agendamento cadastrado para hoje para disparar lembretes.", "info");
+        }
         return;
     }
 
-    renderListLembretesHoje(atendimentosHoje);
+    renderListLembretesHoje(atendimentosHoje, filterVal, filterText);
 
     const modal = document.getElementById("modalDispararLembretesHoje");
     if (modal) modal.style.display = "flex";
 }
 
-function renderListLembretesHoje(atendimentosHoje) {
+function renderListLembretesHoje(atendimentosHoje, filterVal = "todas", filterText = "") {
     const container = document.getElementById("listaLembretesHojeContainer");
     if (!container) return;
+
+    const subTitleEl = document.getElementById("modalDispararLembretesSubTitle");
+    if (subTitleEl) {
+        if (filterVal !== "todas" && filterText) {
+            subTitleEl.innerHTML = `Filtro de Orientadora: <strong style="color:#166534;">${escapeHtml(filterText)}</strong> — Selecione os atendimentos e telefones para envio.`;
+        } else {
+            subTitleEl.innerText = "Selecione quais atendimentos devem receber o lembrete e escolha o telefone preferencial de cada aluno.";
+        }
+    }
 
     const alunosImportados = sigeDB.getAlunosImportados() || [];
     const chkSelectAll = document.getElementById("chkLembreteSelectAll");
