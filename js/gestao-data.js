@@ -122,11 +122,20 @@ const defaultSigeData = {
         }
     ],
     estoqueUniformes: {
-        "camiseta": { "8": 2, "10": 4, "12": 1, "14": 0, "16": 3, "P": 2, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-        "bermuda": { "8": 1, "10": 2, "12": 0, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-        "calca": { "8": 3, "10": 1, "12": 2, "14": 0, "16": 1, "P": 0, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-        "moleton": { "8": 0, "10": 2, "12": 1, "14": 0, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-        "jaqueta": { "8": 1, "10": 0, "12": 1, "14": 1, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+        masculino: {
+            "camiseta": { "8": 2, "10": 4, "12": 1, "14": 0, "16": 3, "P": 2, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "bermuda": { "8": 1, "10": 2, "12": 0, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "calca": { "8": 3, "10": 1, "12": 2, "14": 0, "16": 1, "P": 0, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "moleton": { "8": 0, "10": 2, "12": 1, "14": 0, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "jaqueta": { "8": 1, "10": 0, "12": 1, "14": 1, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+        },
+        feminino: {
+            "camiseta": { "8": 1, "10": 3, "12": 2, "14": 1, "16": 1, "P": 1, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "bermuda": { "8": 1, "10": 1, "12": 1, "14": 0, "16": 1, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "calca": { "8": 2, "10": 2, "12": 1, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "moleton": { "8": 1, "10": 1, "12": 0, "14": 0, "16": 1, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "jaqueta": { "8": 0, "10": 1, "12": 1, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+        }
     },
     agendamentosOP: [
         // Clarinda Rosa Pereira (Séries Iniciais: 1º ao 5º Anos) - 5 Atendimentos na Semana (07/09 a 11/09)
@@ -1183,9 +1192,6 @@ const defaultSigeData = {
 class SigeDatabase {
     constructor() {
         this.data = this.loadLocalOnly();
-        this.data.alunosImportados = [];
-        this.data.pdfImportMeta = null;
-        this.saveData(this.data);
         this.fbApp = null;
         this.firestore = null;
         this.isSyncingFromRemote = false;
