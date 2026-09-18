@@ -2,332 +2,278 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Confirmação de Presença | CE Pedro Rizzi</title>
-
-    <!-- Tailwind CSS CDN & FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            min-height: 100vh;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:"Plus Jakarta Sans",sans-serif;background:linear-gradient(160deg,#0f172a 0%,#064e3b 60%,#065f46 100%);min-height:100vh;min-height:100dvh;display:flex;align-items:flex-start;justify-content:center;padding:20px 16px 40px}
+        .page-wrap{width:100%;max-width:420px}
+        .header{text-align:center;padding:24px 0 20px}
+        .header-icon{width:68px;height:68px;background:linear-gradient(135deg,#10b981,#059669);border-radius:20px;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;box-shadow:0 8px 24px rgba(5,150,105,.45);margin-bottom:14px}
+        .header h1{font-size:1.15rem;font-weight:900;color:#fff;line-height:1.25}
+        .header p{font-size:.78rem;font-weight:700;color:#6ee7b7;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
+        .card{background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+        .state{padding:32px 24px}
+        .hidden{display:none!important}
+        #loadingState{text-align:center;padding:60px 24px}
+        .spinner{width:52px;height:52px;border:4px solid #e2e8f0;border-top-color:#10b981;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        #errorState{text-align:center;padding:48px 24px}
+        .icon-circle{width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px}
+        .icon-red{background:#fee2e2;color:#dc2626}
+        .icon-amber{background:#fef3c7;color:#d97706}
+        #appointmentState{padding:0}
+        .appt-header{padding:20px 22px 16px;border-bottom:1.5px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .badge-status{font-size:.7rem;font-weight:800;padding:5px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+        .badge-wait{background:#fef3c7;color:#92400e}
+        .badge-ok{background:#d1fae5;color:#065f46}
+        .badge-done{background:#dbeafe;color:#1e40af}
+        .appt-body{padding:20px 22px}
+        .student-name{font-size:1.45rem;font-weight:900;color:#0f172a;line-height:1.2;margin-bottom:3px}
+        .student-turma{font-size:.75rem;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.4px;margin-bottom:18px}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+        .info-box{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 14px 12px}
+        .info-label{font-size:.68rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px}
+        .info-value{font-size:1rem;font-weight:900;color:#0f172a}
+        .info-row{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:16px;padding:14px 16px;margin-bottom:10px}
+        .info-row-label{font-size:.68rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px}
+        .info-row-value{font-size:.97rem;font-weight:800;color:#0f172a}
+        .location-row{display:flex;align-items:center;gap:8px;background:#f8fafc;border-radius:12px;padding:10px 14px;font-size:.8rem;color:#64748b;font-weight:600;margin-bottom:4px}
+        .action-area{padding:16px 22px 24px}
+        .btn-confirm{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:1.15rem;font-weight:900;padding:20px 24px;border:none;border-radius:20px;box-shadow:0 8px 24px rgba(5,150,105,.40);cursor:pointer;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;letter-spacing:.3px;margin-bottom:10px;font-family:inherit}
+        .btn-confirm:active{transform:scale(.97);box-shadow:0 4px 12px rgba(5,150,105,.30)}
+        .btn-confirm i{font-size:1.4rem}
+        .btn-cancel{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#f1f5f9;color:#64748b;font-size:.92rem;font-weight:700;padding:15px 24px;border:none;border-radius:16px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;font-family:inherit}
+        .btn-cancel:active{background:#e2e8f0}
+        .cancel-form{display:none;margin-top:14px;padding-top:16px;border-top:1.5px dashed #e2e8f0}
+        .cancel-form.open{display:block}
+        .cancel-form label{font-size:.8rem;font-weight:700;color:#475569;display:block;margin-bottom:8px}
+        .cancel-form textarea{width:100%;padding:12px 14px;border:1.5px solid #cbd5e1;border-radius:14px;font-size:.88rem;font-family:inherit;color:#0f172a;resize:none;margin-bottom:10px;outline:none}
+        .cancel-form textarea:focus{border-color:#10b981}
+        .cancel-btns{display:flex;gap:8px}
+        .btn-send-cancel{flex:1;background:#ef4444;color:#fff;font-weight:800;font-size:.88rem;padding:13px;border:none;border-radius:14px;cursor:pointer;font-family:inherit}
+        .btn-back{background:#e2e8f0;color:#475569;font-weight:700;font-size:.88rem;padding:13px 18px;border:none;border-radius:14px;cursor:pointer;font-family:inherit}
+        #successState,#cancelledState{text-align:center;padding:44px 28px}
+        .success-icon{font-size:4.5rem;color:#10b981;margin-bottom:16px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+        @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+        .success-title{font-size:1.5rem;font-weight:900;color:#0f172a;margin-bottom:8px}
+        .success-desc{font-size:.9rem;color:#64748b;font-weight:600;line-height:1.55;margin-bottom:20px}
+        .success-note{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:16px;padding:14px 16px;font-size:.8rem;font-weight:700;color:#065f46}
+        .footer{text-align:center;padding:20px 0 8px;font-size:.72rem;color:rgba(255,255,255,.35);font-weight:600}
+        h3{font-size:1.1rem;font-weight:900;color:#0f172a}
+        p.sub{font-size:.85rem;color:#64748b;font-weight:600;line-height:1.5;margin-top:6px}
     </style>
 </head>
-<body class="flex items-center justify-center p-4 min-h-screen text-slate-800">
-
-    <div class="max-w-md w-full my-auto">
-        <!-- Cabeçalho Institucional -->
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600 text-white text-3xl font-black shadow-lg shadow-emerald-900/40 mb-3">
-                <i class="fa-solid fa-school"></i>
-            </div>
-            <h1 class="text-2xl font-black text-white tracking-tight">Centro Educacional Pedro Rizzi</h1>
-            <p class="text-emerald-400 font-bold text-sm mt-1 uppercase tracking-wider"><i class="fa-solid fa-heart-pulse"></i> Orientação Educacional</p>
+<body>
+<div class="page-wrap">
+    <div class="header">
+        <div class="header-icon"><i class="fa-solid fa-school"></i></div>
+        <h1>C.E. Pedro Rizzi</h1>
+        <p><i class="fa-solid fa-heart-pulse"></i> Orientação Educacional</p>
+    </div>
+    <div class="card">
+        <!-- Estado 1: Carregando -->
+        <div id="loadingState">
+            <div class="spinner"></div>
+            <p style="font-weight:700;color:#64748b;font-size:.9rem;text-align:center;margin-top:0;">Localizando agendamento...</p>
         </div>
-
-        <!-- Card Principal -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            
-            <!-- Estado 1: Carregando -->
-            <div id="loadingState" class="py-12 text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mb-4"></div>
-                <p class="font-bold text-slate-600">Localizando agendamento...</p>
-            </div>
-
-            <!-- Estado 2: Erro / Não encontrado -->
-            <div id="errorState" class="hidden py-8 text-center">
-                <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <h3 class="text-lg font-black text-slate-900 mb-2">Agendamento Não Localizado</h3>
-                <p class="text-slate-600 text-sm mb-6" id="errorMessage">O código de atendimento não é válido ou o agendamento já foi finalizado.</p>
-                <div class="p-4 bg-slate-100 rounded-2xl text-xs text-slate-500">
-                    Se você possui dúvidas, entre em contato diretamente com a Secretaria Escolar do CE Pedro Rizzi.
-                </div>
-            </div>
-
-            <!-- Estado 3: Agendamento Encontrado -->
-            <div id="appointmentState" class="hidden">
-                <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
-                    <div>
-                        <span class="text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
-                            <i class="fa-solid fa-calendar-check"></i> Atendimento Agendado
-                        </span>
-                    </div>
-                    <div id="statusBadgeContainer">
-                    </div>
-                </div>
-
-                <!-- Dados do Estudante e Atendimento -->
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Estudante</p>
-                        <h2 id="dispAluno" class="text-xl font-black text-slate-900 leading-tight">--</h2>
-                        <p id="dispTurma" class="text-xs font-bold text-emerald-700 mt-0.5">Turma: --</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                        <div>
-                            <p class="text-xs font-bold text-slate-500 uppercase"><i class="fa-solid fa-calendar-day text-emerald-600"></i> Data</p>
-                            <p id="dispData" class="font-extrabold text-slate-900 text-sm mt-0.5">--</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-500 uppercase"><i class="fa-solid fa-clock text-emerald-600"></i> Horário</p>
-                            <p id="dispHorario" class="font-extrabold text-slate-900 text-sm mt-0.5">--</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y=2 text-sm text-slate-700 bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100">
-                        <div class="flex items-start gap-2.5">
-                            <i class="fa-solid fa-user-tie text-emerald-600 mt-1"></i>
-                            <div>
-                                 <span class="font-bold text-xs text-slate-500 uppercase block">Orientadora Educacional</span>
-                                 <span id="dispOrientadora" class="font-extrabold text-slate-900">--</span>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2.5 pt-2 border-t border-emerald-100">
-                            <i class="fa-solid fa-user text-emerald-600 mt-1"></i>
-                            <div>
-                                 <span class="font-bold text-xs text-slate-500 uppercase block">Responsável Convocado(a)</span>
-                                 <span id="dispResponsavel" class="font-extrabold text-slate-900">--</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-xs text-slate-500 flex items-start gap-2 bg-slate-100 p-3 rounded-xl">
-                        <i class="fa-solid fa-location-dot text-slate-400 mt-0.5"></i>
-                        <span><strong>Local:</strong> Sala da Orientação Educacional - CE Pedro Rizzi</span>
-                    </div>
-                </div>
-
-                <!-- Form de Ação -->
-                <div id="actionForm" class="space-y-3">
-                    <button id="btnConfirmar" onclick="confirmarPresenca()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-4 px-6 rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 text-base cursor-pointer">
-                        <i class="fa-solid fa-circle-check text-xls"></i>
-                        <span>CONFIRMAR MINHA PRESENÇA</span>
-                    </button>
-
-                    <button id="btnCancelar" onclick="toggleFormCancelamento()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-circle-xmark text-slate-400"></i>
-                        <span>Não poderei comparecer</span>
-                    </button>
-                </div>
-
-                <!-- Sub-Form de Cancelamento / Reagendamento -->
-                <div id="cancelFormContainer" class="hidden mt-4 pt-4 border-t border-slate-200">
-                    <label class="block text-xs font-bold text-slate-700 mb-2">Informe o motivo ou solicite reagendamento:</label>
-                    <textarea id="txtMotivoCancelamento" rows="2" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 mb-3" placeholder="Ex: Preciso reagendar para outro dia devido a compromisso de trabalho..."></textarea>
-                    
-                    <div class="flex gap-2">
-                        <button onclick="enviarCancelamento()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm cursor-pointer">
-                            Enviar Notificação
-                        </button>
-                        <button onclick="toggleFormCancelamento()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-sm cursor-pointer">
-                            Voltar
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Estado de Sucesso (Congirmação Concluída) -->
-                <div id="successState" class="hidden text-center py-6">
-                    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-slate-900 mb-2">Presença Confirmada!</h3>
-                    <p class="text-slate-600 text-sm mb-6 leading-relaxed">
-                        Agradecemos sua congirmação. A Orientação Educacional do CE Pedro Rizzi aguarda você no dia e horário agendados.
-                    </p>
-                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800">
-                        <i class="fa-solid fa-mobile-screen-button"></i> Esta confirmação jÄ foi atualizada em tempo real no sistema da escola1
-                    </div>
-                </div>
-
-                <!-- Estado de Cancelamento Informado -->
-                <div id="cancelledState" class="hidden text-center py-6">
-                    <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </div>
-                    <h3 class="text-lg font-black text-slate-900 mb-2">Solicitação Registrada</h3>
-                    <p class="text-slate-600 text-sm mb-6 leading-relaxed">
-                        Registramos que você não poderá comparecer. A  equipe de Orientação Educacional entrará em contato para reagendamento.
-                    </p>
-                </div>
-            </div>
+        <!-- Estado 2: Erro -->
+        <div id="errorState" class="state hidden">
+            <div class="icon-circle icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 style="margin-bottom:8px;">Agendamento Não Localizado</h3>
+            <p class="sub" id="errorMessage">O código de atendimento não é válido ou o agendamento já foi finalizado.</p>
+            <div style="margin-top:18px;background:#f8fafc;border-radius:14px;padding:14px;font-size:.8rem;color:#64748b;font-weight:600;line-height:1.5;">Em caso de dúvidas, entre em contato diretamente com a Secretaria Escolar do CE Pedro Rizzi.</div>
         </div>
-
-        <!-- Rodapé -->
-        <div class="text-center mt-6 text-xs text-slate-400 font-medium">
-            Integra Rizzi &copy; 2026 — Centro Educacional Pedro Rizzi
+        <!-- Estado 3: Dados do Agendamento -->
+        <div id="appointmentState" class="hidden">
+            <div class="appt-header">
+                <span style="font-size:.72rem;font-weight:800;color:#10b981;background:#f0fdf4;padding:5px 10px;border-radius:20px;text-transform:uppercase;"><i class="fa-solid fa-calendar-check"></i> Atendimento</span>
+                <div id="statusBadgeContainer"></div>
+            </div>
+            <div class="appt-body">
+                <div class="student-name" id="dispAluno">&mdash;</div>
+                <div class="student-turma" id="dispTurma">Turma: &mdash;</div>
+                <div class="info-grid">
+                    <div class="info-box">
+                        <span class="info-label"><i class="fa-solid fa-calendar-day" style="color:#10b981"></i> Data</span>
+                        <span class="info-value" id="dispData">&mdash;</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label"><i class="fa-solid fa-clock" style="color:#10b981"></i> Horário</span>
+                        <span class="info-value" id="dispHorario">&mdash;</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="fa-solid fa-user-tie"></i> Orientadora</span>
+                    <span class="info-row-value" id="dispOrientadora">&mdash;</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="fa-solid fa-user"></i> Responsável Convocado</span>
+                    <span class="info-row-value" id="dispResponsavel">&mdash;</span>
+                </div>
+                <div class="location-row">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>Sala da Orientação Educacional &mdash; CE Pedro Rizzi</span>
+                </div>
+            </div>
+            <!-- Botões de Ação -->
+            <div class="action-area" id="actionArea">
+                <button id="btnConfirmar" class="btn-confirm" onclick="confirmarPresenca()">
+                    <i class="fa-solid fa-circle-check"></i>CONFIRMAR PRESENÇA
+                </button>
+                <button class="btn-cancel" onclick="toggleCancelForm()">
+                    <i class="fa-solid fa-circle-xmark"></i>Não poderei comparecer
+                </button>
+                <div class="cancel-form" id="cancelForm">
+                    <label>Informe o motivo ou solicite reagendamento:</label>
+                    <textarea id="txtMotivo" rows="3" placeholder="Ex: Tenho compromisso de trabalho, pode reagendar?"></textarea>
+                    <div class="cancel-btns">
+                        <button class="btn-send-cancel" onclick="enviarCancelamento()">Enviar Notificação</button>
+                        <button class="btn-back" onclick="toggleCancelForm()">Voltar</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Sucesso -->
+            <div id="successState" class="hidden">
+                <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="success-title">Presença Confirmada! ✅</div>
+                <p class="success-desc">Agradecemos sua confirmação.<br>A Orientação Educacional do CE Pedro Rizzi aguarda você no dia e horário agendados.</p>
+                <div class="success-note"><i class="fa-solid fa-mobile-screen-button"></i> Sua confirmação já foi registrada em tempo real no sistema da escola.</div>
+            </div>
+            <!-- Cancelamento -->
+            <div id="cancelledState" class="hidden">
+                <div class="icon-circle icon-amber" style="margin:0 auto 16px;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <h3 style="margin-bottom:8px;text-align:center;">Solicitação Registrada</h3>
+                <p class="sub" style="text-align:center;">Registramos que você não poderá comparecer. A equipe de Orientação Educacional entrará em contato para reagendamento.</p>
+            </div>
         </div>
     </div>
+    <div class="footer">Integra Rizzi &copy; 2026 &mdash; Centro Educacional Pedro Rizzi</div>
+</div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
+        authDomain: "sas-cepr.firebaseapp.com",
+        projectId: "sas-cepr",
+        storageBucket: "sas-cepr.firebasestorage.app",
+        messagingSenderId: "145326632209",
+        appId: "1:145326632209:web:58d9e934e4a0bf26bcf0b0"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const urlParams     = new URLSearchParams(window.location.search);
+    const appointmentId = urlParams.get('id');
+    let fullDatabaseData  = null;
+    let targetAppointment = null;
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
-            authDomain: "sas-cepr.firebaseapp.com",
-            projectId: "sas-cepr",
-            storageBucket: "sas-cepr.firebasestorage.app",
-            messagingSenderId: "145326632209",
-            appId: "1:145326632209:web:58d9e934e4a0bf26bcf0b0"
-        };
+    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+    function show(id) { document.getElementById(id).classList.remove('hidden'); }
+    function formatDateBR(s) {
+        if (!s) return '—';
+        const p = s.split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
+    }
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+    async function loadAppointment() {
+        if (!appointmentId) { showError('Link inválido. O identificador do atendimento não foi informado na mensagem.'); return; }
+        try {
+            const doc = await db.collection('sige_pedro_rizzi').doc('database').get();
+            if (!doc.exists) { showError('Banco de dados da escola temporariamente indisponível.'); return; }
+            fullDatabaseData  = doc.data();
+            const agendamentos = fullDatabaseData.agendamentosOP || [];
+            targetAppointment  = agendamentos.find(a => a.id === appointmentId);
+            if (!targetAppointment) { showError('Agendamento não localizado no sistema da escola.'); return; }
+            renderAppointment(targetAppointment);
+        } catch (err) {
+            console.error(err);
+            showError('Erro ao conectar com o servidor da escola. Verifique sua internet e tente novamente.');
         }
-        const db = firebase.firestore();
+    }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const appointmentId = urlParams.get('id');
+    function showError(msg) {
+        hide('loadingState');
+        document.getElementById('errorMessage').innerText = msg;
+        show('errorState');
+    }
 
-        let fullDatabaseData = null;
-        let targetAppointment = null;
+    function renderAppointment(ag) {
+        hide('loadingState');
+        show('appointmentState');
+        document.getElementById('dispAluno').innerText       = ag.aluno       || 'Estudante';
+        document.getElementById('dispTurma').innerText       = 'Turma: ' + (ag.turma || '—');
+        document.getElementById('dispData').innerText        = formatDateBR(ag.data);
+        document.getElementById('dispHorario').innerText     = ag.horario     || '—';
+        document.getElementById('dispOrientadora').innerText = ag.orientadora || 'Orientação Educacional';
+        document.getElementById('dispResponsavel').innerText = ag.responsavel || '—';
+        const badge = document.getElementById('statusBadgeContainer');
+        const st    = ag.statusSecretaria;
+        if (st === 'confirmado' || st === 'confirmado_whatsapp') {
+            badge.innerHTML = '<span class="badge-status badge-ok"><i class="fa-solid fa-circle-check"></i> Confirmado</span>';
+            hide('actionArea'); show('successState');
+        } else if (st === 'realizado') {
+            badge.innerHTML = '<span class="badge-status badge-done"><i class="fa-solid fa-check-double"></i> Realizado</span>';
+            hide('actionArea');
+        } else if (st === 'cancelado') {
+            badge.innerHTML = '<span class="badge-status badge-wait"><i class="fa-solid fa-clock-rotate-left"></i> Reagendamento Solicitado</span>';
+            hide('actionArea'); show('cancelledState');
+        } else {
+            badge.innerHTML = '<span class="badge-status badge-wait"><i class="fa-solid fa-hourglass-half"></i> Aguardando</span>';
+        }
+    }
 
-        function formatDateBR(dateStr) {
-            if (! dateStr) return "-";
-            const parts = dateStr.split("-");
-            if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    async function confirmarPresenca() {
+        if (!fullDatabaseData || !targetAppointment) return;
+        const btn = document.getElementById('btnConfirmar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Confirmando...';
+        try {
+            const ags = fullDatabaseData.agendamentosOP || [];
+            const idx = ags.findIndex(a => a.id === appointmentId);
+            if (idx !== -1) {
+                ags[idx].statusSecretaria = 'confirmado_whatsapp';
+                ags[idx].obsSecretaria    = '🟢 Presença confirmada pelo responsável via link do WhatsApp';
+                ags[idx].confirmadoEm     = new Date().toISOString();
+                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                hide('actionArea');
+                show('successState');
             }
-            return dateStr;
+        } catch (e) {
+            console.error(e);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> CONFIRMAR PRESENÇA';
+            alert('Erro ao registrar confirmação. Verifique sua conexão com a internet.');
         }
+    }
 
-        async function loadAppointment() {
-            if (!appointmentId) {
-                showError("Link inv&aacute;lido. O identificador do atendimento não foi informado na mensagem.");
-                return;
+    function toggleCancelForm() {
+        document.getElementById('cancelForm').classList.toggle('open');
+    }
+
+    async function enviarCancelamento() {
+        if (!fullDatabaseData || !targetAppointment) return;
+        const motivo = document.getElementById('txtMotivo').value.trim();
+        try {
+            const ags = fullDatabaseData.agendamentosOP || [];
+            const idx = ags.findIndex(a => a.id === appointmentId);
+            if (idx !== -1) {
+                ags[idx].statusSecretaria   = 'cancelado';
+                ags[idx].obsSecretaria      = 'Responsável informou via WhatsApp que não poderá comparecer. Motivo: ' + (motivo || 'Não informado');
+                ags[idx].canceladoViaLinkEm = new Date().toISOString();
+                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                hide('actionArea');
+                show('cancelledState');
             }
-
-            try {
-                const docRef = db.collection("sige_pedro_rizzi").doc("database");
-                const doc = await docRef.get();
-
-                if (!doc.exists) {
-                    showError("Banco de dados da escola temporariamente indisponável.");
-                    return;
-                }
-
-                fullDatabaseData = doc.data();
-                const agendamentos = fullDatabaseData.agendamentosOP || [];
-                targetAppointment = agendamentos.find(a => a.id === appointmentId);
-
-                if (!targetAppointment) {
-                    showError("Agendamento não localizado no sistema da escola.");
-                    return;
-                }
-
-                renderAppointment(targetAppointment);
-            } catch (err) {
-                console.error("Erro Firebase:", err);
-                showError("Erro ao conectar com o servidor da escola. Tente novamente.");
-            }
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao enviar notificação. Verifique sua conexão com a internet.');
         }
+    }
 
-        function showError(msg) {
-            document.getElementById("loadingState").classList.add("hidden");
-            document.getElementById("appointmentState").classList.add("hidden");
-            document.getElementById("errorState").classList.remove("hidden");
-            document.getElementById("errorMessage").innerText = msg;
-        }
-
-        function renderAppointment(ag) {
-            document.getElementById("loadingState").classList.add("hidden");
-            document.getElementById("appointmentState").classList.remove("hidden");
-            document.getElementById("dispAluno").innerText = ag.aluno || "Estudante";
-            document.getElementById("dispTurma").innerText = `Turma: ${ag.turma || '-'}`;
-            document.getElementById("dispData").innerText = formatDateBR(ag.data);
-            document.getElementById("dispHorario").innerText = ag.horario || "-";
-            document.getElementById("dispOrientadora").innerText = ag.orientadora || "Orientação Educacional";
-            document.getElementById("dispResponsavel").innerText = ag.responsavel || "Responsavel Convocado";
-            const badgeContainer = document.getElementById("statusBadgeContainer");
-            if (ag.statusSecretaria === 'confirmado' || ag.statusSecretaria === 'confirmado_whatsapp') {
-                badgeContainer.innerHTML = `<span class="text-xs font-black bg-emerald-500 text-white px-3 py-1 rounded-full"><i class="fa-solid fa-circle-check"></i> Já Confirmado</span>`;
-                showSuccessState();
-            } else if (ag.statusSecretaria === 'realizado') {
-                badgeContainer.innerHTML = `<span class="text-xs font-black bg-blue-600 text-white px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> Atendimento Realizado</span>`;
-                document.getElementById("actionForm").classList.add("hidden");
-            } else if (ag.statusSecretaria === 'cancelado') {
-                badgeContainer.innerHTML = `<span class="text-xs font-black bg-amber-500 text-white px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Reagendamento Solicitado</span>`;
-                showCancelledState();
-            } else {
-                badgeContainer.innerHTML = `<span class="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full"><i class="fa-solid fa-hourglass-half"></i> Aguardando Resposta</span>`;
-            }
-        }
-
-        async function congirmarPresenca() {
-            if (!fullDatabaseData || !targetAppointment) return;
-            const btn = document.getElementById("btnConfirmar");
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Confirmando...`;
-            try {
-                const agendamentos = fullDatabaseData.agendamentosOP || [];
-                const idx = agendamentos.findIndex(a => a.id === appointmentId);
-                if (idx !== -1) {
-                    agendamentos[idx].statusSecretaria = "confirmado";
-                    agendamentos[idx].obsSecretaria = "🟣 Presença congirmada pelo responsÁvel via link do WhatsApp";
-                    agendamentos[idx].congirmadoEm = new Date().toISOString();
-                    await db.collection("sige_pedro_rizzi").doc("database").set({
-                        agendamentosOP: agendamentos
-                    }, { merge: true });
-                    showSuccessState();
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao registrar confirmação. Verifique sua conexão com a internet.");
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-circle-check text-xls"></i><span>CONFIRMAR MINHA PRESENÇA</span>`;
-            }
-        }
-        function toggleFormCancelamento() {
-            const container = document.getElementById("cancelFormContainer");
-            container.classList.toggle("hidden");
-        }
-        async function enviarCancelamento() {
-            if (!fullDatabaseData || !targetAppointment) return;
-            const motivo = document.getElementById("txtMotivoCancelamento").value.trim();
-            try {
-                const agendamentos = fullDatabaseData.agendamentosOP || [];
-                const idx = agendamentos.findIndex(a => a.id === appointmentId);
-                if (idx !== -1) {
-                    agendamentos[idx].statusSecretaria = "cancelado";
-                    agendamentos[idx].obsSecretaria = `Responsável informou via WhatsApp que nao podera comparecer. Motivo: ${motivo || 'Não informado'}`;
-                    agendamentos[idx].canceladoViaLinkEm = new Date().toISOString();
-                    await db,collection("sige_pedro_rizzi").doc("satabase").set({
-                        agendamentosOP: agendamentos
-                    }, { merge: true });
-                    showCancelledState();
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao enviar notificação.");
-            }
-        }
-        function showSuccessState() {
-            document.getElementById("actionForm").classList.add("hidden");
-            document.getElementById("cancelFormContainer").classList.add("hidden");
-            document.getElementById("successState").classList.remove("hidden");
-        }
-        function showCancelledState() {
-            document.getElementById("actionForm").classList.add("hidden");
-            document.getElementById("cancelFormContainer").classList.add("hidden");
-            document.getElementById("cancelledState").classList.remove("hidden");
-        }
-        window.addEventListener("DOMContentLoaded", loadAppointment);
-    </script>
+    window.addEventListener('DOMContentLoaded', loadAppointment);
+</script>
 </body>
 </html>
