@@ -7009,6 +7009,26 @@ function exportarRelatorioDirecaoCSV() {
 // ----------------------------------------------------
 // SUB-ABA 6: CALENDÁRIO DO ANO LETIVO & PRAZOS
 // ----------------------------------------------------
+let dirCalViewMode = 'grid'; // 'grid' (Grade de Meses) ou 'tabela' (Tabela Analítica)
+
+function setDirCalViewMode(mode) {
+    dirCalViewMode = mode;
+    const btnGrid = document.getElementById("btnDirCalViewGrid");
+    const btnTab = document.getElementById("btnDirCalViewTabela");
+    const gridContainer = document.getElementById("dirCalViewGridContainer");
+    const tabContainer = document.getElementById("dirCalViewTabelaContainer");
+
+    if (btnGrid && btnTab) {
+        btnGrid.classList.toggle("active", mode === 'grid');
+        btnTab.classList.toggle("active", mode === 'tabela');
+    }
+    if (gridContainer && tabContainer) {
+        gridContainer.style.display = mode === 'grid' ? "block" : "none";
+        tabContainer.style.display = mode === 'tabela' ? "block" : "none";
+    }
+    renderDirCalendarioEscolar();
+}
+
 function getCalCategoriaBadge(cat, desc) {
     let bg = '#ffedd5', color = '#c2410c';
     if (cat === 'feriado' || cat === 'feriado_recesso') { bg = '#fee2e2'; color = '#b91c1c'; }
@@ -7022,11 +7042,26 @@ function getCalCategoriaBadge(cat, desc) {
     return `<span style="background:${bg}; color:${color}; padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:800; display:inline-block; white-space:nowrap;">${desc || 'Evento'}</span>`;
 }
 
+const MESES_CONFIG_2026 = [
+    { mes: "Janeiro", trimNome: "Férias Escolares", trimClass: "trimestre-recesso", dias: 0, horas: 0, icone: "fa-umbrella-beach", corBadge: "#64748b" },
+    { mes: "Fevereiro", trimNome: "1º Trimestre", trimClass: "trimestre-1", dias: 11, horas: 44, icone: "fa-seedling", corBadge: "#2563eb", sub: "Início letivo: 11/02" },
+    { mes: "Março", trimNome: "1º Trimestre", trimClass: "trimestre-1", dias: 22, horas: 88, icone: "fa-book-open", corBadge: "#2563eb" },
+    { mes: "Abril", trimNome: "1º Trimestre", trimClass: "trimestre-1", dias: 20, horas: 80, icone: "fa-feather", corBadge: "#2563eb" },
+    { mes: "Maio", trimNome: "1º / 2º Trimestre", trimClass: "trimestre-1", dias: 19, horas: 76, icone: "fa-graduation-cap", corBadge: "#059669", sub: "15d (1º Trim) + 4d (2º Trim)" },
+    { mes: "Junho", trimNome: "2º Trimestre", trimClass: "trimestre-2", dias: 20, horas: 80, icone: "fa-campground", corBadge: "#059669" },
+    { mes: "Julho", trimNome: "2º Trimestre", trimClass: "trimestre-2", dias: 18, horas: 72, icone: "fa-mug-hot", corBadge: "#059669", sub: "Recesso: 20 a 31/07" },
+    { mes: "Agosto", trimNome: "2º Trimestre", trimClass: "trimestre-2", dias: 21, horas: 84, icone: "fa-sun", corBadge: "#059669" },
+    { mes: "Setembro", trimNome: "2º / 3º Trimestre", trimClass: "trimestre-2", dias: 20, horas: 80, icone: "fa-award", corBadge: "#d97706", sub: "4d (2º Trim) + 16d (3º Trim)" },
+    { mes: "Outubro", trimNome: "3º Trimestre", trimClass: "trimestre-3", dias: 19, horas: 76, icone: "fa-palette", corBadge: "#d97706" },
+    { mes: "Novembro", trimNome: "3º Trimestre", trimClass: "trimestre-3", dias: 19, horas: 76, icone: "fa-hand-holding-heart", corBadge: "#d97706" },
+    { mes: "Dezembro", trimNome: "3º Trimestre", trimClass: "trimestre-3", dias: 11, horas: 44, icone: "fa-trophy", corBadge: "#d97706", sub: "Término letivo: 15/12" }
+];
+
 function renderDirCalendarioEscolar() {
     const regua = document.getElementById("dirCalReguaPrazos");
+    const gridBody = document.getElementById("dirCalMonthsGridBody");
     const tbody = document.getElementById("dirTableEventosCalendarioBody");
     const paginationInfo = document.getElementById("dirCalPaginationInfo");
-    if (!tbody) return;
 
     let eventos = sigeDB.getEventosCalendarioEscolar() || [];
     // Auto-popula se estiver vazio e base global disponível
@@ -7091,50 +7126,138 @@ function renderDirCalendarioEscolar() {
         paginationInfo.innerHTML = `<span>Mostrando <strong>${filtrados.length}</strong> de <strong>${eventos.length}</strong> eventos cadastrados no Calendário Escolar 2026.</span>`;
     }
 
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" style="padding:2.5rem; text-align:center; color:#64748b;">
-                    <i class="fa-solid fa-calendar-xmark" style="font-size:2rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
-                    Nenhum evento letivo encontrado para os filtros selecionados.
-                </td>
-            </tr>
-        `;
-        return;
+    // 1. RENDERIZAÇÃO DA GRADE DE MESES (VISÃO MODULAR)
+    if (gridBody) {
+        const mesesParaExibir = mesFilter ? MESES_CONFIG_2026.filter(m => m.mes === mesFilter) : MESES_CONFIG_2026;
+        
+        gridBody.innerHTML = mesesParaExibir.map(cfg => {
+            const eventosDoMes = filtrados.filter(e => (e.mes || "") === cfg.mes);
+
+            return `
+                <div class="cal-month-card ${cfg.trimClass}">
+                    <!-- Cabeçalho do Mês -->
+                    <div class="cal-month-header">
+                        <div>
+                            <h4 class="cal-month-title">
+                                <i class="fa-solid ${cfg.icone}" style="color:${cfg.corBadge}; font-size:1.1rem;"></i>
+                                <span>${cfg.mes}</span>
+                                <span style="font-size:0.8rem; font-weight:700; color:var(--dir-text-muted);">2026</span>
+                            </h4>
+                            <div style="font-size:0.75rem; color:${cfg.corBadge}; font-weight:800; margin-top:2px;">
+                                ${cfg.trimNome} ${cfg.sub ? `• <span style="color:#64748b; font-weight:600;">${cfg.sub}</span>` : ''}
+                            </div>
+                        </div>
+
+                        <div>
+                            ${cfg.dias > 0 ? `
+                                <span class="cal-month-kpi-badge">
+                                    <i class="fa-solid fa-clock" style="color:${cfg.corBadge};"></i>
+                                    <strong>${cfg.dias} dias</strong> (${cfg.horas}h)
+                                </span>
+                            ` : `
+                                <span class="cal-month-kpi-badge" style="background:#f1f5f9; color:#64748b;">
+                                    <i class="fa-solid fa-umbrella-beach"></i> Férias
+                                </span>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Lista de Eventos do Mês -->
+                    <div class="cal-month-body">
+                        ${eventosDoMes.length === 0 ? `
+                            <div style="padding: 32px 16px; text-align:center; color:#94a3b8; font-size:0.8125rem;">
+                                <i class="fa-regular fa-calendar-check" style="font-size:1.6rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                                <span>${busca || catFilter ? 'Nenhum evento com os filtros ativos.' : (cfg.dias === 0 ? 'Férias escolares / Recesso discente.' : 'Nenhum evento registrado.')}</span>
+                            </div>
+                        ` : eventosDoMes.map(ev => {
+                            const dataDisp = ev.dataExibicao || formatDateBR(ev.data);
+                            const descTexto = (ev.descricao && ev.descricao !== ev.titulo) ? ev.descricao : '';
+                            const publicoIcon = ev.publicoAlvo === 'professores' ? '👨‍🏫 Docentes' : (ev.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (ev.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'));
+
+                            return `
+                                <div class="cal-event-card">
+                                    <div class="cal-event-top">
+                                        <span class="cal-event-date-chip">
+                                            <i class="fa-regular fa-calendar" style="color:var(--dir-accent-primary);"></i>
+                                            <strong>${dataDisp}</strong>
+                                            ${ev.hora ? `<span>(${ev.hora})</span>` : ''}
+                                        </span>
+                                        ${getCalCategoriaBadge(ev.categoria, ev.categoriaDesc)}
+                                    </div>
+
+                                    <h5 class="cal-event-title">${ev.titulo}</h5>
+                                    ${descTexto ? `<p class="cal-event-desc">${descTexto}</p>` : ''}
+
+                                    <div class="cal-event-footer">
+                                        <span title="Público-Alvo"><i class="fa-solid fa-users" style="font-size:0.7rem; color:#94a3b8;"></i> ${publicoIcon}</span>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span style="font-size:0.72rem; color:#94a3b8;" title="Local"><i class="fa-solid fa-location-dot" style="font-size:0.7rem;"></i> ${ev.local || 'Escola'}</span>
+                                            <button type="button" onclick="excluirEventoCalendario('${ev.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px 4px; border-radius:4px; font-size:0.75rem;" title="Remover do calendário">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
+
+                    <!-- Rodapé do Mês -->
+                    <div class="cal-month-footer">
+                        <span><strong style="color:var(--dir-text-headings);">${eventosDoMes.length}</strong> evento(s) listado(s)</span>
+                        ${cfg.dias > 0 ? `<span>Meta: <strong>${cfg.dias} dias letivos</strong></span>` : `<span>Recesso</span>`}
+                    </div>
+                </div>
+            `;
+        }).join("");
     }
 
-    tbody.innerHTML = filtrados.map(e => {
-        const dataDisp = e.dataExibicao || formatDateBR(e.data);
-        const descTexto = (e.descricao && e.descricao !== e.titulo) ? e.descricao : '';
+    // 2. RENDERIZAÇÃO DA TABELA ANALÍTICA LINEAR
+    if (tbody) {
+        if (filtrados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="padding:2.5rem; text-align:center; color:#64748b;">
+                        <i class="fa-solid fa-calendar-xmark" style="font-size:2rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                        Nenhum evento letivo encontrado para os filtros selecionados.
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = filtrados.map(e => {
+                const dataDisp = e.dataExibicao || formatDateBR(e.data);
+                const descTexto = (e.descricao && e.descricao !== e.titulo) ? e.descricao : '';
 
-        return `
-            <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                <td style="padding:12px 16px; font-weight:700; color:#1e293b; white-space:nowrap;">
-                    <div style="font-size:0.875rem;">${dataDisp}</div>
-                    ${e.mes ? `<span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">${e.mes}</span>` : ''}
-                    ${e.hora ? `<div style="font-size:0.75rem; color:#64748b;">às ${e.hora}</div>` : ''}
-                </td>
-                <td style="padding:12px 16px;">
-                    ${getCalCategoriaBadge(e.categoria, e.categoriaDesc)}
-                </td>
-                <td style="padding:12px 16px;">
-                    <strong style="color:#0f172a; display:block; font-size:0.9rem; line-height:1.4;">${e.titulo}</strong>
-                    ${descTexto ? `<span style="font-size:0.8rem; color:#475569; display:block; margin-top:3px; line-height:1.4;">${descTexto}</span>` : ''}
-                </td>
-                <td style="padding:12px 16px; font-size:0.82rem; color:#475569; white-space:nowrap;">
-                    ${e.publicoAlvo === 'professores' ? '👨‍🏫 Professores' : (e.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (e.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'))}
-                </td>
-                <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
-                    ${e.local || 'C.E. Pedro Rizzi'}
-                </td>
-                <td style="padding:12px 16px; text-align:center;">
-                    <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join("");
+                return `
+                    <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <td style="padding:12px 16px; font-weight:700; color:#1e293b; white-space:nowrap;">
+                            <div style="font-size:0.875rem;">${dataDisp}</div>
+                            ${e.mes ? `<span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">${e.mes}</span>` : ''}
+                            ${e.hora ? `<div style="font-size:0.75rem; color:#64748b;">às ${e.hora}</div>` : ''}
+                        </td>
+                        <td style="padding:12px 16px;">
+                            ${getCalCategoriaBadge(e.categoria, e.categoriaDesc)}
+                        </td>
+                        <td style="padding:12px 16px;">
+                            <strong style="color:#0f172a; display:block; font-size:0.9rem; line-height:1.4;">${e.titulo}</strong>
+                            ${descTexto ? `<span style="font-size:0.8rem; color:#475569; display:block; margin-top:3px; line-height:1.4;">${descTexto}</span>` : ''}
+                        </td>
+                        <td style="padding:12px 16px; font-size:0.82rem; color:#475569; white-space:nowrap;">
+                            ${e.publicoAlvo === 'professores' ? '👨‍🏫 Professores' : (e.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (e.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'))}
+                        </td>
+                        <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
+                            ${e.local || 'C.E. Pedro Rizzi'}
+                        </td>
+                        <td style="padding:12px 16px; text-align:center;">
+                            <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+    }
 }
 
 function resetDirCalFiltros() {
