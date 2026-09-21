@@ -1039,18 +1039,75 @@ class SigeDatabase {
         window.location.reload();
     }
 
-    // Gerenciador de Usuários e Login por E-mail
+    // Gerenciador de Usuários e Login por E-mail (RBAC Modular)
+    getDefaultPermissoesByRole(role) {
+        if (!role) return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        if (role === "desenvolvedor" || role === "direcao" || role === "admin") {
+            return { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+        }
+        if (role.startsWith("orientadora") || role === "orientacao") {
+            return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        }
+        if (role.startsWith("supervisora") || role === "supervisao") {
+            return { op: true, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false };
+        }
+        if (role === "secretaria") {
+            return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true };
+        }
+        if (role === "docentes" || role === "comunidade") {
+            return { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        }
+        return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+    }
+
     getUsuarios() {
+        let saveNeeded = false;
         if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados) || this.data.usuariosCadastrados.length === 0) {
             this.data.usuariosCadastrados = [
-                { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
-                { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
-                { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
-                { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
-                { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
-                { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
+                { 
+                    email: "elcortelini@gmail.com", 
+                    nome: "Elevi Cortelini (Desenvolvedor)", 
+                    role: "desenvolvedor", 
+                    cargo: "Desenvolvedor do Sistema",
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                },
+                { 
+                    email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
+                    nome: "Daiane Caetano Costa de Aquino", 
+                    role: "orientadora_daiane", 
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                },
+                { 
+                    email: "daiane@escola.gov.br", 
+                    nome: "Daiane Caetano Costa de Aquino", 
+                    role: "orientadora_daiane", 
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                },
+                { 
+                    email: "clarinda@escola.gov.br", 
+                    nome: "Clarinda Rosa Pereira", 
+                    role: "orientadora_clarinda", 
+                    cargo: "Orientadora Educacional — Séries Iniciais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                },
+                { 
+                    email: "secretaria@escola.gov.br", 
+                    nome: "Secretaria Escolar", 
+                    role: "secretaria", 
+                    cargo: "Secretaria & Recepção",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true }
+                },
+                { 
+                    email: "direcao@escola.gov.br", 
+                    nome: "Direção Escolar", 
+                    role: "direcao", 
+                    cargo: "Direção & Gestão Institucional",
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                }
             ];
-            this.saveData(this.data);
+            saveNeeded = true;
         } else {
             const hasDaianeOfficial = this.data.usuariosCadastrados.some(u => u.email.toLowerCase().includes("daiane.aquino04548"));
             if (!hasDaianeOfficial) {
@@ -1058,23 +1115,52 @@ class SigeDatabase {
                     email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais" 
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 });
-                this.saveData(this.data);
+                saveNeeded = true;
             }
+
+            // Garante objeto de permissões completo em todos os usuários existentes
+            this.data.usuariosCadastrados.forEach(u => {
+                if (!u.permissoes || typeof u.permissoes !== 'object') {
+                    u.permissoes = this.getDefaultPermissoesByRole(u.role);
+                    saveNeeded = true;
+                } else {
+                    const defaults = this.getDefaultPermissoesByRole(u.role);
+                    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+                        if (u.permissoes[k] === undefined) {
+                            u.permissoes[k] = !!defaults[k];
+                            saveNeeded = true;
+                        }
+                    });
+                }
+                // O desenvolvedor master sempre tem todos os acessos
+                if (u.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+                    u.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+                }
+            });
+        }
+
+        if (saveNeeded) {
+            this.saveData(this.data);
         }
         return this.data.usuariosCadastrados;
     }
 
     addUsuario(user) {
         const list = this.getUsuarios();
+        if (!user.permissoes) {
+            user.permissoes = this.getDefaultPermissoesByRole(user.role);
+        }
         const existingIndex = list.findIndex(u => u.email.toLowerCase().trim() === user.email.toLowerCase().trim());
         if (existingIndex >= 0) {
-            list[existingIndex] = user;
+            list[existingIndex] = { ...list[existingIndex], ...user };
         } else {
             list.push(user);
         }
         this.data.usuariosCadastrados = list;
+        this.addAuditLog(`Cadastro/Atualização de Usuário (${user.nome} - ${user.email})`, 'Admin');
         this.saveData(this.data);
         return user;
     }
@@ -1082,10 +1168,79 @@ class SigeDatabase {
     removeUsuario(email) {
         if (email.toLowerCase().trim() === "elcortelini@gmail.com") return false;
         let list = this.getUsuarios();
+        const userToRemove = list.find(u => u.email.toLowerCase().trim() === email.toLowerCase().trim());
         list = list.filter(u => u.email.toLowerCase().trim() !== email.toLowerCase().trim());
         this.data.usuariosCadastrados = list;
+        if (userToRemove) {
+            this.addAuditLog(`Remoção de Usuário (${userToRemove.nome} - ${userToRemove.email})`, 'Admin');
+        }
         this.saveData(this.data);
         return true;
+    }
+
+    aplicarPresetPermissoes(email, preset) {
+        if (!email) return false;
+        if (email.toLowerCase().trim() === "elcortelini@gmail.com") {
+            // Desenvolvedor sempre total
+            return this.salvarPermissoesUsuario(email, { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true });
+        }
+
+        let perms = {};
+        switch (preset) {
+            case 'total':
+                perms = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+                break;
+            case 'pedagogico':
+                perms = { op: true, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false };
+                break;
+            case 'administrativo':
+                perms = { op: false, mural: true, supervisao: false, admin: true, direcao: true, uniformes: true };
+                break;
+            case 'apenas_op':
+                perms = { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+                break;
+            case 'apenas_mural':
+                perms = { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+                break;
+            case 'bloqueado':
+                perms = { op: false, mural: false, supervisao: false, admin: false, direcao: false, uniformes: false };
+                break;
+            default:
+                return false;
+        }
+
+        return this.salvarPermissoesUsuario(email, perms);
+    }
+
+    sincronizarUsuariosComEquipe() {
+        const equipe = this.getEquipeEscolar();
+        const users = this.getUsuarios();
+        let novosAdicionados = 0;
+
+        equipe.forEach(p => {
+            if (p.email && p.email.includes("@")) {
+                const jaExiste = users.some(u => u.email.toLowerCase().trim() === p.email.toLowerCase().trim());
+                if (!jaExiste) {
+                    let suggestedRole = "comunidade";
+                    if (p.setor === "orientacao") suggestedRole = p.nome.toLowerCase().includes("clarinda") ? "orientadora_clarinda" : "orientadora_daiane";
+                    else if (p.setor === "supervisao") suggestedRole = "supervisao";
+                    else if (p.setor === "direcao") suggestedRole = "direcao";
+                    else if (p.setor === "secretaria") suggestedRole = "secretaria";
+                    else if (p.setor === "docentes") suggestedRole = "docentes";
+
+                    this.addUsuario({
+                        email: p.email.toLowerCase().trim(),
+                        nome: p.nome,
+                        role: suggestedRole,
+                        cargo: p.cargoFuncao || p.setor || "Colaborador Escolar",
+                        permissoes: this.getDefaultPermissoesByRole(suggestedRole)
+                    });
+                    novosAdicionados++;
+                }
+            }
+        });
+
+        return novosAdicionados;
     }
 
     getLoggedUser() {
@@ -2578,17 +2733,27 @@ class SigeDatabase {
     }
 
     temPermissaoModulo(moduloId) {
+        const activeRole = this.getRole();
         const user = this.getLoggedUser();
+
+        // Se o papel ativo for desenvolvedor, tem acesso total
+        if (activeRole === 'desenvolvedor') return true;
+
+        // Se o desenvolvedor está simulando outro perfil pelo seletor
+        if (user && user.role === 'desenvolvedor' && activeRole && activeRole !== 'desenvolvedor') {
+            const users = this.getUsuarios();
+            const simulatedUser = users.find(u => u.role === activeRole);
+            if (simulatedUser && simulatedUser.permissoes) {
+                return !!simulatedUser.permissoes[moduloId];
+            }
+            const defaults = this.getDefaultPermissoesByRole(activeRole);
+            return !!defaults[moduloId];
+        }
+
         if (!user) return false;
         if (user.role === 'desenvolvedor') return true;
         if (!user.permissoes) {
-            if (user.role === 'direcao') return true;
-            if (user.role === 'admin') return true;
-            if (moduloId === 'op' && (user.role.startsWith('orientadora') || user.role === 'secretaria')) return true;
-            if (moduloId === 'supervisao' && user.role === 'supervisao') return true;
-            if (moduloId === 'uniformes' && (user.role === 'secretaria' || user.role === 'direcao')) return true;
-            if (moduloId === 'mural') return true;
-            return false;
+            user.permissoes = this.getDefaultPermissoesByRole(user.role);
         }
         return !!user.permissoes[moduloId];
     }

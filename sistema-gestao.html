@@ -13,7 +13,7 @@
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=20260921_v27">
-    <link rel="stylesheet" href="css/gestao.css?v=20260921_v29">
+    <link rel="stylesheet" href="css/gestao.css?v=20260921_v30">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
@@ -457,6 +457,122 @@
                         <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Painel de Administração Integrada do Sistema
                     </h3>
                     <p style="font-size:0.85rem; color:#64748b;">Gestão de equipe escolar multidisciplinar, turmas, turnos, solicitações de TI/infraestrutura e configurações globais.</p>
+                </div>
+            </div>
+
+            <!-- PAINEL NOBRE: CONTROLE DE ACESSO & PERMISSÕES MODULARES POR USUÁRIO (RBAC) -->
+            <div id="adminCardPermissoesUsuarios" class="rbac-card">
+                <div class="rbac-header">
+                    <div>
+                        <h4 class="rbac-title">
+                            <i class="fa-solid fa-shield-halved" style="color:#7c3aed; font-size:1.35rem;"></i> Controle de Acesso & Permissões Modulares por Usuário (RBAC)
+                        </h4>
+                        <p class="rbac-subtitle">
+                            Defina com precisão quais módulos (Orientação, Mural, Supervisão, Administração, Direção e Uniformes) cada usuário ou colaborador pode visualizar e operar.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" onclick="openModalNovoUsuarioRBAC()" class="btn btn-primary" style="width:auto; font-size:0.84rem; padding:8px 16px; background:linear-gradient(135deg, #7c3aed, #6d28d9); border:none; font-weight:800; box-shadow:0 4px 12px rgba(124,58,237,0.3); display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Usuário de Acesso
+                        </button>
+                        <button type="button" onclick="sincronizarUsuariosComEquipeUI()" class="btn btn-secondary" style="width:auto; font-size:0.84rem; padding:8px 14px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Importar colaboradores com e-mail cadastrados na Equipe Escolar">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar com Equipe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs Rápidos -->
+                <div class="rbac-stats-grid">
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#ede9fe; color:#6d28d9;">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="rbacKpiTotalUsuarios">0</div>
+                            <div class="rbac-stat-label">Usuários Cadastrados</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#dcfce7; color:#15803d;">
+                            <i class="fa-solid fa-lock-open"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="rbacKpiAcessoTotal">0</div>
+                            <div class="rbac-stat-label">Acesso Total (6/6 Módulos)</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#fef3c7; color:#b45309;">
+                            <i class="fa-solid fa-user-lock"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="rbacKpiAcessoParcial">0</div>
+                            <div class="rbac-stat-label">Acesso Restrito / Setorial</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#e0f2fe; color:#0369a1;">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value">6 Módulos</div>
+                            <div class="rbac-stat-label">OE, Mural, Sup, Adm, Dir, Uni</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Busca e Filtros Rápidos -->
+                <div class="rbac-filter-toolbar">
+                    <div class="rbac-search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="rbacSearchInput" oninput="filtrarUsuariosRBAC()" placeholder="Buscar por nome, e-mail institucional ou cargo..." class="rbac-search-input">
+                    </div>
+
+                    <div class="rbac-filter-chips">
+                        <button type="button" class="rbac-filter-btn active" id="btnRbacFilter_todos" onclick="setRbacFilterPerfil('todos')">Todos</button>
+                        <button type="button" class="rbac-filter-btn" id="btnRbacFilter_desenvolvedor" onclick="setRbacFilterPerfil('desenvolvedor')">🛠️ Desenvolvedor</button>
+                        <button type="button" class="rbac-filter-btn" id="btnRbacFilter_direcao" onclick="setRbacFilterPerfil('direcao')">👑 Direção</button>
+                        <button type="button" class="rbac-filter-btn" id="btnRbacFilter_orientacao" onclick="setRbacFilterPerfil('orientacao')">💛 Orientação</button>
+                        <button type="button" class="rbac-filter-btn" id="btnRbacFilter_supervisao" onclick="setRbacFilterPerfil('supervisao')">📋 Supervisão</button>
+                        <button type="button" class="rbac-filter-btn" id="btnRbacFilter_secretaria" onclick="setRbacFilterPerfil('secretaria')">📝 Secretaria</button>
+                    </div>
+                </div>
+
+                <!-- Legenda Rápida dos Módulos -->
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; font-size:0.75rem; color:#64748b;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span style="font-weight:700; color:#334155;"><i class="fa-solid fa-circle-info"></i> Clique no módulo para ativar/desativar:</span>
+                        <span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:800;">🧭 OE (Orientação)</span>
+                        <span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-weight:800;">📢 Mural</span>
+                        <span style="background:#f5f3ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-weight:800;">📋 Supervisão</span>
+                        <span style="background:#eff6ff; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:800;">⚙️ Administração</span>
+                        <span style="background:#ecfdf5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:800;">👑 Direção</span>
+                        <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:800;">👕 Uniformes</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.74rem; color:#94a3b8;"><i class="fa-solid fa-cloud-arrow-up"></i> Alterações salvas instantaneamente</span>
+                    </div>
+                </div>
+
+                <!-- Tabela de Matriz de Permissões -->
+                <div class="rbac-table-container">
+                    <table class="rbac-table">
+                        <thead>
+                            <tr>
+                                <th style="min-width:240px;">Usuário & E-mail</th>
+                                <th style="min-width:140px;">Perfil Base</th>
+                                <th style="min-width:380px;">Módulos com Acesso Liberado</th>
+                                <th style="min-width:120px; text-align:center;">Status</th>
+                                <th style="min-width:130px; text-align:right;">Ações Rápidas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersPermissionsTableBody">
+                            <!-- Preenchido dinamicamente via renderAdminPermissoesUsuarios() -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -3103,6 +3219,108 @@
         </div>
     </div>
 
+    <!-- Modal de Cadastro / Edição de Usuário e Permissões Modulares (RBAC) -->
+    <div id="modalAdminNovoUsuario" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:18px; max-width:640px; width:94%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
+                <div>
+                    <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px; margin:0;" id="modalAdminNovoUsuarioTitle">
+                        <i class="fa-solid fa-user-shield" style="color:#7c3aed;"></i> Usuário de Acesso ao Sistema
+                    </h3>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Cadastre ou configure o e-mail e os módulos que o profissional pode acessar.</div>
+                </div>
+                <button type="button" onclick="closeModalNovoUsuarioRBAC()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formAdminNovoUsuario" onsubmit="submitNovoUsuarioRBAC(event)" style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">E-mail Institucional *</label>
+                        <input type="email" id="rbacInputEmail" placeholder="nome@edu.itajai.sc.gov.br" required class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Nome Completo *</label>
+                        <input type="text" id="rbacInputNome" placeholder="Nome do Colaborador" required class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Perfil Base do Sistema *</label>
+                        <select id="rbacInputRole" onchange="autoSelectRbacRoleDefaults(this.value)" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem; font-weight:700;">
+                            <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
+                            <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
+                            <option value="supervisao">📋 Supervisora Pedagógica</option>
+                            <option value="secretaria">📝 Secretaria Escolar</option>
+                            <option value="direcao">👑 Direção Escolar</option>
+                            <option value="docentes">👨‍🏫 Docente / Professor</option>
+                            <option value="comunidade">👥 Comunidade Escolar / Apoio</option>
+                            <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Cargo / Função *</label>
+                        <input type="text" id="rbacInputCargo" placeholder="Ex: Orientadora Educacional" required class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem;">
+                    </div>
+                </div>
+
+                <!-- Seleção dos Módulos Permitidos -->
+                <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-size:0.83rem; font-weight:800; color:#0f172a;">
+                            <i class="fa-solid fa-cubes"></i> Módulos do Sistema Liberados:
+                        </span>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" onclick="setAllModalRbacCheckboxes(true)" style="background:#e0f2fe; color:#0369a1; border:none; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">Marcar Todos</button>
+                            <button type="button" onclick="setAllModalRbacCheckboxes(false)" style="background:#f1f5f9; color:#64748b; border:none; padding:3px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">Desmarcar Todos</button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_op" checked>
+                            <span style="font-size:0.82rem; font-weight:700; color:#92400e;"><i class="fa-solid fa-heart-pulse" style="color:#d97706;"></i> Orientação Educacional (OE)</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_mural" checked>
+                            <span style="font-size:0.82rem; font-weight:700; color:#334155;"><i class="fa-solid fa-chalkboard-user"></i> Mural & Prazos</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_supervisao">
+                            <span style="font-size:0.82rem; font-weight:700; color:#6b21a8;"><i class="fa-solid fa-clipboard-check" style="color:#8b5cf6;"></i> Supervisão Pedagógica</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_admin">
+                            <span style="font-size:0.82rem; font-weight:700; color:#1e40af;"><i class="fa-solid fa-gears" style="color:#2563eb;"></i> Administração Integrada</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_direcao">
+                            <span style="font-size:0.82rem; font-weight:700; color:#065f46;"><i class="fa-solid fa-crown" style="color:#059669;"></i> Direção Executiva</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
+                            <input type="checkbox" id="rbacChk_uniformes">
+                            <span style="font-size:0.82rem; font-weight:700; color:#0369a1;"><i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Uniformes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+                    <button type="button" onclick="closeModalNovoUsuarioRBAC()" class="btn btn-secondary" style="width:auto; padding:8px 16px; font-size:0.85rem;">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; padding:8px 20px; font-size:0.85rem; background:#7c3aed; border:none; font-weight:800;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Usuário & Permissões
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal de Importação de Alunos via PDF -->
     <div id="modalImportPDFAlunos" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:9500; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:840px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1;">
@@ -4039,9 +4257,9 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20260921_v29"></script>
-    <script src="js/gestao-data.js?v=20260921_v29"></script>
-    <script src="js/gestao-app.js?v=20260921_v29"></script>
+    <script src="js/calendario-oficial-data.js?v=20260921_v30"></script>
+    <script src="js/gestao-data.js?v=20260921_v30"></script>
+    <script src="js/gestao-app.js?v=20260921_v30"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

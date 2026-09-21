@@ -180,6 +180,9 @@
 .role-pill-supervisao { background: #f3e8ff; color: #6b21a8; }
 .role-pill-secretaria { background: #dcfce7; color: #166534; }
 .role-pill-comunidade { background: #f1f5f9; color: #475569; }
+.role-pill-desenvolvedor { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; font-weight: 800; }
+.role-pill-orientadora_clarinda { background: #fef3c7; color: #92400e; }
+.role-pill-orientadora_daiane { background: #fef9c3; color: #854d0e; }
 
 /* Navegação por Abas */
 .sige-nav-tabs {
@@ -2350,4 +2353,364 @@
     color: var(--dir-text-muted);
 }
 
+/* ==========================================================================
+   PAINEL DE CONTROLE DE ACESSO & PERMISSÕES MODULARES (RBAC - MODO B)
+   ========================================================================== */
+.rbac-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
 
+.rbac-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+
+.rbac-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.rbac-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 4px 0 0 0;
+    line-height: 1.45;
+}
+
+/* KPIs Rápidos */
+.rbac-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.rbac-stat-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rbac-stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    border-color: #cbd5e1;
+}
+
+.rbac-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.rbac-stat-value {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.rbac-stat-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Barra de Filtros e Busca */
+.rbac-filter-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+}
+
+.rbac-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+}
+
+.rbac-search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.rbac-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.rbac-search-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.rbac-filter-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.rbac-filter-btn {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.rbac-filter-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.rbac-filter-btn.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+}
+
+/* Tabela de Matriz RBAC */
+.rbac-table-container {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.rbac-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    text-align: left;
+}
+
+.rbac-table thead th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 800;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 14px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.rbac-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+}
+
+.rbac-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.rbac-user-cell {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rbac-user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.rbac-user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.rbac-user-name {
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 0.88rem;
+}
+
+.rbac-user-email {
+    font-size: 0.76rem;
+    color: #64748b;
+}
+
+.rbac-user-cargo {
+    font-size: 0.74rem;
+    color: #475569;
+    margin-top: 1px;
+}
+
+/* Chips Interativos de Módulos (Switches de 1 Clique) */
+.rbac-modules-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.rbac-mod-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #94a3b8;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+}
+
+.rbac-mod-chip:hover:not(.disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.rbac-mod-chip:focus-visible {
+    outline: 2px solid #7c3aed;
+    outline-offset: 2px;
+}
+
+.rbac-mod-chip.disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+/* Estados Ativos por Módulo */
+.rbac-mod-chip.active.mod-op {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.rbac-mod-chip.active.mod-mural {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+.rbac-mod-chip.active.mod-supervisao {
+    background: #f5f3ff;
+    color: #6b21a8;
+    border-color: #ddd6fe;
+}
+
+.rbac-mod-chip.active.mod-admin {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+.rbac-mod-chip.active.mod-direcao {
+    background: #ecfdf5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+
+.rbac-mod-chip.active.mod-uniformes {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+}
+
+.rbac-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.73rem;
+    font-weight: 800;
+}
+
+.rbac-status-total {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.rbac-status-parcial {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.rbac-status-bloqueado {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.rbac-preset-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.rbac-preset-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
