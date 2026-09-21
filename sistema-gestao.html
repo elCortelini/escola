@@ -809,7 +809,7 @@
                     <div class="dir-nav-card-icon" style="background:#fef3c7; color:#d97706;">
                         <i class="fa-solid fa-users"></i>
                     </div>
-                    <div class="dir-nav-card-title">Orientação</div>
+                    <div class="dir-nav-card-title">Orientação & Relatórios</div>
                 </button>
 
                 <button type="button" class="dir-nav-card dir-subtab-btn" data-dirsub="atas" onclick="switchDirSubTab('atas')">
@@ -817,13 +817,6 @@
                         <i class="fa-solid fa-book-bookmark"></i>
                     </div>
                     <div class="dir-nav-card-title">Atas</div>
-                </button>
-
-                <button type="button" class="dir-nav-card dir-subtab-btn" data-dirsub="relatorios" onclick="switchDirSubTab('relatorios')">
-                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0284c7;">
-                        <i class="fa-solid fa-file-invoice"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Relatórios</div>
                 </button>
 
                 <button type="button" class="dir-nav-card dir-subtab-btn" data-dirsub="dossie" onclick="switchDirSubTab('dossie')">
@@ -1049,7 +1042,71 @@
             <div id="dirSubTab_whatsapp" class="dir-subtab-content active">
 
                 <!-- ============================================================ -->
-                <!-- BLOCO 1: COMPOSITOR DE MENSAGENS (PRÁTICO, SIMPLES E ELEGANTE) -->
+                <!-- BLOCO 1: CONTATOS (LARGURA TOTAL - VISUAL REFINADO) -->
+                <!-- ============================================================ -->
+                <div class="dir-card">
+                    <!-- Cabeçalho do Bloco de Contatos com Ações -->
+                    <div class="dir-card-header">
+                        <div>
+                            <h4 class="dir-card-title">
+                                <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
+                            </h4>
+                            <p class="dir-card-subtitle">Gerencie os destinatários organizados por tags, turmas e cargos institucionais</p>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <!-- Botões de CSV em ícones compactos conforme solicitado -->
+                            <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
+                                <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i>
+                            </button>
+                            <button type="button" onclick="openImportarContatosCSVModal()" class="dir-btn-icon" title="Importar contatos de arquivo CSV" aria-label="Importar contatos CSV">
+                                <i class="fa-solid fa-file-import" style="color:#2563eb;"></i>
+                            </button>
+                            <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
+                                <i class="fa-solid fa-file-export" style="color:#166534;"></i>
+                            </button>
+                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="dir-btn dir-btn-primary" style="background:#16a34a; border-color:#16a34a; min-height:38px; padding:6px 14px; font-size:0.8125rem;">
+                                <i class="fa-solid fa-plus"></i> Novo Contato
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Linha de TAGS (Menores e todas lado a lado) -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
+                        <span style="font-size:0.75rem; font-weight:800; color:var(--dir-text-muted); letter-spacing:0.5px; text-transform:uppercase;">TAGS:</span>
+                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:8px; flex:1; align-items:center;">
+                            <!-- Renderizado via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Barra de Busca Rápida e Seleção de Todos -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" id="dirWpCheckboxSelecionarTodos" onchange="toggleSelecionarTodosContatosWp(this.checked)" class="contact-checkbox-custom">
+                            <label for="dirWpCheckboxSelecionarTodos" style="font-size:0.875rem; font-weight:800; color:var(--dir-text-secondary); cursor:pointer;">
+                                Selecionar Todos (<span id="dirWpVisibleCount">0</span> contatos)
+                            </label>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; max-width:340px;">
+                            <input type="text" id="dirWpSearchContatosInput" oninput="filtrarContatosListaPorTexto()" placeholder="🔍 Buscar por nome, telefone ou tag..." class="dir-input" style="min-height:36px; padding:6px 12px; font-size:0.8125rem;">
+                        </div>
+                        <div>
+                            <span style="color:var(--dir-text-muted); font-size:0.875rem;">
+                                <strong id="dirWpSelecionadosContador" style="color:var(--dir-accent-whatsapp); font-weight:900; font-size:1.05rem;">0</strong> selecionados
+                            </span>
+                            <button type="button" onclick="limparSelecaoContatosWp()" style="background:none; border:none; color:var(--dir-accent-danger); font-size:0.8125rem; font-weight:700; cursor:pointer; text-decoration:underline; margin-left:8px; padding:0;">
+                                Desmarcar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Contatos em Linhas Espaçadas (Formato do Mockup) -->
+                    <div id="dirWpContatosListContainer" style="max-height:440px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px;">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- BLOCO 2: COMPOSITOR DE MENSAGENS (PRÁTICO, SIMPLES E ELEGANTE) -->
                 <!-- ============================================================ -->
                 <div class="dir-card">
                     <div class="dir-card-header">
@@ -1131,70 +1188,6 @@
                             <i class="fa-brands fa-whatsapp" style="font-size:1.25rem;"></i>
                             <span id="btnDirWpDisparoText">🚀 Iniciar Fila de Disparo (0 selecionados)</span>
                         </button>
-                    </div>
-                </div>
-
-                <!-- ============================================================ -->
-                <!-- BLOCO 2: CONTATOS (LARGURA TOTAL - VISUAL REFINADO) -->
-                <!-- ============================================================ -->
-                <div class="dir-card">
-                    <!-- Cabeçalho do Bloco de Contatos com Ações -->
-                    <div class="dir-card-header">
-                        <div>
-                            <h4 class="dir-card-title">
-                                <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
-                            </h4>
-                            <p class="dir-card-subtitle">Gerencie os destinatários organizados por tags, turmas e cargos institucionais</p>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <!-- Botões de CSV em ícones compactos conforme solicitado -->
-                            <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
-                                <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i>
-                            </button>
-                            <button type="button" onclick="openImportarContatosCSVModal()" class="dir-btn-icon" title="Importar contatos de arquivo CSV" aria-label="Importar contatos CSV">
-                                <i class="fa-solid fa-file-import" style="color:#2563eb;"></i>
-                            </button>
-                            <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
-                                <i class="fa-solid fa-file-export" style="color:#166534;"></i>
-                            </button>
-                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="dir-btn dir-btn-primary" style="background:#16a34a; border-color:#16a34a; min-height:38px; padding:6px 14px; font-size:0.8125rem;">
-                                <i class="fa-solid fa-plus"></i> Novo Contato
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Linha de TAGS (Menores e todas lado a lado) -->
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
-                        <span style="font-size:0.75rem; font-weight:800; color:var(--dir-text-muted); letter-spacing:0.5px; text-transform:uppercase;">TAGS:</span>
-                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:8px; flex:1; align-items:center;">
-                            <!-- Renderizado via JS -->
-                        </div>
-                    </div>
-
-                    <!-- Barra de Busca Rápida e Seleção de Todos -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="checkbox" id="dirWpCheckboxSelecionarTodos" onchange="toggleSelecionarTodosContatosWp(this.checked)" class="contact-checkbox-custom">
-                            <label for="dirWpCheckboxSelecionarTodos" style="font-size:0.875rem; font-weight:800; color:var(--dir-text-secondary); cursor:pointer;">
-                                Selecionar Todos (<span id="dirWpVisibleCount">0</span> contatos)
-                            </label>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:10px; flex:1; max-width:340px;">
-                            <input type="text" id="dirWpSearchContatosInput" oninput="filtrarContatosListaPorTexto()" placeholder="🔍 Buscar por nome, telefone ou tag..." class="dir-input" style="min-height:36px; padding:6px 12px; font-size:0.8125rem;">
-                        </div>
-                        <div>
-                            <span style="color:var(--dir-text-muted); font-size:0.875rem;">
-                                <strong id="dirWpSelecionadosContador" style="color:var(--dir-accent-whatsapp); font-weight:900; font-size:1.05rem;">0</strong> selecionados
-                            </span>
-                            <button type="button" onclick="limparSelecaoContatosWp()" style="background:none; border:none; color:var(--dir-accent-danger); font-size:0.8125rem; font-weight:700; cursor:pointer; text-decoration:underline; margin-left:8px; padding:0;">
-                                Desmarcar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Lista de Contatos em Linhas Espaçadas (Formato do Mockup) -->
-                    <div id="dirWpContatosListContainer" style="max-height:440px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px;">
-                        <!-- Renderizado via JS -->
                     </div>
                 </div>
 
@@ -1305,24 +1298,107 @@
             <!-- SUB-ABA 6: CALENDÁRIO DO ANO LETIVO -->
             <!-- ========================================== -->
             <div id="dirSubTab_calendario" class="dir-subtab-content">
+                <!-- Métricas Oficiais dos Trimestres & Total Anual da Planilha 2026 -->
+                <div class="dir-kpi-grid" style="margin-bottom: 20px;">
+                    <div class="dir-kpi-card" style="border-left: 4px solid #3b82f6;">
+                        <div class="dir-kpi-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>1º Trimestre</span>
+                            <span style="font-size:0.75rem; font-weight:800; color:#2563eb; background:#eff6ff; padding:2px 8px; border-radius:6px;">11/02 a 22/05</span>
+                        </div>
+                        <div class="dir-kpi-val" style="color:#1d4ed8; font-size:1.4rem;">68 dias <span style="font-size:0.875rem; color:#64748b; font-weight:600;">/ 272h</span></div>
+                        <div class="dir-kpi-desc">Fev: 11d (44h) | Mar: 22d (88h) | Abr: 20d (80h) | Mai: 15d (60h)</div>
+                    </div>
+
+                    <div class="dir-kpi-card" style="border-left: 4px solid #10b981;">
+                        <div class="dir-kpi-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>2º Trimestre</span>
+                            <span style="font-size:0.75rem; font-weight:800; color:#059669; background:#ecfdf5; padding:2px 8px; border-radius:6px;">26/05 a 04/09</span>
+                        </div>
+                        <div class="dir-kpi-val" style="color:#047857; font-size:1.4rem;">67 dias <span style="font-size:0.875rem; color:#64748b; font-weight:600;">/ 268h</span></div>
+                        <div class="dir-kpi-desc">Mai: 4d (16h) | Jun: 20d (80h) | Jul: 18d (72h) | Ago: 21d (84h) | Set: 4d (16h)</div>
+                    </div>
+
+                    <div class="dir-kpi-card" style="border-left: 4px solid #f59e0b;">
+                        <div class="dir-kpi-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>3º Trimestre</span>
+                            <span style="font-size:0.75rem; font-weight:800; color:#d97706; background:#fffbeb; padding:2px 8px; border-radius:6px;">09/09 a 15/12</span>
+                        </div>
+                        <div class="dir-kpi-val" style="color:#b45309; font-size:1.4rem;">65 dias <span style="font-size:0.875rem; color:#64748b; font-weight:600;">/ 260h</span></div>
+                        <div class="dir-kpi-desc">Set: 16d (64h) | Out: 19d (76h) | Nov: 19d (76h) | Dez: 11d (44h)</div>
+                    </div>
+
+                    <div class="dir-kpi-card" style="border-left: 4px solid #8b5cf6;">
+                        <div class="dir-kpi-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Total Ano Letivo 2026</span>
+                            <span style="font-size:0.75rem; font-weight:800; color:#7c3aed; background:#f5f3ff; padding:2px 8px; border-radius:6px;">Oficial Pedro Rizzi</span>
+                        </div>
+                        <div class="dir-kpi-val" style="color:#6d28d9; font-size:1.4rem;">200 dias <span style="font-size:0.875rem; color:#64748b; font-weight:600;">/ 800 horas</span></div>
+                        <div class="dir-kpi-desc">Cumprimento integral da LDB / Matriz Curricular</div>
+                    </div>
+                </div>
+
                 <!-- Régua de Contagem Regressiva dos Próximos Prazos -->
-                <div id="dirCalReguaPrazos" class="dir-kpi-grid">
+                <div id="dirCalReguaPrazos" class="dir-kpi-grid" style="margin-bottom: 20px;">
                     <!-- Preenchido via JS com os próximos prazos -->
                 </div>
 
-                <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <!-- Cabeçalho do Calendário & Ações -->
+                <div class="dir-card" style="padding: 16px 24px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
                         <h4 class="dir-card-title">
-                            <i class="fa-solid fa-calendar-days" style="color:var(--dir-accent-amber);"></i> Cronograma & Marcos Institucionais do Ano Letivo
+                            <i class="fa-solid fa-calendar-days" style="color:var(--dir-accent-amber);"></i> Cronograma & Marcos do Ano Letivo 2026
                         </h4>
-                        <p class="dir-card-subtitle">Conselhos de classe, prazos de fechamento de notas, reuniões pedagógicas e eventos comemorativos.</p>
+                        <p class="dir-card-subtitle">Base oficial importada da planilha <strong>Calendario_Escolar_2026_Pedro_Rizzi.xlsx</strong> (105 eventos oficiais cadastrados).</p>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" onclick="restaurarCalendarioOficialExcel()" class="dir-btn dir-btn-secondary" style="min-height:38px; border-color:#cbd5e1; color:#334155; background:#f8fafc;" title="Restaura os 105 eventos originais da planilha oficial">
+                            <i class="fa-solid fa-file-excel" style="color:#16a34a;"></i> Recarregar da Planilha
+                        </button>
                         <button type="button" onclick="openImportarCalendarioModal()" class="dir-btn dir-btn-secondary" style="min-height:38px; border-color:#fdba74; color:#c2410c; background:#fff7ed;">
-                            <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Importar do PDF Oficial (Abril)
+                            <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Importar do PDF (Abril)
                         </button>
                         <button type="button" onclick="openNovoEventoCalendarioModal()" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c;">
-                            <i class="fa-solid fa-calendar-plus"></i> Novo Evento Letivo
+                            <i class="fa-solid fa-calendar-plus"></i> Novo Evento
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Filtros do Calendário -->
+                <div class="dir-filter-bar" style="margin-bottom: 16px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:280px;">
+                        <input type="text" id="dirCalFilterBusca" oninput="renderDirCalendarioEscolar()" placeholder="🔍 Buscar por evento, palavra-chave ou local..." class="dir-input" style="min-width:240px; flex:1;">
+                        
+                        <select id="dirCalFilterMes" onchange="renderDirCalendarioEscolar()" class="dir-select" style="min-width:160px; width:auto;">
+                            <option value="">📅 Todos os Meses (105 eventos)</option>
+                            <option value="Janeiro">Janeiro</option>
+                            <option value="Fevereiro">Fevereiro</option>
+                            <option value="Março">Março</option>
+                            <option value="Abril">Abril</option>
+                            <option value="Maio">Maio</option>
+                            <option value="Junho">Junho</option>
+                            <option value="Julho">Julho</option>
+                            <option value="Agosto">Agosto</option>
+                            <option value="Setembro">Setembro</option>
+                            <option value="Outubro">Outubro</option>
+                            <option value="Novembro">Novembro</option>
+                            <option value="Dezembro">Dezembro</option>
+                        </select>
+
+                        <select id="dirCalFilterCategoria" onchange="renderDirCalendarioEscolar()" class="dir-select" style="min-width:180px; width:auto;">
+                            <option value="">🏷️ Todas as Categorias</option>
+                            <option value="feriado">Feriado / Recesso</option>
+                            <option value="marco_letivo">Marco Letivo / Início-Término</option>
+                            <option value="formacao">Formação Continuada / Pedagógica</option>
+                            <option value="reuniao_gestao">Reunião de Gestão / Equipe</option>
+                            <option value="conselho_classe">Conselho de Classe</option>
+                            <option value="leitura">Parada para Leitura</option>
+                            <option value="civica">Homenagem Cívica</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" onclick="resetDirCalFiltros()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; padding:6px 14px;" title="Limpar Filtros">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Limpar
                         </button>
                     </div>
                 </div>
@@ -1333,18 +1409,21 @@
                         <table class="dir-table">
                             <thead>
                                 <tr>
-                                    <th>Data & Horário</th>
-                                    <th>Categoria</th>
-                                    <th>Título do Evento</th>
-                                    <th>Público-Alvo</th>
-                                    <th>Local</th>
-                                    <th style="text-align:center;">Ações</th>
+                                    <th style="width:140px;">Mês & Data</th>
+                                    <th style="width:160px;">Categoria</th>
+                                    <th>Descrição do Evento / Pauta</th>
+                                    <th style="width:140px;">Público-Alvo</th>
+                                    <th style="width:140px;">Local</th>
+                                    <th style="width:80px; text-align:center;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="dirTableEventosCalendarioBody">
                                 <!-- Renderizado via JS -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="dirCalPaginationInfo" class="dir-table-pagination" style="font-size:0.8125rem; color:var(--dir-text-muted); font-weight:600;">
+                        <span>Mostrando eventos do Calendário Escolar 2026</span>
                     </div>
                 </div>
             </div>
@@ -3941,9 +4020,9 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20260921_v27"></script>
-    <script src="js/gestao-data.js?v=20260921_v27"></script>
-    <script src="js/gestao-app.js?v=20260921_v27"></script>
+    <script src="js/calendario-oficial-data.js?v=20260921_v28"></script>
+    <script src="js/gestao-data.js?v=20260921_v28"></script>
+    <script src="js/gestao-app.js?v=20260921_v28"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

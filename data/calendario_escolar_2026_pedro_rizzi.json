@@ -1,4 +1,4 @@
-window.CALENDARIO_OFICIAL_CEPR_2026_BUNDLE = {
+{
   "ano": 2026,
   "escola": "Centro Educacional Pedro Rizzi",
   "origem": "Planilha Oficial Calendario_Escolar_2026_Pedro_Rizzi.xlsx",
@@ -1358,6 +1358,4 @@ window.CALENDARIO_OFICIAL_CEPR_2026_BUNDLE = {
       "local": "C.E. Pedro Rizzi"
     }
   ]
-};
-
-window.CALENDARIO_OFICIAL_CEPR_2026 = window.CALENDARIO_OFICIAL_CEPR_2026_BUNDLE.eventos;
+}

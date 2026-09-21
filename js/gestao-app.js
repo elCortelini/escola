@@ -5914,10 +5914,10 @@ function aplicarTemplateWhatsAppDirecao() {
     if (!textarea) return;
 
     const templatesMap = {
-        convocacao_gabinete: `Olá, {nome}! Aqui é da Direção do Centro Educacional Pedro Rizzi.\n\nSolicitamos seu comparecimento à escola nesta semana para tratarmos do acompanhamento pedagógico e frequência escolar do(a) estudante.\n\nPor favor, confirme o recebimento desta mensagem e nos informe seu melhor dia e horário. Atenciosamente,\nDireção Escolar — {escola}`,
-        lembrete_orientacao: `Prezado(a) {nome},\n\nLembramos que há um agendamento com a Orientação Educacional do {escola} programado para os próximos dias.\n\nSua presença é fundamental para o sucesso escolar do estudante. Contamos com você!\nAtenciosamente, Direção & Orientação.`,
-        alerta_infrequencia: `Prezado(a) {nome},\n\nIdentificamos ausências reiteradas do estudante nos últimos dias letivos no {escola}. Lembramos que a frequência escolar é obrigatória por lei e essencial para a aprendizagem.\n\nSolicitamos justificativa ou contato urgente com a Direção Escolar pelo telefone (47) 3348-0000.`,
-        comunicado_geral: `Comunicado Oficial da Direção — {escola}\n\nPrezado(a) {nome},\nInformamos à comunidade escolar que as atividades pedagógicas seguem conforme o cronograma oficial.\n\nQualquer dúvida estamos à disposição na secretaria da escola.\nAtenciosamente, Direção Escolar.`,
+        convocacao_gabinete: `Olá, {nome}! Aqui é da Direção do Centro Educacional Pedro Rizzi.\nSolicitamos seu comparecimento à escola nesta semana para tratarmos do acompanhamento pedagógico e frequência escolar do(a) estudante.\nPor favor, confirme o recebimento desta mensagem e nos informe seu melhor dia e horário. Atenciosamente,\nDireção Escolar — {escola}`,
+        lembrete_orientacao: `Prezado(a) {nome},\nLembramos que há um agendamento com a Orientação Educacional do {escola} programado para os próximos dias.\nSua presença é fundamental para o sucesso escolar do estudante. Contamos com você!\nAtenciosamente, Direção & Orientação.`,
+        alerta_infrequencia: `Prezado(a) {nome},\nIdentificamos ausências reiteradas do estudante nos últimos dias letivos no {escola}. Lembramos que a frequência escolar é obrigatória por lei e essencial para a aprendizagem.\nSolicitamos justificativa ou contato urgente com a Direção Escolar pelo telefone (47) 3348-0000.`,
+        comunicado_geral: `Comunicado Oficial da Direção — {escola}\nPrezado(a) {nome},\nInformamos à comunidade escolar que as atividades pedagógicas seguem conforme o cronograma oficial.\nQualquer dúvida estamos à disposição na secretaria da escola.\nAtenciosamente, Direção Escolar.`,
         personalizado: ""
     };
 
@@ -7009,12 +7009,32 @@ function exportarRelatorioDirecaoCSV() {
 // ----------------------------------------------------
 // SUB-ABA 6: CALENDÁRIO DO ANO LETIVO & PRAZOS
 // ----------------------------------------------------
+function getCalCategoriaBadge(cat, desc) {
+    let bg = '#ffedd5', color = '#c2410c';
+    if (cat === 'feriado' || cat === 'feriado_recesso') { bg = '#fee2e2'; color = '#b91c1c'; }
+    else if (cat === 'recesso') { bg = '#fef3c7'; color = '#b45309'; }
+    else if (cat === 'marco_letivo') { bg = '#eff6ff'; color = '#1d4ed8'; }
+    else if (cat === 'formacao') { bg = '#f3e8ff'; color = '#7e22ce'; }
+    else if (cat === 'reuniao_gestao' || cat === 'reuniao_pedagogica') { bg = '#e0e7ff'; color = '#4338ca'; }
+    else if (cat === 'conselho_classe') { bg = '#dbeafe'; color = '#1e40af'; }
+    else if (cat === 'leitura') { bg = '#ecfdf5'; color = '#047857'; }
+    else if (cat === 'civica') { bg = '#fef9c3'; color = '#a16207'; }
+    return `<span style="background:${bg}; color:${color}; padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:800; display:inline-block; white-space:nowrap;">${desc || 'Evento'}</span>`;
+}
+
 function renderDirCalendarioEscolar() {
     const regua = document.getElementById("dirCalReguaPrazos");
     const tbody = document.getElementById("dirTableEventosCalendarioBody");
+    const paginationInfo = document.getElementById("dirCalPaginationInfo");
     if (!tbody) return;
 
-    const eventos = sigeDB.getEventosCalendarioEscolar() || [];
+    let eventos = sigeDB.getEventosCalendarioEscolar() || [];
+    // Auto-popula se estiver vazio e base global disponível
+    if (eventos.length === 0 && typeof window !== 'undefined' && Array.isArray(window.CALENDARIO_OFICIAL_CEPR_2026) && window.CALENDARIO_OFICIAL_CEPR_2026.length > 0) {
+        eventos = [...window.CALENDARIO_OFICIAL_CEPR_2026];
+        sigeDB.data.eventosCalendarioEscolar = eventos;
+        sigeDB.saveData(sigeDB.data);
+    }
 
     // Régua de Contagem Regressiva
     if (regua) {
@@ -7024,25 +7044,24 @@ function renderDirCalendarioEscolar() {
         if (futuros.length === 0) {
             regua.innerHTML = `
                 <div style="grid-column: 1 / -1; background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #cbd5e1; font-size:0.85rem; color:#64748b; text-align:center;">
-                    Nenhum prazo próximo ou marco agendado para os próximos dias.
+                    Nenhum prazo próximo ou marco agendado para os próximos dias a partir de hoje (${formatDateBR(hoje)}).
                 </div>
             `;
         } else {
             regua.innerHTML = futuros.map(f => {
                 const diffDays = Math.ceil((new Date(f.data) - new Date(hoje)) / (1000 * 60 * 60 * 24));
+                const dataDisp = f.dataExibicao || formatDateBR(f.data);
                 return `
                     <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #ea580c; box-shadow:var(--shadow-sm);">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:0.75rem; font-weight:800; background:#ffedd5; color:#c2410c; padding:2px 8px; border-radius:8px;">
-                                ${f.categoriaDesc || 'Marco Escolar'}
-                            </span>
+                            ${getCalCategoriaBadge(f.categoria, f.categoriaDesc)}
                             <span style="font-size:0.8rem; font-weight:800; color:#ea580c;">
                                 ${diffDays === 0 ? '🚨 É HOJE!' : `Faltam ${diffDays} dia(s)`}
                             </span>
                         </div>
                         <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:8px 0 4px 0;">${f.titulo}</h4>
                         <div style="font-size:0.78rem; color:#64748b;">
-                            <i class="fa-regular fa-calendar"></i> ${formatDateBR(f.data)} ${f.hora ? `às ${f.hora}` : ''} | ${f.local || 'Escola'}
+                            <i class="fa-regular fa-calendar"></i> ${dataDisp} ${f.hora ? `às ${f.hora}` : ''} | ${f.local || 'C.E. Pedro Rizzi'}
                         </div>
                     </div>
                 `;
@@ -7050,84 +7069,93 @@ function renderDirCalendarioEscolar() {
         }
     }
 
-    if (eventos.length === 0) {
+    // Filtros
+    const busca = (document.getElementById("dirCalFilterBusca")?.value || "").toLowerCase().trim();
+    const mesFilter = document.getElementById("dirCalFilterMes")?.value || "";
+    const catFilter = document.getElementById("dirCalFilterCategoria")?.value || "";
+
+    const filtrados = eventos.filter(e => {
+        if (mesFilter && (e.mes || "") !== mesFilter) return false;
+        if (catFilter) {
+            if (catFilter === 'feriado' && e.categoria !== 'feriado' && e.categoria !== 'recesso' && e.categoria !== 'feriado_recesso') return false;
+            else if (catFilter !== 'feriado' && e.categoria !== catFilter) return false;
+        }
+        if (busca) {
+            const str = `${e.titulo || ''} ${e.descricao || ''} ${e.mes || ''} ${e.dataExibicao || ''} ${e.local || ''}`.toLowerCase();
+            if (!str.includes(busca)) return false;
+        }
+        return true;
+    });
+
+    if (paginationInfo) {
+        paginationInfo.innerHTML = `<span>Mostrando <strong>${filtrados.length}</strong> de <strong>${eventos.length}</strong> eventos cadastrados no Calendário Escolar 2026.</span>`;
+    }
+
+    if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="padding:2rem; text-align:center; color:#64748b;">
-                    Nenhum evento registrado no calendário do ano letivo.
+                <td colspan="6" style="padding:2.5rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-calendar-xmark" style="font-size:2rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                    Nenhum evento letivo encontrado para os filtros selecionados.
                 </td>
             </tr>
         `;
         return;
     }
 
-    tbody.innerHTML = eventos.map(e => `
-        <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-            <td style="padding:12px 16px; font-weight:600; color:#1e293b;">
-                <div>${formatDateBR(e.data)}</div>
-                <div style="font-size:0.75rem; color:#64748b;">${e.hora ? `às ${e.hora}` : ''}</div>
-            </td>
-            <td style="padding:12px 16px;">
-                <span style="background:#ffedd5; color:#c2410c; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:700;">
-                    ${e.categoriaDesc || 'Evento'}
-                </span>
-            </td>
-            <td style="padding:12px 16px;">
-                <strong style="color:#0f172a; display:block;">${e.titulo}</strong>
-                ${e.descricao ? `<span style="font-size:0.75rem; color:#64748b;">${e.descricao}</span>` : ''}
-            </td>
-            <td style="padding:12px 16px; font-size:0.82rem; color:#475569;">
-                ${e.publicoAlvo === 'professores' ? '👨‍🏫 Professores' : (e.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (e.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'))}
-            </td>
-            <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
-                ${e.local || '-'}
-            </td>
-            <td style="padding:12px 16px; text-align:center;">
-                <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join("");
+    tbody.innerHTML = filtrados.map(e => {
+        const dataDisp = e.dataExibicao || formatDateBR(e.data);
+        const descTexto = (e.descricao && e.descricao !== e.titulo) ? e.descricao : '';
+
+        return `
+            <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                <td style="padding:12px 16px; font-weight:700; color:#1e293b; white-space:nowrap;">
+                    <div style="font-size:0.875rem;">${dataDisp}</div>
+                    ${e.mes ? `<span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">${e.mes}</span>` : ''}
+                    ${e.hora ? `<div style="font-size:0.75rem; color:#64748b;">às ${e.hora}</div>` : ''}
+                </td>
+                <td style="padding:12px 16px;">
+                    ${getCalCategoriaBadge(e.categoria, e.categoriaDesc)}
+                </td>
+                <td style="padding:12px 16px;">
+                    <strong style="color:#0f172a; display:block; font-size:0.9rem; line-height:1.4;">${e.titulo}</strong>
+                    ${descTexto ? `<span style="font-size:0.8rem; color:#475569; display:block; margin-top:3px; line-height:1.4;">${descTexto}</span>` : ''}
+                </td>
+                <td style="padding:12px 16px; font-size:0.82rem; color:#475569; white-space:nowrap;">
+                    ${e.publicoAlvo === 'professores' ? '👨‍🏫 Professores' : (e.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (e.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'))}
+                </td>
+                <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
+                    ${e.local || 'C.E. Pedro Rizzi'}
+                </td>
+                <td style="padding:12px 16px; text-align:center;">
+                    <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
 }
 
-function openNovoEventoCalendarioModal() {
-    const modal = document.getElementById("modalNovoEventoCalendario");
-    if (modal) modal.style.display = "flex";
-}
-
-function closeNovoEventoCalendarioModal() {
-    const modal = document.getElementById("modalNovoEventoCalendario");
-    if (modal) modal.style.display = "none";
-}
-
-function salvarNovoEventoCalendario(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const titulo = document.getElementById("calInputTitulo")?.value.trim();
-    const data = document.getElementById("calInputData")?.value;
-    const hora = document.getElementById("calInputHora")?.value;
-    const categoria = document.getElementById("calInputCategoria")?.value;
-    const categoriaDesc = document.getElementById("calInputCategoria")?.selectedOptions[0]?.text;
-    const publicoAlvo = document.getElementById("calInputPublico")?.value;
-    const local = document.getElementById("calInputLocal")?.value.trim();
-    const descricao = document.getElementById("calInputDescricao")?.value.trim();
-
-    if (!titulo || !data) return;
-
-    sigeDB.addEventoCalendarioEscolar({
-        titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
-    });
-
-    closeNovoEventoCalendarioModal();
+function resetDirCalFiltros() {
+    const b = document.getElementById("dirCalFilterBusca");
+    const m = document.getElementById("dirCalFilterMes");
+    const c = document.getElementById("dirCalFilterCategoria");
+    if (b) b.value = "";
+    if (m) m.value = "";
+    if (c) c.value = "";
     renderDirCalendarioEscolar();
-    showToast(`Evento "${titulo}" adicionado ao calendário escolar!`);
 }
 
-function excluirEventoCalendario(id) {
-    if (confirm("Deseja realmente remover este evento do calendário?")) {
-        sigeDB.deleteEventoCalendarioEscolar(id);
+function restaurarCalendarioOficialExcel() {
+    if (!window.CALENDARIO_OFICIAL_CEPR_2026 || !Array.isArray(window.CALENDARIO_OFICIAL_CEPR_2026) || window.CALENDARIO_OFICIAL_CEPR_2026.length === 0) {
+        showToast("Erro: Base oficial não encontrada. Recarregue a página.", "warning");
+        return;
+    }
+    if (confirm(`Deseja restaurar todos os ${window.CALENDARIO_OFICIAL_CEPR_2026.length} eventos oficiais da planilha oficial Calendario_Escolar_2026_Pedro_Rizzi.xlsx?`)) {
+        sigeDB.importarEventosCalendarioLote(window.CALENDARIO_OFICIAL_CEPR_2026, true);
         renderDirCalendarioEscolar();
-        showToast("Evento removido do calendário.");
+        showToast(`🎉 ${window.CALENDARIO_OFICIAL_CEPR_2026.length} eventos oficiais da planilha foram restaurados!`);
     }
 }
 
