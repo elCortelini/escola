@@ -1,0 +1,1550 @@
+window.CALENDARIO_OFICIAL_CEPR_2026 = [
+  {
+    "data": "2026-01-01",
+    "titulo": "Ano Novo",
+    "descricao": "Ano Novo.",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-01-05",
+    "dataFim": "2026-01-30",
+    "titulo": "Plantão de férias da Educação Infantil",
+    "descricao": "Período de 05 a 30 de Janeiro: Plantão de férias da Educação Infantil.",
+    "categoria": "recesso",
+    "categoriaDesc": "Recesso / Férias",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-01-21",
+    "titulo": "Retorno de diretores e secretários às unidades de ensino, após o período de férias de 30 dias",
+    "descricao": "Retorno de diretores e secretários às unidades de ensino, após o período de férias de 30 dias.",
+    "categoria": "recesso",
+    "categoriaDesc": "Recesso / Férias",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-01-28",
+    "titulo": "Reunião pedagógica com diretores de unidades de ensino",
+    "descricao": "Reunião pedagógica com diretores de unidades de ensino.",
+    "categoria": "formacao",
+    "categoriaDesc": "Formação Continuada",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-01-29",
+    "titulo": "Reunião administrativa com diretores de unidades de ensino",
+    "descricao": "Reunião administrativa com diretores de unidades de ensino.",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-01-30",
+    "titulo": "Reunião administrativa com os secretários de unidades de ensino",
+    "descricao": "Reunião administrativa com os secretários de unidades de ensino.",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-04",
+    "titulo": "Retorno dos profissionais da educação e organização dos espaços nas unidades de ensino",
+    "descricao": "Retorno dos profissionais da educação e organização dos espaços nas unidades de ensino.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-05",
+    "dataFim": "2026-02-10",
+    "titulo": "Formação Continuada, reunião e planejamento administrativo e pedagógico",
+    "descricao": "Período de 05 a 10 de Fevereiro: Formação Continuada, reunião e planejamento administrativo e pedagógico.",
+    "categoria": "formacao",
+    "categoriaDesc": "Formação Continuada",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-05",
+    "titulo": "Formação",
+    "descricao": "Formação. (igreja reviver).",
+    "categoria": "formacao",
+    "categoriaDesc": "Formação Continuada",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-06",
+    "titulo": "Formação",
+    "descricao": "Formação. (secretaria municipal de educação).",
+    "categoria": "formacao",
+    "categoriaDesc": "Formação Continuada",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-11",
+    "titulo": "Início das aulas",
+    "descricao": "Início das aulas.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-11",
+    "dataFim": "2026-02-27",
+    "titulo": "Período de acolhimento e diagnóstico do desenvolvimento e da aprendizagem",
+    "descricao": "Período de 11 a 27 de Fevereiro: Período de acolhimento e diagnóstico do desenvolvimento e da aprendizagem.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-16",
+    "titulo": "Emenda de feriado – (não haverá aula)",
+    "descricao": "Emenda de feriado – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-17",
+    "titulo": "Feriado: Carnaval – (não haverá aula)",
+    "descricao": "Feriado: Carnaval – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-23",
+    "titulo": "Reunião de pais",
+    "descricao": "Reunião de pais. (1º e 2º ano). Horário: 18:30 às 20:00 horas.",
+    "categoria": "reuniao_pais",
+    "categoriaDesc": "Reunião de Pais / Boletins",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-24",
+    "titulo": "Reunião de pais",
+    "descricao": "Reunião de pais. (3º, 4º e 5º ano). Horário: 18:30 às 20:00 horas.",
+    "categoria": "reuniao_pais",
+    "categoriaDesc": "Reunião de Pais / Boletins",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-24",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-02-25",
+    "titulo": "Reunião de pais",
+    "descricao": "Reunião de pais. (6º ao 8º ano). Horário: 18:30 às 20:00 horas.",
+    "categoria": "reuniao_pais",
+    "categoriaDesc": "Reunião de Pais / Boletins",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-02",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-03",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-03",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-10",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30)",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-10",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-10",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-11",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-12",
+    "titulo": "Pesquisa–Projeto LAB- PROA - UNIVALI",
+    "descricao": "Pesquisa–Projeto LAB- PROA - UNIVALI",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-17",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-17",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-19",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-24",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-24",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-27",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-27",
+    "titulo": "Prazo para início do processo de reclassifcação em atendimento à Resolução do COMED nº 006/2022",
+    "descricao": "Prazo para início do processo de reclassifcação em atendimento à Resolução do COMED nº 006/2022.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-27",
+    "titulo": "Reunião pais",
+    "descricao": "Reunião pais. (Alunos reprovados).",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-27",
+    "titulo": "Data final para o envio das provas da Apreensão conceitual para impressão",
+    "descricao": "Data final para o envio das provas da Apreensão conceitual para impressão.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-31",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-03-31",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-02",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-03",
+    "titulo": "Feriado: Sexta-Feira Santa – (não haverá aula)",
+    "descricao": "Feriado: Sexta-Feira Santa – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-07",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-07",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-07",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-10",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-10",
+    "titulo": "Final do processo de reclassificação em atendimento à Resolução do COMED nº 006/2022",
+    "descricao": "Final do processo de reclassificação em atendimento à Resolução do COMED nº 006/2022.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-13",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-14",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-14",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-16",
+    "titulo": "Comemoração aniversário Pedro Rizzi/ Dia 18 – Dia Nacional da Literatura infantil",
+    "descricao": "Comemoração aniversário Pedro Rizzi/ Dia 18 – Dia Nacional da Literatura infantil.",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-20",
+    "titulo": "Envio das questões da prova trimestral no drive",
+    "descricao": "Envio das questões da prova trimestral no drive.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-21",
+    "titulo": "Feriado: Tiradentes – (não haverá aula)",
+    "descricao": "Feriado: Tiradentes – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-22",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-28",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-28",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-04-30",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-01",
+    "titulo": "Feriado: Dia do Trabalhador – (não haverá aula)",
+    "descricao": "Feriado: Dia do Trabalhador – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-04",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-05",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-05",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-06",
+    "titulo": "Avaliação Trimestral",
+    "descricao": "Avaliação Trimestral.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-08",
+    "titulo": "Festa família Pedro Rizzi",
+    "descricao": "Festa família Pedro Rizzi.",
+    "categoria": "evento_cultural",
+    "categoriaDesc": "Evento Festivo / Esportivo",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-11",
+    "dataFim": "2026-05-22",
+    "titulo": "Pré conselho do 1º trimestre",
+    "descricao": "Período de 11 a 22 de Maio: Pré conselho do 1º trimestre.",
+    "categoria": "conselho_classe",
+    "categoriaDesc": "Conselho de Classe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-12",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-12",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-12",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-13",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-14",
+    "titulo": "Projeto LAB- PROA - UNIVALI",
+    "descricao": "Projeto LAB- PROA - UNIVALI",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-19",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-19",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-21",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-25",
+    "titulo": "Ensino Fundamental: 1º conselho de classe / Educação Infantil, Educação Integral, CEMESPI e Banda Filarmônica: Reunião pedagógica e Formação continuada - (não haverá aula)",
+    "descricao": "Ensino Fundamental: 1º conselho de classe / Educação Infantil, Educação Integral, CEMESPI e Banda Filarmônica: Reunião pedagógica e Formação continuada - (não haverá aula). Secretaria Municipal de Educação Avenida Vereador Abrahão João Francisco, 3855 - Ressacada 88307-303–Itajaí–Santa Catarina Fone: 47 3249-3300 diretoriaexecutiva@edu.itajai.sc.gov.br",
+    "categoria": "conselho_classe",
+    "categoriaDesc": "Conselho de Classe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-26",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-26",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-05-29",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-01",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-02",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-02",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-04",
+    "titulo": "Feriado: Corpus Christi – (não haverá aula)",
+    "descricao": "Feriado: Corpus Christi – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-05",
+    "titulo": "Entrega de boletins",
+    "descricao": "Entrega de boletins. (noturno).",
+    "categoria": "reuniao_pais",
+    "categoriaDesc": "Reunião de Pais / Boletins",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-09",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-09",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-09",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-10",
+    "titulo": "Festa Julina (período noturno)",
+    "descricao": "Festa Julina (período noturno).",
+    "categoria": "evento_cultural",
+    "categoriaDesc": "Evento Festivo / Esportivo",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-11",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-15",
+    "titulo": "Feriado: Aniversário de Itajaí – (não haverá aula)",
+    "descricao": "Feriado: Aniversário de Itajaí – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-16",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-16",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-17",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-23",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-23",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-26",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-30",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-06-30",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-03",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-06",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-07",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-07",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-07",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-14",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-14",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-15",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-20",
+    "dataFim": "2026-07-24",
+    "titulo": "Interclasse–Anos finais",
+    "descricao": "Período de 20 a 24 de Julho: Interclasse–Anos finais. (inscrições e premiação).",
+    "categoria": "evento_cultural",
+    "categoriaDesc": "Evento Festivo / Esportivo",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-21",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-21",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-24",
+    "titulo": "Envio das questões da prova trimestral no drive",
+    "descricao": "Envio das questões da prova trimestral no drive.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-07-27",
+    "dataFim": "2026-07-31",
+    "titulo": "Recesso escolar – (não haverá aula)",
+    "descricao": "Período de 27 a 31 de Julho: Recesso escolar – (não haverá aula).",
+    "categoria": "recesso",
+    "categoriaDesc": "Recesso / Férias",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-03",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-04",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-04",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-11",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-11",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-11",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-12",
+    "titulo": "Avaliação Trimestral",
+    "descricao": "Avaliação Trimestral.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-13",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-17",
+    "dataFim": "2026-08-28",
+    "titulo": "Pré conselho do 2º trimestre",
+    "descricao": "Período de 17 a 28 de Agosto: Pré conselho do 2º trimestre.",
+    "categoria": "conselho_classe",
+    "categoriaDesc": "Conselho de Classe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-18",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-18",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-21",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-25",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-25",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-08-26",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-01",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-01",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-04",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-07",
+    "titulo": "Feriado: Independência do Brasil–Desfile Cívico – (não haverá aula)",
+    "descricao": "Feriado: Independência do Brasil–Desfile Cívico – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-08",
+    "titulo": "Ensino Fundamental: 2º conselho de classe / Educação Infantil, Educação Integral, CEMESPI e Banda Filarmônica: Reunião pedagógica e Formação continuada – (não haverá aula)",
+    "descricao": "Ensino Fundamental: 2º conselho de classe / Educação Infantil, Educação Integral, CEMESPI e Banda Filarmônica: Reunião pedagógica e Formação continuada – (não haverá aula).",
+    "categoria": "conselho_classe",
+    "categoriaDesc": "Conselho de Classe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-09",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-11",
+    "titulo": "Entrega de boletins",
+    "descricao": "Entrega de boletins. (noturno).",
+    "categoria": "reuniao_pais",
+    "categoriaDesc": "Reunião de Pais / Boletins",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-15",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-15",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-15",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-17",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-22",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-22",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-25",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-29",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-09-29",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-01",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-05",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-06",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-06",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-08",
+    "titulo": "Feira do conhecimento",
+    "descricao": "Feira do conhecimento. (Noturno).",
+    "categoria": "evento_cultural",
+    "categoriaDesc": "Evento Festivo / Esportivo",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-12",
+    "titulo": "Feriado: Padroeira do Brasil / Dia da Criança – (não haverá aula)",
+    "descricao": "Feriado: Padroeira do Brasil / Dia da Criança – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-13",
+    "titulo": "Antecipação do Dia do Professor – (não haverá aula)",
+    "descricao": "Antecipação do Dia do Professor – (não haverá aula).",
+    "categoria": "marco_letivo",
+    "categoriaDesc": "Marco Letivo Oficial",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-14",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-20",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-20",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-20",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-21",
+    "dataFim": "2026-10-23",
+    "titulo": "Interclasse–Anos iniciais",
+    "descricao": "Período de 21 a 23 de Outubro: Interclasse–Anos iniciais.",
+    "categoria": "evento_cultural",
+    "categoriaDesc": "Evento Festivo / Esportivo",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-22",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-23",
+    "titulo": "Envio das questões da prova trimestral no drive",
+    "descricao": "Envio das questões da prova trimestral no drive.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-27",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-27",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-28",
+    "titulo": "Ponto facultativo: Dia do Servidor Público – (não haverá aula)",
+    "descricao": "Ponto facultativo: Dia do Servidor Público – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-10-30",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-02",
+    "titulo": "Feriado: Finados – (não haverá aula)",
+    "descricao": "Feriado: Finados – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-03",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-03",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-05",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-10",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-10",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-10",
+    "titulo": "Reunião APP",
+    "descricao": "Reunião APP. (Horário 17:30).",
+    "categoria": "reuniao_app",
+    "categoriaDesc": "Reunião APP",
+    "publicoAlvo": "pais",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-11",
+    "titulo": "Avaliação Trimestral",
+    "descricao": "Avaliação Trimestral.",
+    "categoria": "avaliacao",
+    "categoriaDesc": "Avaliação Trimestral",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-13",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-16",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-16",
+    "dataFim": "2026-11-27",
+    "titulo": "Pré conselho do 3º trimestre",
+    "descricao": "Período de 16 a 27 de Novembro: Pré conselho do 3º trimestre.",
+    "categoria": "conselho_classe",
+    "categoriaDesc": "Conselho de Classe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-17",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-17",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-20",
+    "titulo": "Feriado: Dia da Consciência Negra – (não haverá aula)",
+    "descricao": "Feriado: Dia da Consciência Negra – (não haverá aula).",
+    "categoria": "feriado",
+    "categoriaDesc": "Feriado / Recesso",
+    "publicoAlvo": "escola_toda",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-24",
+    "titulo": "Homenagem cívica",
+    "descricao": "Homenagem cívica. (primeira aula).",
+    "categoria": "civica",
+    "categoriaDesc": "Homenagem Cívica",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-24",
+    "titulo": "Reunião administrativa",
+    "descricao": "Reunião administrativa. (direção, supervisão e orientação). (matutino).",
+    "categoria": "reuniao_gestao",
+    "categoriaDesc": "Reunião Gestão & Equipe",
+    "publicoAlvo": "professores",
+    "local": "C.E. Pedro Rizzi"
+  },
+  {
+    "data": "2026-11-27",
+    "titulo": "Parada para leitura",
+    "descricao": "Parada para leitura. 30 Minutos. (Primeira aula, todas as turmas).",
+    "categoria": "leitura",
+    "categoriaDesc": "Parada para Leitura",
+    "publicoAlvo": "alunos",
+    "local": "C.E. Pedro Rizzi"
+  }
+];

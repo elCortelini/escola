@@ -2966,6 +2966,41 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    importarEventosCalendarioLote(eventos, sobrescrever = true) {
+        if (!Array.isArray(eventos)) return 0;
+        if (!this.data.eventosCalendarioEscolar || sobrescrever) {
+            this.data.eventosCalendarioEscolar = [];
+        }
+        
+        let count = 0;
+        eventos.forEach(ev => {
+            if (!ev || !ev.data || !ev.titulo) return;
+            const novoEvento = {
+                id: generateSecureId('cal-ev'),
+                data: ev.data,
+                dataFim: ev.dataFim || null,
+                hora: ev.hora || '08:00',
+                titulo: ev.titulo,
+                categoria: ev.categoria || 'marco_letivo',
+                categoriaDesc: ev.categoriaDesc || 'Marco Letivo Oficial',
+                descricao: ev.descricao || '',
+                publicoAlvo: ev.publicoAlvo || 'escola_toda',
+                local: ev.local || 'C.E. Pedro Rizzi',
+                status: ev.status || 'agendado',
+                origem: 'PDF_OFICIAL_2026',
+                criadoEm: new Date().toISOString()
+            };
+            this.data.eventosCalendarioEscolar.push(novoEvento);
+            count++;
+        });
+
+        // Ordena por data
+        this.data.eventosCalendarioEscolar.sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+        this.addAuditLog(`Importação de ${count} Eventos do Calendário Oficial 2026 (PDF Abril)`, 'Direção');
+        this.saveData(this.data);
+        return count;
+    }
+
     getContatosWhatsApp() {
         return (this.data && Array.isArray(this.data.contatosWhatsAppDirecao)) ? this.data.contatosWhatsAppDirecao : [];
     }

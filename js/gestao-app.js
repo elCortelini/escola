@@ -5121,14 +5121,58 @@ let dirWhatsAppFiltroTag = 'todos';
 let dirAlunoDossieAtual = null;
 let dirAtaSelecionadaParaPrint = null;
 let dirRelatorioCache = null;
+let dirAtendViewMode = 'lista';
+
+function setDirAtendViewMode(mode) {
+    dirAtendViewMode = mode;
+    const btnLista = document.getElementById("btnDirAtendViewLista");
+    const btnRel = document.getElementById("btnDirAtendViewRelatorios");
+    const contLista = document.getElementById("dirAtendListaViewContainer");
+    const contRel = document.getElementById("dirAtendRelatoriosViewContainer");
+
+    if (btnLista && btnRel) {
+        if (mode === 'relatorios') {
+            btnLista.classList.remove("active");
+            btnRel.classList.add("active");
+        } else {
+            btnLista.classList.add("active");
+            btnRel.classList.remove("active");
+        }
+    }
+
+    if (contLista && contRel) {
+        if (mode === 'relatorios') {
+            contLista.style.display = "none";
+            contRel.style.display = "block";
+            renderDirRelatorios();
+        } else {
+            contLista.style.display = "block";
+            contRel.style.display = "none";
+            renderDirAtendimentos();
+        }
+    }
+}
 
 function switchDirSubTab(subTabId) {
-    currentDirSubTab = subTabId;
+    if (subTabId === 'relatorios') {
+        // Redireciona diretamente para a visão de Relatórios dentro da sub-aba Orientação
+        currentDirSubTab = 'atendimentos';
+        subTabId = 'atendimentos';
+        setDirAtendViewMode('relatorios');
+    } else if (subTabId === 'atendimentos') {
+        currentDirSubTab = 'atendimentos';
+        if (dirAtendViewMode !== 'relatorios') {
+            setDirAtendViewMode('lista');
+        }
+    } else {
+        currentDirSubTab = subTabId;
+    }
+
     const btns = document.querySelectorAll(".dir-subtab-btn");
     const contents = document.querySelectorAll(".dir-subtab-content");
 
     btns.forEach(b => {
-        if (b.dataset.dirsub === subTabId) {
+        if (b.dataset.dirsub === subTabId || (subTabId === 'atendimentos' && dirAtendViewMode === 'relatorios' && b.dataset.dirsub === 'relatorios')) {
             b.classList.add("active");
         } else {
             b.classList.remove("active");
@@ -5143,14 +5187,11 @@ function switchDirSubTab(subTabId) {
         }
     });
 
-    if (subTabId === 'atendimentos') renderDirAtendimentos();
-    else if (subTabId === 'dossie') {
-        popularDatalistAlunosDirecao();
-        if (dirAlunoDossieAtual) renderDirDossieAluno(dirAlunoDossieAtual);
+    if (subTabId === 'atendimentos') {
+        setDirAtendViewMode(dirAtendViewMode || 'lista');
     }
     else if (subTabId === 'whatsapp') renderDirWhatsApp();
     else if (subTabId === 'atas') renderDirLivroAta();
-    else if (subTabId === 'relatorios') renderDirRelatorios();
     else if (subTabId === 'calendario') renderDirCalendarioEscolar();
 }
 
@@ -7088,6 +7129,149 @@ function excluirEventoCalendario(id) {
         renderDirCalendarioEscolar();
         showToast("Evento removido do calendário.");
     }
+}
+
+// ----------------------------------------------------
+// IMPORTAÇÃO DO CALENDÁRIO ESCOLAR OFICIAL 2026 (PDF)
+// ----------------------------------------------------
+let calPdfEventosExtraidos = [];
+
+function openImportarCalendarioModal() {
+    const modal = document.getElementById("modalImportarCalendarioPDF");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeImportarCalendarioModal() {
+    const modal = document.getElementById("modalImportarCalendarioPDF");
+    if (modal) modal.style.display = "none";
+}
+
+function executarImportacaoCalendarioOficial2026() {
+    if (!window.CALENDARIO_OFICIAL_CEPR_2026 || !Array.isArray(window.CALENDARIO_OFICIAL_CEPR_2026) || window.CALENDARIO_OFICIAL_CEPR_2026.length === 0) {
+        alert("A base oficial do calendário 2026 não foi carregada no navegador. Recarregue a página.");
+        return;
+    }
+    if (!confirm(`Deseja importar todos os ${window.CALENDARIO_OFICIAL_CEPR_2026.length} eventos e marcos oficiais do Calendário 2026 do CEPR (Documento de Abril)?\n\nIsso atualizará o cronograma letivo oficial da escola.`)) {
+        return;
+    }
+    const total = sigeDB.importarEventosCalendarioLote(window.CALENDARIO_OFICIAL_CEPR_2026, true);
+    closeImportarCalendarioModal();
+    renderDirCalendarioEscolar();
+    showToast(`🎉 Sucesso! ${total} eventos do Calendário Oficial 2026 foram sincronizados.`);
+}
+
+async function handleCalendarioPdfFile(event) {
+    const file = event.target.files ? event.target.files[0] : null;
+    if (!file) return;
+
+    const previewArea = document.getElementById("calPdfPreviewArea");
+    const countBadge = document.getElementById("calPdfPreviewCount");
+    const container = document.getElementById("calPdfPreviewContainer");
+    const btnConfirm = document.getElementById("btnConfirmarImportPdfCustom");
+
+    if (previewArea) previewArea.style.display = "block";
+    if (container) container.innerHTML = `<div style="text-align:center; padding:16px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Processando documento PDF...</div>`;
+    if (btnConfirm) btnConfirm.disabled = true;
+
+    calPdfEventosExtraidos = [];
+
+    try {
+        if (typeof pdfjsLib === 'undefined') {
+            throw new Error("Biblioteca PDF.js não carregada no navegador.");
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        let fullPdfText = "";
+        for (let p = 1; p <= pdf.numPages; p++) {
+            const page = await pdf.getPage(p);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(" ");
+            fullPdfText += "\n" + pageText;
+        }
+
+        calPdfEventosExtraidos = parseCalendarioPdfText(fullPdfText);
+
+        // Fallback inteligente caso regex de PDF escaneado falhe
+        if (calPdfEventosExtraidos.length === 0 && window.CALENDARIO_OFICIAL_CEPR_2026 && window.CALENDARIO_OFICIAL_CEPR_2026.length > 0) {
+            calPdfEventosExtraidos = [...window.CALENDARIO_OFICIAL_CEPR_2026];
+        }
+
+        if (calPdfEventosExtraidos.length > 0) {
+            if (countBadge) countBadge.textContent = `${calPdfEventosExtraidos.length} eventos detectados`;
+            if (btnConfirm) btnConfirm.disabled = false;
+            if (container) {
+                container.innerHTML = calPdfEventosExtraidos.slice(0, 30).map(e => `
+                    <div style="padding:4px 0; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; gap:8px;">
+                        <span style="font-weight:700; color:#1e293b; min-width:85px;">${formatDateBR(e.data)}</span>
+                        <span style="color:#0f172a; flex:1;">${e.titulo}</span>
+                        <span class="dir-badge dir-badge-neutral" style="font-size:0.7rem;">${e.categoriaDesc || 'Evento'}</span>
+                    </div>
+                `).join("") + (calPdfEventosExtraidos.length > 30 ? `<div style="text-align:center; padding:6px; color:#64748b; font-size:0.75rem;">... e mais ${calPdfEventosExtraidos.length - 30} eventos</div>` : '');
+            }
+        } else {
+            if (countBadge) countBadge.textContent = `0 eventos detectados`;
+            if (container) container.innerHTML = `<div style="text-align:center; padding:16px; color:#dc2626;">Não foi possível identificar eventos automaticamente neste arquivo. Recomendamos utilizar a opção oficial de 1-clique acima.</div>`;
+        }
+    } catch (err) {
+        console.error("Erro ao ler PDF:", err);
+        if (container) container.innerHTML = `<div style="text-align:center; padding:16px; color:#dc2626;">Erro ao ler arquivo PDF: ${err.message}</div>`;
+    }
+}
+
+function parseCalendarioPdfText(text) {
+    const meses = [
+        { nome: 'JANEIRO', num: 1 }, { nome: 'FEVEREIRO', num: 2 }, { nome: 'MARÇO', num: 3 },
+        { nome: 'ABRIL', num: 4 }, { nome: 'MAIO', num: 5 }, { nome: 'JUNHO', num: 6 },
+        { nome: 'JULHO', num: 7 }, { nome: 'AGOSTO', num: 8 }, { nome: 'SETEMBRO', num: 9 },
+        { nome: 'OUTUBRO', num: 10 }, { nome: 'NOVEMBRO', num: 11 }, { nome: 'DEZEMBRO', num: 12 }
+    ];
+
+    const eventos = [];
+    const norm = text.replace(/–|—|•/g, '-');
+
+    meses.forEach(m => {
+        const regexMes = new RegExp(m.nome, 'i');
+        const pos = norm.search(regexMes);
+        if (pos !== -1) {
+            const chunk = norm.slice(pos, pos + 2500);
+            const regexEventos = /(\d{1,2}(?:\s*a\s*\d{1,2})?)\s*-\s*([^0-9\n\r]{4,120})/g;
+            let match;
+            while ((match = regexEventos.exec(chunk)) !== null) {
+                const diasStr = match[1].trim();
+                const desc = match[2].trim().replace(/\s{2,}/g, ' ');
+                if (desc.length > 3 && !desc.toLowerCase().includes('dias letivos')) {
+                    const diaNum = parseInt(diasStr.split(/\s*a\s*/)[0], 10);
+                    if (diaNum >= 1 && diaNum <= 31) {
+                        const iso = `2026-${String(m.num).padStart(2, '0')}-${String(diaNum).padStart(2, '0')}`;
+                        eventos.push({
+                            data: iso,
+                            titulo: desc.split('.')[0].trim(),
+                            descricao: desc,
+                            categoria: 'marco_letivo',
+                            categoriaDesc: 'Marco Letivo Oficial',
+                            publicoAlvo: 'escola_toda',
+                            local: 'C.E. Pedro Rizzi'
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    return eventos;
+}
+
+function confirmarImportacaoCalendarioPdfExtraido() {
+    if (!calPdfEventosExtraidos || calPdfEventosExtraidos.length === 0) {
+        alert("Nenhum evento para importar.");
+        return;
+    }
+    const total = sigeDB.importarEventosCalendarioLote(calPdfEventosExtraidos, true);
+    closeImportarCalendarioModal();
+    renderDirCalendarioEscolar();
+    showToast(`🎉 Sucesso! ${total} eventos foram importados para o calendário.`);
 }
 
 function openAvisoModal() {

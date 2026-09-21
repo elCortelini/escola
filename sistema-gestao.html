@@ -12,8 +12,8 @@
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260921_v26">
-    <link rel="stylesheet" href="css/gestao.css?v=20260921_v26">
+    <link rel="stylesheet" href="css/style.css?v=20260921_v27">
+    <link rel="stylesheet" href="css/gestao.css?v=20260921_v27">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
@@ -136,43 +136,28 @@
         <!-- ========================================== -->
         <!-- ABA 1: MURAL DE RECADOS & CALENDÁRIO -->
         <!-- ========================================== -->
+        <!-- ========================================== -->
+        <!-- ABA 1: MURAL DE RECADOS & CALENDÁRIO (EM BREVE) -->
+        <!-- ========================================== -->
         <section id="tab-mural" class="tab-content-section">
-            <div class="action-toolbar">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Mural do Dia & Calendário de Tarefas
-                    </h3>
-                    <p style="font-size:0.85rem; color:#64748b;">Avisos da escola, prazos organizacionais e atribuições de responsabilidade.</p>
+            <div class="dir-card" style="text-align:center; padding:64px 24px;">
+                <div style="width:72px; height:72px; border-radius:20px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:20px; box-shadow:0 8px 20px rgba(37,99,235,0.15);">
+                    <i class="fa-solid fa-bullhorn"></i>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button onclick="openAvisoModal()" class="btn btn-primary" style="width:auto;">
-                        <i class="fa-solid fa-plus"></i> Publicar Aviso
-                    </button>
-                    <button onclick="openNovaTarefaModal()" class="btn btn-secondary" style="width:auto;">
-                        <i class="fa-solid fa-calendar-plus"></i> Nova Tarefa no Calendário
-                    </button>
+                <div style="margin-bottom:12px;">
+                    <span class="dir-badge dir-badge-info" style="font-size:0.75rem; padding:4px 14px; text-transform:uppercase; letter-spacing:1px; font-weight:800;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Em Breve
+                    </span>
                 </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
-                <!-- Coluna Mural -->
-                <div>
-                    <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-note-sticky" style="color:#2563eb;"></i> Comunicados Oficiais
-                    </h4>
-                    <div id="muralContainer" class="mural-grid" style="grid-template-columns: 1fr;">
-                        <!-- Rendered via JS -->
-                    </div>
-                </div>
-
-                <!-- Coluna Calendário de Tarefas -->
-                <div>
-                    <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-calendar-days" style="color:#d97706;"></i> Calendário de Prazos (Quem & Quando)
-                    </h4>
-                    <div id="calendarioContainer">
-                        <!-- Rendered via JS -->
-                    </div>
+                <h3 style="font-size:1.5rem; font-weight:900; color:var(--dir-text-headings); margin-bottom:8px;">
+                    Mural Digital da Escola & Comunicados Oficiais
+                </h3>
+                <p style="font-size:0.9375rem; color:var(--dir-text-secondary); max-width:560px; margin:0 auto 24px auto; line-height:1.6;">
+                    Este recurso está em desenvolvimento para centralizar avisos da escola, comunicados aos responsáveis e recados internos para o corpo docente e administrativo.
+                </p>
+                <div style="display:inline-flex; gap:8px; background:#f8fafc; border:1px solid var(--dir-border-subtle); padding:10px 18px; border-radius:12px; font-size:0.8125rem; color:var(--dir-text-muted); font-weight:600;">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--dir-accent-primary); margin-top:2px;"></i>
+                    <span>Previsão de lançamento nas próximas atualizações do IntegraRizzi</span>
                 </div>
             </div>
         </section>
@@ -857,126 +842,203 @@
             </div>
 
             <!-- ========================================== -->
-            <!-- SUB-ABA 1: ATENDIMENTOS DA ORIENTAÇÃO -->
+            <!-- SUB-ABA 1: ATENDIMENTOS & RELATÓRIOS DA ORIENTAÇÃO -->
             <!-- ========================================== -->
             <div id="dirSubTab_atendimentos" class="dir-subtab-content">
-                <!-- KPI Cards Executivos da Orientação (8-Point Grid) -->
-                <div class="dir-kpi-grid">
-                    <div class="dir-kpi-card">
-                        <div class="dir-kpi-title">Total Atendimentos OE</div>
-                        <div id="dirStatTotalOP" class="dir-kpi-val" style="color:var(--dir-accent-primary);">0</div>
-                        <div class="dir-kpi-desc">Cadastrados no sistema</div>
+                <!-- Cabeçalho com Alternador Segmentado (Atendimentos vs Relatórios) -->
+                <div class="dir-card" style="padding:14px 20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h4 class="dir-card-title" style="font-size:1.15rem; margin:0;">
+                            <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Educacional (OE)
+                        </h4>
+                        <p class="dir-card-subtitle" style="margin:2px 0 0 0;">Acompanhe os atendimentos individuais ou emita relatórios analíticos consolidados por período.</p>
                     </div>
-
-                    <div class="dir-kpi-card">
-                        <div class="dir-kpi-title">Presença Confirmada (Pais)</div>
-                        <div id="dirStatOkSec" class="dir-kpi-val" style="color:#10b981;">0%</div>
-                        <div id="dirStatOkSecCount" class="dir-kpi-desc">0 comparecimentos confirmados</div>
-                    </div>
-
-                    <div class="dir-kpi-card">
-                        <div class="dir-kpi-title">Aguardando / Em Aberto</div>
-                        <div id="dirStatPendentesOP" class="dir-kpi-val" style="color:var(--dir-accent-amber);">0</div>
-                        <div class="dir-kpi-desc">Agendamentos futuros / pendentes</div>
-                    </div>
-
-                    <div class="dir-kpi-card">
-                        <div class="dir-kpi-title">Ausências / Faltas de Pais</div>
-                        <div id="dirStatFaltasOP" class="dir-kpi-val" style="color:var(--dir-accent-danger);">0</div>
-                        <div class="dir-kpi-desc">Convocações não atendidas</div>
-                    </div>
-                </div>
-
-                <!-- Barra de Filtros dos Atendimentos (Ergonomia & Fitts) -->
-                <div class="dir-filter-bar">
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:280px;">
-                        <input type="text" id="dirAtendFilterBusca" oninput="renderDirAtendimentos()" placeholder="🔍 Buscar por aluno ou responsável..." class="dir-input" style="min-width:220px; flex:1;">
-                        
-                        <select id="dirAtendFilterTurma" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:140px; width:auto;">
-                            <option value="">🏫 Todas as Turmas</option>
-                        </select>
-
-                        <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:160px; width:auto;">
-                            <option value="">💛 Todas as Orientadoras</option>
-                            <option value="Clarinda">Clarinda (Anos Iniciais)</option>
-                            <option value="Daiane">Daiane (Anos Finais)</option>
-                        </select>
-
-                        <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:150px; width:auto;">
-                            <option value="">Todos os Status</option>
-                            <option value="realizado">✅ Compareceu / Realizado</option>
-                            <option value="aguardando">⏳ Aguardando / Pendente</option>
-                            <option value="falta">❌ Não Compareceu / Falta</option>
-                        </select>
-                    </div>
-
-                    <div style="display:flex; gap:8px;">
-                        <button type="button" onclick="resetDirAtendFiltros()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; padding:6px 14px;" title="Limpar Filtros">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Limpar
+                    <div class="dir-segmented-control" role="tablist" aria-label="Visão da Orientação">
+                        <button type="button" id="btnDirAtendViewLista" onclick="setDirAtendViewMode('lista')" class="dir-segment-btn active" title="Ver listagem e status dos atendimentos">
+                            <i class="fa-solid fa-table-list"></i> Atendimentos Registrados
+                        </button>
+                        <button type="button" id="btnDirAtendViewRelatorios" onclick="setDirAtendViewMode('relatorios')" class="dir-segment-btn" title="Ver relatórios estatísticos e quantitativos">
+                            <i class="fa-solid fa-chart-pie"></i> Relatórios da Orientação
                         </button>
                     </div>
                 </div>
 
-                <!-- Tabela de Atendimentos da Orientação -->
-                <div class="dir-table-card">
-                    <div style="overflow-x:auto;">
-                        <table class="dir-table">
-                            <thead>
-                                <tr>
-                                    <th>Data & Horário</th>
-                                    <th>Estudante</th>
-                                    <th>Turma</th>
-                                    <th>Orientadora</th>
-                                    <th>Motivo Principal</th>
-                                    <th>Presença Família</th>
-                                    <th style="text-align:center;">Ações da Direção</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dirTableAtendimentosOEBody">
-                                <!-- Renderizado via JS -->
-                            </tbody>
-                        </table>
+                <!-- VISÃO 1: LISTAGEM DE ATENDIMENTOS & KPIS -->
+                <div id="dirAtendListaViewContainer">
+                    <!-- KPI Cards Executivos da Orientação (8-Point Grid) -->
+                    <div class="dir-kpi-grid">
+                        <div class="dir-kpi-card">
+                            <div class="dir-kpi-title">Total Atendimentos OE</div>
+                            <div id="dirStatTotalOP" class="dir-kpi-val" style="color:var(--dir-accent-primary);">0</div>
+                            <div class="dir-kpi-desc">Cadastrados no sistema</div>
+                        </div>
+
+                        <div class="dir-kpi-card">
+                            <div class="dir-kpi-title">Presença Confirmada (Pais)</div>
+                            <div id="dirStatOkSec" class="dir-kpi-val" style="color:#10b981;">0%</div>
+                            <div id="dirStatOkSecCount" class="dir-kpi-desc">0 comparecimentos confirmados</div>
+                        </div>
+
+                        <div class="dir-kpi-card">
+                            <div class="dir-kpi-title">Aguardando / Em Aberto</div>
+                            <div id="dirStatPendentesOP" class="dir-kpi-val" style="color:var(--dir-accent-amber);">0</div>
+                            <div class="dir-kpi-desc">Agendamentos futuros / pendentes</div>
+                        </div>
+
+                        <div class="dir-kpi-card">
+                            <div class="dir-kpi-title">Ausências / Faltas de Pais</div>
+                            <div id="dirStatFaltasOP" class="dir-kpi-val" style="color:var(--dir-accent-danger);">0</div>
+                            <div class="dir-kpi-desc">Convocações não atendidas</div>
+                        </div>
                     </div>
-                    <div id="dirAtendPagination" class="dir-table-pagination">
-                        <span id="dirAtendCountInfo">Mostrando 0 de 0 atendimentos</span>
+
+                    <!-- Barra de Filtros dos Atendimentos (Ergonomia & Fitts) -->
+                    <div class="dir-filter-bar">
+                        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:280px;">
+                            <input type="text" id="dirAtendFilterBusca" oninput="renderDirAtendimentos()" placeholder="🔍 Buscar por aluno ou responsável..." class="dir-input" style="min-width:220px; flex:1;">
+                            
+                            <select id="dirAtendFilterTurma" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:140px; width:auto;">
+                                <option value="">🏫 Todas as Turmas</option>
+                            </select>
+
+                            <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:160px; width:auto;">
+                                <option value="">💛 Todas as Orientadoras</option>
+                                <option value="Clarinda">Clarinda (Anos Iniciais)</option>
+                                <option value="Daiane">Daiane (Anos Finais)</option>
+                            </select>
+
+                            <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:150px; width:auto;">
+                                <option value="">Todos os Status</option>
+                                <option value="realizado">✅ Compareceu / Realizado</option>
+                                <option value="aguardando">⏳ Aguardando / Pendente</option>
+                                <option value="falta">❌ Não Compareceu / Falta</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" onclick="resetDirAtendFiltros()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; padding:6px 14px;" title="Limpar Filtros">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Atendimentos da Orientação -->
+                    <div class="dir-table-card">
+                        <div style="overflow-x:auto;">
+                            <table class="dir-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data & Horário</th>
+                                        <th>Estudante</th>
+                                        <th>Turma</th>
+                                        <th>Orientadora</th>
+                                        <th>Motivo Principal</th>
+                                        <th>Presença Família</th>
+                                        <th style="text-align:center;">Ações da Direção</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dirTableAtendimentosOEBody">
+                                    <!-- Renderizado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="dirAtendPagination" class="dir-table-pagination">
+                            <span id="dirAtendCountInfo">Mostrando 0 de 0 atendimentos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISÃO 2: RELATÓRIOS CONSOLIDADOS & GRÁFICOS DA ORIENTAÇÃO -->
+                <div id="dirAtendRelatoriosViewContainer" style="display:none;">
+                    <!-- Filtros Dinâmicos de Data e Período -->
+                    <div class="dir-card">
+                        <div class="dir-card-header">
+                            <div>
+                                <h4 class="dir-card-title">
+                                    <i class="fa-solid fa-sliders" style="color:var(--dir-accent-primary);"></i> Filtros do Relatório de Atendimentos da Orientação
+                                </h4>
+                                <p class="dir-card-subtitle">Defina o intervalo cronológico e recorte desejado para consolidar dados oficiais da escola.</p>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; align-items:flex-end;">
+                            <div>
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Inicial (De):</label>
+                                <input type="date" id="dirRelDataInicio" class="dir-input">
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Final (Até):</label>
+                                <input type="date" id="dirRelDataFim" class="dir-input">
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Turma / Segmento:</label>
+                                <select id="dirRelTurmaSelect" class="dir-select">
+                                    <option value="">🏫 Todas as Turmas</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Orientadora:</label>
+                                <select id="dirRelOrientadoraSelect" class="dir-select">
+                                    <option value="">Todas</option>
+                                    <option value="Clarinda">Clarinda (Iniciais)</option>
+                                    <option value="Daiane">Daiane (Finais)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <button type="button" onclick="gerarRelatorioExecutivoDirecao()" class="dir-btn dir-btn-primary" style="width:100%;">
+                                    <i class="fa-solid fa-bolt"></i> Gerar Relatório
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Atalhos de Período -->
+                        <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; align-items:center; padding-top:12px; border-top:1px solid var(--dir-border-subtle);">
+                            <span style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Atalhos de Período:</span>
+                            <button type="button" onclick="setDirRelPeriodo('mes_atual')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Mês Atual</button>
+                            <button type="button" onclick="setDirRelPeriodo('trimestre_1')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">1º Trimestre</button>
+                            <button type="button" onclick="setDirRelPeriodo('trimestre_2')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">2º Trimestre</button>
+                            <button type="button" onclick="setDirRelPeriodo('trimestre_3')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">3º Trimestre</button>
+                            <button type="button" onclick="setDirRelPeriodo('ano_todo')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Ano Todo (2026)</button>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Exibição dos Resultados do Relatório -->
+                    <div id="dirRelatorioResultadosContainer" class="dir-card">
+                        <!-- Renderizado dinamicamente via JS -->
+                        <div style="text-align:center; padding:32px 16px; color:var(--dir-text-muted);">
+                            <i class="fa-solid fa-chart-pie" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
+                            <p style="margin:0;">Clique em "Gerar Relatório" para consolidar as informações do período selecionado.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- ========================================== -->
-            <!-- SUB-ABA 2: DOSSIÊ DO ALUNO (360º) -->
+            <!-- SUB-ABA 2: MURAL DIGITAL DA ESCOLA (EM BREVE) -->
             <!-- ========================================== -->
             <div id="dirSubTab_dossie" class="dir-subtab-content">
-                <!-- Seletor do Aluno -->
-                <div class="dir-card">
-                    <div class="dir-card-header" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
-                        <div>
-                            <h4 class="dir-card-title">
-                                <i class="fa-solid fa-magnifying-glass" style="color:var(--dir-accent-primary);"></i> Localizar Aluno para Atendimento de Gabinete
-                            </h4>
-                            <p class="dir-card-subtitle">Consulte o histórico consolidado de qualquer aluno para reuniões com pais na sala da Direção.</p>
-                        </div>
+                <div class="dir-card" style="text-align:center; padding:64px 24px;">
+                    <div style="width:72px; height:72px; border-radius:20px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:20px; box-shadow:0 8px 20px rgba(37,99,235,0.15);">
+                        <i class="fa-solid fa-bullhorn"></i>
                     </div>
-                    
-                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                        <div style="flex:1; min-width:280px; position:relative;">
-                            <input type="text" id="dirDossieAlunoInput" list="dirDossieAlunosDatalist" placeholder="Digite o nome do aluno ou selecione na lista..." class="dir-input" style="font-size:0.9375rem; min-height:44px;">
-                            <datalist id="dirDossieAlunosDatalist">
-                                <!-- Preenchido dinamicamente via JS -->
-                            </datalist>
-                        </div>
-                        <button type="button" onclick="carregarDossieAlunoSelecionado()" class="dir-btn dir-btn-primary" style="min-height:44px; padding:10px 24px;">
-                            <i class="fa-solid fa-id-card"></i> Abrir Dossiê 360º
-                        </button>
+                    <div style="margin-bottom:12px;">
+                        <span class="dir-badge dir-badge-info" style="font-size:0.75rem; padding:4px 14px; text-transform:uppercase; letter-spacing:1px; font-weight:800;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Em Breve
+                        </span>
                     </div>
-                </div>
-
-                <!-- Painel de Resultados do Dossiê -->
-                <div id="dirDossieResultContainer">
-                    <div style="background:var(--dir-bg-surface); padding:48px 24px; text-align:center; border-radius:16px; border:1.5px dashed var(--dir-border-interactive); box-shadow:var(--dir-shadow-sm);">
-                        <i class="fa-solid fa-user-graduate" style="font-size:3rem; color:#94a3b8; margin-bottom:16px; display:block;"></i>
-                        <h4 style="color:var(--dir-text-headings); font-weight:800; margin-bottom:6px; font-size:1.125rem;">Nenhum aluno selecionado</h4>
-                        <p style="font-size:0.875rem; color:var(--dir-text-muted); max-width:480px; margin:0 auto; line-height:1.5;">Digite o nome do estudante acima para visualizar o prontuário completo, histórico da Orientação e convocações.</p>
+                    <h3 style="font-size:1.5rem; font-weight:900; color:var(--dir-text-headings); margin-bottom:8px;">
+                        Mural Digital & Comunicados da Escola
+                    </h3>
+                    <p style="font-size:0.9375rem; color:var(--dir-text-secondary); max-width:560px; margin:0 auto 24px auto; line-height:1.6;">
+                        Este módulo está em fase de desenvolvimento. Em breve, a Direção poderá publicar informativos institucionais, gerenciar comunicados para o corpo docente e acompanhar murais de recados unificados diretamente pelo portal.
+                    </p>
+                    <div style="display:inline-flex; gap:8px; background:#f8fafc; border:1px solid var(--dir-border-subtle); padding:10px 18px; border-radius:12px; font-size:0.8125rem; color:var(--dir-text-muted); font-weight:600;">
+                        <i class="fa-solid fa-shield-halved" style="color:var(--dir-accent-primary); margin-top:2px;"></i>
+                        <span>Previsão de lançamento nas próximas atualizações do IntegraRizzi</span>
                     </div>
                 </div>
             </div>
@@ -1220,72 +1282,22 @@
             </div>
 
             <!-- ========================================== -->
-            <!-- SUB-ABA 5: RELATÓRIOS EXECUTIVOS -->
+            <!-- SUB-ABA 5: RELATÓRIOS INTEGRADOS NA ORIENTAÇÃO -->
             <!-- ========================================== -->
             <div id="dirSubTab_relatorios" class="dir-subtab-content">
-                <!-- Filtros Dinâmicos de Data e Período -->
-                <div class="dir-card">
-                    <div class="dir-card-header">
-                        <div>
-                            <h4 class="dir-card-title">
-                                <i class="fa-solid fa-sliders" style="color:var(--dir-accent-primary);"></i> Filtros Dinâmicos do Relatório Executivo
-                            </h4>
-                            <p class="dir-card-subtitle">Defina o intervalo cronológico e recorte desejado para consolidar dados oficiais da escola.</p>
-                        </div>
+                <div class="dir-card" style="text-align:center; padding:48px 24px;">
+                    <div style="width:64px; height:64px; border-radius:18px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:1.8rem; margin-bottom:16px;">
+                        <i class="fa-solid fa-chart-pie"></i>
                     </div>
-
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; align-items:flex-end;">
-                        <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Inicial (De):</label>
-                            <input type="date" id="dirRelDataInicio" class="dir-input">
-                        </div>
-
-                        <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Final (Até):</label>
-                            <input type="date" id="dirRelDataFim" class="dir-input">
-                        </div>
-
-                        <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Turma / Segmento:</label>
-                            <select id="dirRelTurmaSelect" class="dir-select">
-                                <option value="">🏫 Todas as Turmas</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Orientadora:</label>
-                            <select id="dirRelOrientadoraSelect" class="dir-select">
-                                <option value="">Todas</option>
-                                <option value="Clarinda">Clarinda (Iniciais)</option>
-                                <option value="Daiane">Daiane (Finais)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <button type="button" onclick="gerarRelatorioExecutivoDirecao()" class="dir-btn dir-btn-primary" style="width:100%;">
-                                <i class="fa-solid fa-bolt"></i> Gerar Relatório
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Atalhos de Período -->
-                    <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; align-items:center; padding-top:12px; border-top:1px solid var(--dir-border-subtle);">
-                        <span style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Atalhos de Período:</span>
-                        <button type="button" onclick="setDirRelPeriodo('mes_atual')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Mês Atual</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_1')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">1º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_2')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">2º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_3')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">3º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('ano_todo')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Ano Todo (2026)</button>
-                    </div>
-                </div>
-
-                <!-- Painel de Exibição dos Resultados do Relatório -->
-                <div id="dirRelatorioResultadosContainer" class="dir-card">
-                    <!-- Renderizado dinamicamente via JS -->
-                    <div style="text-align:center; padding:32px 16px; color:var(--dir-text-muted);">
-                        <i class="fa-solid fa-chart-pie" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
-                        <p style="margin:0;">Clique em "Gerar Relatório" para consolidar as informações do período selecionado.</p>
-                    </div>
+                    <h4 style="font-size:1.25rem; font-weight:800; color:var(--dir-text-headings); margin-bottom:8px;">
+                        Relatórios da Orientação Educacional
+                    </h4>
+                    <p style="font-size:0.875rem; color:var(--dir-text-secondary); max-width:520px; margin:0 auto 20px auto; line-height:1.5;">
+                        Os relatórios e consolidados analíticos de atendimento agora estão integrados diretamente na aba <strong>Orientação</strong> para facilitar o seu fluxo de trabalho.
+                    </p>
+                    <button type="button" onclick="switchDirSubTab('atendimentos'); setDirAtendViewMode('relatorios');" class="dir-btn dir-btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-arrow-right"></i> Abrir Relatórios na Aba Orientação
+                    </button>
                 </div>
             </div>
 
@@ -1305,7 +1317,10 @@
                         </h4>
                         <p class="dir-card-subtitle">Conselhos de classe, prazos de fechamento de notas, reuniões pedagógicas e eventos comemorativos.</p>
                     </div>
-                    <div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" onclick="openImportarCalendarioModal()" class="dir-btn dir-btn-secondary" style="min-height:38px; border-color:#fdba74; color:#c2410c; background:#fff7ed;">
+                            <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Importar do PDF Oficial (Abril)
+                        </button>
                         <button type="button" onclick="openNovoEventoCalendarioModal()" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c;">
                             <i class="fa-solid fa-calendar-plus"></i> Novo Evento Letivo
                         </button>
@@ -3507,49 +3522,59 @@
     </div>
 
     <!-- 2. MODAL: NOVO EVENTO NO CALENDÁRIO LETIVO -->
-    <div id="modalNovoEventoCalendario" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:600px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.25);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+    <!-- MODAL: NOVO EVENTO CALENDÁRIO LETIVO -->
+    <div id="modalNovoEventoCalendario" class="dir-modal-backdrop" style="display:none; z-index:3000;">
+        <div class="dir-modal-card" style="max-width:620px;">
+            <div class="dir-modal-header">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <h3 class="dir-modal-title">
                         <i class="fa-solid fa-calendar-plus" style="color:#ea580c;"></i> Adicionar Evento ao Calendário Escolar
                     </h3>
-                    <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Gestão do calendário letivo oficial — Centro Educacional Pedro Rizzi.</p>
+                    <p class="dir-card-subtitle" style="margin-top:2px;">Gestão do calendário letivo oficial — Centro Educacional Pedro Rizzi.</p>
                 </div>
-                <button type="button" onclick="closeNovoEventoCalendarioModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeNovoEventoCalendarioModal()" class="dir-modal-close" aria-label="Fechar janela">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <form id="formNovoEventoCalendario" onsubmit="salvarNovoEventoCalendario(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formNovoEventoCalendario" onsubmit="salvarNovoEventoCalendario(event)" style="display:flex; flex-direction:column; gap:16px;">
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Título do Evento *</label>
-                    <input type="text" id="calInputTitulo" required placeholder="Ex: Conselho de Classe 3º Trimestre" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Título do Evento *</label>
+                    <input type="text" id="calInputTitulo" required placeholder="Ex: Conselho de Classe 3º Trimestre" class="dir-input">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data do Evento *</label>
-                        <input type="date" id="calInputData" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Data do Evento *</label>
+                        <input type="date" id="calInputData" required class="dir-input">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Horário Previsto</label>
-                        <input type="time" id="calInputHora" value="08:00" class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Horário Previsto</label>
+                        <input type="time" id="calInputHora" value="08:00" class="dir-input">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Categoria do Evento *</label>
-                        <select id="calInputCategoria" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Categoria do Evento *</label>
+                        <select id="calInputCategoria" required class="dir-select">
                             <option value="reuniao_pedagogica">👥 Reunião Pedagógica</option>
                             <option value="conselho_classe">🎓 Conselho de Classe</option>
-                            <option value="prazo_notas">⏳ Prazo de Notas / Diários</option>
-                            <option value="feriado_recesso">🏖️ Feriado / Recesso Escolar</option>
-                            <option value="evento_cultural">🎨 Evento Cultural / Feira</option>
+                            <option value="reuniao_app">🤝 Reunião APP</option>
+                            <option value="reuniao_gestao">💼 Reunião Gestão & Equipe</option>
+                            <option value="civica">🇧🇷 Homenagem Cívica</option>
+                            <option value="leitura">📖 Parada para Leitura</option>
+                            <option value="avaliacao">📝 Avaliação Trimestral</option>
+                            <option value="reuniao_pais">👨‍👩‍👦 Reunião de Pais / Boletins</option>
+                            <option value="formacao">💡 Formação Continuada</option>
+                            <option value="feriado">🏖️ Feriado / Recesso Escolar</option>
+                            <option value="evento_cultural">🎨 Evento Festivo / Esportivo</option>
+                            <option value="marco_letivo">📌 Marco Letivo Oficial</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Público-Alvo *</label>
-                        <select id="calInputPublico" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Público-Alvo *</label>
+                        <select id="calInputPublico" required class="dir-select">
                             <option value="professores">👨‍🏫 Professores / Corpo Docente</option>
                             <option value="escola_toda">🌐 Toda a Comunidade Escolar</option>
                             <option value="pais">👨‍👩‍👦 Famílias / Responsáveis</option>
@@ -3559,22 +3584,101 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Local do Evento</label>
-                    <input type="text" id="calInputLocal" placeholder="Ex: Auditório da Escola / Sala de Reuniões" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Local do Evento</label>
+                    <input type="text" id="calInputLocal" placeholder="Ex: Auditório da Escola / Sala de Reuniões" class="dir-input">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Descrição / Observações</label>
-                    <textarea id="calInputDescricao" rows="3" placeholder="Informações detalhadas sobre a programação e pauta..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Descrição / Observações</label>
+                    <textarea id="calInputDescricao" rows="3" placeholder="Informações detalhadas sobre a programação e pauta..." class="dir-textarea"></textarea>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
-                    <button type="button" onclick="closeNovoEventoCalendarioModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background:#ea580c; border-color:#ea580c; width:auto; color:white; font-weight:800;">
+                <div class="dir-modal-footer">
+                    <button type="button" onclick="closeNovoEventoCalendarioModal()" class="dir-btn dir-btn-secondary">Cancelar</button>
+                    <button type="submit" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c;">
                         <i class="fa-solid fa-calendar-check"></i> Salvar no Calendário
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORTAÇÃO DO CALENDÁRIO OFICIAL 2026 (PDF / DOCUMENTO DE ABRIL) -->
+    <div id="modalImportarCalendarioPDF" class="dir-modal-backdrop" style="display:none; z-index:3300;">
+        <div class="dir-modal-card" style="max-width:760px;">
+            <div class="dir-modal-header">
+                <div>
+                    <h3 class="dir-modal-title">
+                        <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Importar Calendário Escolar Oficial (PDF)
+                    </h3>
+                    <p class="dir-card-subtitle" style="margin-top:2px;">Centro Educacional Pedro Rizzi — Ano Letivo 2026</p>
+                </div>
+                <button type="button" onclick="closeImportarCalendarioModal()" class="dir-modal-close" aria-label="Fechar janela">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Card Destaque: Importação Direta do Documento Oficial de Abril -->
+            <div style="background:#fff7ed; border:1.5px solid #fed7aa; border-radius:14px; padding:18px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="dir-badge dir-badge-warning" style="font-size:0.72rem; text-transform:uppercase;">Documento Oficial SME/CEPR</span>
+                            <span style="font-size:0.75rem; color:#9a3412; font-weight:700;">Atualização ABRIL/2026</span>
+                        </div>
+                        <h4 style="color:#7c2d12; font-size:1.05rem; font-weight:900; margin:6px 0 2px 0;">
+                            Calendario_2026_Pedro_Rizzi - ABRIL.pdf
+                        </h4>
+                        <p style="font-size:0.8125rem; color:#9a3412; margin:0; line-height:1.4;">
+                            Contém <strong>171 marcos oficiais mapeados</strong>: 1º, 2º e 3º Trimestres, Paradas de Leitura, Reuniões da APP (17:30), Reuniões Administrativas, Feriados Municipais/Nacionais, Conselhos de Classe e Provas Trimestrais.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <button type="button" onclick="executarImportacaoCalendarioOficial2026()" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c; font-size:0.875rem;">
+                        <i class="fa-solid fa-bolt"></i> ⚡ Importar Todos os 171 Eventos do PDF Oficial
+                    </button>
+                    <a href="docs/Calendario_2026_Pedro_Rizzi - ABRIL.pdf" target="_blank" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 12px; font-size:0.78rem;">
+                        <i class="fa-solid fa-eye"></i> Visualizar Documento PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Divisor -->
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                <div style="flex:1; height:1px; background:var(--dir-border-subtle);"></div>
+                <span style="font-size:0.75rem; font-weight:800; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Ou selecione um novo arquivo PDF</span>
+                <div style="flex:1; height:1px; background:var(--dir-border-subtle);"></div>
+            </div>
+
+            <!-- Upload Customizado de PDF -->
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">
+                        Selecione o arquivo .PDF do calendário no seu computador:
+                    </label>
+                    <input type="file" id="calImportPdfFileInput" accept=".pdf" onchange="handleCalendarioPdfFile(event)" class="dir-input" style="padding:8px; background:#f8fafc;">
+                </div>
+
+                <!-- Prévia de Eventos Detectados no PDF selecionado -->
+                <div id="calPdfPreviewArea" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:800; font-size:0.8125rem; color:var(--dir-text-headings);">Prévia dos Eventos Detectados no Arquivo:</span>
+                        <span id="calPdfPreviewCount" class="dir-badge dir-badge-success">0 eventos</span>
+                    </div>
+                    <div id="calPdfPreviewContainer" style="max-height:160px; overflow-y:auto; border:1px solid var(--dir-border-subtle); border-radius:10px; background:#f8fafc; padding:10px; font-size:0.8125rem;">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </div>
+                </div>
+
+                <div class="dir-modal-footer" style="margin-top:8px;">
+                    <button type="button" onclick="closeImportarCalendarioModal()" class="dir-btn dir-btn-secondary">Fechar</button>
+                    <button type="button" id="btnConfirmarImportPdfCustom" onclick="confirmarImportacaoCalendarioPdfExtraido()" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c;" disabled>
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Confirmar & Importar Eventos do Arquivo
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3837,8 +3941,9 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/gestao-data.js?v=20260921_v26"></script>
-    <script src="js/gestao-app.js?v=20260921_v26"></script>
+    <script src="js/calendario-oficial-data.js?v=20260921_v27"></script>
+    <script src="js/gestao-data.js?v=20260921_v27"></script>
+    <script src="js/gestao-app.js?v=20260921_v27"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>
