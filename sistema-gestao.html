@@ -1514,7 +1514,7 @@
                 <textarea id="detalhesMensagemEditavel" rows="3" class="search-input" style="width:100%; font-size:0.85rem; font-family:inherit; color:#0f172a; line-height:1.4; border-color:#86efac; background:white;" placeholder="Digite ou ajuste a mensagem que será enviada via WhatsApp..."></textarea>
 
                 <div style="margin-top:8px;">
-                    <a id="detalhesWaBtn" href="#" onclick="enviarMensagemPersonalizadaWhatsApp(event)" target="_blank" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.9rem; font-weight:800; text-decoration:none;">
+                    <a id="detalhesWaBtn" href="#" onclick="enviarMensagemPersonalizadaWhatsApp(event)" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-direct" style="width:100%; justify-content:center; padding:10px; font-size:0.9rem; font-weight:800; text-decoration:none;">
                         <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Enviar Mensagem via WhatsApp (<span id="detalhesTelefoneText">-</span>)
                     </a>
                 </div>
@@ -2414,6 +2414,9 @@
     <!-- Modal de Login por E-mail Institucional & Google Auth -->
     <div id="modalSigeLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
         <div style="background:white; border-radius:20px; max-width:460px; width:92%; padding:2.2rem; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1; text-align:center;">
+            <div class="modal-header" style="display:flex; justify-content:flex-end; align-items:center; margin-top:-0.5rem; margin-bottom:0.5rem;">
+                <button type="button" onclick="closeModal('modalSigeLogin')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;line-height:1;" title="Fechar">&times;</button>
+            </div>
             <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" style="max-height:75px; margin-bottom:1rem; background:white; padding:6px 12px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
             
             <h3 style="color:#0f172a; font-size:1.4rem; font-weight:900; margin-bottom:4px;">Acesso ao IntegraRizzi</h3>
@@ -2574,6 +2577,7 @@
                                 <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Matrícula</th>
                                 <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Aluno</th>
                                 <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Turma</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Turno</th>
                                 <th style="padding:8px 12px; border-bottom:1px solid #cbd5e1;">Telefones Extraídos</th>
                             </tr>
                         </thead>

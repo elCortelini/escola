@@ -45,11 +45,6 @@ function checkSigeAuth() {
     const urlParams = new URLSearchParams(window.location.search);
     const actionParam = urlParams.get('action') || urlParams.get('aba');
 
-    // Se o acesso veio do link "Desenvolvedor do Sistema", realiza o login automático do desenvolvedor
-    if (actionParam === 'dev') {
-        sigeDB.loginWithEmail('elcortelini@gmail.com');
-    }
-
     const user = sigeDB.getLoggedUser();
     const loginModal = document.getElementById("modalSigeLogin");
     const roleWrapper = document.getElementById("roleSelectorContainerWrapper");
@@ -471,39 +466,17 @@ function processGoogleLogin(email, nomeOpcional) {
 }
 
 function loginWithGooglePrompt() {
-    let fallbackTriggered = false;
-
-    function triggerFallback() {
-        if (fallbackTriggered) return;
-        fallbackTriggered = true;
-        const inputEmail = prompt("Autenticação Google / IntegraRizzi:\n\nInforme seu e-mail da Conta do Google (ex: daiane.aquino04548@edu.itajai.sc.gov.br):", "daiane.aquino04548@edu.itajai.sc.gov.br");
-        if (inputEmail && inputEmail.trim()) {
-            processGoogleLogin(inputEmail.trim());
-        }
-    }
-
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
             window.google.accounts.id.prompt((notification) => {
                 if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment())) {
                     console.log("GIS prompt not displayed:", notification.getNotDisplayedReason ? notification.getNotDisplayedReason() : notification);
-                    triggerFallback();
                 }
             });
-
-            setTimeout(() => {
-                const pickerIframe = document.querySelector("iframe[id^='credential_picker_iframe']");
-                if (!pickerIframe || pickerIframe.style.display === "none") {
-                    triggerFallback();
-                }
-            }, 500);
-            return;
         } catch (e) {
-            console.log("GIS prompt fallback error:", e);
+            console.log("GIS prompt error:", e);
         }
     }
-    
-    triggerFallback();
 }
 
 function initGoogleAuth() {
@@ -776,7 +749,6 @@ let opViewMode = "semanal"; // "semanal", "cards", "projetos"
 let currentWeekRefDate = new Date();
 
 function setOpViewMode(mode) {
-    if (mode === "projetos") mode = "semanal";
     opViewMode = mode;
     document.querySelectorAll(".op-toggle-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
@@ -788,7 +760,7 @@ function setOpViewMode(mode) {
     if (semanalView && listaView && projetosView) {
         semanalView.style.display = mode === "semanal" ? "block" : "none";
         listaView.style.display = mode === "cards" ? "block" : "none";
-        projetosView.style.display = "none";
+        projetosView.style.display = mode === "projetos" ? "block" : "none";
     }
     renderModuleOrientacaoPedagogica();
 }
@@ -813,9 +785,10 @@ function getWeekDays(refDate) {
     for (let i = 0; i < 5; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
-        const iso = d.toISOString().split("T")[0];
+        const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         const dayNames = ["Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", "Quinta-Feira", "Sexta-Feira", "Sábado"];
-        const todayIso = new Date().toISOString().split("T")[0];
+        const today = new Date();
+        const todayIso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
         week.push({
             dateIso: iso,
             dayName: dayNames[d.getDay()],
@@ -1104,7 +1077,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                     <button onclick="event.stopPropagation(); excluirAgendamentoDirect('${item.id}');" class="btn-delete-card" title="Excluir Agendamento">
                                         <i class="fa-solid fa-trash-can"></i> Excluir
                                     </button>
-                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact">
+                                    <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn-wa-compact">
                                         <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                                     </a>
                                 </div>
@@ -1179,9 +1152,16 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
             { isHeader: true, header: "⛅ TURNO VESPERTINO (TARDE)", turno: "vespertino" },
 
             { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
+            { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
+
             { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#f1f5f9" },
+            { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#f1f5f9" },
+
             { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
-            { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" }
+            { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
+
+            { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" },
+            { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#fef2f2" }
         ];
 
         let activeSlots = slotsConfig.filter(s => {
@@ -1190,7 +1170,6 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                 return s.isHeader || s.orientadoraKey === "clarinda";
             }
             if (filterOrientadora.includes("Daiane")) {
-                if (s.isHeader && s.turno === "vespertino") return false;
                 return s.isHeader || s.orientadoraKey === "daiane";
             }
             return true;
@@ -1287,7 +1266,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         </div>
 
                                         <!-- Botão WhatsApp Direto no Card -->
-                                        <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-wa-compact" style="margin-top:4px;">
+                                        <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn-wa-compact" style="margin-top:4px;">
                                             <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                                         </a>
                                     </div>
@@ -1371,7 +1350,7 @@ function renderCardsView(todosAtendimentos) {
                         </div>
                         
                         ${a.telefone ? `
-                            <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" class="btn-whatsapp-direct">
+                            <a href="${waUrl}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-direct">
                                 <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                             </a>
                         ` : ''}
@@ -3114,7 +3093,7 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
 
                     <!-- Rodapé do Card com Ações Rápidas -->
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:10px; flex-wrap:wrap; gap:8px;">
-                        <a href="${waUrl}" target="_blank" class="btn-whatsapp-direct" style="padding:6px 12px; font-size:0.8rem; text-decoration:none;">
+                        <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-direct" style="padding:6px 12px; font-size:0.8rem; text-decoration:none;">
                             <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
                         </a>
                         <div style="display:flex; gap:8px; align-items:center;">
@@ -3224,7 +3203,7 @@ function renderAlunoPhoneBadges(telefones, currentPhone, nomeAluno, turmaAluno) 
                     <span style="font-size:0.83rem; font-weight:800; color:${isSelected ? '#14532d' : '#334155'}; font-family:monospace;">${escapeHtml(p)}</span>
                     ${badgeIcon}
                 </div>
-                <a href="${waUrl}" target="_blank" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(16,185,129,0.3); margin-left:8px;" title="Testar / Abrir conversa no WhatsApp">
+                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(16,185,129,0.3); margin-left:8px;" title="Testar / Abrir conversa no WhatsApp">
                     <i class="fa-brands fa-whatsapp"></i> WhatsApp
                 </a>
             </div>
@@ -4843,9 +4822,9 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 
     // Busca o número cadastrado da Orientadora designada para direcionar retornos
     const orientadorasList = sigeDB.getOrientadoras();
-    const orientadoraObj = orientadorasList.find(o => 
-        (agendamento.orientadora && agendamento.orientadora.toLowerCase().includes("carmen") && o.nome.toLowerCase().includes("carmen")) ||
-        (agendamento.orientadora && agendamento.orientadora.toLowerCase().includes("luciana") && o.nome.toLowerCase().includes("luciana"))
+    const orientadoraObj = orientadorasList.find(o =>
+        agendamento.orientadora && o.nome && 
+        agendamento.orientadora.toLowerCase().split(' ').some(w => w.length > 3 && o.nome.toLowerCase().includes(w))
     ) || orientadorasList[0];
 
     let orientadoraCleanPhone = orientadoraObj ? orientadoraObj.telefone.replace(/\D/g, "") : "";
@@ -5125,8 +5104,9 @@ function submitNovaTarefa(e) {
 // UTILITÁRIOS E FEEDBACK
 // ==========================================
 function formatDateBR(dateStr) {
-    if (!dateStr) return "";
-    const parts = dateStr.split("-");
+    if (!dateStr) return '';
+    const dateOnly = String(dateStr).split('T')[0].split(' ')[0];
+    const parts = dateOnly.split('-');
     if (parts.length !== 3) return dateStr;
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
@@ -5245,7 +5225,7 @@ function renderEquipeEscolarTable(setorFiltro = "todos") {
                 </td>
                 <td style="padding:12px 14px;">
                     ${p.telefone ? `
-                        <a href="${waLink}" target="_blank" style="color:#16a34a; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.82rem;">
+                        <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#16a34a; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.82rem;">
                             <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> ${escapeHtml(p.telefone)}
                         </a>
                     ` : '<span style="color:#94a3b8; font-size:0.82rem;">Sem telefone</span>'}

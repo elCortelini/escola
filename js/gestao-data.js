@@ -3,6 +3,12 @@
  * Centro Educacional Pedro Rizzi
  */
 
+
+function getLocalDateISO(d) {
+    d = d || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
 /**
@@ -1424,7 +1430,18 @@ class SigeDatabase {
 
     saveData(data) {
         this.data = data;
-        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(data));
+        try {
+            localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                console.error('⚠️ Limite de armazenamento local atingido. Dados não salvos localmente.', e);
+                if (typeof showToast === 'function') {
+                    showToast('⚠️ Armazenamento local cheio. Dados salvos apenas na nuvem.', 'warning');
+                }
+            } else {
+                console.error('Erro ao salvar localmente:', e);
+            }
+        }
         this.syncToFirebase();
     }
 
@@ -1501,7 +1518,7 @@ class SigeDatabase {
         let user = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
 
         if (!user) {
-            if (cleanEmail.includes("daiane") || cleanEmail.includes("aquino") || cleanEmail.includes("04548")) {
+            if (cleanEmail === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanEmail === "daiane@escola.gov.br") {
                 user = { 
                     email: cleanEmail, 
                     nome: "Daiane Caetano Costa de Aquino", 
@@ -1509,7 +1526,7 @@ class SigeDatabase {
                     cargo: "Orientadora Educacional — Séries Finais" 
                 };
                 this.addUsuario(user);
-            } else if (cleanEmail.includes("clarinda")) {
+            } else if (cleanEmail === "clarinda@escola.gov.br") {
                 user = { 
                     email: cleanEmail, 
                     nome: "Clarinda Rosa Pereira", 
@@ -1663,33 +1680,15 @@ class SigeDatabase {
 
     // Orientação Pedagógica
     getAgendamentosOP() {
-        if (!this.data || !Array.isArray(this.data.agendamentosOP)) {
-            if (!this.data) this.data = {};
-            this.data.agendamentosOP = defaultSigeData.agendamentosOP || [];
-            this.saveData(this.data);
-        } else {
-            const deletedSet = new Set(this.data.deletedOPIds || []);
-            const existingIds = new Set(this.data.agendamentosOP.map(a => a.id));
-            let addedNew = false;
-            (defaultSigeData.agendamentosOP || []).forEach(defAg => {
-                if (!existingIds.has(defAg.id) && !deletedSet.has(defAg.id)) {
-                    this.data.agendamentosOP.push(defAg);
-                    existingIds.add(defAg.id);
-                    addedNew = true;
-                }
-            });
-            if (deletedSet.size > 0) {
-                const initLen = this.data.agendamentosOP.length;
-                this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !deletedSet.has(a.id));
-                if (this.data.agendamentosOP.length !== initLen) {
-                    addedNew = true;
-                }
-            }
-            if (addedNew) {
-                this.saveData(this.data);
-            }
+        const all = (this.data && this.data.agendamentosOP) ? this.data.agendamentosOP : [];
+        const role = this.getRole();
+        if (role === 'orientadora_clarinda') {
+            return all.filter(a => !a.orientadora || a.orientadora.toLowerCase().includes('clarinda'));
         }
-        return this.data.agendamentosOP;
+        if (role === 'orientadora_daiane') {
+            return all.filter(a => !a.orientadora || a.orientadora.toLowerCase().includes('daiane') || a.orientadora.toLowerCase().includes('aquino'));
+        }
+        return all;
     }
 
     deleteAgendamentoOP(id) {
@@ -1701,7 +1700,7 @@ class SigeDatabase {
         if (!this.data.deletedOPIds.includes(id)) {
             this.data.deletedOPIds.push(id);
         }
-        let list = this.getAgendamentosOP();
+        let list = (this.data && this.data.agendamentosOP) ? this.data.agendamentosOP : [];
         this.data.agendamentosOP = list.filter(a => a.id !== id);
         this.saveData(this.data);
         this.logAuditEvent("Orientação", `Excluído agendamento ${id}`, "Orientação");
@@ -2087,7 +2086,7 @@ class SigeDatabase {
 
     addDemandaSupervisao(demanda) {
         demanda.id = "sup-" + Date.now();
-        demanda.criadoEm = new Date().toISOString().split("T")[0];
+        demanda.criadoEm = getLocalDateISO();
         if (!demanda.dataInicio) demanda.dataInicio = demanda.prazo || demanda.criadoEm;
         if (!demanda.dataFim) demanda.dataFim = demanda.dataInicio;
         if (!demanda.turno) demanda.turno = "matutino";
@@ -2239,7 +2238,7 @@ class SigeDatabase {
 
     addDemandaAdmin(demanda) {
         demanda.id = "adm-" + Date.now();
-        demanda.criadoEm = new Date().toISOString().split("T")[0];
+        demanda.criadoEm = getLocalDateISO();
         this.data.demandasAdmin.unshift(demanda);
         this.saveData(this.data);
         return demanda;
@@ -2260,7 +2259,7 @@ class SigeDatabase {
 
     addAviso(aviso) {
         aviso.id = "av-" + Date.now();
-        aviso.data = new Date().toISOString().split("T")[0];
+        aviso.data = getLocalDateISO();
         this.data.muralAvisos.unshift(aviso);
         this.saveData(this.data);
         return aviso;
@@ -2362,8 +2361,8 @@ class SigeDatabase {
         const lote = {
             id: loteId,
             codigoLote: codigoLote,
-            dataCorte: dataEnvioSme || new Date().toISOString().split("T")[0],
-            dataEnvioSme: dataEnvioSme || new Date().toISOString().split("T")[0],
+            dataCorte: dataEnvioSme || getLocalDateISO(),
+            dataEnvioSme: dataEnvioSme || getLocalDateISO(),
             previsaoRecebimento: previsaoRecebimento || "",
             dataChegadaReal: null,
             status: "enviado_sme",
@@ -2392,7 +2391,7 @@ class SigeDatabase {
     registrarRecebimentoLoteSME(loteId, dataChegadaReal, observacoes = "", mapaConferencia = {}) {
         const lote = (this.getLotesSME()).find(l => l.id === loteId);
         if (lote) {
-            lote.dataChegadaReal = dataChegadaReal || new Date().toISOString().split("T")[0];
+            lote.dataChegadaReal = dataChegadaReal || getLocalDateISO();
             let temDivergencia = false;
 
             lote.pedidosIds.forEach(id => {
@@ -2486,7 +2485,7 @@ class SigeDatabase {
         if (!ped) throw new Error("Pedido de uniforme não encontrado!");
 
         ped.status = "entregue";
-        ped.dataEntregaAluno = new Date().toISOString().split("T")[0];
+        ped.dataEntregaAluno = getLocalDateISO();
         ped.entreguePor = entreguePor || this.getRoleFormatted();
 
         if (darBaixaEstoque) {
@@ -2518,7 +2517,7 @@ class SigeDatabase {
     getNotificacoesPertinentes() {
         const role = this.getRole();
         const list = [];
-        const hojeStr = new Date().toISOString().split("T")[0];
+        const hojeStr = getLocalDateISO();
 
         // 0. Uniformes Escolares (Secretaria, Direção, Admin)
         if (role === "secretaria" || role === "direcao" || role === "admin" || role === "desenvolvedor") {
@@ -2641,6 +2640,25 @@ class SigeDatabase {
             }
         });
         this.saveData(this.data);
+    }
+
+    getUserName() {
+        const logged = this.getLoggedUser();
+        return logged ? (logged.nome || logged.email || null) : null;
+    }
+
+    getRoleFormatted() {
+        const role = this.getRole();
+        const roleMap = {
+            desenvolvedor: 'Desenvolvedor do Sistema',
+            direcao: 'Direção Escolar',
+            orientadora_clarinda: 'Orientadora Clarinda (Anos Iniciais)',
+            orientadora_daiane: 'Orientadora Daiane (Anos Finais)',
+            supervisao: 'Supervisão Pedagógica',
+            secretaria: 'Secretaria Escolar',
+            admin: 'Administrador'
+        };
+        return roleMap[role] || this.getUserName() || 'Gestão Escolar';
     }
 }
 
