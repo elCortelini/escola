@@ -5596,13 +5596,13 @@ function setDirWpModoEnvio(modo) {
     const btnDisparoText = document.getElementById("btnDirWpDisparoText");
 
     if (modo === 'individual') {
-        if (btnMulti) { btnMulti.classList.remove("btn-primary"); btnMulti.classList.add("btn-secondary"); }
-        if (btnInd) { btnInd.classList.add("btn-primary"); btnInd.classList.remove("btn-secondary"); }
+        if (btnMulti) btnMulti.classList.remove("active");
+        if (btnInd) btnInd.classList.add("active");
         if (indContainer) indContainer.style.display = "block";
         if (btnDisparoText) btnDisparoText.textContent = "Abrir WhatsApp Web para Contato Avulso";
     } else {
-        if (btnMulti) { btnMulti.classList.add("btn-primary"); btnMulti.classList.remove("btn-secondary"); }
-        if (btnInd) { btnInd.classList.remove("btn-primary"); btnInd.classList.add("btn-secondary"); }
+        if (btnMulti) btnMulti.classList.add("active");
+        if (btnInd) btnInd.classList.remove("active");
         if (indContainer) indContainer.style.display = "none";
         atualizarContadoresSelecaoWp();
     }
@@ -5639,9 +5639,10 @@ function renderDirWpTagsFilter() {
         }).length;
     });
 
+    const isAllActive = selectedWpTags.size === 0;
     let html = `
-        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:3px 9px; font-size:0.75rem; border-radius:14px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${selectedWpTags.size === 0 ? '#0284c7' : '#cbd5e1'}; ${selectedWpTags.size === 0 ? 'background:#0284c7; color:white; box-shadow:0 1px 3px rgba(2,132,199,0.25);' : 'background:#ffffff; color:#475569;'}">
-            Todas (${contatos.length})
+        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="dir-tag-chip ${isAllActive ? 'active' : ''}" title="Exibir todos os contatos">
+            <span>🏷️ Todas</span> <span style="font-size:0.7rem; opacity:0.85;">(${contatos.length})</span>
         </button>
     `;
 
@@ -5649,8 +5650,8 @@ function renderDirWpTagsFilter() {
         const isSelected = selectedWpTags.has(tag);
         const count = countsByTag[tag] || 0;
         html += `
-            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:3px 9px; font-size:0.75rem; border-radius:14px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${isSelected ? '#0284c7' : '#cbd5e1'}; ${isSelected ? 'background:#0284c7; color:white; box-shadow:0 1px 3px rgba(2,132,199,0.25);' : 'background:#ffffff; color:#475569;'}">
-                ${tag} <span style="font-size:0.68rem; opacity:0.85;">(${count})</span>
+            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="dir-tag-chip ${isSelected ? 'active' : ''}" title="Filtrar por ${tag}">
+                <span>${tag}</span> <span style="font-size:0.7rem; opacity:0.85;">(${count})</span>
             </button>
         `;
     });
@@ -5714,8 +5715,8 @@ function renderDirWhatsAppContatos() {
 
     if (filtrados.length === 0) {
         container.innerHTML = `
-            <div style="padding:2.5rem 1rem; text-align:center; color:#64748b; font-size:0.85rem; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
-                <i class="fa-solid fa-filter" style="font-size:1.8rem; color:#94a3b8; margin-bottom:8px; display:block;"></i>
+            <div style="padding:2.5rem 1rem; text-align:center; color:#64748b; font-size:0.875rem; background:#f8fafc; border-radius:12px; border:1.5px dashed #cbd5e1;">
+                <i class="fa-solid fa-filter" style="font-size:2rem; color:#94a3b8; margin-bottom:10px; display:block;"></i>
                 Nenhum contato encontrado com as tags ou filtros selecionados.
             </div>
         `;
@@ -5726,31 +5727,31 @@ function renderDirWhatsAppContatos() {
     container.innerHTML = filtrados.map(c => {
         const isChecked = selectedWpContactIds.has(c.id);
         const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
-        const tagsHtml = tags.map(t => `<span style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:10px; display:inline-flex; align-items:center; gap:3px; white-space:nowrap;">🏷️ ${escapeHtml(t)}</span>`).join(" ");
+        const tagsHtml = tags.map(t => `<span style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:10px; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">🏷️ ${escapeHtml(t)}</span>`).join(" ");
         const tooltipInfo = tags.join(', ') + (c.notas ? ' — ' + c.notas : '') + (c.cargo ? ' (' + c.cargo + ')' : '');
 
         return `
-            <div class="contact-row-card" style="${isChecked ? 'background:#eff6ff; border-color:#bfdbfe;' : ''}">
+            <div class="contact-row-card ${isChecked ? 'selected' : ''}">
                 <div style="display:flex; align-items:center; justify-content:center;">
-                    <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="contact-checkbox-custom">
+                    <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="contact-checkbox-custom" aria-label="Selecionar ${escapeHtml(c.nome)}">
                 </div>
-                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(c.nome)}">
+                <div style="font-weight:700; font-size:0.875rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(c.nome)}">
                     ${escapeHtml(c.nome)}
                 </div>
-                <div style="font-weight:700; font-size:0.86rem; color:#334155; white-space:nowrap; letter-spacing:0.3px;">
+                <div style="font-weight:700; font-size:0.85rem; color:#334155; white-space:nowrap; letter-spacing:0.3px; font-variant-numeric:tabular-nums;">
                     ${escapeHtml(c.telefone)}
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; overflow:hidden;" title="${escapeHtml(tooltipInfo)}">
                     ${tagsHtml}
                 </div>
-                <div style="text-align:center;">
-                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar contato">
-                        ✏️
+                <div style="display:flex; justify-content:center;">
+                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" class="dir-btn-icon edit" title="Editar dados de ${escapeHtml(c.nome)}">
+                        <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 </div>
-                <div style="text-align:center;">
-                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Excluir contato">
-                        🗑️
+                <div style="display:flex; justify-content:center;">
+                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="dir-btn-icon danger" title="Excluir contato ${escapeHtml(c.nome)}">
+                        <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
             </div>

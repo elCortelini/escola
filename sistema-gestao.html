@@ -12,8 +12,8 @@
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260921_v25">
-    <link rel="stylesheet" href="css/gestao.css?v=20260921_v25">
+    <link rel="stylesheet" href="css/style.css?v=20260921_v26">
+    <link rel="stylesheet" href="css/gestao.css?v=20260921_v26">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
@@ -798,12 +798,12 @@
         <!-- ========================================== -->
         <section id="tab-direcao" class="tab-content-section">
             <!-- 1. BARRA SUPERIOR: PAINEL DE GESTÃO -->
-            <div style="background:white; border:1px solid #e2e8f0; border-radius:14px; padding:12px 1.5rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+            <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
-                    <h3 style="color:#1e293b; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+                    <h3 class="dir-card-title" style="font-size: 1.25rem;">
                         <i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Painel de Gestão
                     </h3>
-                    <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Centro Educacional Pedro Rizzi — Gabinete da Direção & Gestão Integrada</p>
+                    <p class="dir-card-subtitle">Centro Educacional Pedro Rizzi — Gabinete da Direção & Gestão Integrada</p>
                 </div>
                 <!-- Status escondido conforme solicitado (mantido para compatibilidade com JS) -->
                 <div style="display:none;">
@@ -860,49 +860,49 @@
             <!-- SUB-ABA 1: ATENDIMENTOS DA ORIENTAÇÃO -->
             <!-- ========================================== -->
             <div id="dirSubTab_atendimentos" class="dir-subtab-content">
-                <!-- KPI Cards Executivos da Orientação -->
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
-                    <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
-                        <div style="font-size:0.78rem; color:#64748b; font-weight:700; text-transform:uppercase;">Total Atendimentos OE</div>
-                        <div id="dirStatTotalOP" style="font-size:2rem; font-weight:800; color:#2563eb; margin-top:4px;">0</div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">Cadastrados no sistema</div>
+                <!-- KPI Cards Executivos da Orientação (8-Point Grid) -->
+                <div class="dir-kpi-grid">
+                    <div class="dir-kpi-card">
+                        <div class="dir-kpi-title">Total Atendimentos OE</div>
+                        <div id="dirStatTotalOP" class="dir-kpi-val" style="color:var(--dir-accent-primary);">0</div>
+                        <div class="dir-kpi-desc">Cadastrados no sistema</div>
                     </div>
 
-                    <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
-                        <div style="font-size:0.78rem; color:#64748b; font-weight:700; text-transform:uppercase;">Presença Confirmada (Pais)</div>
-                        <div id="dirStatOkSec" style="font-size:2rem; font-weight:800; color:#10b981; margin-top:4px;">0%</div>
-                        <div id="dirStatOkSecCount" style="font-size:0.75rem; color:#94a3b8;">0 comparecimentos confirmados</div>
+                    <div class="dir-kpi-card">
+                        <div class="dir-kpi-title">Presença Confirmada (Pais)</div>
+                        <div id="dirStatOkSec" class="dir-kpi-val" style="color:#10b981;">0%</div>
+                        <div id="dirStatOkSecCount" class="dir-kpi-desc">0 comparecimentos confirmados</div>
                     </div>
 
-                    <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
-                        <div style="font-size:0.78rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando / Em Aberto</div>
-                        <div id="dirStatPendentesOP" style="font-size:2rem; font-weight:800; color:#d97706; margin-top:4px;">0</div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">Agendamentos futuros / pendentes</div>
+                    <div class="dir-kpi-card">
+                        <div class="dir-kpi-title">Aguardando / Em Aberto</div>
+                        <div id="dirStatPendentesOP" class="dir-kpi-val" style="color:var(--dir-accent-amber);">0</div>
+                        <div class="dir-kpi-desc">Agendamentos futuros / pendentes</div>
                     </div>
 
-                    <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
-                        <div style="font-size:0.78rem; color:#64748b; font-weight:700; text-transform:uppercase;">Ausências / Faltas de Pais</div>
-                        <div id="dirStatFaltasOP" style="font-size:2rem; font-weight:800; color:#ef4444; margin-top:4px;">0</div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">Convocações não atendidas</div>
+                    <div class="dir-kpi-card">
+                        <div class="dir-kpi-title">Ausências / Faltas de Pais</div>
+                        <div id="dirStatFaltasOP" class="dir-kpi-val" style="color:var(--dir-accent-danger);">0</div>
+                        <div class="dir-kpi-desc">Convocações não atendidas</div>
                     </div>
                 </div>
 
-                <!-- Barra de Filtros dos Atendimentos -->
-                <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:1.2rem; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;">
-                    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; flex:1; min-width:280px;">
-                        <input type="text" id="dirAtendFilterBusca" oninput="renderDirAtendimentos()" placeholder="🔍 Buscar por aluno ou responsável..." class="search-input" style="min-width:220px; flex:1;">
+                <!-- Barra de Filtros dos Atendimentos (Ergonomia & Fitts) -->
+                <div class="dir-filter-bar">
+                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:280px;">
+                        <input type="text" id="dirAtendFilterBusca" oninput="renderDirAtendimentos()" placeholder="🔍 Buscar por aluno ou responsável..." class="dir-input" style="min-width:220px; flex:1;">
                         
-                        <select id="dirAtendFilterTurma" onchange="renderDirAtendimentos()" class="search-input" style="min-width:140px;">
+                        <select id="dirAtendFilterTurma" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:140px; width:auto;">
                             <option value="">🏫 Todas as Turmas</option>
                         </select>
 
-                        <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="search-input" style="min-width:160px;">
+                        <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:160px; width:auto;">
                             <option value="">💛 Todas as Orientadoras</option>
                             <option value="Clarinda">Clarinda (Anos Iniciais)</option>
                             <option value="Daiane">Daiane (Anos Finais)</option>
                         </select>
 
-                        <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="search-input" style="min-width:150px;">
+                        <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:150px; width:auto;">
                             <option value="">Todos os Status</option>
                             <option value="realizado">✅ Compareceu / Realizado</option>
                             <option value="aguardando">⏳ Aguardando / Pendente</option>
@@ -911,25 +911,25 @@
                     </div>
 
                     <div style="display:flex; gap:8px;">
-                        <button type="button" onclick="resetDirAtendFiltros()" class="btn btn-secondary" style="font-size:0.8rem; padding:8px 12px;" title="Limpar Filtros">
+                        <button type="button" onclick="resetDirAtendFiltros()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; padding:6px 14px;" title="Limpar Filtros">
                             <i class="fa-solid fa-arrow-rotate-left"></i> Limpar
                         </button>
                     </div>
                 </div>
 
                 <!-- Tabela de Atendimentos da Orientação -->
-                <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:var(--shadow-sm);">
+                <div class="dir-table-card">
                     <div style="overflow-x:auto;">
-                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
-                            <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#475569; font-weight:700; font-size:0.8rem; text-transform:uppercase;">
+                        <table class="dir-table">
+                            <thead>
                                 <tr>
-                                    <th style="padding:12px 16px;">Data & Horário</th>
-                                    <th style="padding:12px 16px;">Estudante</th>
-                                    <th style="padding:12px 16px;">Turma</th>
-                                    <th style="padding:12px 16px;">Orientadora</th>
-                                    <th style="padding:12px 16px;">Motivo Principal</th>
-                                    <th style="padding:12px 16px;">Presença Família</th>
-                                    <th style="padding:12px 16px; text-align:center;">Ações da Direção</th>
+                                    <th>Data & Horário</th>
+                                    <th>Estudante</th>
+                                    <th>Turma</th>
+                                    <th>Orientadora</th>
+                                    <th>Motivo Principal</th>
+                                    <th>Presença Família</th>
+                                    <th style="text-align:center;">Ações da Direção</th>
                                 </tr>
                             </thead>
                             <tbody id="dirTableAtendimentosOEBody">
@@ -937,7 +937,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div id="dirAtendPagination" style="padding:12px 16px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; color:#64748b;">
+                    <div id="dirAtendPagination" class="dir-table-pagination">
                         <span id="dirAtendCountInfo">Mostrando 0 de 0 atendimentos</span>
                     </div>
                 </div>
@@ -948,20 +948,24 @@
             <!-- ========================================== -->
             <div id="dirSubTab_dossie" class="dir-subtab-content">
                 <!-- Seletor do Aluno -->
-                <div style="background:white; padding:1.5rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm); margin-bottom:1.5rem;">
-                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-magnifying-glass" style="color:#2563eb;"></i> Localizar Aluno para Atendimento de Gabinete
-                    </h4>
-                    <p style="font-size:0.83rem; color:#64748b; margin-bottom:1rem;">Consulte o histórico consolidado de qualquer aluno para reuniões com pais na sala da Direção.</p>
+                <div class="dir-card">
+                    <div class="dir-card-header" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
+                        <div>
+                            <h4 class="dir-card-title">
+                                <i class="fa-solid fa-magnifying-glass" style="color:var(--dir-accent-primary);"></i> Localizar Aluno para Atendimento de Gabinete
+                            </h4>
+                            <p class="dir-card-subtitle">Consulte o histórico consolidado de qualquer aluno para reuniões com pais na sala da Direção.</p>
+                        </div>
+                    </div>
                     
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                         <div style="flex:1; min-width:280px; position:relative;">
-                            <input type="text" id="dirDossieAlunoInput" list="dirDossieAlunosDatalist" placeholder="Digite o nome do aluno ou selecione na lista..." class="search-input" style="width:100%; box-sizing:border-box; font-size:0.95rem; padding:10px 14px;">
+                            <input type="text" id="dirDossieAlunoInput" list="dirDossieAlunosDatalist" placeholder="Digite o nome do aluno ou selecione na lista..." class="dir-input" style="font-size:0.9375rem; min-height:44px;">
                             <datalist id="dirDossieAlunosDatalist">
                                 <!-- Preenchido dinamicamente via JS -->
                             </datalist>
                         </div>
-                        <button type="button" onclick="carregarDossieAlunoSelecionado()" class="btn btn-primary" style="width:auto; padding:10px 20px; font-size:0.9rem;">
+                        <button type="button" onclick="carregarDossieAlunoSelecionado()" class="dir-btn dir-btn-primary" style="min-height:44px; padding:10px 24px;">
                             <i class="fa-solid fa-id-card"></i> Abrir Dossiê 360º
                         </button>
                     </div>
@@ -969,10 +973,10 @@
 
                 <!-- Painel de Resultados do Dossiê -->
                 <div id="dirDossieResultContainer">
-                    <div style="background:white; padding:3rem 1.5rem; text-align:center; border-radius:14px; border:1px dashed #cbd5e1;">
-                        <i class="fa-solid fa-user-graduate" style="font-size:3rem; color:#94a3b8; margin-bottom:12px;"></i>
-                        <h4 style="color:#334155; font-weight:700; margin-bottom:4px;">Nenhum aluno selecionado</h4>
-                        <p style="font-size:0.85rem; color:#64748b;">Digite o nome do estudante acima para visualizar o prontuário completo, histórico da Orientação e convocações.</p>
+                    <div style="background:var(--dir-bg-surface); padding:48px 24px; text-align:center; border-radius:16px; border:1.5px dashed var(--dir-border-interactive); box-shadow:var(--dir-shadow-sm);">
+                        <i class="fa-solid fa-user-graduate" style="font-size:3rem; color:#94a3b8; margin-bottom:16px; display:block;"></i>
+                        <h4 style="color:var(--dir-text-headings); font-weight:800; margin-bottom:6px; font-size:1.125rem;">Nenhum aluno selecionado</h4>
+                        <p style="font-size:0.875rem; color:var(--dir-text-muted); max-width:480px; margin:0 auto; line-height:1.5;">Digite o nome do estudante acima para visualizar o prontuário completo, histórico da Orientação e convocações.</p>
                     </div>
                 </div>
             </div>
@@ -985,45 +989,46 @@
                 <!-- ============================================================ -->
                 <!-- BLOCO 1: COMPOSITOR DE MENSAGENS (PRÁTICO, SIMPLES E ELEGANTE) -->
                 <!-- ============================================================ -->
-                <div style="background:white; border:1px solid #e0e7ff; border-radius:16px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:0 2px 10px rgba(99,102,241,0.04);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:0.9rem; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="width:30px; height:30px; border-radius:8px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">
+                <div class="dir-card">
+                    <div class="dir-card-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="width:36px; height:36px; border-radius:10px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:1.05rem;">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </span>
-                            <h4 style="font-size:1.05rem; font-weight:800; color:#1e293b; margin:0;">
-                                Compositor de Mensagens
-                            </h4>
+                            <div>
+                                <h4 class="dir-card-title">Compositor de Mensagens</h4>
+                                <p class="dir-card-subtitle">Envie comunicados e convocações oficiais via WhatsApp Web com variáveis dinâmicas</p>
+                            </div>
                         </div>
-                        <div style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:8px; gap:2px;">
-                            <button type="button" id="btnDirWpModoMulti" onclick="setDirWpModoEnvio('multi')" class="btn btn-sm btn-primary" style="font-size:0.75rem; padding:5px 12px; border-radius:6px; font-weight:700; cursor:pointer;">
+                        <div class="dir-segmented-control" role="tablist" aria-label="Modo de Envio">
+                            <button type="button" id="btnDirWpModoMulti" onclick="setDirWpModoEnvio('multi')" class="dir-segment-btn active" title="Envio em lote para contatos selecionados por tags">
                                 <i class="fa-solid fa-users"></i> Em Lote (Tags)
                             </button>
-                            <button type="button" id="btnDirWpModoIndividual" onclick="setDirWpModoEnvio('individual')" class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:5px 12px; border-radius:6px; font-weight:600; cursor:pointer;">
+                            <button type="button" id="btnDirWpModoIndividual" onclick="setDirWpModoEnvio('individual')" class="dir-segment-btn" title="Envio avulso para um destinatário específico">
                                 <i class="fa-solid fa-user"></i> Contato Avulso
                             </button>
                         </div>
                     </div>
 
                     <!-- Campos exclusivos do Envio Individual / Avulso -->
-                    <div id="dirWpCamposIndividualContainer" style="display:none; margin-bottom:10px; padding:10px 12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:10px;">
+                    <div id="dirWpCamposIndividualContainer" style="display:none; margin-bottom:16px; padding:16px; background:#f8fafc; border-radius:12px; border:1px solid var(--dir-border-subtle);">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
                             <div>
-                                <label style="font-size:0.76rem; font-weight:700; color:#475569;">Nome do Destinatário *</label>
-                                <input type="text" id="dirWpInputNome" placeholder="Ex: Claudia (Mãe da Alice)" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.82rem; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Nome do Destinatário *</label>
+                                <input type="text" id="dirWpInputNome" placeholder="Ex: Claudia (Mãe da Alice)" class="dir-input">
                             </div>
                             <div>
-                                <label style="font-size:0.76rem; font-weight:700; color:#475569;">WhatsApp com DDD *</label>
-                                <input type="text" id="dirWpInputTelefone" placeholder="Ex: 47999881122" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.82rem; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">WhatsApp com DDD *</label>
+                                <input type="tel" id="dirWpInputTelefone" placeholder="Ex: 47999881122" class="dir-input">
                             </div>
                         </div>
                     </div>
 
                     <!-- Linha Prática e Compacta: Modelo + Variáveis Dinâmicas + Contador -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span style="font-size:0.76rem; font-weight:700; color:#64748b;">Modelo:</span>
-                            <select id="dirWpTemplateSelect" onchange="aplicarTemplateWhatsAppDirecao()" style="font-size:0.8rem; padding:5px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; font-weight:600; cursor:pointer;">
+                            <label for="dirWpTemplateSelect" style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Modelo:</label>
+                            <select id="dirWpTemplateSelect" onchange="aplicarTemplateWhatsAppDirecao()" class="dir-select" style="width:auto; min-height:36px; padding:6px 12px; font-weight:600; cursor:pointer;">
                                 <option value="convocacao_gabinete">📌 Convocação Presencial — Gabinete</option>
                                 <option value="lembrete_orientacao">⏰ Lembrete de Reunião — Orientação</option>
                                 <option value="alerta_infrequencia">⚠️ Alerta de Faltas e Frequência</option>
@@ -1031,37 +1036,37 @@
                                 <option value="personalizado">✏️ Em Branco (Personalizado)</option>
                             </select>
                             
-                            <span style="font-size:0.76rem; font-weight:700; color:#64748b; margin-left:4px;">Inserir:</span>
-                            <button type="button" onclick="inserirVariavelMensagemWp('{nome}')" class="btn" style="background:#eff6ff; color:#1d4ed8; font-size:0.74rem; font-weight:700; padding:3px 8px; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;" title="Insere a variável de nome no texto">
+                            <span style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); margin-left:8px; text-transform:uppercase; letter-spacing:0.5px;">Inserir:</span>
+                            <button type="button" onclick="inserirVariavelMensagemWp('{nome}')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 10px; font-size:0.75rem; border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8;" title="Insere a variável {nome} que será substituída pelo nome do contato">
                                 + {nome}
                             </button>
-                            <button type="button" onclick="inserirVariavelMensagemWp('{escola}')" class="btn" style="background:#eff6ff; color:#1d4ed8; font-size:0.74rem; font-weight:700; padding:3px 8px; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;" title="Insere a variável de escola no texto">
+                            <button type="button" onclick="inserirVariavelMensagemWp('{escola}')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 10px; font-size:0.75rem; border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8;" title="Insere a variável {escola}">
                                 + {escola}
                             </button>
                         </div>
                         <div>
-                            <span id="dirWpCharCount" style="font-size:0.75rem; color:#94a3b8; font-weight:600;">0 caracteres</span>
+                            <span id="dirWpCharCount" style="font-size:0.8125rem; color:var(--dir-text-muted); font-weight:600; font-variant-numeric:tabular-nums;">0 caracteres</span>
                         </div>
                     </div>
 
                     <!-- Textarea da Mensagem -->
-                    <div style="margin-bottom:8px;">
-                        <textarea id="dirWpInputMensagem" oninput="atualizarPreviewMensagemWhatsApp()" rows="4" placeholder="Digite aqui o texto da mensagem a ser enviada aos contatos..." style="width:100%; box-sizing:border-box; font-family:inherit; line-height:1.5; font-size:0.88rem; border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+                    <div style="margin-bottom:12px;">
+                        <textarea id="dirWpInputMensagem" oninput="atualizarPreviewMensagemWhatsApp()" rows="4" placeholder="Digite aqui o texto da mensagem a ser enviada aos contatos..." class="dir-textarea" style="line-height:1.55;"></textarea>
                     </div>
 
                     <!-- Prévia da Mensagem (Discreta e Expansível para não poluir o layout) -->
-                    <details style="margin-bottom:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px;">
-                        <summary style="font-size:0.76rem; font-weight:700; color:#64748b; cursor:pointer; user-select:none;">
-                            <i class="fa-regular fa-eye"></i> Visualizar prévia da mensagem com variáveis substituídas
+                    <details style="margin-bottom:16px; background:#f8fafc; border:1px solid var(--dir-border-subtle); border-radius:10px; padding:8px 16px;">
+                        <summary style="font-size:0.8125rem; font-weight:700; color:var(--dir-text-muted); cursor:pointer; user-select:none; display:flex; align-items:center; gap:6px;">
+                            <i class="fa-regular fa-eye" style="color:var(--dir-accent-primary);"></i> Visualizar prévia da mensagem com variáveis substituídas
                         </summary>
-                        <div id="dirWpPreviewContainer" style="margin-top:6px; padding:8px 12px; background:white; border-radius:6px; border:1px dashed #cbd5e1; font-size:0.82rem; color:#334155; line-height:1.45; white-space:pre-wrap;">
+                        <div id="dirWpPreviewContainer" style="margin-top:8px; padding:12px 16px; background:white; border-radius:8px; border:1px dashed var(--dir-border-interactive); font-size:0.875rem; color:var(--dir-text-body); line-height:1.5; white-space:pre-wrap;">
                         </div>
                     </details>
 
-                    <!-- Botão de Disparo Principal -->
+                    <!-- Botão de Disparo Principal (Ergonômico, WCAG AA, Alta Acessibilidade) -->
                     <div style="display:flex; justify-content:flex-end;">
-                        <button type="button" id="btnDirWpDisparoPrincipal" onclick="executarAcaoDisparoWhatsApp()" class="btn btn-primary" style="background:#16a34a; border-color:#16a34a; font-weight:800; padding:10px 20px; font-size:0.92rem; border-radius:10px; box-shadow:0 2px 8px rgba(22,163,74,0.25); display:inline-flex; align-items:center; gap:8px;">
-                            <i class="fa-brands fa-whatsapp" style="font-size:1.15rem;"></i>
+                        <button type="button" id="btnDirWpDisparoPrincipal" onclick="executarAcaoDisparoWhatsApp()" class="dir-btn dir-btn-whatsapp" title="Iniciar processo de envio pelo WhatsApp">
+                            <i class="fa-brands fa-whatsapp" style="font-size:1.25rem;"></i>
                             <span id="btnDirWpDisparoText">🚀 Iniciar Fila de Disparo (0 selecionados)</span>
                         </button>
                     </div>
@@ -1070,60 +1075,63 @@
                 <!-- ============================================================ -->
                 <!-- BLOCO 2: CONTATOS (LARGURA TOTAL - VISUAL REFINADO) -->
                 <!-- ============================================================ -->
-                <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div class="dir-card">
                     <!-- Cabeçalho do Bloco de Contatos com Ações -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                        <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
-                        </h4>
+                    <div class="dir-card-header">
+                        <div>
+                            <h4 class="dir-card-title">
+                                <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
+                            </h4>
+                            <p class="dir-card-subtitle">Gerencie os destinatários organizados por tags, turmas e cargos institucionais</p>
+                        </div>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <!-- Botões de CSV em ícones compactos conforme solicitado -->
-                            <button type="button" onclick="downloadModeloCSVContatos()" title="Baixar modelo de planilha CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0284c7; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#f0f9ff'; this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
-                                <i class="fa-solid fa-file-csv" style="font-size:1rem;"></i>
+                            <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
+                                <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i>
                             </button>
-                            <button type="button" onclick="openImportarContatosCSVModal()" title="Importar contatos de arquivo CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
-                                <i class="fa-solid fa-file-import" style="font-size:0.95rem;"></i>
+                            <button type="button" onclick="openImportarContatosCSVModal()" class="dir-btn-icon" title="Importar contatos de arquivo CSV" aria-label="Importar contatos CSV">
+                                <i class="fa-solid fa-file-import" style="color:#2563eb;"></i>
                             </button>
-                            <button type="button" onclick="exportarContatosParaCSV()" title="Exportar base de contatos em CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#166534; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#f0fdf4'; this.style.borderColor='#86efac'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
-                                <i class="fa-solid fa-file-export" style="font-size:0.95rem;"></i>
+                            <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
+                                <i class="fa-solid fa-file-export" style="color:#166534;"></i>
                             </button>
-                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="font-size:0.8rem; padding:7px 14px; background:#16a34a; border-color:#16a34a; font-weight:800; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="dir-btn dir-btn-primary" style="background:#16a34a; border-color:#16a34a; min-height:38px; padding:6px 14px; font-size:0.8125rem;">
                                 <i class="fa-solid fa-plus"></i> Novo Contato
                             </button>
                         </div>
                     </div>
 
                     <!-- Linha de TAGS (Menores e todas lado a lado) -->
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; background:#f8fafc; padding:8px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-                        <span style="font-size:0.75rem; font-weight:800; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">TAGS:</span>
-                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:6px; flex:1; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
+                        <span style="font-size:0.75rem; font-weight:800; color:var(--dir-text-muted); letter-spacing:0.5px; text-transform:uppercase;">TAGS:</span>
+                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:8px; flex:1; align-items:center;">
                             <!-- Renderizado via JS -->
                         </div>
                     </div>
 
                     <!-- Barra de Busca Rápida e Seleção de Todos -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; background:#f8fafc; padding:8px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-                        <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid var(--dir-border-subtle);">
+                        <div style="display:flex; align-items:center; gap:10px;">
                             <input type="checkbox" id="dirWpCheckboxSelecionarTodos" onchange="toggleSelecionarTodosContatosWp(this.checked)" class="contact-checkbox-custom">
-                            <label for="dirWpCheckboxSelecionarTodos" style="font-size:0.85rem; font-weight:800; color:#334155; cursor:pointer;">
+                            <label for="dirWpCheckboxSelecionarTodos" style="font-size:0.875rem; font-weight:800; color:var(--dir-text-secondary); cursor:pointer;">
                                 Selecionar Todos (<span id="dirWpVisibleCount">0</span> contatos)
                             </label>
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px; flex:1; max-width:320px;">
-                            <input type="text" id="dirWpSearchContatosInput" oninput="filtrarContatosListaPorTexto()" placeholder="Buscar por nome, telefone ou tag..." class="search-input" style="width:100%; box-sizing:border-box; font-size:0.82rem; padding:6px 10px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; max-width:340px;">
+                            <input type="text" id="dirWpSearchContatosInput" oninput="filtrarContatosListaPorTexto()" placeholder="🔍 Buscar por nome, telefone ou tag..." class="dir-input" style="min-height:36px; padding:6px 12px; font-size:0.8125rem;">
                         </div>
                         <div>
-                            <span style="color:#64748b; font-size:0.82rem;">
-                                <strong id="dirWpSelecionadosContador" style="color:#16a34a; font-weight:900; font-size:1rem;">0</strong> selecionados
+                            <span style="color:var(--dir-text-muted); font-size:0.875rem;">
+                                <strong id="dirWpSelecionadosContador" style="color:var(--dir-accent-whatsapp); font-weight:900; font-size:1.05rem;">0</strong> selecionados
                             </span>
-                            <button type="button" onclick="limparSelecaoContatosWp()" class="btn" style="background:none; border:none; color:#dc2626; font-size:0.78rem; font-weight:700; cursor:pointer; text-decoration:underline; margin-left:6px;">
+                            <button type="button" onclick="limparSelecaoContatosWp()" style="background:none; border:none; color:var(--dir-accent-danger); font-size:0.8125rem; font-weight:700; cursor:pointer; text-decoration:underline; margin-left:8px; padding:0;">
                                 Desmarcar
                             </button>
                         </div>
                     </div>
 
                     <!-- Lista de Contatos em Linhas Espaçadas (Formato do Mockup) -->
-                    <div id="dirWpContatosListContainer" style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+                    <div id="dirWpContatosListContainer" style="max-height:440px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px;">
                         <!-- Renderizado via JS -->
                     </div>
                 </div>
@@ -1131,37 +1139,37 @@
                 <!-- ============================================================ -->
                 <!-- SEÇÃO INFERIOR: HISTÓRICO DE MENSAGENS COM FILTROS AVANÇADOS -->
                 <!-- ============================================================ -->
-                <div style="background:white; padding:1.5rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+                <div class="dir-card">
+                    <div class="dir-card-header">
                         <div>
-                            <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                                <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;"></i> Histórico de Mensagens Enviadas & Acompanhamento de Respostas
+                            <h4 class="dir-card-title">
+                                <i class="fa-solid fa-clock-rotate-left" style="color:var(--dir-accent-primary);"></i> Histórico de Mensagens Enviadas & Acompanhamento de Respostas
                             </h4>
-                            <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Acompanhe quem recebeu, controle confirmações de leitura/retorno e filtre por datas e tags.</p>
+                            <p class="dir-card-subtitle">Acompanhe quem recebeu, controle confirmações de leitura/retorno e filtre por datas e tags.</p>
                         </div>
-                        <span id="dirWpTotalLogsBadge" style="background:#eff6ff; color:#1e40af; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px;">0 registros</span>
+                        <span id="dirWpTotalLogsBadge" style="background:#eff6ff; color:#1e40af; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:16px; border:1px solid #bfdbfe;">0 registros</span>
                     </div>
 
-                    <!-- Barra de Filtros Dinâmicos do Histórico -->
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:14px; display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px; align-items:flex-end;">
+                    <!-- Barra de Filtros Dinâmicos do Histórico (Grelha de 8pt) -->
+                    <div style="background:#f8fafc; border:1px solid var(--dir-border-subtle); border-radius:12px; padding:16px; margin-bottom:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; align-items:flex-end;">
                         <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:3px;">Data Inicial (De):</label>
-                            <input type="date" id="dirWpHistDataInicio" onchange="renderDirWhatsAppLogs()" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.8rem; padding:6px 8px;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Inicial (De):</label>
+                            <input type="date" id="dirWpHistDataInicio" onchange="renderDirWhatsAppLogs()" class="dir-input" style="min-height:38px; padding:6px 10px; font-size:0.8125rem;">
                         </div>
                         <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:3px;">Data Final (Até):</label>
-                            <input type="date" id="dirWpHistDataFim" onchange="renderDirWhatsAppLogs()" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.8rem; padding:6px 8px;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Final (Até):</label>
+                            <input type="date" id="dirWpHistDataFim" onchange="renderDirWhatsAppLogs()" class="dir-input" style="min-height:38px; padding:6px 10px; font-size:0.8125rem;">
                         </div>
                         <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:3px;">Filtrar por Tag:</label>
-                            <select id="dirWpHistFilterTag" onchange="renderDirWhatsAppLogs()" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.8rem; padding:6px 8px;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Filtrar por Tag:</label>
+                            <select id="dirWpHistFilterTag" onchange="renderDirWhatsAppLogs()" class="dir-select" style="min-height:38px; padding:6px 10px; font-size:0.8125rem;">
                                 <option value="">Todas as Tags</option>
                                 <!-- Preenchido dinamicamente com as tags cadastradas -->
                             </select>
                         </div>
                         <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:3px;">Status do Retorno:</label>
-                            <select id="dirWpHistFilterStatus" onchange="renderDirWhatsAppLogs()" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.8rem; padding:6px 8px;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Status do Retorno:</label>
+                            <select id="dirWpHistFilterStatus" onchange="renderDirWhatsAppLogs()" class="dir-select" style="min-height:38px; padding:6px 10px; font-size:0.8125rem;">
                                 <option value="">Todos os Status</option>
                                 <option value="enviado">📤 Enviado</option>
                                 <option value="lido">👁️ Lido / Confirmado</option>
@@ -1170,11 +1178,11 @@
                             </select>
                         </div>
                         <div>
-                            <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:3px;">Buscar no Histórico:</label>
-                            <input type="text" id="dirWpHistFilterBusca" oninput="renderDirWhatsAppLogs()" placeholder="Nome, fone ou texto..." class="search-input" style="width:100%; box-sizing:border-box; font-size:0.8rem; padding:6px 8px;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Buscar no Histórico:</label>
+                            <input type="text" id="dirWpHistFilterBusca" oninput="renderDirWhatsAppLogs()" placeholder="Nome, fone ou texto..." class="dir-input" style="min-height:38px; padding:6px 10px; font-size:0.8125rem;">
                         </div>
                         <div>
-                            <button type="button" onclick="limparFiltrosHistoricoWhatsApp()" class="btn btn-secondary" style="width:100%; font-size:0.8rem; padding:7px;">
+                            <button type="button" onclick="limparFiltrosHistoricoWhatsApp()" class="dir-btn dir-btn-secondary" style="width:100%; min-height:38px; font-size:0.8125rem; padding:6px 12px;">
                                 <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
                             </button>
                         </div>
@@ -1191,22 +1199,22 @@
             <!-- SUB-ABA 4: LIVRO-ATA DE GABINETE -->
             <!-- ========================================== -->
             <div id="dirSubTab_atas" class="dir-subtab-content">
-                <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Livro de Atas & Reuniões de Gabinete
+                        <h4 class="dir-card-title">
+                            <i class="fa-solid fa-book-bookmark" style="color:var(--dir-accent-purple);"></i> Livro de Atas & Reuniões de Gabinete
                         </h4>
-                        <p style="font-size:0.82rem; color:#64748b; margin:2px 0 0 0;">Registro formal de atendimentos com famílias, órgãos externos, SME e conselhos com emissão de termo para assinatura.</p>
+                        <p class="dir-card-subtitle">Registro formal de atendimentos com famílias, órgãos externos, SME e conselhos com emissão de termo para assinatura.</p>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <button type="button" onclick="openNovaAtaGabineteModal()" class="btn btn-primary" style="background:#9333ea; border-color:#9333ea; width:auto; font-size:0.85rem;">
+                    <div>
+                        <button type="button" onclick="openNovaAtaGabineteModal()" class="dir-btn dir-btn-primary" style="background:var(--dir-accent-purple); border-color:var(--dir-accent-purple);">
                             <i class="fa-solid fa-file-circle-plus"></i> Nova Ata de Reunião
                         </button>
                     </div>
                 </div>
 
                 <!-- Lista de Atas Registradas -->
-                <div id="dirAtasListContainer" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:1.2rem;">
+                <div id="dirAtasListContainer" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:16px;">
                     <!-- Renderizado via JS -->
                 </div>
             </div>
@@ -1216,33 +1224,37 @@
             <!-- ========================================== -->
             <div id="dirSubTab_relatorios" class="dir-subtab-content">
                 <!-- Filtros Dinâmicos de Data e Período -->
-                <div style="background:white; padding:1.5rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm); margin-bottom:1.5rem;">
-                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-sliders" style="color:#0284c7;"></i> Filtros Dinâmicos do Relatório Executivo
-                    </h4>
-                    <p style="font-size:0.82rem; color:#64748b; margin-bottom:1.2rem;">Defina o intervalo cronológico e recorte desejado para consolidar dados oficiais da escola.</p>
-
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:flex-end;">
+                <div class="dir-card">
+                    <div class="dir-card-header">
                         <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Data Inicial (De):</label>
-                            <input type="date" id="dirRelDataInicio" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <h4 class="dir-card-title">
+                                <i class="fa-solid fa-sliders" style="color:var(--dir-accent-primary);"></i> Filtros Dinâmicos do Relatório Executivo
+                            </h4>
+                            <p class="dir-card-subtitle">Defina o intervalo cronológico e recorte desejado para consolidar dados oficiais da escola.</p>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; align-items:flex-end;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Inicial (De):</label>
+                            <input type="date" id="dirRelDataInicio" class="dir-input">
                         </div>
 
                         <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Data Final (Até):</label>
-                            <input type="date" id="dirRelDataFim" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Final (Até):</label>
+                            <input type="date" id="dirRelDataFim" class="dir-input">
                         </div>
 
                         <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Turma / Segmento:</label>
-                            <select id="dirRelTurmaSelect" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Turma / Segmento:</label>
+                            <select id="dirRelTurmaSelect" class="dir-select">
                                 <option value="">🏫 Todas as Turmas</option>
                             </select>
                         </div>
 
                         <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Orientadora:</label>
-                            <select id="dirRelOrientadoraSelect" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Orientadora:</label>
+                            <select id="dirRelOrientadoraSelect" class="dir-select">
                                 <option value="">Todas</option>
                                 <option value="Clarinda">Clarinda (Iniciais)</option>
                                 <option value="Daiane">Daiane (Finais)</option>
@@ -1250,29 +1262,29 @@
                         </div>
 
                         <div>
-                            <button type="button" onclick="gerarRelatorioExecutivoDirecao()" class="btn btn-primary" style="width:100%; background:#0284c7; border-color:#0284c7; font-weight:800; padding:10px;">
+                            <button type="button" onclick="gerarRelatorioExecutivoDirecao()" class="dir-btn dir-btn-primary" style="width:100%;">
                                 <i class="fa-solid fa-bolt"></i> Gerar Relatório
                             </button>
                         </div>
                     </div>
 
                     <!-- Atalhos de Período -->
-                    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center;">
-                        <span style="font-size:0.75rem; font-weight:700; color:#64748b;">Atalhos de Período:</span>
-                        <button type="button" onclick="setDirRelPeriodo('mes_atual')" class="btn btn-secondary" style="font-size:0.75rem; padding:3px 10px;">Mês Atual</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_1')" class="btn btn-secondary" style="font-size:0.75rem; padding:3px 10px;">1º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_2')" class="btn btn-secondary" style="font-size:0.75rem; padding:3px 10px;">2º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('trimestre_3')" class="btn btn-secondary" style="font-size:0.75rem; padding:3px 10px;">3º Trimestre</button>
-                        <button type="button" onclick="setDirRelPeriodo('ano_todo')" class="btn btn-secondary" style="font-size:0.75rem; padding:3px 10px;">Ano Todo (2026)</button>
+                    <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; align-items:center; padding-top:12px; border-top:1px solid var(--dir-border-subtle);">
+                        <span style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Atalhos de Período:</span>
+                        <button type="button" onclick="setDirRelPeriodo('mes_atual')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Mês Atual</button>
+                        <button type="button" onclick="setDirRelPeriodo('trimestre_1')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">1º Trimestre</button>
+                        <button type="button" onclick="setDirRelPeriodo('trimestre_2')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">2º Trimestre</button>
+                        <button type="button" onclick="setDirRelPeriodo('trimestre_3')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">3º Trimestre</button>
+                        <button type="button" onclick="setDirRelPeriodo('ano_todo')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Ano Todo (2026)</button>
                     </div>
                 </div>
 
                 <!-- Painel de Exibição dos Resultados do Relatório -->
-                <div id="dirRelatorioResultadosContainer" style="background:white; padding:1.5rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm);">
+                <div id="dirRelatorioResultadosContainer" class="dir-card">
                     <!-- Renderizado dinamicamente via JS -->
-                    <div style="text-align:center; padding:2rem; color:#64748b;">
-                        <i class="fa-solid fa-chart-pie" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:10px;"></i>
-                        <p>Clique em "Gerar Relatório" para consolidar as informações do período selecionado.</p>
+                    <div style="text-align:center; padding:32px 16px; color:var(--dir-text-muted);">
+                        <i class="fa-solid fa-chart-pie" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
+                        <p style="margin:0;">Clique em "Gerar Relatório" para consolidar as informações do período selecionado.</p>
                     </div>
                 </div>
             </div>
@@ -1282,36 +1294,36 @@
             <!-- ========================================== -->
             <div id="dirSubTab_calendario" class="dir-subtab-content">
                 <!-- Régua de Contagem Regressiva dos Próximos Prazos -->
-                <div id="dirCalReguaPrazos" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
+                <div id="dirCalReguaPrazos" class="dir-kpi-grid">
                     <!-- Preenchido via JS com os próximos prazos -->
                 </div>
 
-                <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-calendar-days" style="color:#ea580c;"></i> Cronograma & Marcos Institucionais do Ano Letivo
+                        <h4 class="dir-card-title">
+                            <i class="fa-solid fa-calendar-days" style="color:var(--dir-accent-amber);"></i> Cronograma & Marcos Institucionais do Ano Letivo
                         </h4>
-                        <p style="font-size:0.82rem; color:#64748b; margin:2px 0 0 0;">Conselhos de classe, prazos de fechamento de notas, reuniões pedagógicas e eventos comemorativos.</p>
+                        <p class="dir-card-subtitle">Conselhos de classe, prazos de fechamento de notas, reuniões pedagógicas e eventos comemorativos.</p>
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <button type="button" onclick="openNovoEventoCalendarioModal()" class="btn btn-primary" style="background:#ea580c; border-color:#ea580c; width:auto; font-size:0.85rem;">
+                    <div>
+                        <button type="button" onclick="openNovoEventoCalendarioModal()" class="dir-btn dir-btn-primary" style="background:#ea580c; border-color:#ea580c;">
                             <i class="fa-solid fa-calendar-plus"></i> Novo Evento Letivo
                         </button>
                     </div>
                 </div>
 
                 <!-- Tabela de Eventos Letivos -->
-                <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:var(--shadow-sm);">
+                <div class="dir-table-card">
                     <div style="overflow-x:auto;">
-                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
-                            <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#475569; font-weight:700; font-size:0.8rem; text-transform:uppercase;">
+                        <table class="dir-table">
+                            <thead>
                                 <tr>
-                                    <th style="padding:12px 16px;">Data & Horário</th>
-                                    <th style="padding:12px 16px;">Categoria</th>
-                                    <th style="padding:12px 16px;">Título do Evento</th>
-                                    <th style="padding:12px 16px;">Público-Alvo</th>
-                                    <th style="padding:12px 16px;">Local</th>
-                                    <th style="padding:12px 16px; text-align:center;">Ações</th>
+                                    <th>Data & Horário</th>
+                                    <th>Categoria</th>
+                                    <th>Título do Evento</th>
+                                    <th>Público-Alvo</th>
+                                    <th>Local</th>
+                                    <th style="text-align:center;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="dirTableEventosCalendarioBody">
@@ -3567,50 +3579,52 @@
     </div>
 
     <!-- 3. MODAL: NOVO CONTATO WHATSAPP DIREÇÃO (COM MULTI-TAGS) -->
-    <div id="modalNovoContatoWhatsApp" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:540px; width:94%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.25); max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
-                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
-                    <i class="fa-solid fa-address-card" style="color:#16a34a;"></i> <span id="modalNovoContatoTitle">Cadastrar Contato Oficial</span>
+    <div id="modalNovoContatoWhatsApp" class="dir-modal-backdrop" style="display:none;">
+        <div class="dir-modal-card" style="max-width:540px;">
+            <div class="dir-modal-header">
+                <h3 class="dir-modal-title">
+                    <i class="fa-solid fa-address-card" style="color:var(--dir-accent-whatsapp);"></i> <span id="modalNovoContatoTitle">Cadastrar Contato Oficial</span>
                 </h3>
-                <button type="button" onclick="closeNovoContatoWhatsAppModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeNovoContatoWhatsAppModal()" class="dir-modal-close" aria-label="Fechar janela">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <form id="formNovoContatoWhatsApp" onsubmit="salvarNovoContatoWhatsApp(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formNovoContatoWhatsApp" onsubmit="salvarNovoContatoWhatsApp(event)" style="display:flex; flex-direction:column; gap:16px;">
                 <input type="hidden" id="wContInputId" value="">
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Nome do Contato *</label>
-                    <input type="text" id="wContInputNome" required placeholder="Ex: Maria dos Santos (Mãe da Alice)" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Nome do Contato *</label>
+                    <input type="text" id="wContInputNome" required placeholder="Ex: Maria dos Santos (Mãe da Alice)" class="dir-input">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">WhatsApp (Com DDD, apenas números) *</label>
-                    <input type="tel" id="wContInputTelefone" required placeholder="Ex: 47999881122" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">WhatsApp (Com DDD, apenas números) *</label>
+                    <input type="tel" id="wContInputTelefone" required placeholder="Ex: 47999881122" class="dir-input">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a; display:flex; justify-content:space-between;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between; margin-bottom:6px;">
                         <span>Tags / Categorias (separadas por vírgula) *</span>
-                        <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">Ex: Pais, Professor, APMF</span>
+                        <span style="font-size:0.72rem; color:var(--dir-text-muted); font-weight:normal; text-transform:none;">Ex: Pais, Professor, APMF</span>
                     </label>
-                    <input type="text" id="wContInputTags" required placeholder="Pais / Responsáveis, 3º Ano A" class="search-input" style="width:100%; box-sizing:border-box; margin-bottom:6px;">
-                    <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:0.73rem;">
-                        <span style="color:#64748b; align-self:center;">Sugestões rápidas:</span>
-                        <button type="button" onclick="adicionarSugestaoTagContato('Pais / Responsáveis')" class="btn" style="padding:2px 8px; font-size:0.72rem; background:#f1f5f9; border-radius:12px; border:1px solid #cbd5e1;">+ Pais</button>
-                        <button type="button" onclick="adicionarSugestaoTagContato('Equipe Docente')" class="btn" style="padding:2px 8px; font-size:0.72rem; background:#f1f5f9; border-radius:12px; border:1px solid #cbd5e1;">+ Docente / Professor</button>
-                        <button type="button" onclick="adicionarSugestaoTagContato('Conselho Escolar / APMF')" class="btn" style="padding:2px 8px; font-size:0.72rem; background:#f1f5f9; border-radius:12px; border:1px solid #cbd5e1;">+ APMF</button>
-                        <button type="button" onclick="adicionarSugestaoTagContato('Conselho Tutelar / SME')" class="btn" style="padding:2px 8px; font-size:0.72rem; background:#f1f5f9; border-radius:12px; border:1px solid #cbd5e1;">+ Órgãos</button>
+                    <input type="text" id="wContInputTags" required placeholder="Pais / Responsáveis, 3º Ano A" class="dir-input" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:0.75rem; align-items:center;">
+                        <span style="color:var(--dir-text-muted); font-size:0.72rem; font-weight:700;">Sugestões:</span>
+                        <button type="button" onclick="adicionarSugestaoTagContato('Pais / Responsáveis')" class="dir-tag-chip" style="padding:3px 10px; font-size:0.72rem;">+ Pais</button>
+                        <button type="button" onclick="adicionarSugestaoTagContato('Equipe Docente')" class="dir-tag-chip" style="padding:3px 10px; font-size:0.72rem;">+ Docente</button>
+                        <button type="button" onclick="adicionarSugestaoTagContato('Conselho Escolar / APMF')" class="dir-tag-chip" style="padding:3px 10px; font-size:0.72rem;">+ APMF</button>
+                        <button type="button" onclick="adicionarSugestaoTagContato('Conselho Tutelar / SME')" class="dir-tag-chip" style="padding:3px 10px; font-size:0.72rem;">+ Órgãos</button>
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Cargo / Observações</label>
-                    <input type="text" id="wContInputNotas" placeholder="Ex: Professor de Matemática, Presidente APMF..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Cargo / Observações</label>
+                    <input type="text" id="wContInputNotas" placeholder="Ex: Professor de Matemática, Presidente APMF..." class="dir-input">
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem; border-top:1px solid #e2e8f0; padding-top:12px;">
-                    <button type="button" onclick="closeNovoContatoWhatsAppModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background:#16a34a; border-color:#16a34a; width:auto; color:white; font-weight:800;">
+                <div class="dir-modal-footer">
+                    <button type="button" onclick="closeNovoContatoWhatsAppModal()" class="dir-btn dir-btn-secondary">Cancelar</button>
+                    <button type="submit" class="dir-btn dir-btn-whatsapp">
                         <i class="fa-solid fa-floppy-disk"></i> <span id="btnSalvarContatoText">Salvar Contato</span>
                     </button>
                 </div>
@@ -3619,56 +3633,58 @@
     </div>
 
     <!-- 3A. MODAL: IMPORTAR CONTATOS VIA CSV (COM TABELA-MODELO) -->
-    <div id="modalImportarContatosCSV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3200; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:750px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+    <div id="modalImportarContatosCSV" class="dir-modal-backdrop" style="display:none; z-index:3200;">
+        <div class="dir-modal-card" style="max-width:760px;">
+            <div class="dir-modal-header">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px; margin:0;">
-                        <i class="fa-solid fa-file-import" style="color:#2563eb;"></i> Importação em Lote de Contatos (CSV)
+                    <h3 class="dir-modal-title">
+                        <i class="fa-solid fa-file-import" style="color:var(--dir-accent-primary);"></i> Importação em Lote de Contatos (CSV)
                     </h3>
-                    <p style="font-size:0.82rem; color:#64748b; margin:2px 0 0 0;">Importe famílias, turmas ou órgãos via arquivo ou colando os dados da planilha.</p>
+                    <p class="dir-card-subtitle" style="margin-top:2px;">Importe famílias, turmas ou órgãos via arquivo ou colando os dados da planilha.</p>
                 </div>
-                <button type="button" onclick="closeImportarContatosCSVModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeImportarContatosCSVModal()" class="dir-modal-close" aria-label="Fechar janela">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <!-- Banner com download da tabela-modelo -->
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div style="font-size:0.82rem; color:#1e40af;">
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="font-size:0.8125rem; color:#1e40af; line-height:1.4;">
                     <strong><i class="fa-solid fa-circle-info"></i> Formato Aceito:</strong> Colunas separadas por ponto-e-vírgula (<code>;</code>) ou vírgula (<code>,</code>): <strong>Nome; Telefone; Tags; Observacoes</strong>
                 </div>
-                <button type="button" onclick="downloadModeloCSVContatos()" class="btn btn-sm btn-primary" style="background:#0284c7; border-color:#0284c7; font-size:0.78rem; font-weight:700; width:auto;">
+                <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 14px; font-size:0.75rem; border-color:#93c5fd; background:#ffffff; color:#0284c7;">
                     <i class="fa-solid fa-download"></i> Baixar Planilha Modelo (.CSV)
                 </button>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; flex-direction:column; gap:16px;">
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a; display:block; margin-bottom:4px;">1. Selecione o Arquivo .CSV do seu computador:</label>
-                    <input type="file" id="dirWpImportCsvFileInput" accept=".csv, text/csv, text/plain" onchange="handleCsvFileSelected(event)" class="search-input" style="width:100%; box-sizing:border-box; background:#f8fafc; padding:8px;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">1. Selecione o Arquivo .CSV do seu computador:</label>
+                    <input type="file" id="dirWpImportCsvFileInput" accept=".csv, text/csv, text/plain" onchange="handleCsvFileSelected(event)" class="dir-input" style="padding:8px; background:#f8fafc;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a; display:block; margin-bottom:4px;">2. Ou cole o texto da planilha diretamente aqui:</label>
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">2. Ou cole o texto da planilha diretamente aqui:</label>
                     <textarea id="dirWpImportCsvTextarea" oninput="processarPreviaTextoCsv()" rows="5" placeholder="Nome;Telefone;Tags;Observacoes
 Mariana Santos;47999881122;Pais / Responsáveis, 3º Ano A;Mãe do Lucas
-Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" class="search-input" style="width:100%; box-sizing:border-box; font-family:monospace; font-size:0.8rem;"></textarea>
+Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" class="dir-textarea" style="font-family:monospace; font-size:0.8125rem;"></textarea>
                 </div>
 
                 <!-- Prévia dos Registros Identificados -->
                 <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="font-weight:800; font-size:0.83rem; color:#0f172a;">3. Prévia dos Contatos Identificados:</span>
-                        <span id="dirWpCsvPreviewCount" style="font-size:0.75rem; font-weight:800; background:#dcfce7; color:#166534; padding:2px 8px; border-radius:10px;">0 contatos detectados</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:800; font-size:0.8125rem; color:var(--dir-text-headings);">3. Prévia dos Contatos Identificados:</span>
+                        <span id="dirWpCsvPreviewCount" class="dir-badge dir-badge-success">0 contatos detectados</span>
                     </div>
-                    <div id="dirWpCsvPreviewContainer" style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; padding:8px; font-size:0.78rem;">
-                        <div style="text-align:center; color:#94a3b8; padding:1.5rem;">Nenhum arquivo selecionado ou texto colado.</div>
+                    <div id="dirWpCsvPreviewContainer" style="max-height:180px; overflow-y:auto; border:1.5px solid var(--dir-border-subtle); border-radius:10px; background:#f8fafc; padding:10px; font-size:0.8125rem;">
+                        <div style="text-align:center; color:#94a3b8; padding:24px 16px;">Nenhum arquivo selecionado ou texto colado.</div>
                     </div>
                 </div>
 
                 <!-- Botões de Ação -->
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.5rem; border-top:1px solid #e2e8f0; padding-top:14px;">
-                    <button type="button" onclick="closeImportarContatosCSVModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="button" id="btnConfirmarImportCsv" onclick="confirmarImportacaoCsvContatos()" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; width:auto; font-weight:800;" disabled>
+                <div class="dir-modal-footer">
+                    <button type="button" onclick="closeImportarContatosCSVModal()" class="dir-btn dir-btn-secondary">Cancelar</button>
+                    <button type="button" id="btnConfirmarImportCsv" onclick="confirmarImportacaoCsvContatos()" class="dir-btn dir-btn-primary" disabled>
                         <i class="fa-solid fa-cloud-arrow-up"></i> Confirmar & Importar Contatos
                     </button>
                 </div>
@@ -3677,38 +3693,40 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </div>
 
     <!-- 3B. MODAL: FILA DE DISPARO GUIADA DO WHATSAPP (HUMANIZADA & ANTI-BLOQUEIO) -->
-    <div id="modalFilaEnvioWhatsApp" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3300; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div style="background:white; padding:2rem; border-radius:20px; max-width:680px; width:94%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); max-height:94vh; overflow-y:auto;">
+    <div id="modalFilaEnvioWhatsApp" class="dir-modal-backdrop" style="display:none; z-index:3300;">
+        <div class="dir-modal-card" style="max-width:680px;">
             <!-- Cabeçalho da Fila -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+            <div class="dir-modal-header">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px; margin:0;">
-                        <i class="fa-brands fa-whatsapp" style="color:#16a34a; font-size:1.4rem;"></i> Fila Guiada de Disparo Oficial
+                    <h3 class="dir-modal-title">
+                        <i class="fa-brands fa-whatsapp" style="color:var(--dir-accent-whatsapp); font-size:1.5rem;"></i> Fila Guiada de Disparo Oficial
                     </h3>
-                    <p style="font-size:0.8rem; color:#64748b; margin:3px 0 0 0;">Cada mensagem é personalizada com o nome exato do contato antes do envio.</p>
+                    <p class="dir-card-subtitle" style="margin-top:2px;">Cada mensagem é personalizada com o nome exato do contato antes do envio.</p>
                 </div>
-                <button type="button" onclick="fecharFilaEnvioWhatsApp()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="fecharFilaEnvioWhatsApp()" class="dir-modal-close" aria-label="Fechar janela">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <!-- Barra de Progresso da Fila -->
-            <div style="margin-bottom:1.2rem;">
-                <div style="display:flex; justify-content:space-between; font-size:0.82rem; font-weight:800; color:#334155; margin-bottom:4px;">
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.8125rem; font-weight:800; color:var(--dir-text-secondary); margin-bottom:6px;">
                     <span id="dirWpFilaProgressoLabel">Contato 1 de 10 (10%)</span>
                     <span id="dirWpFilaRestantesLabel">9 restantes</span>
                 </div>
                 <div style="width:100%; height:10px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
-                    <div id="dirWpFilaProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #16a34a, #22c55e); transition:width 0.3s;"></div>
+                    <div id="dirWpFilaProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #16a34a, #22c55e); transition:width 0.3s ease;"></div>
                 </div>
             </div>
 
             <!-- Card do Destinatário Atual -->
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:1.2rem; margin-bottom:1.2rem;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                     <div>
-                        <div style="font-size:0.72rem; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">Destinatário da Vez</div>
-                        <h4 id="dirWpFilaNomeAtual" style="color:#0f172a; font-size:1.15rem; font-weight:900; margin:2px 0 0 0;">Nome do Contato</h4>
+                        <div style="font-size:0.75rem; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">Destinatário da Vez</div>
+                        <h4 id="dirWpFilaNomeAtual" style="color:var(--dir-text-headings); font-size:1.25rem; font-weight:900; margin:4px 0 0 0;">Nome do Contato</h4>
                     </div>
-                    <div id="dirWpFilaTelefoneAtual" style="font-size:1rem; font-weight:800; color:#15803d; background:white; padding:4px 10px; border-radius:8px; border:1px solid #86efac;">
+                    <div id="dirWpFilaTelefoneAtual" style="font-size:1rem; font-weight:800; color:#15803d; background:white; padding:6px 12px; border-radius:8px; border:1px solid #86efac; font-variant-numeric:tabular-nums;">
                         (47) 99999-9999
                     </div>
                 </div>
@@ -3718,27 +3736,27 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
             </div>
 
             <!-- Card da Mensagem com Variáveis Substituídas -->
-            <div style="margin-bottom:1.5rem;">
-                <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+            <div style="margin-bottom:24px;">
+                <label style="font-size:0.75rem; font-weight:800; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">
                     Mensagem Final Formatada para Este Destinatário:
                 </label>
-                <div id="dirWpFilaMensagemFinalPreview" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:0.88rem; color:#1e293b; line-height:1.45; white-space:pre-wrap; max-height:160px; overflow-y:auto;">
+                <div id="dirWpFilaMensagemFinalPreview" style="background:#f8fafc; border:1.5px solid var(--dir-border-interactive); border-radius:10px; padding:16px; font-size:0.875rem; color:var(--dir-text-body); line-height:1.5; white-space:pre-wrap; max-height:180px; overflow-y:auto;">
                     <!-- Mensagem final -->
                 </div>
             </div>
 
-            <!-- Controles e Botões da Fila -->
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <button type="button" onclick="dispararContatoAtualFilaWhatsApp()" class="btn btn-primary" style="background:#16a34a; border-color:#16a34a; font-weight:900; padding:12px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35); display:flex; justify-content:center; align-items:center; gap:10px;">
-                    <i class="fa-brands fa-whatsapp" style="font-size:1.3rem;"></i> 
+            <!-- Controles e Botões da Fila (Fitts Ergonomics) -->
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button type="button" onclick="dispararContatoAtualFilaWhatsApp()" class="dir-btn dir-btn-whatsapp" style="padding:14px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35);">
+                    <i class="fa-brands fa-whatsapp" style="font-size:1.35rem;"></i> 
                     <span>Abrir no WhatsApp & Registrar Log</span>
                 </button>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                    <button type="button" onclick="pularContatoAtualFilaWhatsApp()" class="btn btn-secondary" style="font-size:0.82rem; padding:8px 12px; width:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <button type="button" onclick="pularContatoAtualFilaWhatsApp()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem;">
                         <i class="fa-solid fa-forward-step"></i> Pular Contato
                     </button>
-                    <button type="button" onclick="fecharFilaEnvioWhatsApp()" class="btn btn-secondary" style="font-size:0.82rem; padding:8px 12px; width:auto; color:#dc2626;">
+                    <button type="button" onclick="fecharFilaEnvioWhatsApp()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; color:var(--dir-accent-danger); border-color:#fca5a5;">
                         <i class="fa-solid fa-circle-stop"></i> Encerrar Fila
                     </button>
                 </div>
@@ -3747,17 +3765,17 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </div>
 
     <!-- 4. MODAL: IMPRESSÃO DE TERMO DE ATA TIMBRADA -->
-    <div id="modalPrintTermoAta" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:850px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
-                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; margin:0;">
+    <div id="modalPrintTermoAta" class="dir-modal-backdrop" style="display:none; z-index:3500;">
+        <div class="dir-modal-card" style="max-width:850px;">
+            <div class="dir-modal-header">
+                <h3 class="dir-modal-title">
                     <i class="fa-solid fa-print" style="color:#9333ea;"></i> Folha Timbrada Oficial — Termo de Atendimento de Gabinete
                 </h3>
                 <div style="display:flex; gap:10px;">
-                    <button type="button" onclick="window.print()" class="btn btn-primary" style="background:#9333ea; border-color:#9333ea; width:auto; font-size:0.85rem;">
+                    <button type="button" onclick="window.print()" class="dir-btn dir-btn-primary" style="background:#9333ea; border-color:#9333ea; min-height:36px; padding:6px 14px; font-size:0.8125rem;">
                         <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
                     </button>
-                    <button type="button" onclick="closePrintTermoAtaModal()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;">Fechar</button>
+                    <button type="button" onclick="closePrintTermoAtaModal()" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 14px; font-size:0.8125rem;">Fechar</button>
                 </div>
             </div>
 
@@ -3769,17 +3787,17 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </div>
 
     <!-- 5. MODAL: IMPRESSÃO DE RELATÓRIO EXECUTIVO OFICIAL -->
-    <div id="modalPrintRelatorioExecutivo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:900px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
-                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; margin:0;">
+    <div id="modalPrintRelatorioExecutivo" class="dir-modal-backdrop" style="display:none; z-index:3500;">
+        <div class="dir-modal-card" style="max-width:900px;">
+            <div class="dir-modal-header">
+                <h3 class="dir-modal-title">
                     <i class="fa-solid fa-file-pdf" style="color:#0284c7;"></i> Relatório Gerencial Oficial — Prestação de Contas & SME
                 </h3>
                 <div style="display:flex; gap:10px;">
-                    <button type="button" onclick="window.print()" class="btn btn-primary" style="background:#0284c7; border-color:#0284c7; width:auto; font-size:0.85rem;">
+                    <button type="button" onclick="window.print()" class="dir-btn dir-btn-primary" style="background:#0284c7; border-color:#0284c7; min-height:36px; padding:6px 14px; font-size:0.8125rem;">
                         <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
                     </button>
-                    <button type="button" onclick="closePrintRelatorioModal()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;">Fechar</button>
+                    <button type="button" onclick="closePrintRelatorioModal()" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 14px; font-size:0.8125rem;">Fechar</button>
                 </div>
             </div>
 
@@ -3791,17 +3809,17 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </div>
 
     <!-- 6. MODAL: IMPRESSÃO DO DOSSIÊ 360º DO ALUNO -->
-    <div id="modalPrintDossieAluno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:850px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
-                <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; margin:0;">
-                    <i class="fa-solid fa-id-card" style="color:#2563eb;"></i> Ficha Individual Timbrada — Prontuário Escolar 360º
+    <div id="modalPrintDossieAluno" class="dir-modal-backdrop" style="display:none; z-index:3500;">
+        <div class="dir-modal-card" style="max-width:850px;">
+            <div class="dir-modal-header">
+                <h3 class="dir-modal-title">
+                    <i class="fa-solid fa-id-card" style="color:var(--dir-accent-primary);"></i> Ficha Individual Timbrada — Prontuário Escolar 360º
                 </h3>
                 <div style="display:flex; gap:10px;">
-                    <button type="button" onclick="window.print()" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; width:auto; font-size:0.85rem;">
+                    <button type="button" onclick="window.print()" class="dir-btn dir-btn-primary" style="min-height:36px; padding:6px 14px; font-size:0.8125rem;">
                         <i class="fa-solid fa-print"></i> Imprimir Ficha
                     </button>
-                    <button type="button" onclick="closePrintDossieModal()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;">Fechar</button>
+                    <button type="button" onclick="closePrintDossieModal()" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 14px; font-size:0.8125rem;">Fechar</button>
                 </div>
             </div>
 
@@ -3819,8 +3837,8 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/gestao-data.js?v=20260921_v25"></script>
-    <script src="js/gestao-app.js?v=20260921_v25"></script>
+    <script src="js/gestao-data.js?v=20260921_v26"></script>
+    <script src="js/gestao-app.js?v=20260921_v26"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

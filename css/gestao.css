@@ -1397,22 +1397,122 @@
 }
 
 /* ======================================================== */
+/* SENIOR UX/UI DESIGN SYSTEM: MÓDULO DA DIREÇÃO */
+/* 8-Point Grid | 60-30-10 Rule | WCAG 2.1 AA | Ergonomics */
 /* ======================================================== */
-/* MÓDULO DA DIREÇÃO: NAVEGAÇÃO EM CARDS / BLOCOS */
+
+/* Spacing Variables & Design Tokens */
+:root {
+    --dir-space-1: 4px;
+    --dir-space-2: 8px;
+    --dir-space-3: 16px;
+    --dir-space-4: 24px;
+    --dir-space-5: 32px;
+    --dir-space-6: 48px;
+
+    /* 60% Dominant Canvas & Surfaces */
+    --dir-bg-canvas: #f8fafc;
+    --dir-bg-surface: #ffffff;
+    --dir-bg-subtle: #f1f5f9;
+    --dir-border-subtle: #e2e8f0;
+    --dir-border-interactive: #cbd5e1;
+
+    /* 30% Structural & Typography */
+    --dir-text-headings: #0f172a;
+    --dir-text-body: #1e293b;
+    --dir-text-secondary: #334155;
+    --dir-text-muted: #64748b;
+
+    /* 10% Semantic Accents */
+    --dir-accent-primary: #2563eb;
+    --dir-accent-primary-hover: #1d4ed8;
+    --dir-accent-primary-active: #1e40af;
+
+    --dir-accent-whatsapp: #16a34a;
+    --dir-accent-whatsapp-hover: #15803d;
+    --dir-accent-whatsapp-active: #166534;
+
+    --dir-accent-amber: #d97706;
+    --dir-accent-amber-hover: #b45309;
+
+    --dir-accent-purple: #9333ea;
+    --dir-accent-purple-hover: #7e22ce;
+
+    --dir-accent-danger: #dc2626;
+    --dir-accent-danger-hover: #b91c1c;
+
+    /* Interactive Rings & Elevation */
+    --dir-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
+    --dir-focus-ring-whatsapp: 0 0 0 3px rgba(22, 163, 74, 0.25);
+    --dir-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --dir-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    --dir-shadow-hover: 0 6px 16px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* ======================================================== */
+/* CARDS & CONTAINERS (8-POINT GRID) */
+/* ======================================================== */
+.dir-card {
+    background: var(--dir-bg-surface);
+    border: 1px solid var(--dir-border-subtle);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--dir-shadow-sm);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dir-card:hover {
+    border-color: #cbd5e1;
+}
+
+.dir-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--dir-border-subtle);
+}
+
+.dir-card-title {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 800;
+    color: var(--dir-text-headings);
+    letter-spacing: -0.015em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dir-card-subtitle {
+    font-size: 0.8125rem; /* 13px */
+    color: var(--dir-text-muted);
+    margin: 3px 0 0 0;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+/* ======================================================== */
+/* NAVEGAÇÃO EM BLOCOS (6 ITENS LADO A LADO) */
 /* ======================================================== */
 .dir-nav-cards-container {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 10px;
-    margin-bottom: 1.25rem;
+    gap: 12px;
+    margin-bottom: 24px;
     width: 100%;
 }
 
 .dir-nav-card {
     background: #ffffff;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid var(--dir-border-subtle);
     border-radius: 14px;
-    padding: 12px 6px;
+    padding: 12px 8px;
+    min-height: 84px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1421,27 +1521,37 @@
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--dir-shadow-sm);
     text-align: center;
     min-width: 0;
+    user-select: none;
 }
 
 .dir-nav-card:hover {
     transform: translateY(-2px);
     border-color: #cbd5e1;
     background: #f8fafc;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--dir-shadow-md);
+}
+
+.dir-nav-card:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.dir-nav-card:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 2px;
 }
 
 .dir-nav-card.active {
-    background: #fdf2f8 !important; /* Rosa suave conforme mockup */
-    border: 2px solid #f43f5e !important; /* Contorno suave agradável */
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.12) !important;
+    background: #fdf2f8 !important; /* Rosa suave de destaque */
+    border: 2px solid #f43f5e !important;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.15) !important;
 }
 
-.dir-nav-card.active i,
-.dir-nav-card.active .dir-nav-card-icon i {
-    color: inherit !important;
+.dir-nav-card.active .dir-nav-card-title {
+    color: #9f1239 !important;
+    font-weight: 800;
 }
 
 .dir-nav-card-icon {
@@ -1451,18 +1561,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     transition: transform 0.2s ease;
 }
 
 .dir-nav-card:hover .dir-nav-card-icon {
-    transform: scale(1.06);
+    transform: scale(1.08);
 }
 
 .dir-nav-card-title {
-    font-size: 0.84rem;
+    font-size: 0.8125rem;
     font-weight: 700;
-    color: #334155;
+    color: var(--dir-text-secondary);
     letter-spacing: -0.2px;
     white-space: nowrap;
     overflow: hidden;
@@ -1474,7 +1584,7 @@
     .dir-nav-cards-container {
         display: flex !important;
         overflow-x: auto;
-        padding-bottom: 6px;
+        padding-bottom: 8px;
         scroll-snap-type: x mandatory;
     }
     .dir-nav-card {
@@ -1485,37 +1595,321 @@
 }
 
 /* ======================================================== */
-/* LINHAS DA TABELA DE CONTATOS & MODO SWITCH */
+/* CONTROLES DE FORMULÁRIO ERGONÔMICOS (WCAG AA & 8-PT GRID) */
+/* ======================================================== */
+.dir-input,
+.dir-select,
+.dir-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: var(--dir-text-body);
+    background: var(--dir-bg-surface);
+    border: 1.5px solid var(--dir-border-interactive);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-height: 40px;
+    line-height: 1.5;
+    transition: all 0.15s ease-in-out;
+}
+
+.dir-input:hover,
+.dir-select:hover,
+.dir-textarea:hover {
+    border-color: #94a3b8;
+}
+
+.dir-input:focus,
+.dir-select:focus,
+.dir-textarea:focus {
+    border-color: var(--dir-accent-primary);
+    box-shadow: var(--dir-focus-ring);
+    outline: none;
+}
+
+.dir-input::placeholder,
+.dir-textarea::placeholder {
+    color: #94a3b8;
+}
+
+.dir-textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+/* ======================================================== */
+/* BOTÕES DO SISTEMA (LEI DE FITTS, ESTADOS & AFFORDANCES) */
+/* ======================================================== */
+.dir-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 10px 18px;
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.dir-btn:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 2px;
+}
+
+/* Primário (Azul Executivo) */
+.dir-btn-primary {
+    background: var(--dir-accent-primary);
+    color: #ffffff;
+    border-color: var(--dir-accent-primary);
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+.dir-btn-primary:hover {
+    background: var(--dir-accent-primary-hover);
+    border-color: var(--dir-accent-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.dir-btn-primary:active {
+    background: var(--dir-accent-primary-active);
+    transform: translateY(0) scale(0.985);
+}
+
+/* WhatsApp Emerald (CTA Principal) */
+.dir-btn-whatsapp {
+    background: var(--dir-accent-whatsapp);
+    color: #ffffff;
+    border-color: var(--dir-accent-whatsapp);
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+    min-height: 44px;
+    font-size: 0.9375rem;
+}
+
+.dir-btn-whatsapp:hover {
+    background: var(--dir-accent-whatsapp-hover);
+    border-color: var(--dir-accent-whatsapp-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+}
+
+.dir-btn-whatsapp:active {
+    background: var(--dir-accent-whatsapp-active);
+    transform: translateY(0) scale(0.985);
+}
+
+.dir-btn-whatsapp:focus-visible {
+    outline: 2px solid var(--dir-accent-whatsapp);
+    outline-offset: 2px;
+}
+
+/* Secundário / Neutro Estrutural */
+.dir-btn-secondary {
+    background: var(--dir-bg-surface);
+    color: var(--dir-text-secondary);
+    border-color: var(--dir-border-interactive);
+}
+
+.dir-btn-secondary:hover {
+    background: var(--dir-bg-subtle);
+    border-color: #94a3b8;
+    color: var(--dir-text-headings);
+    transform: translateY(-1px);
+}
+
+.dir-btn-secondary:active {
+    background: #e2e8f0;
+    transform: translateY(0) scale(0.985);
+}
+
+/* Botões de Ícones Compactos (Área de toque de 38x38px conforme Fitts) */
+.dir-btn-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 8px;
+    border: 1.5px solid var(--dir-border-interactive);
+    background: var(--dir-bg-surface);
+    color: var(--dir-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+}
+
+.dir-btn-icon:hover {
+    background: var(--dir-bg-subtle);
+    border-color: #94a3b8;
+    color: var(--dir-text-headings);
+    transform: translateY(-1px);
+}
+
+.dir-btn-icon:active {
+    transform: scale(0.94);
+}
+
+.dir-btn-icon:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 2px;
+}
+
+.dir-btn-icon.edit:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: var(--dir-accent-primary);
+}
+
+.dir-btn-icon.danger:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: var(--dir-accent-danger);
+}
+
+/* ======================================================== */
+/* SEGMENTED CONTROL (MODO EM LOTE VS CONTATO AVULSO) */
+/* ======================================================== */
+.dir-segmented-control {
+    display: inline-flex;
+    background: var(--dir-bg-subtle);
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+    border: 1px solid var(--dir-border-subtle);
+}
+
+.dir-segment-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--dir-text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.dir-segment-btn.active {
+    background: var(--dir-bg-surface);
+    color: var(--dir-accent-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dir-segment-btn:hover:not(.active) {
+    color: var(--dir-text-headings);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.dir-segment-btn:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 1px;
+}
+
+/* ======================================================== */
+/* TAGS / CHIPS DINÂMICAS */
+/* ======================================================== */
+.dir-tag-chip {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 18px;
+    border: 1.5px solid var(--dir-border-interactive);
+    background: var(--dir-bg-surface);
+    color: var(--dir-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+}
+
+.dir-tag-chip:hover {
+    background: var(--dir-bg-subtle);
+    border-color: #94a3b8;
+    color: var(--dir-text-headings);
+    transform: translateY(-1px);
+}
+
+.dir-tag-chip.active {
+    background: var(--dir-accent-primary);
+    color: #ffffff;
+    border-color: var(--dir-accent-primary);
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+}
+
+.dir-tag-chip:active {
+    transform: scale(0.96);
+}
+
+.dir-tag-chip:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 2px;
+}
+
+/* ======================================================== */
+/* LINHAS DA TABELA DE CONTATOS & CHECKBOXES */
 /* ======================================================== */
 .contact-row-card {
     display: grid;
-    grid-template-columns: 32px 1.3fr 1.1fr 1.6fr 36px 36px;
+    grid-template-columns: 36px 1.4fr 1.1fr 1.5fr 38px 38px;
     align-items: center;
-    padding: 10px 14px;
+    padding: 10px 16px;
     background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
-    border-radius: 8px;
-    transition: background 0.15s;
-    gap: 8px;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    transition: all 0.15s ease-in-out;
+    gap: 12px;
+    min-height: 48px;
 }
 
 .contact-row-card:hover {
     background: #f8fafc;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.contact-row-card.selected {
+    background: #eff6ff;
+    border-color: #bfdbfe;
 }
 
 .contact-checkbox-custom {
     appearance: none;
     -webkit-appearance: none;
-    width: 19px;
-    height: 19px;
+    width: 20px;
+    height: 20px;
     background: #ffffff;
     border: 1.5px solid #cbd5e1;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
+}
+
+.contact-checkbox-custom:hover {
+    border-color: #2563eb;
 }
 
 .contact-checkbox-custom:checked {
@@ -1526,22 +1920,264 @@
 .contact-checkbox-custom:checked::after {
     content: "✓";
     color: #ffffff;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
 }
 
-#btnDirWpModoMulti.btn-primary,
-#btnDirWpModoIndividual.btn-primary {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
-    color: #ffffff !important;
-    box-shadow: 0 1px 3px rgba(37,99,235,0.25) !important;
+.contact-checkbox-custom:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
 }
 
-#btnDirWpModoMulti.btn-secondary,
-#btnDirWpModoIndividual.btn-secondary {
-    background: #f1f5f9 !important;
-    border-color: #e2e8f0 !important;
-    color: #475569 !important;
-    box-shadow: none !important;
+/* ======================================================== */
+/* CARDS DE KPI EXECUTIVOS (GRID DE 8 PONTOS) */
+/* ======================================================== */
+.dir-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
+
+.dir-kpi-card {
+    background: var(--dir-bg-surface);
+    padding: 20px 24px;
+    border-radius: 14px;
+    border: 1px solid var(--dir-border-subtle);
+    box-shadow: var(--dir-shadow-sm);
+    transition: all 0.2s ease-in-out;
+}
+
+.dir-kpi-card:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: var(--dir-shadow-md);
+}
+
+.dir-kpi-title {
+    font-size: 0.75rem;
+    color: var(--dir-text-muted);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dir-kpi-val {
+    font-size: 2.125rem; /* 34px */
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dir-kpi-desc {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* ======================================================== */
+/* BARRA DE FILTROS DO SISTEMA (8-PT SPACING) */
+/* ======================================================== */
+.dir-filter-bar {
+    background: var(--dir-bg-surface);
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1px solid var(--dir-border-subtle);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--dir-shadow-sm);
+}
+
+/* ======================================================== */
+/* TABELAS MODERNAS & RESPONSIVAS (ALINHAMENTO & ESCANEABILIDADE) */
+/* ======================================================== */
+.dir-table-card {
+    background: var(--dir-bg-surface);
+    border-radius: 14px;
+    border: 1px solid var(--dir-border-subtle);
+    overflow: hidden;
+    box-shadow: var(--dir-shadow-sm);
+}
+
+.dir-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.dir-table thead {
+    background: var(--dir-bg-canvas);
+    border-bottom: 2px solid var(--dir-border-subtle);
+    color: var(--dir-text-secondary);
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dir-table th {
+    padding: 14px 16px;
+}
+
+.dir-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--dir-border-subtle);
+    color: var(--dir-text-body);
+    vertical-align: middle;
+}
+
+.dir-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.dir-table tbody tr:hover {
+    background: var(--dir-bg-canvas);
+}
+
+.dir-table-pagination {
+    padding: 12px 16px;
+    background: var(--dir-bg-canvas);
+    border-top: 1px solid var(--dir-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8125rem;
+    color: var(--dir-text-muted);
+}
+
+/* ======================================================== */
+/* MODAIS ERGONÔMICOS (WCAG AA, LEI DE FITTS & 8-PT GRID) */
+/* ======================================================== */
+.dir-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.75);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.dir-modal-card {
+    background: var(--dir-bg-surface);
+    padding: 24px;
+    border-radius: 18px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    max-height: 92vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.dir-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--dir-border-subtle);
+}
+
+.dir-modal-title {
+    color: var(--dir-text-headings);
+    font-weight: 800;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.dir-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--dir-text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.dir-modal-close:hover {
+    background: var(--dir-bg-subtle);
+    color: var(--dir-text-headings);
+}
+
+.dir-modal-close:focus-visible {
+    outline: 2px solid var(--dir-accent-primary);
+    outline-offset: 2px;
+}
+
+.dir-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    border-top: 1px solid var(--dir-border-subtle);
+    padding-top: 16px;
+}
+
+/* ======================================================== */
+/* BADGES SEMÂNTICOS DE STATUS (WCAG AA CONSTRAST >= 4.5:1) */
+/* ======================================================== */
+.dir-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.dir-badge-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.dir-badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.dir-badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.dir-badge-info {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.dir-badge-neutral {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+
