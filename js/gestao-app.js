@@ -5622,7 +5622,7 @@ function renderDirWhatsApp() {
     }
 }
 
-// Renderiza as tags dinâmicas como botões horizontais (exatamente como no print)
+// Renderiza as tags dinâmicas como botões horizontais compactos (lado a lado e cores suaves)
 function renderDirWpTagsFilter() {
     const container = document.getElementById("dirWpTagsBadgesContainer");
     if (!container) return;
@@ -5640,7 +5640,7 @@ function renderDirWpTagsFilter() {
     });
 
     let html = `
-        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:6px 14px; font-size:0.8rem; border-radius:10px; font-weight:800; cursor:pointer; transition:all 0.15s; border:none; ${selectedWpTags.size === 0 ? 'background:#e11d48; color:white; box-shadow:0 2px 6px rgba(225,29,72,0.3);' : 'background:#fce7f3; color:#831843;'}">
+        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:3px 9px; font-size:0.75rem; border-radius:14px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${selectedWpTags.size === 0 ? '#0284c7' : '#cbd5e1'}; ${selectedWpTags.size === 0 ? 'background:#0284c7; color:white; box-shadow:0 1px 3px rgba(2,132,199,0.25);' : 'background:#ffffff; color:#475569;'}">
             Todas (${contatos.length})
         </button>
     `;
@@ -5649,8 +5649,8 @@ function renderDirWpTagsFilter() {
         const isSelected = selectedWpTags.has(tag);
         const count = countsByTag[tag] || 0;
         html += `
-            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:6px 14px; font-size:0.8rem; border-radius:10px; font-weight:800; cursor:pointer; transition:all 0.15s; border:none; ${isSelected ? 'background:#e11d48; color:white; box-shadow:0 2px 6px rgba(225,29,72,0.3);' : 'background:#fce7f3; color:#831843;'}">
-                ${tag} <span style="font-size:0.72rem; opacity:0.85;">(${count})</span>
+            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:3px 9px; font-size:0.75rem; border-radius:14px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${isSelected ? '#0284c7' : '#cbd5e1'}; ${isSelected ? 'background:#0284c7; color:white; box-shadow:0 1px 3px rgba(2,132,199,0.25);' : 'background:#ffffff; color:#475569;'}">
+                ${tag} <span style="font-size:0.68rem; opacity:0.85;">(${count})</span>
             </button>
         `;
     });
@@ -5676,7 +5676,7 @@ function filtrarContatosListaPorTexto() {
     renderDirWhatsAppContatos();
 }
 
-// Renderiza a lista de contatos em linhas limpas (formato exato do print)
+// Renderiza a lista de contatos em linhas limpas e agradáveis
 function renderDirWhatsAppContatos() {
     const container = document.getElementById("dirWpContatosListContainer");
     const visibleCountElem = document.getElementById("dirWpVisibleCount");
@@ -5729,26 +5729,26 @@ function renderDirWhatsAppContatos() {
         const cargoExibicao = c.cargo || c.notas || tags[0] || 'Contato';
 
         return `
-            <div class="contact-row-card" style="${isChecked ? 'background:#fdf2f8; border-color:#fbcfe8;' : ''}">
+            <div class="contact-row-card" style="${isChecked ? 'background:#eff6ff; border-color:#bfdbfe;' : ''}">
                 <div style="display:flex; align-items:center; justify-content:center;">
                     <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="contact-checkbox-custom">
                 </div>
-                <div style="font-weight:800; font-size:0.95rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">
+                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">
                     ${c.nome}
                 </div>
-                <div style="font-weight:900; font-size:0.95rem; color:#0f172a; white-space:nowrap; letter-spacing:0.3px;">
+                <div style="font-weight:700; font-size:0.86rem; color:#334155; white-space:nowrap; letter-spacing:0.3px;">
                     ${c.telefone}
                 </div>
-                <div style="font-size:0.88rem; color:#475569; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${cargoExibicao}">
+                <div style="font-size:0.8rem; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${cargoExibicao}">
                     ${cargoExibicao}
                 </div>
                 <div style="text-align:center;">
-                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.15rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar contato">
+                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar contato">
                         ✏️
                     </button>
                 </div>
                 <div style="text-align:center;">
-                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.15rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Excluir contato">
+                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Excluir contato">
                         🗑️
                     </button>
                 </div>

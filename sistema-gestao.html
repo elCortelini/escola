@@ -12,8 +12,8 @@
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260921_v23">
-    <link rel="stylesheet" href="css/gestao.css?v=20260921_v23">
+    <link rel="stylesheet" href="css/style.css?v=20260921_v24">
+    <link rel="stylesheet" href="css/gestao.css?v=20260921_v24">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
@@ -797,21 +797,17 @@
         <!-- ABA 5: DIREÇÃO & GESTÃO EXECUTIVA -->
         <!-- ========================================== -->
         <section id="tab-direcao" class="tab-content-section">
-            <!-- 1. BARRA SUPERIOR: PAINEL DE GESTÃO (ESTILO MOCKUP) -->
-            <div style="background:white; border:2px solid #0f172a; border-radius:14px; padding:12px 1.5rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:var(--shadow-sm);">
+            <!-- 1. BARRA SUPERIOR: PAINEL DE GESTÃO -->
+            <div style="background:white; border:1px solid #e2e8f0; border-radius:14px; padding:12px 1.5rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.25rem; margin:0; display:flex; align-items:center; gap:8px;">
+                    <h3 style="color:#1e293b; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Painel de Gestão
                     </h3>
                     <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Centro Educacional Pedro Rizzi — Gabinete da Direção & Gestão Integrada</p>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <span id="dirSyncBadgeStatus" style="font-size:0.75rem; font-weight:700; background:#dcfce7; color:#166534; padding:5px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-cloud-check"></i> Base Integrada
-                    </span>
-                    <button type="button" onclick="openAvisoModal()" class="btn btn-primary" style="width:auto; background:linear-gradient(135deg, #d97706, #b45309); border:none; font-size:0.82rem; padding:7px 12px; font-weight:700;">
-                        <i class="fa-solid fa-bullhorn"></i> Emitir Comunicado Geral
-                    </button>
+                <!-- Status escondido conforme solicitado (mantido para compatibilidade com JS) -->
+                <div style="display:none;">
+                    <span id="dirSyncBadgeStatus"></span>
                 </div>
             </div>
 
@@ -987,123 +983,120 @@
             <div id="dirSubTab_whatsapp" class="dir-subtab-content active">
 
                 <!-- ============================================================ -->
-                <!-- BLOCO 1: COMPOSITOR DE MENSAGENS (100% LARGURA - ESTILO MOCKUP) -->
+                <!-- BLOCO 1: COMPOSITOR DE MENSAGENS (PRÁTICO, SIMPLES E ELEGANTE) -->
                 <!-- ============================================================ -->
-                <div style="background:white; border:2.5px solid #6366f1; border-radius:18px; padding:1.5rem; margin-bottom:1.5rem; box-shadow:var(--shadow-sm);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1.5px solid #e0e7ff; padding-bottom:10px;">
-                        <h4 style="font-size:1.2rem; font-weight:900; color:#1e1b4b; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-paper-plane" style="color:#6366f1;"></i> Compositor de Mensagens
-                        </h4>
-                        <div style="display:flex; gap:8px;">
-                            <button type="button" id="btnDirWpModoMulti" onclick="setDirWpModoEnvio('multi')" class="btn btn-sm btn-primary" style="font-size:0.78rem; padding:5px 12px; background:#6366f1; border-color:#6366f1; font-weight:800;">
+                <div style="background:white; border:1px solid #e0e7ff; border-radius:16px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:0 2px 10px rgba(99,102,241,0.04);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:0.9rem; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="width:30px; height:30px; border-radius:8px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </span>
+                            <h4 style="font-size:1.05rem; font-weight:800; color:#1e293b; margin:0;">
+                                Compositor de Mensagens
+                            </h4>
+                        </div>
+                        <div style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:8px; gap:2px;">
+                            <button type="button" id="btnDirWpModoMulti" onclick="setDirWpModoEnvio('multi')" class="btn btn-sm btn-primary" style="font-size:0.75rem; padding:5px 12px; border-radius:6px; font-weight:700; cursor:pointer;">
                                 <i class="fa-solid fa-users"></i> Em Lote (Tags)
                             </button>
-                            <button type="button" id="btnDirWpModoIndividual" onclick="setDirWpModoEnvio('individual')" class="btn btn-sm btn-secondary" style="font-size:0.78rem; padding:5px 12px; font-weight:700;">
+                            <button type="button" id="btnDirWpModoIndividual" onclick="setDirWpModoEnvio('individual')" class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:5px 12px; border-radius:6px; font-weight:600; cursor:pointer;">
                                 <i class="fa-solid fa-user"></i> Contato Avulso
                             </button>
                         </div>
                     </div>
 
                     <!-- Campos exclusivos do Envio Individual / Avulso -->
-                    <div id="dirWpCamposIndividualContainer" style="display:none; margin-bottom:14px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #cbd5e1;">
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">
+                    <div id="dirWpCamposIndividualContainer" style="display:none; margin-bottom:10px; padding:10px 12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:10px;">
                             <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Nome do Contato *</label>
-                                <input type="text" id="dirWpInputNome" placeholder="Ex: Sra. Claudia (Mãe da Alice)" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <label style="font-size:0.76rem; font-weight:700; color:#475569;">Nome do Destinatário *</label>
+                                <input type="text" id="dirWpInputNome" placeholder="Ex: Claudia (Mãe da Alice)" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.82rem; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1;">
                             </div>
                             <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">WhatsApp com DDD *</label>
-                                <input type="text" id="dirWpInputTelefone" placeholder="Ex: 47999881122" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <label style="font-size:0.76rem; font-weight:700; color:#475569;">WhatsApp com DDD *</label>
+                                <input type="text" id="dirWpInputTelefone" placeholder="Ex: 47999881122" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.82rem; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Linha de Modelos e Inserção de Variáveis -->
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:14px; margin-bottom:12px; align-items:center;">
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
-                                Modelo Pré-Formatado (Template Institucional)
-                            </label>
-                            <select id="dirWpTemplateSelect" onchange="aplicarTemplateWhatsAppDirecao()" class="search-input" style="width:100%; box-sizing:border-box; background:#f5f3ff; border-color:#ddd6fe; font-weight:700; color:#5b21b6;">
-                                <option value="convocacao_gabinete">📌 Convocação Presencial — Gabinete da Direção</option>
-                                <option value="lembrete_orientacao">⏰ Lembrete de Reunião com a Orientação Educacional</option>
-                                <option value="alerta_infrequencia">⚠️ Alerta de Faltas e Frequência Escolar</option>
-                                <option value="comunicado_geral">📢 Comunicado Oficial da Direção</option>
-                                <option value="personalizado">✏️ Mensagem Personalizada em Branco</option>
+                    <!-- Linha Prática e Compacta: Modelo + Variáveis Dinâmicas + Contador -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="font-size:0.76rem; font-weight:700; color:#64748b;">Modelo:</span>
+                            <select id="dirWpTemplateSelect" onchange="aplicarTemplateWhatsAppDirecao()" style="font-size:0.8rem; padding:5px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; font-weight:600; cursor:pointer;">
+                                <option value="convocacao_gabinete">📌 Convocação Presencial — Gabinete</option>
+                                <option value="lembrete_orientacao">⏰ Lembrete de Reunião — Orientação</option>
+                                <option value="alerta_infrequencia">⚠️ Alerta de Faltas e Frequência</option>
+                                <option value="comunicado_geral">📢 Comunicado Oficial</option>
+                                <option value="personalizado">✏️ Em Branco (Personalizado)</option>
                             </select>
+                            
+                            <span style="font-size:0.76rem; font-weight:700; color:#64748b; margin-left:4px;">Inserir:</span>
+                            <button type="button" onclick="inserirVariavelMensagemWp('{nome}')" class="btn" style="background:#eff6ff; color:#1d4ed8; font-size:0.74rem; font-weight:700; padding:3px 8px; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;" title="Insere a variável de nome no texto">
+                                + {nome}
+                            </button>
+                            <button type="button" onclick="inserirVariavelMensagemWp('{escola}')" class="btn" style="background:#eff6ff; color:#1d4ed8; font-size:0.74rem; font-weight:700; padding:3px 8px; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;" title="Insere a variável de escola no texto">
+                                + {escola}
+                            </button>
                         </div>
                         <div>
-                            <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
-                                Inserir Variável Dinâmica:
-                            </label>
-                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <button type="button" onclick="inserirVariavelMensagemWp('{nome}')" class="btn" style="background:#e0f2fe; color:#0369a1; font-size:0.78rem; font-weight:800; padding:6px 12px; border:1px solid #bae6fd; border-radius:8px;">
-                                    + {nome} (Destinatário)
-                                </button>
-                                <button type="button" onclick="inserirVariavelMensagemWp('{escola}')" class="btn" style="background:#e0f2fe; color:#0369a1; font-size:0.78rem; font-weight:800; padding:6px 12px; border:1px solid #bae6fd; border-radius:8px;">
-                                    + {escola}
-                                </button>
-                            </div>
+                            <span id="dirWpCharCount" style="font-size:0.75rem; color:#94a3b8; font-weight:600;">0 caracteres</span>
                         </div>
                     </div>
 
                     <!-- Textarea da Mensagem -->
-                    <div style="margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <label style="font-size:0.82rem; font-weight:800; color:#334155;">Texto da Mensagem *</label>
-                            <span id="dirWpCharCount" style="font-size:0.75rem; color:#94a3b8; font-weight:600;">0 caracteres</span>
-                        </div>
-                        <textarea id="dirWpInputMensagem" oninput="atualizarPreviewMensagemWhatsApp()" rows="5" class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit; line-height:1.45; font-size:0.9rem; border:1.5px solid #cbd5e1; border-radius:10px;"></textarea>
+                    <div style="margin-bottom:8px;">
+                        <textarea id="dirWpInputMensagem" oninput="atualizarPreviewMensagemWhatsApp()" rows="4" placeholder="Digite aqui o texto da mensagem a ser enviada aos contatos..." style="width:100%; box-sizing:border-box; font-family:inherit; line-height:1.5; font-size:0.88rem; border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
                     </div>
 
-                    <!-- Prévia da Mensagem Formatada -->
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:14px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#64748b; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
-                            <i class="fa-regular fa-eye"></i> Prévia em Tempo Real (Substituição de variáveis):
+                    <!-- Prévia da Mensagem (Discreta e Expansível para não poluir o layout) -->
+                    <details style="margin-bottom:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px;">
+                        <summary style="font-size:0.76rem; font-weight:700; color:#64748b; cursor:pointer; user-select:none;">
+                            <i class="fa-regular fa-eye"></i> Visualizar prévia da mensagem com variáveis substituídas
+                        </summary>
+                        <div id="dirWpPreviewContainer" style="margin-top:6px; padding:8px 12px; background:white; border-radius:6px; border:1px dashed #cbd5e1; font-size:0.82rem; color:#334155; line-height:1.45; white-space:pre-wrap;">
                         </div>
-                        <div id="dirWpPreviewContainer" style="font-size:0.85rem; color:#1e293b; white-space:pre-wrap; background:white; padding:10px 14px; border-radius:8px; border:1px dashed #cbd5e1; max-height:100px; overflow-y:auto; line-height:1.45;">
-                            <!-- Atualizado dinamicamente -->
-                        </div>
-                    </div>
+                    </details>
 
                     <!-- Botão de Disparo Principal -->
-                    <div>
-                        <button type="button" id="btnDirWpDisparoPrincipal" onclick="executarAcaoDisparoWhatsApp()" class="btn btn-primary" style="width:100%; background:#16a34a; border-color:#16a34a; font-weight:900; padding:14px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35); display:flex; justify-content:center; align-items:center; gap:10px; border-radius:12px;">
-                            <i class="fa-brands fa-whatsapp" style="font-size:1.35rem;"></i>
-                            <span id="btnDirWpDisparoText">🚀 Iniciar Fila de Disparo (0 contatos selecionados)</span>
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button type="button" id="btnDirWpDisparoPrincipal" onclick="executarAcaoDisparoWhatsApp()" class="btn btn-primary" style="background:#16a34a; border-color:#16a34a; font-weight:800; padding:10px 20px; font-size:0.92rem; border-radius:10px; box-shadow:0 2px 8px rgba(22,163,74,0.25); display:inline-flex; align-items:center; gap:8px;">
+                            <i class="fa-brands fa-whatsapp" style="font-size:1.15rem;"></i>
+                            <span id="btnDirWpDisparoText">🚀 Iniciar Fila de Disparo (0 selecionados)</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- ============================================================ -->
-                <!-- BLOCO 2: CONTATOS (100% LARGURA - EXATAMENTE COMO NO PRINT) -->
+                <!-- BLOCO 2: CONTATOS (LARGURA TOTAL - VISUAL REFINADO) -->
                 <!-- ============================================================ -->
-                <div style="background:white; border:2px solid #0f172a; border-radius:18px; padding:1.5rem; margin-bottom:1.5rem; box-shadow:var(--shadow-sm);">
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
                     <!-- Cabeçalho do Bloco de Contatos com Ações -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.2rem; border-bottom:2px solid #0f172a; padding-bottom:12px;">
-                        <h4 style="font-size:1.3rem; font-weight:900; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                        <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
                             <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
                         </h4>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <button type="button" onclick="downloadModeloCSVContatos()" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 12px; display:inline-flex; align-items:center; gap:6px; background:#f8fafc; border-color:#cbd5e1; color:#334155; font-weight:700;" title="Baixar planilha modelo CSV">
-                                <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i> Baixar Modelo CSV
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <!-- Botões de CSV em ícones compactos conforme solicitado -->
+                            <button type="button" onclick="downloadModeloCSVContatos()" title="Baixar modelo de planilha CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0284c7; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#f0f9ff'; this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
+                                <i class="fa-solid fa-file-csv" style="font-size:1rem;"></i>
                             </button>
-                            <button type="button" onclick="openImportarContatosCSVModal()" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 12px; display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; font-weight:700;" title="Importar contatos CSV">
-                                <i class="fa-solid fa-file-import"></i> Importar CSV
+                            <button type="button" onclick="openImportarContatosCSVModal()" title="Importar contatos de arquivo CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
+                                <i class="fa-solid fa-file-import" style="font-size:0.95rem;"></i>
                             </button>
-                            <button type="button" onclick="exportarContatosParaCSV()" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 12px; display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border-color:#bbf7d0; color:#166534; font-weight:700;" title="Exportar contatos CSV">
-                                <i class="fa-solid fa-file-export"></i> Exportar CSV
+                            <button type="button" onclick="exportarContatosParaCSV()" title="Exportar base de contatos em CSV" style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#166534; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#f0fdf4'; this.style.borderColor='#86efac'" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1'">
+                                <i class="fa-solid fa-file-export" style="font-size:0.95rem;"></i>
                             </button>
-                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="font-size:0.8rem; padding:7px 14px; background:#16a34a; border-color:#16a34a; font-weight:800; display:inline-flex; align-items:center; gap:6px;">
+                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="font-size:0.8rem; padding:7px 14px; background:#16a34a; border-color:#16a34a; font-weight:800; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
                                 <i class="fa-solid fa-plus"></i> Novo Contato
                             </button>
                         </div>
                     </div>
 
-                    <!-- Linha de TAGS (Exatamente como desenhado no print) -->
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.2rem; flex-wrap:wrap; background:#fdf2f8; padding:10px 14px; border-radius:12px; border:1px solid #fbcfe8;">
-                        <span style="font-size:0.95rem; font-weight:900; color:#831843; letter-spacing:0.5px;">TAGS</span>
-                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:8px; flex:1; align-items:center;">
+                    <!-- Linha de TAGS (Menores e todas lado a lado) -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; background:#f8fafc; padding:8px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+                        <span style="font-size:0.75rem; font-weight:800; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">TAGS:</span>
+                        <div id="dirWpTagsBadgesContainer" style="display:flex; flex-wrap:wrap; gap:6px; flex:1; align-items:center;">
                             <!-- Renderizado via JS -->
                         </div>
                     </div>
@@ -3826,8 +3819,8 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/gestao-data.js?v=20260921_v23"></script>
-    <script src="js/gestao-app.js?v=20260921_v23"></script>
+    <script src="js/gestao-data.js?v=20260921_v24"></script>
+    <script src="js/gestao-app.js?v=20260921_v24"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>
