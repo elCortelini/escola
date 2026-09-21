@@ -5726,21 +5726,22 @@ function renderDirWhatsAppContatos() {
     container.innerHTML = filtrados.map(c => {
         const isChecked = selectedWpContactIds.has(c.id);
         const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
-        const cargoExibicao = c.cargo || c.notas || tags[0] || 'Contato';
+        const tagsHtml = tags.map(t => `<span style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:10px; display:inline-flex; align-items:center; gap:3px; white-space:nowrap;">🏷️ ${escapeHtml(t)}</span>`).join(" ");
+        const tooltipInfo = tags.join(', ') + (c.notas ? ' — ' + c.notas : '') + (c.cargo ? ' (' + c.cargo + ')' : '');
 
         return `
             <div class="contact-row-card" style="${isChecked ? 'background:#eff6ff; border-color:#bfdbfe;' : ''}">
                 <div style="display:flex; align-items:center; justify-content:center;">
                     <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="contact-checkbox-custom">
                 </div>
-                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">
-                    ${c.nome}
+                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(c.nome)}">
+                    ${escapeHtml(c.nome)}
                 </div>
                 <div style="font-weight:700; font-size:0.86rem; color:#334155; white-space:nowrap; letter-spacing:0.3px;">
-                    ${c.telefone}
+                    ${escapeHtml(c.telefone)}
                 </div>
-                <div style="font-size:0.8rem; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${cargoExibicao}">
-                    ${cargoExibicao}
+                <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; overflow:hidden;" title="${escapeHtml(tooltipInfo)}">
+                    ${tagsHtml}
                 </div>
                 <div style="text-align:center;">
                     <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar contato">
