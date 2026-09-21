@@ -5579,94 +5579,293 @@ function closePrintDossieModal() {
 }
 
 // ----------------------------------------------------
-// SUB-ABA 3: CENTRAL WHATSAPP DA DIREÇÃO
+// SUB-ABA 3: CENTRAL WHATSAPP DA DIREÇÃO & MENSAGERIA
 // ----------------------------------------------------
-function renderDirWhatsApp() {
-    renderDirWhatsAppContatos();
-    renderDirWhatsAppLogs();
-    aplicarTemplateWhatsAppDirecao();
+let dirWpModoEnvio = 'multi'; // 'multi' ou 'individual'
+let selectedWpTags = new Set(); // Conjunto de tags selecionadas para filtrar
+let selectedWpContactIds = new Set(); // Conjunto de contatos selecionados para disparo
+let dirWpFilaEnvio = []; // Array da fila guiada atual
+let dirWpFilaIndexAtual = 0; // Posição atual na fila
+let parsedCsvContactsPreview = []; // Contatos em espera de importação
+
+function setDirWpModoEnvio(modo) {
+    dirWpModoEnvio = modo;
+    const btnMulti = document.getElementById("btnDirWpModoMulti");
+    const btnInd = document.getElementById("btnDirWpModoIndividual");
+    const indContainer = document.getElementById("dirWpCamposIndividualContainer");
+    const btnDisparoText = document.getElementById("btnDirWpDisparoText");
+
+    if (modo === 'individual') {
+        if (btnMulti) { btnMulti.classList.remove("btn-primary"); btnMulti.classList.add("btn-secondary"); }
+        if (btnInd) { btnInd.classList.add("btn-primary"); btnInd.classList.remove("btn-secondary"); }
+        if (indContainer) indContainer.style.display = "block";
+        if (btnDisparoText) btnDisparoText.textContent = "Abrir WhatsApp Web para Contato Avulso";
+    } else {
+        if (btnMulti) { btnMulti.classList.add("btn-primary"); btnMulti.classList.remove("btn-secondary"); }
+        if (btnInd) { btnInd.classList.remove("btn-primary"); btnInd.classList.add("btn-secondary"); }
+        if (indContainer) indContainer.style.display = "none";
+        atualizarContadoresSelecaoWp();
+    }
 }
 
+function renderDirWhatsApp() {
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+    renderDirWhatsAppLogs();
+    popularSelectTagsHistoricoWp();
+
+    const textarea = document.getElementById("dirWpInputMensagem");
+    if (textarea && !textarea.value.trim()) {
+        aplicarTemplateWhatsAppDirecao();
+    } else {
+        atualizarPreviewMensagemWhatsApp();
+    }
+}
+
+// Renderiza as tags dinâmicas como botões interativos com contadores
+function renderDirWpTagsFilter() {
+    const container = document.getElementById("dirWpTagsBadgesContainer");
+    if (!container) return;
+
+    const allTags = sigeDB.getAllTagsContatos();
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+
+    // Calcula contagem de contatos por tag
+    const countsByTag = {};
+    allTags.forEach(t => {
+        countsByTag[t] = contatos.filter(c => {
+            const cTags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : []);
+            return cTags.includes(t);
+        }).length;
+    });
+
+    let html = `
+        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:4px 10px; font-size:0.75rem; border-radius:20px; font-weight:700; transition:all 0.15s; ${selectedWpTags.size === 0 ? 'background:#0f172a; color:white; border:1px solid #0f172a;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
+            🌐 Todas as Tags (${contatos.length})
+        </button>
+    `;
+
+    allTags.forEach(tag => {
+        const isSelected = selectedWpTags.has(tag);
+        const count = countsByTag[tag] || 0;
+        html += `
+            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:4px 10px; font-size:0.75rem; border-radius:20px; font-weight:700; transition:all 0.15s; display:inline-flex; align-items:center; gap:5px; ${isSelected ? 'background:#16a34a; color:white; border:1px solid #16a34a; box-shadow:0 2px 4px rgba(22,163,74,0.25);' : 'background:#f8fafc; color:#334155; border:1px solid #cbd5e1;'}">
+                <span>${isSelected ? '✓ ' : ''}${tag}</span>
+                <span style="font-size:0.68rem; opacity:0.85; background:${isSelected ? 'rgba(255,255,255,0.25)' : '#e2e8f0'}; padding:1px 6px; border-radius:10px;">${count}</span>
+            </button>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function onDirWpTagToggle(tag) {
+    if (tag === '__TODAS__') {
+        selectedWpTags.clear();
+    } else {
+        if (selectedWpTags.has(tag)) {
+            selectedWpTags.delete(tag);
+        } else {
+            selectedWpTags.add(tag);
+        }
+    }
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+}
+
+function filtrarContatosListaPorTexto() {
+    renderDirWhatsAppContatos();
+}
+
+// Renderiza a lista de contatos dinamicamente filtrados por tags e texto
 function renderDirWhatsAppContatos() {
     const container = document.getElementById("dirWpContatosListContainer");
+    const totalBadge = document.getElementById("dirWpTotalContatosBadge");
+    const visibleCountElem = document.getElementById("dirWpVisibleCount");
+    const selectAllCheckbox = document.getElementById("dirWpCheckboxSelecionarTodos");
+
     if (!container) return;
 
     const contatos = sigeDB.getContatosWhatsApp() || [];
-    const filtrados = contatos.filter(c => {
-        if (dirWhatsAppFiltroTag === 'todos') return true;
-        return c.tag === dirWhatsAppFiltroTag;
+    if (totalBadge) totalBadge.innerText = `${contatos.length} contatos`;
+
+    const textoBusca = (document.getElementById("dirWpSearchContatosInput")?.value || '').toLowerCase().trim();
+
+    // Filtra por tags selecionadas
+    let filtrados = contatos.filter(c => {
+        const cTags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : []);
+        if (selectedWpTags.size > 0) {
+            const hasTag = Array.from(selectedWpTags).some(t => cTags.includes(t));
+            if (!hasTag) return false;
+        }
+        if (textoBusca) {
+            const matchNome = (c.nome || '').toLowerCase().includes(textoBusca);
+            const matchFone = (c.telefone || '').includes(textoBusca);
+            const matchTags = cTags.some(t => t.toLowerCase().includes(textoBusca));
+            if (!matchNome && !matchFone && !matchTags) return false;
+        }
+        return true;
     });
+
+    if (visibleCountElem) visibleCountElem.innerText = filtrados.length;
+
+    // Atualiza estado do checkbox selecionar todos
+    if (selectAllCheckbox) {
+        const allVisibleSelected = filtrados.length > 0 && filtrados.every(c => selectedWpContactIds.has(c.id));
+        selectAllCheckbox.checked = allVisibleSelected;
+    }
 
     if (filtrados.length === 0) {
-        container.innerHTML = `<div style="padding:1rem; text-align:center; color:#64748b; font-size:0.82rem;">Nenhum contato cadastrado nesta categoria.</div>`;
+        container.innerHTML = `
+            <div style="padding:2rem 1rem; text-align:center; color:#64748b; font-size:0.83rem; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
+                <i class="fa-solid fa-filter" style="font-size:1.5rem; color:#94a3b8; margin-bottom:6px; display:block;"></i>
+                Nenhum contato encontrado com as tags ou filtros selecionados.
+            </div>
+        `;
+        atualizarContadoresSelecaoWp();
         return;
     }
 
-    container.innerHTML = filtrados.map(c => `
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:700; color:#0f172a; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.nome}</div>
-                <div style="font-size:0.78rem; color:#2563eb; font-weight:600;"><i class="fa-brands fa-whatsapp"></i> ${c.telefone}</div>
-                <div style="font-size:0.72rem; color:#64748b;">${c.tag || 'Geral'}</div>
+    container.innerHTML = filtrados.map(c => {
+        const isChecked = selectedWpContactIds.has(c.id);
+        const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
+        const safeNome = (c.nome || '').replace(/'/g, "\\'");
+        const safeFone = (c.telefone || '').replace(/\D/g, '');
+
+        return `
+            <div style="background:${isChecked ? '#f0fdf4' : '#ffffff'}; border:1px solid ${isChecked ? '#86efac' : '#e2e8f0'}; border-radius:10px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; transition:all 0.15s;">
+                <div style="display:flex; align-items:flex-start; gap:10px; flex:1; min-width:0;">
+                    <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} style="transform:scale(1.2); margin-top:3px; cursor:pointer;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:800; color:#0f172a; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">${c.nome}</div>
+                        <div style="font-size:0.78rem; color:#15803d; font-weight:700; display:flex; align-items:center; gap:4px;">
+                            <i class="fa-brands fa-whatsapp"></i> ${c.telefone}
+                        </div>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:3px;">
+                            ${tags.map(t => `<span style="background:#e0f2fe; color:#0369a1; font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:8px;">${t}</span>`).join("")}
+                        </div>
+                        ${c.notas ? `<div style="font-size:0.7rem; color:#64748b; margin-top:2px; font-style:italic;">${c.notas}</div>` : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center;">
+                    <button type="button" onclick="usarContatoNoAssistenteWhatsApp('${safeNome}', '${safeFone}', '${tags[0] || ''}')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.72rem; padding:4px 8px; border-radius:6px;" title="Usar no envio avulso">
+                        <i class="fa-solid fa-arrow-left"></i> Avulso
+                    </button>
+                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="btn" style="background:#fee2e2; color:#991b1b; font-size:0.72rem; padding:4px 7px; border-radius:6px;" title="Excluir contato">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
             </div>
-            <div style="display:flex; gap:6px;">
-                <button type="button" onclick="usarContatoNoAssistenteWhatsApp('${c.nome.replace(/'/g, "\\'")}', '${c.telefone}', '${c.tag || ''}')" class="btn" style="background:#dcfce7; color:#166534; font-size:0.75rem; padding:4px 8px; border:none; border-radius:6px; font-weight:700;" title="Usar no envio">
-                    <i class="fa-solid fa-arrow-left"></i> Usar
-                </button>
-                <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="btn" style="background:#fee2e2; color:#991b1b; font-size:0.75rem; padding:4px 8px; border:none; border-radius:6px;" title="Excluir">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `).join("");
+        `;
+    }).join("");
+
+    atualizarContadoresSelecaoWp();
 }
 
-function renderDirWhatsAppLogs() {
-    const container = document.getElementById("dirWpLogListContainer");
-    if (!container) return;
-
-    const logs = sigeDB.getMensagensWhatsAppLog() || [];
-    if (logs.length === 0) {
-        container.innerHTML = `<div style="padding:1rem; text-align:center; color:#64748b; font-size:0.82rem;">Nenhum envio recente registrado.</div>`;
-        return;
+function toggleSelectContatoWp(id, checked) {
+    if (checked) {
+        selectedWpContactIds.add(id);
+    } else {
+        selectedWpContactIds.delete(id);
     }
-
-    container.innerHTML = logs.slice(0, 10).map(l => `
-        <div style="padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <strong style="color:#0f172a; display:block;">${l.contatoNome}</strong>
-                <span style="color:#64748b; font-size:0.72rem;">${formatDateBR(l.enviadoEm)} às ${new Date(l.enviadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</span>
-            </div>
-            <span style="background:#dcfce7; color:#166534; font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:8px;">Enviado</span>
-        </div>
-    `).join("");
-}
-
-function filtrarContatosDirWhatsApp(tag) {
-    dirWhatsAppFiltroTag = tag;
-    const btns = document.querySelectorAll(".btnDirWpTagFilter");
-    btns.forEach(b => {
-        if (b.dataset.tag === tag) b.classList.add("active");
-        else b.classList.remove("active");
-    });
+    atualizarContadoresSelecaoWp();
     renderDirWhatsAppContatos();
 }
 
-function usarContatoNoAssistenteWhatsApp(nome, fone, tag) {
-    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = nome;
-    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
-    if (document.getElementById("dirWpInputTag") && tag) document.getElementById("dirWpInputTag").value = tag;
-    showToast(`Contato "${nome}" selecionado para envio.`);
+function toggleSelecionarTodosContatosWp(checked) {
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+    const textoBusca = (document.getElementById("dirWpSearchContatosInput")?.value || '').toLowerCase().trim();
+
+    const filtrados = contatos.filter(c => {
+        const cTags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : []);
+        if (selectedWpTags.size > 0) {
+            const hasTag = Array.from(selectedWpTags).some(t => cTags.includes(t));
+            if (!hasTag) return false;
+        }
+        if (textoBusca) {
+            const matchNome = (c.nome || '').toLowerCase().includes(textoBusca);
+            const matchFone = (c.telefone || '').includes(textoBusca);
+            const matchTags = cTags.some(t => t.toLowerCase().includes(textoBusca));
+            if (!matchNome && !matchFone && !matchTags) return false;
+        }
+        return true;
+    });
+
+    if (checked) {
+        filtrados.forEach(c => selectedWpContactIds.add(c.id));
+    } else {
+        filtrados.forEach(c => selectedWpContactIds.delete(c.id));
+    }
+
+    atualizarContadoresSelecaoWp();
+    renderDirWhatsAppContatos();
 }
 
-function prepararDisparoWhatsAppFamiliar(alunoNome, fone) {
-    switchDirSubTab('whatsapp');
-    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = `Responsáveis por ${alunoNome}`;
-    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
-    if (document.getElementById("dirWpTemplateSelect")) {
-        document.getElementById("dirWpTemplateSelect").value = "convocacao_gabinete";
-        aplicarTemplateWhatsAppDirecao();
+function limparSelecaoContatosWp() {
+    selectedWpContactIds.clear();
+    atualizarContadoresSelecaoWp();
+    renderDirWhatsAppContatos();
+}
+
+function atualizarContadoresSelecaoWp() {
+    const count = selectedWpContactIds.size;
+    const contadorElem = document.getElementById("dirWpSelecionadosContador");
+    const btnTextElem = document.getElementById("btnDirWpDisparoText");
+
+    if (contadorElem) contadorElem.innerText = count;
+    if (btnTextElem && dirWpModoEnvio === 'multi') {
+        btnTextElem.innerText = `🚀 Iniciar Fila de Disparo (${count} contato${count === 1 ? '' : 's'} selecionado${count === 1 ? '' : 's'})`;
     }
+}
+
+// Inserção de variáveis {nome} e {escola} no textarea
+function inserirVariavelMensagemWp(variavel) {
+    const textarea = document.getElementById("dirWpInputMensagem");
+    if (!textarea) return;
+
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const text = textarea.value;
+
+    textarea.value = text.substring(0, startPos) + variavel + text.substring(endPos, text.length);
+    textarea.focus();
+    textarea.selectionStart = startPos + variavel.length;
+    textarea.selectionEnd = startPos + variavel.length;
+
+    atualizarPreviewMensagemWhatsApp();
+}
+
+// Prévia dinâmica com contagem de caracteres e substituição de tags
+function atualizarPreviewMensagemWhatsApp() {
+    const textarea = document.getElementById("dirWpInputMensagem");
+    const previewContainer = document.getElementById("dirWpPreviewContainer");
+    const charCountElem = document.getElementById("dirWpCharCount");
+
+    if (!textarea || !previewContainer) return;
+
+    const text = textarea.value || '';
+    if (charCountElem) charCountElem.innerText = `${text.length} caracteres`;
+
+    if (!text.trim()) {
+        previewContainer.innerHTML = `<span style="color:#94a3b8; font-style:italic;">A prévia da mensagem aparecerá aqui após preencher o texto.</span>`;
+        return;
+    }
+
+    // Pega o nome do primeiro contato selecionado ou um exemplo
+    let sampleNome = 'Senhor(a) Responsável';
+    if (selectedWpContactIds.size > 0) {
+        const firstId = Array.from(selectedWpContactIds)[0];
+        const c = sigeDB.getContatosWhatsApp().find(item => item.id === firstId);
+        if (c) sampleNome = c.nome;
+    } else if (document.getElementById("dirWpInputNome")?.value.trim()) {
+        sampleNome = document.getElementById("dirWpInputNome").value.trim();
+    }
+
+    let previewText = text
+        .replace(/{nome}/gi, `<strong>[${sampleNome}]</strong>`)
+        .replace(/{escola}/gi, `<strong>Centro Educacional Pedro Rizzi</strong>`);
+
+    previewContainer.innerHTML = previewText;
 }
 
 function aplicarTemplateWhatsAppDirecao() {
@@ -5674,53 +5873,507 @@ function aplicarTemplateWhatsAppDirecao() {
     const textarea = document.getElementById("dirWpInputMensagem");
     if (!textarea) return;
 
-    const nomeDest = document.getElementById("dirWpInputNome")?.value || 'Senhor(a) Responsável';
-
     const templatesMap = {
-        convocacao_gabinete: `Olá, ${nomeDest}! Aqui é da Direção do Centro Educacional Pedro Rizzi.\n\nSolicitamos seu comparecimento à escola nesta semana para tratarmos do acompanhamento pedagógico e frequência escolar do(a) estudante.\n\nPor favor, confirme o recebimento desta mensagem e nos informe seu melhor dia e horário. Atenciosamente,\nDireção Escolar — C.E. Pedro Rizzi`,
-        lembrete_orientacao: `Prezado(a) ${nomeDest},\n\nLembramos que há um agendamento com a Orientação Educacional do C.E. Pedro Rizzi programado para esta semana.\n\nSua presença é fundamental para o sucesso escolar do estudante. Contamos com você!\nAtenciosamente, Direção & Orientação.`,
-        alerta_infrequencia: `Prezado(a) ${nomeDest},\n\nIdentificamos ausências reiteradas do estudante nos últimos dias letivos. Lembramos que a frequência escolar é obrigatória por lei e essencial para a aprendizagem.\n\nSolicitamos justificativa ou contato urgente com a Direção Escolar pelo telefone (47) 3348-0000.`,
-        comunicado_geral: `Comunicado Oficial da Direção — Centro Educacional Pedro Rizzi\n\nInformamos à comunidade escolar que...\n\nQualquer dúvida estamos à disposição na secretaria da escola.`,
+        convocacao_gabinete: `Olá, {nome}! Aqui é da Direção do Centro Educacional Pedro Rizzi.\n\nSolicitamos seu comparecimento à escola nesta semana para tratarmos do acompanhamento pedagógico e frequência escolar do(a) estudante.\n\nPor favor, confirme o recebimento desta mensagem e nos informe seu melhor dia e horário. Atenciosamente,\nDireção Escolar — {escola}`,
+        lembrete_orientacao: `Prezado(a) {nome},\n\nLembramos que há um agendamento com a Orientação Educacional do {escola} programado para os próximos dias.\n\nSua presença é fundamental para o sucesso escolar do estudante. Contamos com você!\nAtenciosamente, Direção & Orientação.`,
+        alerta_infrequencia: `Prezado(a) {nome},\n\nIdentificamos ausências reiteradas do estudante nos últimos dias letivos no {escola}. Lembramos que a frequência escolar é obrigatória por lei e essencial para a aprendizagem.\n\nSolicitamos justificativa ou contato urgente com a Direção Escolar pelo telefone (47) 3348-0000.`,
+        comunicado_geral: `Comunicado Oficial da Direção — {escola}\n\nPrezado(a) {nome},\nInformamos à comunidade escolar que as atividades pedagógicas seguem conforme o cronograma oficial.\n\nQualquer dúvida estamos à disposição na secretaria da escola.\nAtenciosamente, Direção Escolar.`,
         personalizado: ""
     };
 
     if (templatesMap[template] !== undefined) {
         textarea.value = templatesMap[template];
+        atualizarPreviewMensagemWhatsApp();
     }
 }
 
-function executarEnvioWhatsAppDirecao(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const nome = document.getElementById("dirWpInputNome")?.value.trim();
-    let fone = document.getElementById("dirWpInputTelefone")?.value.replace(/\D/g, '');
-    const tag = document.getElementById("dirWpInputTag")?.value || 'Geral';
+// Disparo: Alterna entre Envio Individual e Fila Guiada
+function executarAcaoDisparoWhatsApp() {
     const msg = document.getElementById("dirWpInputMensagem")?.value.trim();
-
-    if (!nome || !fone || !msg) {
-        showToast("Preencha todos os campos obrigatórios para enviar.", "warning");
+    if (!msg) {
+        showToast("Escreva o texto da mensagem antes de enviar.", "warning");
         return;
     }
 
-    // Adiciona código do país Brasil (55) se não informado
-    if (fone.length === 10 || fone.length === 11) {
-        fone = '55' + fone;
+    if (dirWpModoEnvio === 'individual') {
+        const nome = document.getElementById("dirWpInputNome")?.value.trim();
+        let fone = document.getElementById("dirWpInputTelefone")?.value.replace(/\D/g, '');
+
+        if (!nome || !fone) {
+            showToast("Informe o Nome e o WhatsApp do contato avulso.", "warning");
+            return;
+        }
+
+        if (fone.length === 10 || fone.length === 11) fone = '55' + fone;
+
+        const msgFinal = msg
+            .replace(/{nome}/gi, nome)
+            .replace(/{escola}/gi, "Centro Educacional Pedro Rizzi");
+
+        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msgFinal)}`, '_blank');
+
+        sigeDB.addMensagemWhatsAppLog({
+            contatoNome: nome,
+            telefone: fone,
+            tag: 'Avulso',
+            mensagem: msgFinal,
+            status: 'enviado'
+        });
+
+        renderDirWhatsAppLogs();
+        showToast(`WhatsApp aberto para ${nome}! Registro de envio salvo.`);
+    } else {
+        // Envio em Lote (Multi-Contatos via Fila Guiada)
+        if (selectedWpContactIds.size === 0) {
+            showToast("Nenhum contato selecionado. Marque pelo menos um contato na lista.", "warning");
+            return;
+        }
+
+        const allContatos = sigeDB.getContatosWhatsApp() || [];
+        dirWpFilaEnvio = allContatos.filter(c => selectedWpContactIds.has(c.id));
+        dirWpFilaIndexAtual = 0;
+
+        iniciarFilaEnvioWhatsApp();
+    }
+}
+
+// ----------------------------------------------------
+// FILA DE ENVIO GUIADA (ANTI-BLOQUEIO)
+// ----------------------------------------------------
+function iniciarFilaEnvioWhatsApp() {
+    const modal = document.getElementById("modalFilaEnvioWhatsApp");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+    renderFilaEnvioItemAtual();
+}
+
+function fecharFilaEnvioWhatsApp() {
+    const modal = document.getElementById("modalFilaEnvioWhatsApp");
+    if (modal) modal.style.display = "none";
+    renderDirWhatsAppLogs();
+}
+
+function renderFilaEnvioItemAtual() {
+    if (dirWpFilaIndexAtual >= dirWpFilaEnvio.length) {
+        fecharFilaEnvioWhatsApp();
+        showToast(`🎉 Fila de envio concluída com sucesso! Todos os ${dirWpFilaEnvio.length} contatos foram processados.`, "success");
+        selectedWpContactIds.clear();
+        atualizarContadoresSelecaoWp();
+        renderDirWhatsAppContatos();
+        return;
     }
 
-    const url = `https://wa.me/${fone}?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    const c = dirWpFilaEnvio[dirWpFilaIndexAtual];
+    const total = dirWpFilaEnvio.length;
+    const atualNum = dirWpFilaIndexAtual + 1;
+    const pct = Math.round((atualNum / total) * 100);
 
+    const progressoLabel = document.getElementById("dirWpFilaProgressoLabel");
+    const restantesLabel = document.getElementById("dirWpFilaRestantesLabel");
+    const progressBar = document.getElementById("dirWpFilaProgressBar");
+    const nomeAtualElem = document.getElementById("dirWpFilaNomeAtual");
+    const foneAtualElem = document.getElementById("dirWpFilaTelefoneAtual");
+    const tagsAtualElem = document.getElementById("dirWpFilaTagsAtual");
+    const previewFinalElem = document.getElementById("dirWpFilaMensagemFinalPreview");
+
+    if (progressoLabel) progressoLabel.innerText = `Contato ${atualNum} de ${total} (${pct}%)`;
+    if (restantesLabel) restantesLabel.innerText = `${total - atualNum} restantes`;
+    if (progressBar) progressBar.style.width = `${pct}%`;
+
+    if (nomeAtualElem) nomeAtualElem.innerText = c.nome;
+    if (foneAtualElem) foneAtualElem.innerText = c.telefone;
+
+    const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
+    if (tagsAtualElem) {
+        tagsAtualElem.innerHTML = tags.map(t => `<span style="background:#dcfce7; color:#166534; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:8px;">🏷️ ${t}</span>`).join("");
+    }
+
+    const msgTemplate = document.getElementById("dirWpInputMensagem")?.value || '';
+    const msgFinal = msgTemplate
+        .replace(/{nome}/gi, c.nome)
+        .replace(/{escola}/gi, "Centro Educacional Pedro Rizzi");
+
+    if (previewFinalElem) previewFinalElem.innerText = msgFinal;
+}
+
+function dispararContatoAtualFilaWhatsApp() {
+    if (dirWpFilaIndexAtual >= dirWpFilaEnvio.length) return;
+
+    const c = dirWpFilaEnvio[dirWpFilaIndexAtual];
+    let fone = (c.telefone || '').replace(/\D/g, '');
+    if (fone.length === 10 || fone.length === 11) fone = '55' + fone;
+
+    const msgTemplate = document.getElementById("dirWpInputMensagem")?.value || '';
+    const msgFinal = msgTemplate
+        .replace(/{nome}/gi, c.nome)
+        .replace(/{escola}/gi, "Centro Educacional Pedro Rizzi");
+
+    const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
+
+    // Abre o WhatsApp Web em nova aba
+    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msgFinal)}`, '_blank');
+
+    // Registra no histórico
     sigeDB.addMensagemWhatsAppLog({
-        contatoNome: nome,
+        contatoNome: c.nome,
         telefone: fone,
-        tag: tag,
-        mensagem: msg,
+        tag: tags[0] || 'Geral',
+        mensagem: msgFinal,
         status: 'enviado'
     });
 
-    renderDirWhatsAppLogs();
-    showToast(`WhatsApp aberto para ${nome}! Registro de envio salvo.`);
+    // Avança para o próximo
+    dirWpFilaIndexAtual++;
+    renderFilaEnvioItemAtual();
 }
 
+function pularContatoAtualFilaWhatsApp() {
+    dirWpFilaIndexAtual++;
+    renderFilaEnvioItemAtual();
+}
+
+// ----------------------------------------------------
+// TABELA-MODELO & IMPORTAÇÃO / EXPORTAÇÃO CSV
+// ----------------------------------------------------
+function downloadModeloCSVContatos() {
+    // CSV com delimitador ponto-e-vírgula e codificação UTF-8 BOM
+    const cabecalho = "Nome;Telefone;Tags;Observacoes\r\n";
+    const linhasExemplo = [
+        "Mariana dos Santos;47999881122;Pais / Responsáveis, 3º Ano A;Mãe do aluno Lucas Santos",
+        "Prof. Ricardo Alencar;47997665544;Equipe Docente, Matemática;Representante dos professores",
+        "Carlos Roberto Silveira;47991223344;Conselho Escolar / APMF;Presidente da APMF",
+        "Conselho Tutelar Central;47988332211;Conselho Tutelar / SME;Plantão de Atendimento Escolar",
+        "Juliana Ribeiro;47994445566;Pais / Responsáveis, 5º Ano B;Responsável Financeira e Transporte"
+    ].join("\r\n");
+
+    const csvContent = "\uFEFF" + cabecalho + linhasExemplo;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "tabela_modelo_contatos_escola.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Planilha modelo (.CSV) baixada com sucesso!", "success");
+}
+
+function exportarContatosParaCSV() {
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+    if (contatos.length === 0) {
+        showToast("Nenhum contato cadastrado para exportar.", "warning");
+        return;
+    }
+
+    const cabecalho = "Nome;Telefone;Tags;Observacoes\r\n";
+    const linhas = contatos.map(c => {
+        const tags = Array.isArray(c.tags) ? c.tags.join(", ") : (c.tag || '');
+        const safeNome = (c.nome || '').replace(/;/g, ',');
+        const safeFone = (c.telefone || '').replace(/;/g, '');
+        const safeTags = tags.replace(/;/g, '-');
+        const safeNotas = (c.notas || '').replace(/;/g, ',');
+        return `${safeNome};${safeFone};${safeTags};${safeNotas}`;
+    }).join("\r\n");
+
+    const csvContent = "\uFEFF" + cabecalho + linhas;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `contatos_direcao_pedro_rizzi_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(`Base com ${contatos.length} contatos exportada para CSV!`, "success");
+}
+
+function openImportarContatosCSVModal() {
+    const modal = document.getElementById("modalImportarContatosCSV");
+    if (!modal) return;
+    parsedCsvContactsPreview = [];
+    if (document.getElementById("dirWpImportCsvFileInput")) document.getElementById("dirWpImportCsvFileInput").value = "";
+    if (document.getElementById("dirWpImportCsvTextarea")) document.getElementById("dirWpImportCsvTextarea").value = "";
+    processarPreviaTextoCsv();
+    modal.style.display = "flex";
+}
+
+function closeImportarContatosCSVModal() {
+    const modal = document.getElementById("modalImportarContatosCSV");
+    if (modal) modal.style.display = "none";
+}
+
+function handleCsvFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const texto = e.target.result;
+        const textarea = document.getElementById("dirWpImportCsvTextarea");
+        if (textarea) textarea.value = texto;
+        processarPreviaTextoCsv();
+    };
+    reader.readAsText(file, "UTF-8");
+}
+
+function processarPreviaTextoCsv() {
+    const textarea = document.getElementById("dirWpImportCsvTextarea");
+    const container = document.getElementById("dirWpCsvPreviewContainer");
+    const countBadge = document.getElementById("dirWpCsvPreviewCount");
+    const btnConfirmar = document.getElementById("btnConfirmarImportCsv");
+
+    if (!textarea || !container) return;
+
+    const raw = textarea.value.trim();
+    if (!raw) {
+        container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:1.5rem;">Nenhum arquivo selecionado ou texto colado.</div>`;
+        if (countBadge) countBadge.innerText = "0 contatos detectados";
+        if (btnConfirmar) btnConfirmar.disabled = true;
+        parsedCsvContactsPreview = [];
+        return;
+    }
+
+    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+    const parsed = [];
+
+    lines.forEach((line, idx) => {
+        // Detecta delimitador: ponto-e-vírgula ou vírgula
+        const delimitador = line.includes(";") ? ";" : ",";
+        const parts = line.split(delimitador).map(p => p.trim());
+
+        // Se for linha de cabeçalho (contém "nome" ou "telefone"), pula
+        if (idx === 0 && (parts[0].toLowerCase().includes("nome") || (parts[1] && parts[1].toLowerCase().includes("tel")))) {
+            return;
+        }
+
+        const nome = parts[0] || '';
+        const fone = (parts[1] || '').replace(/\D/g, '');
+        const rawTags = parts[2] || 'Pais / Responsáveis';
+        const notas = parts[3] || '';
+
+        if (nome && fone) {
+            // Divide tags por vírgula se houver mais de uma
+            const tags = rawTags.split(",").map(t => t.trim()).filter(Boolean);
+            parsed.push({
+                nome: nome,
+                telefone: fone,
+                tags: tags.length > 0 ? tags : ['Pais / Responsáveis'],
+                notas: notas
+            });
+        }
+    });
+
+    parsedCsvContactsPreview = parsed;
+
+    if (countBadge) countBadge.innerText = `${parsed.length} contato${parsed.length === 1 ? '' : 's'} detectado${parsed.length === 1 ? '' : 's'}`;
+    if (btnConfirmar) btnConfirmar.disabled = parsed.length === 0;
+
+    if (parsed.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1rem;">Nenhum contato válido encontrado. Certifique-se de que cada linha tenha Nome e Telefone.</div>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.75rem;">
+            <thead>
+                <tr style="background:#e2e8f0; text-align:left; color:#1e293b;">
+                    <th style="padding:6px;">#</th>
+                    <th style="padding:6px;">Nome</th>
+                    <th style="padding:6px;">Telefone</th>
+                    <th style="padding:6px;">Tags</th>
+                    <th style="padding:6px;">Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${parsed.map((c, i) => `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 6px; color:#64748b;">${i + 1}</td>
+                        <td style="padding:4px 6px; font-weight:700;">${c.nome}</td>
+                        <td style="padding:4px 6px; color:#15803d;">${c.telefone}</td>
+                        <td style="padding:4px 6px;">${c.tags.map(t => `<span style="background:#e0f2fe; color:#0369a1; padding:1px 4px; border-radius:4px; font-size:0.68rem; margin-right:3px;">${t}</span>`).join("")}</td>
+                        <td style="padding:4px 6px; color:#64748b;">${c.notas || '-'}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    `;
+}
+
+function confirmarImportacaoCsvContatos() {
+    if (parsedCsvContactsPreview.length === 0) return;
+
+    const adicionados = sigeDB.addContatosEmLote(parsedCsvContactsPreview);
+    closeImportarContatosCSVModal();
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+    popularSelectTagsHistoricoWp();
+    showToast(`Sucesso! ${adicionados} novos contatos foram importados para o sistema.`, "success");
+}
+
+// ----------------------------------------------------
+// HISTÓRICO DE MENSAGENS COM FILTROS & RASTREAMENTO
+// ----------------------------------------------------
+function popularSelectTagsHistoricoWp() {
+    const select = document.getElementById("dirWpHistFilterTag");
+    if (!select) return;
+
+    const valAtual = select.value;
+    const tags = sigeDB.getAllTagsContatos();
+
+    select.innerHTML = `<option value="">Todas as Tags</option>` + tags.map(t => `
+        <option value="${t}">${t}</option>
+    `).join("");
+
+    select.value = valAtual;
+}
+
+function renderDirWhatsAppLogs() {
+    const container = document.getElementById("dirWpLogListContainer");
+    const badgeTotal = document.getElementById("dirWpTotalLogsBadge");
+    if (!container) return;
+
+    const logs = sigeDB.getMensagensWhatsAppLog() || [];
+
+    // Filtros
+    const dtInicio = document.getElementById("dirWpHistDataInicio")?.value;
+    const dtFim = document.getElementById("dirWpHistDataFim")?.value;
+    const tagFiltro = document.getElementById("dirWpHistFilterTag")?.value;
+    const statusFiltro = document.getElementById("dirWpHistFilterStatus")?.value;
+    const busca = (document.getElementById("dirWpHistFilterBusca")?.value || '').toLowerCase().trim();
+
+    const filtrados = logs.filter(l => {
+        if (dtInicio && l.enviadoEm) {
+            const lData = l.enviadoEm.slice(0, 10);
+            if (lData < dtInicio) return false;
+        }
+        if (dtFim && l.enviadoEm) {
+            const lData = l.enviadoEm.slice(0, 10);
+            if (lData > dtFim) return false;
+        }
+        if (tagFiltro && l.tag !== tagFiltro) return false;
+        if (statusFiltro && (l.status || 'enviado') !== statusFiltro) return false;
+        if (busca) {
+            const matchNome = (l.contatoNome || '').toLowerCase().includes(busca);
+            const matchFone = (l.telefone || '').includes(busca);
+            const matchMsg = (l.mensagem || '').toLowerCase().includes(busca);
+            if (!matchNome && !matchFone && !matchMsg) return false;
+        }
+        return true;
+    });
+
+    if (badgeTotal) badgeTotal.innerText = `${filtrados.length} de ${logs.length} registros`;
+
+    if (filtrados.length === 0) {
+        container.innerHTML = `
+            <div style="padding:2.5rem 1rem; text-align:center; color:#64748b; font-size:0.85rem; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
+                <i class="fa-solid fa-clock-rotate-left" style="font-size:1.8rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                Nenhum registro de mensagem enviado encontrado para os filtros selecionados.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.83rem;">
+            <thead>
+                <tr style="background:#f1f5f9; text-align:left; color:#475569; border-bottom:1px solid #cbd5e1;">
+                    <th style="padding:10px 12px;">Data / Hora</th>
+                    <th style="padding:10px 12px;">Destinatário</th>
+                    <th style="padding:10px 12px;">Tag</th>
+                    <th style="padding:10px 12px;">Mensagem Enviada</th>
+                    <th style="padding:10px 12px;">Status / Retorno</th>
+                    <th style="padding:10px 12px; text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${filtrados.map(l => {
+                    const status = l.status || 'enviado';
+                    const dataFmt = formatDateBR(l.enviadoEm);
+                    const horaFmt = l.enviadoEm ? new Date(l.enviadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
+                    const safeFone = (l.telefone || '').replace(/\D/g, '');
+                    const safeMsg = (l.mensagem || '').replace(/'/g, "\\'");
+
+                    return `
+                        <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <td style="padding:10px 12px; white-space:nowrap; color:#334155;">
+                                <div style="font-weight:700;">${dataFmt}</div>
+                                <div style="font-size:0.75rem; color:#64748b;">${horaFmt}</div>
+                            </td>
+                            <td style="padding:10px 12px;">
+                                <strong style="color:#0f172a; display:block;">${l.contatoNome}</strong>
+                                <span style="font-size:0.75rem; color:#15803d; font-weight:600;"><i class="fa-brands fa-whatsapp"></i> ${l.telefone}</span>
+                            </td>
+                            <td style="padding:10px 12px;">
+                                <span style="background:#f1f5f9; color:#475569; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid #e2e8f0;">
+                                    ${l.tag || 'Geral'}
+                                </span>
+                            </td>
+                            <td style="padding:10px 12px; max-width:240px;">
+                                <div style="color:#334155; font-size:0.78rem; line-height:1.35; max-height:48px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                                    ${l.mensagem}
+                                </div>
+                            </td>
+                            <td style="padding:10px 12px;">
+                                <select onchange="alterarStatusLogWhatsApp('${l.id}', this.value)" style="font-size:0.75rem; font-weight:800; padding:3px 6px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer; background:${status === 'lido' ? '#dcfce7' : (status === 'nao_respondeu' ? '#fef3c7' : (status === 'falha' ? '#fee2e2' : '#eff6ff'))}; color:${status === 'lido' ? '#166534' : (status === 'nao_respondeu' ? '#92400e' : (status === 'falha' ? '#991b1b' : '#1e40af'))};">
+                                    <option value="enviado" ${status === 'enviado' ? 'selected' : ''}>📤 Enviado</option>
+                                    <option value="lido" ${status === 'lido' ? 'selected' : ''}>👁️ Lido / Confirmado</option>
+                                    <option value="nao_respondeu" ${status === 'nao_respondeu' ? 'selected' : ''}>⏳ Não Respondeu</option>
+                                    <option value="falha" ${status === 'falha' ? 'selected' : ''}>❌ Falha</option>
+                                </select>
+                            </td>
+                            <td style="padding:10px 12px; text-align:center; white-space:nowrap;">
+                                <div style="display:inline-flex; gap:6px;">
+                                    <button type="button" onclick="reenviarMensagemLogWhatsApp('${safeFone}', '${safeMsg}')" class="btn" style="background:#dcfce7; color:#166534; font-size:0.75rem; padding:4px 8px; border-radius:6px; font-weight:700;" title="Abrir novamente no WhatsApp Web">
+                                        <i class="fa-brands fa-whatsapp"></i> Reenviar
+                                    </button>
+                                    <button type="button" onclick="excluirMensagemLogWhatsApp('${l.id}')" class="btn" style="background:#fee2e2; color:#991b1b; font-size:0.75rem; padding:4px 8px; border-radius:6px;" title="Remover do Histórico">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join("")}
+            </tbody>
+        </table>
+    `;
+}
+
+function alterarStatusLogWhatsApp(id, novoStatus) {
+    sigeDB.atualizarStatusMensagemLog(id, novoStatus);
+    showToast("Status da mensagem atualizado com sucesso!");
+    renderDirWhatsAppLogs();
+}
+
+function reenviarMensagemLogWhatsApp(fone, msg) {
+    if (!fone) return;
+    if (fone.length === 10 || fone.length === 11) fone = '55' + fone;
+    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function excluirMensagemLogWhatsApp(id) {
+    if (confirm("Deseja remover este registro do histórico de mensagens?")) {
+        sigeDB.deleteMensagemWhatsAppLog(id);
+        renderDirWhatsAppLogs();
+        showToast("Registro removido com sucesso.");
+    }
+}
+
+function limparFiltrosHistoricoWhatsApp() {
+    if (document.getElementById("dirWpHistDataInicio")) document.getElementById("dirWpHistDataInicio").value = "";
+    if (document.getElementById("dirWpHistDataFim")) document.getElementById("dirWpHistDataFim").value = "";
+    if (document.getElementById("dirWpHistFilterTag")) document.getElementById("dirWpHistFilterTag").value = "";
+    if (document.getElementById("dirWpHistFilterStatus")) document.getElementById("dirWpHistFilterStatus").value = "";
+    if (document.getElementById("dirWpHistFilterBusca")) document.getElementById("dirWpHistFilterBusca").value = "";
+    renderDirWhatsAppLogs();
+}
+
+// ----------------------------------------------------
+// CADASTRO INDIVIDUAL DE CONTATOS (COM SUPORTE MULTI-TAGS)
+// ----------------------------------------------------
 function openNovoContatoWhatsAppModal() {
     const modal = document.getElementById("modalNovoContatoWhatsApp");
     if (modal) modal.style.display = "flex";
@@ -5731,25 +6384,66 @@ function closeNovoContatoWhatsAppModal() {
     if (modal) modal.style.display = "none";
 }
 
+function adicionarSugestaoTagContato(tag) {
+    const input = document.getElementById("wContInputTags");
+    if (!input) return;
+    const current = input.value.trim();
+    if (!current) {
+        input.value = tag;
+    } else {
+        const parts = current.split(",").map(p => p.trim());
+        if (!parts.includes(tag)) {
+            parts.push(tag);
+            input.value = parts.join(", ");
+        }
+    }
+}
+
 function salvarNovoContatoWhatsApp(e) {
     if (e && e.preventDefault) e.preventDefault();
     const nome = document.getElementById("wContInputNome")?.value.trim();
     const telefone = document.getElementById("wContInputTelefone")?.value.trim();
-    const tag = document.getElementById("wContInputTag")?.value;
+    const rawTags = document.getElementById("wContInputTags")?.value.trim();
     const notas = document.getElementById("wContInputNotas")?.value.trim();
 
     if (!nome || !telefone) return;
 
-    sigeDB.addContatoWhatsApp({ nome, telefone, tag, notas });
+    const tags = rawTags ? rawTags.split(",").map(t => t.trim()).filter(Boolean) : ['Geral'];
+
+    sigeDB.addContatoWhatsApp({ nome, telefone, tags, notas });
     closeNovoContatoWhatsAppModal();
+    renderDirWpTagsFilter();
     renderDirWhatsAppContatos();
+    popularSelectTagsHistoricoWp();
     showToast(`Contato "${nome}" cadastrado com sucesso!`);
+}
+
+function usarContatoNoAssistenteWhatsApp(nome, fone, tag) {
+    setDirWpModoEnvio('individual');
+    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = nome;
+    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
+    atualizarPreviewMensagemWhatsApp();
+    showToast(`Contato "${nome}" selecionado no envio avulso.`);
+}
+
+function prepararDisparoWhatsAppFamiliar(alunoNome, fone) {
+    switchDirSubTab('whatsapp');
+    setDirWpModoEnvio('individual');
+    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = `Responsáveis por ${alunoNome}`;
+    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
+    if (document.getElementById("dirWpTemplateSelect")) {
+        document.getElementById("dirWpTemplateSelect").value = "convocacao_gabinete";
+        aplicarTemplateWhatsAppDirecao();
+    }
 }
 
 function excluirContatoWhatsApp(id) {
     if (confirm("Tem certeza que deseja remover este contato da Direção?")) {
         sigeDB.deleteContatoWhatsApp(id);
+        selectedWpContactIds.delete(id);
+        renderDirWpTagsFilter();
         renderDirWhatsAppContatos();
+        popularSelectTagsHistoricoWp();
         showToast("Contato removido com sucesso.");
     }
 }

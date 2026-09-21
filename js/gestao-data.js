@@ -1286,15 +1286,17 @@ const defaultSigeData = {
     contatosWhatsAppDirecao: [
         {
             id: "w-cont-1",
-            nome: "Sra. Mariana (Mãe Lucas Gabriel - 3º A)",
+            nome: "Sra. Mariana (Mãe Lucas Gabriel)",
             telefone: "47999881122",
-            tag: "Pais / Responsáveis",
+            tags: ["Pais / Responsáveis", "3º Ano A", "Conselho de Classe"],
+            tag: "Pais / Responsáveis, 3º Ano A",
             notas: "Responsável comparece às convocações, prefere contato à tarde."
         },
         {
             id: "w-cont-2",
             nome: "Conselho Tutelar Polo Fazenda",
             telefone: "4733445566",
+            tags: ["Conselho Tutelar / SME", "Órgãos Externos"],
             tag: "Conselho Tutelar / SME",
             notas: "Plantão do Conselho Tutelar para encaminhamentos APOIA."
         },
@@ -1302,6 +1304,7 @@ const defaultSigeData = {
             id: "w-cont-3",
             nome: "Presidência da APMF - Pedro Rizzi",
             telefone: "47991223344",
+            tags: ["Conselho Escolar / APMF", "Financeiro"],
             tag: "Conselho Escolar / APMF",
             notas: "Contato oficial da diretoria da Associação de Pais e Mestres."
         },
@@ -1309,8 +1312,25 @@ const defaultSigeData = {
             id: "w-cont-4",
             nome: "Prof. Ricardo - Representante Docente",
             telefone: "47997665544",
+            tags: ["Equipe Docente", "Anos Finais", "Matemática"],
             tag: "Equipe Docente",
             notas: "Comunicação rápida sobre pautas dos professores dos Anos Finais."
+        },
+        {
+            id: "w-cont-5",
+            nome: "Sr. Carlos (Pai de Isabella Rocha)",
+            telefone: "47988776655",
+            tags: ["Pais / Responsáveis", "4º Ano B"],
+            tag: "Pais / Responsáveis, 4º Ano B",
+            notas: "Pai da aluna Isabella Rocha."
+        },
+        {
+            id: "w-cont-6",
+            nome: "Sra. Juliana (Mãe de Enzo Gabriel)",
+            telefone: "47992334455",
+            tags: ["Pais / Responsáveis", "1º Ano A", "Alunos Novos"],
+            tag: "Pais / Responsáveis, 1º Ano A",
+            notas: "Mãe do aluno novo matriculado recentemente."
         }
     ],
 
@@ -2950,19 +2970,85 @@ class SigeDatabase {
         return (this.data && Array.isArray(this.data.contatosWhatsAppDirecao)) ? this.data.contatosWhatsAppDirecao : [];
     }
 
+    getAllTagsContatos() {
+        const contatos = this.getContatosWhatsApp();
+        const tagsSet = new Set();
+        contatos.forEach(c => {
+            if (Array.isArray(c.tags)) {
+                c.tags.forEach(t => { if (t && typeof t === 'string' && t.trim()) tagsSet.add(t.trim()); });
+            } else if (c.tag && typeof c.tag === 'string') {
+                c.tag.split(',').forEach(t => { if (t && t.trim()) tagsSet.add(t.trim()); });
+            }
+        });
+        return Array.from(tagsSet).sort();
+    }
+
     addContatoWhatsApp(c) {
         if (!this.data.contatosWhatsAppDirecao) this.data.contatosWhatsAppDirecao = [];
+        
+        let tagsArr = [];
+        if (Array.isArray(c.tags)) {
+            tagsArr = c.tags.map(t => String(t).trim()).filter(Boolean);
+        } else if (c.tag && typeof c.tag === 'string') {
+            tagsArr = c.tag.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        if (tagsArr.length === 0) tagsArr = ['Geral'];
+
         const novoContato = {
             id: generateSecureId('w-cont'),
             nome: c.nome || '',
             telefone: (c.telefone || '').replace(/\D/g, ''),
-            tag: c.tag || 'Pais / Responsáveis',
+            tags: tagsArr,
+            tag: tagsArr.join(', '),
             notas: c.notas || '',
             criadoEm: new Date().toISOString()
         };
         this.data.contatosWhatsAppDirecao.push(novoContato);
         this.saveData(this.data);
         return novoContato;
+    }
+
+    addContatosEmLote(contatosList) {
+        if (!this.data.contatosWhatsAppDirecao) this.data.contatosWhatsAppDirecao = [];
+        if (!Array.isArray(contatosList)) return 0;
+
+        let adicionados = 0;
+        contatosList.forEach(c => {
+            const fone = (c.telefone || '').replace(/\D/g, '');
+            if (!c.nome || !fone) return;
+
+            let tagsArr = [];
+            if (Array.isArray(c.tags)) {
+                tagsArr = c.tags.map(t => String(t).trim()).filter(Boolean);
+            } else if (c.tag && typeof c.tag === 'string') {
+                tagsArr = c.tag.split(',').map(t => t.trim()).filter(Boolean);
+            }
+            if (tagsArr.length === 0) tagsArr = ['Importado'];
+
+            const existe = this.data.contatosWhatsAppDirecao.find(ex => ex.telefone === fone);
+            if (existe) {
+                // Atualiza tags e nome
+                existe.nome = c.nome;
+                const setCombinado = new Set([...(existe.tags || [existe.tag || 'Geral']), ...tagsArr]);
+                existe.tags = Array.from(setCombinado);
+                existe.tag = existe.tags.join(', ');
+                if (c.notas) existe.notas = c.notas;
+            } else {
+                this.data.contatosWhatsAppDirecao.push({
+                    id: generateSecureId('w-cont'),
+                    nome: c.nome,
+                    telefone: fone,
+                    tags: tagsArr,
+                    tag: tagsArr.join(', '),
+                    notas: c.notas || '',
+                    criadoEm: new Date().toISOString()
+                });
+                adicionados++;
+            }
+        });
+
+        this.saveData(this.data);
+        return adicionados;
     }
 
     deleteContatoWhatsApp(id) {
@@ -2982,14 +3068,34 @@ class SigeDatabase {
             contatoNome: log.contatoNome || '',
             telefone: log.telefone || '',
             tag: log.tag || '',
+            tags: Array.isArray(log.tags) ? log.tags : (log.tag ? [log.tag] : []),
             mensagem: log.mensagem || '',
             enviadoEm: new Date().toISOString(),
-            status: log.status || 'enviado',
+            status: log.status || 'enviado', // enviado, lido, confirmado, nao_respondeu
             enviadoPor: this.getUserName() || 'Direção'
         };
         this.data.mensagensWhatsAppLog.unshift(novoLog);
         this.saveData(this.data);
         return novoLog;
+    }
+
+    atualizarStatusMensagemLog(id, novoStatus) {
+        if (!this.data || !Array.isArray(this.data.mensagensWhatsAppLog)) return false;
+        const msg = this.data.mensagensWhatsAppLog.find(m => m.id === id);
+        if (msg) {
+            msg.status = novoStatus;
+            msg.atualizadoEm = new Date().toISOString();
+            this.saveData(this.data);
+            return true;
+        }
+        return false;
+    }
+
+    deleteMensagemWhatsAppLog(id) {
+        if (!this.data || !Array.isArray(this.data.mensagensWhatsAppLog)) return false;
+        this.data.mensagensWhatsAppLog = this.data.mensagensWhatsAppLog.filter(m => m.id !== id);
+        this.saveData(this.data);
+        return true;
     }
 
     salvarPermissoesUsuario(email, permissoesMap) {
