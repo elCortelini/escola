@@ -5116,7 +5116,7 @@ function submitDemandaAdmin(e) {
 // MÓDULO 5: DIREÇÃO & GESTÃO EXECUTIVA
 // ==========================================
 
-let currentDirSubTab = 'atendimentos';
+let currentDirSubTab = 'whatsapp';
 let dirWhatsAppFiltroTag = 'todos';
 let dirAlunoDossieAtual = null;
 let dirAtaSelecionadaParaPrint = null;
@@ -5622,7 +5622,7 @@ function renderDirWhatsApp() {
     }
 }
 
-// Renderiza as tags dinâmicas como botões interativos com contadores
+// Renderiza as tags dinâmicas como botões horizontais (exatamente como no print)
 function renderDirWpTagsFilter() {
     const container = document.getElementById("dirWpTagsBadgesContainer");
     if (!container) return;
@@ -5640,8 +5640,8 @@ function renderDirWpTagsFilter() {
     });
 
     let html = `
-        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:4px 10px; font-size:0.75rem; border-radius:20px; font-weight:700; transition:all 0.15s; ${selectedWpTags.size === 0 ? 'background:#0f172a; color:white; border:1px solid #0f172a;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
-            🌐 Todas as Tags (${contatos.length})
+        <button type="button" onclick="onDirWpTagToggle('__TODAS__')" class="btn" style="padding:6px 14px; font-size:0.8rem; border-radius:10px; font-weight:800; cursor:pointer; transition:all 0.15s; border:none; ${selectedWpTags.size === 0 ? 'background:#e11d48; color:white; box-shadow:0 2px 6px rgba(225,29,72,0.3);' : 'background:#fce7f3; color:#831843;'}">
+            Todas (${contatos.length})
         </button>
     `;
 
@@ -5649,9 +5649,8 @@ function renderDirWpTagsFilter() {
         const isSelected = selectedWpTags.has(tag);
         const count = countsByTag[tag] || 0;
         html += `
-            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:4px 10px; font-size:0.75rem; border-radius:20px; font-weight:700; transition:all 0.15s; display:inline-flex; align-items:center; gap:5px; ${isSelected ? 'background:#16a34a; color:white; border:1px solid #16a34a; box-shadow:0 2px 4px rgba(22,163,74,0.25);' : 'background:#f8fafc; color:#334155; border:1px solid #cbd5e1;'}">
-                <span>${isSelected ? '✓ ' : ''}${tag}</span>
-                <span style="font-size:0.68rem; opacity:0.85; background:${isSelected ? 'rgba(255,255,255,0.25)' : '#e2e8f0'}; padding:1px 6px; border-radius:10px;">${count}</span>
+            <button type="button" onclick="onDirWpTagToggle('${tag.replace(/'/g, "\\'")}')" class="btn" style="padding:6px 14px; font-size:0.8rem; border-radius:10px; font-weight:800; cursor:pointer; transition:all 0.15s; border:none; ${isSelected ? 'background:#e11d48; color:white; box-shadow:0 2px 6px rgba(225,29,72,0.3);' : 'background:#fce7f3; color:#831843;'}">
+                ${tag} <span style="font-size:0.72rem; opacity:0.85;">(${count})</span>
             </button>
         `;
     });
@@ -5677,18 +5676,15 @@ function filtrarContatosListaPorTexto() {
     renderDirWhatsAppContatos();
 }
 
-// Renderiza a lista de contatos dinamicamente filtrados por tags e texto
+// Renderiza a lista de contatos em linhas limpas (formato exato do print)
 function renderDirWhatsAppContatos() {
     const container = document.getElementById("dirWpContatosListContainer");
-    const totalBadge = document.getElementById("dirWpTotalContatosBadge");
     const visibleCountElem = document.getElementById("dirWpVisibleCount");
     const selectAllCheckbox = document.getElementById("dirWpCheckboxSelecionarTodos");
 
     if (!container) return;
 
     const contatos = sigeDB.getContatosWhatsApp() || [];
-    if (totalBadge) totalBadge.innerText = `${contatos.length} contatos`;
-
     const textoBusca = (document.getElementById("dirWpSearchContatosInput")?.value || '').toLowerCase().trim();
 
     // Filtra por tags selecionadas
@@ -5701,8 +5697,9 @@ function renderDirWhatsAppContatos() {
         if (textoBusca) {
             const matchNome = (c.nome || '').toLowerCase().includes(textoBusca);
             const matchFone = (c.telefone || '').includes(textoBusca);
+            const matchCargo = (c.cargo || c.notas || '').toLowerCase().includes(textoBusca);
             const matchTags = cTags.some(t => t.toLowerCase().includes(textoBusca));
-            if (!matchNome && !matchFone && !matchTags) return false;
+            if (!matchNome && !matchFone && !matchCargo && !matchTags) return false;
         }
         return true;
     });
@@ -5717,8 +5714,8 @@ function renderDirWhatsAppContatos() {
 
     if (filtrados.length === 0) {
         container.innerHTML = `
-            <div style="padding:2rem 1rem; text-align:center; color:#64748b; font-size:0.83rem; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
-                <i class="fa-solid fa-filter" style="font-size:1.5rem; color:#94a3b8; margin-bottom:6px; display:block;"></i>
+            <div style="padding:2.5rem 1rem; text-align:center; color:#64748b; font-size:0.85rem; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
+                <i class="fa-solid fa-filter" style="font-size:1.8rem; color:#94a3b8; margin-bottom:8px; display:block;"></i>
                 Nenhum contato encontrado com as tags ou filtros selecionados.
             </div>
         `;
@@ -5729,30 +5726,30 @@ function renderDirWhatsAppContatos() {
     container.innerHTML = filtrados.map(c => {
         const isChecked = selectedWpContactIds.has(c.id);
         const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
-        const safeNome = (c.nome || '').replace(/'/g, "\\'");
-        const safeFone = (c.telefone || '').replace(/\D/g, '');
+        const cargoExibicao = c.cargo || c.notas || tags[0] || 'Contato';
 
         return `
-            <div style="background:${isChecked ? '#f0fdf4' : '#ffffff'}; border:1px solid ${isChecked ? '#86efac' : '#e2e8f0'}; border-radius:10px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; transition:all 0.15s;">
-                <div style="display:flex; align-items:flex-start; gap:10px; flex:1; min-width:0;">
-                    <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} style="transform:scale(1.2); margin-top:3px; cursor:pointer;">
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-weight:800; color:#0f172a; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">${c.nome}</div>
-                        <div style="font-size:0.78rem; color:#15803d; font-weight:700; display:flex; align-items:center; gap:4px;">
-                            <i class="fa-brands fa-whatsapp"></i> ${c.telefone}
-                        </div>
-                        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:3px;">
-                            ${tags.map(t => `<span style="background:#e0f2fe; color:#0369a1; font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:8px;">${t}</span>`).join("")}
-                        </div>
-                        ${c.notas ? `<div style="font-size:0.7rem; color:#64748b; margin-top:2px; font-style:italic;">${c.notas}</div>` : ''}
-                    </div>
+            <div class="contact-row-card" style="${isChecked ? 'background:#fdf2f8; border-color:#fbcfe8;' : ''}">
+                <div style="display:flex; align-items:center; justify-content:center;">
+                    <input type="checkbox" onchange="toggleSelectContatoWp('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="contact-checkbox-custom">
                 </div>
-                <div style="display:flex; gap:4px; align-items:center;">
-                    <button type="button" onclick="usarContatoNoAssistenteWhatsApp('${safeNome}', '${safeFone}', '${tags[0] || ''}')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.72rem; padding:4px 8px; border-radius:6px;" title="Usar no envio avulso">
-                        <i class="fa-solid fa-arrow-left"></i> Avulso
+                <div style="font-weight:800; font-size:0.95rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.nome}">
+                    ${c.nome}
+                </div>
+                <div style="font-weight:900; font-size:0.95rem; color:#0f172a; white-space:nowrap; letter-spacing:0.3px;">
+                    ${c.telefone}
+                </div>
+                <div style="font-size:0.88rem; color:#475569; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${cargoExibicao}">
+                    ${cargoExibicao}
+                </div>
+                <div style="text-align:center;">
+                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.15rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar contato">
+                        ✏️
                     </button>
-                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="btn" style="background:#fee2e2; color:#991b1b; font-size:0.72rem; padding:4px 7px; border-radius:6px;" title="Excluir contato">
-                        <i class="fa-solid fa-trash"></i>
+                </div>
+                <div style="text-align:center;">
+                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.15rem; line-height:1; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Excluir contato">
+                        🗑️
                     </button>
                 </div>
             </div>
@@ -6372,11 +6369,38 @@ function limparFiltrosHistoricoWhatsApp() {
 }
 
 // ----------------------------------------------------
-// CADASTRO INDIVIDUAL DE CONTATOS (COM SUPORTE MULTI-TAGS)
+// CADASTRO & EDIÇÃO DE CONTATOS (COM SUPORTE MULTI-TAGS)
 // ----------------------------------------------------
 function openNovoContatoWhatsAppModal() {
     const modal = document.getElementById("modalNovoContatoWhatsApp");
-    if (modal) modal.style.display = "flex";
+    if (!modal) return;
+    if (document.getElementById("wContInputId")) document.getElementById("wContInputId").value = "";
+    if (document.getElementById("wContInputNome")) document.getElementById("wContInputNome").value = "";
+    if (document.getElementById("wContInputTelefone")) document.getElementById("wContInputTelefone").value = "";
+    if (document.getElementById("wContInputTags")) document.getElementById("wContInputTags").value = "";
+    if (document.getElementById("wContInputNotas")) document.getElementById("wContInputNotas").value = "";
+    if (document.getElementById("modalNovoContatoTitle")) document.getElementById("modalNovoContatoTitle").innerText = "Cadastrar Contato Oficial";
+    if (document.getElementById("btnSalvarContatoText")) document.getElementById("btnSalvarContatoText").innerText = "Salvar Contato";
+    modal.style.display = "flex";
+}
+
+function openEditarContatoWhatsAppModal(id) {
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+    const c = contatos.find(item => item.id === id);
+    if (!c) return;
+
+    const modal = document.getElementById("modalNovoContatoWhatsApp");
+    if (!modal) return;
+
+    if (document.getElementById("wContInputId")) document.getElementById("wContInputId").value = c.id;
+    if (document.getElementById("wContInputNome")) document.getElementById("wContInputNome").value = c.nome || '';
+    if (document.getElementById("wContInputTelefone")) document.getElementById("wContInputTelefone").value = c.telefone || '';
+    const tags = Array.isArray(c.tags) ? c.tags.join(", ") : (c.tag || '');
+    if (document.getElementById("wContInputTags")) document.getElementById("wContInputTags").value = tags;
+    if (document.getElementById("wContInputNotas")) document.getElementById("wContInputNotas").value = c.cargo || c.notas || '';
+    if (document.getElementById("modalNovoContatoTitle")) document.getElementById("modalNovoContatoTitle").innerText = "Editar Contato";
+    if (document.getElementById("btnSalvarContatoText")) document.getElementById("btnSalvarContatoText").innerText = "Atualizar Contato";
+    modal.style.display = "flex";
 }
 
 function closeNovoContatoWhatsAppModal() {
@@ -6401,6 +6425,7 @@ function adicionarSugestaoTagContato(tag) {
 
 function salvarNovoContatoWhatsApp(e) {
     if (e && e.preventDefault) e.preventDefault();
+    const id = document.getElementById("wContInputId")?.value;
     const nome = document.getElementById("wContInputNome")?.value.trim();
     const telefone = document.getElementById("wContInputTelefone")?.value.trim();
     const rawTags = document.getElementById("wContInputTags")?.value.trim();
@@ -6410,12 +6435,18 @@ function salvarNovoContatoWhatsApp(e) {
 
     const tags = rawTags ? rawTags.split(",").map(t => t.trim()).filter(Boolean) : ['Geral'];
 
-    sigeDB.addContatoWhatsApp({ nome, telefone, tags, notas });
+    if (id) {
+        sigeDB.updateContatoWhatsApp(id, { nome, telefone, tags, notas, cargo: notas });
+        showToast(`Contato "${nome}" atualizado com sucesso!`);
+    } else {
+        sigeDB.addContatoWhatsApp({ nome, telefone, tags, notas, cargo: notas });
+        showToast(`Contato "${nome}" cadastrado com sucesso!`);
+    }
+
     closeNovoContatoWhatsAppModal();
     renderDirWpTagsFilter();
     renderDirWhatsAppContatos();
     popularSelectTagsHistoricoWp();
-    showToast(`Contato "${nome}" cadastrado com sucesso!`);
 }
 
 function usarContatoNoAssistenteWhatsApp(nome, fone, tag) {

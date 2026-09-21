@@ -1395,3 +1395,113 @@
         max-width: 100%;
     }
 }
+
+/* ======================================================== */
+/* MÓDULO DA DIREÇÃO: NAVEGAÇÃO EM CARDS / BLOCOS (ESTILO MOCKUP) */
+/* ======================================================== */
+.dir-nav-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.dir-nav-card {
+    background: #ffffff;
+    border: 2px solid #0f172a;
+    border-radius: 16px;
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.dir-nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.dir-nav-card.active {
+    background: #fdf2f8 !important; /* Rosa suave conforme print */
+    border: 2.5px solid #0f172a !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.dir-nav-card.active i,
+.dir-nav-card.active .dir-nav-card-icon i {
+    color: inherit !important;
+}
+
+.dir-nav-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    transition: transform 0.2s ease;
+}
+
+.dir-nav-card:hover .dir-nav-card-icon {
+    transform: scale(1.08);
+}
+
+.dir-nav-card-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+}
+
+/* ======================================================== */
+/* LINHAS DA TABELA DE CONTATOS (ESTILO MOCKUP) */
+/* ======================================================== */
+.contact-row-card {
+    display: grid;
+    grid-template-columns: 36px 1.5fr 1.2fr 1fr 40px 40px;
+    align-items: center;
+    padding: 12px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 8px;
+    transition: background 0.15s;
+    gap: 10px;
+}
+
+.contact-row-card:hover {
+    background: #f8fafc;
+}
+
+.contact-checkbox-custom {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #ffffff;
+    border: 2px solid #be185d; /* Vinho / rosa do print */
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.contact-checkbox-custom:checked {
+    background: #be185d;
+}
+
+.contact-checkbox-custom:checked::after {
+    content: "✓";
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+}

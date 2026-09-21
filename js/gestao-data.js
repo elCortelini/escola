@@ -3057,6 +3057,34 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    updateContatoWhatsApp(id, dados) {
+        if (!this.data.contatosWhatsAppDirecao) return null;
+        const index = this.data.contatosWhatsAppDirecao.findIndex(c => c.id === id);
+        if (index === -1) return null;
+
+        let tagsArr = [];
+        if (Array.isArray(dados.tags)) {
+            tagsArr = dados.tags.map(t => String(t).trim()).filter(Boolean);
+        } else if (dados.tag && typeof dados.tag === 'string') {
+            tagsArr = dados.tag.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        if (tagsArr.length === 0) tagsArr = ['Geral'];
+
+        this.data.contatosWhatsAppDirecao[index] = {
+            ...this.data.contatosWhatsAppDirecao[index],
+            nome: dados.nome || this.data.contatosWhatsAppDirecao[index].nome,
+            telefone: (dados.telefone || this.data.contatosWhatsAppDirecao[index].telefone || '').replace(/\D/g, ''),
+            tags: tagsArr,
+            tag: tagsArr.join(', '),
+            cargo: dados.cargo || dados.notas || this.data.contatosWhatsAppDirecao[index].cargo || '',
+            notas: dados.notas || this.data.contatosWhatsAppDirecao[index].notas || '',
+            atualizadoEm: new Date().toISOString()
+        };
+
+        this.saveData(this.data);
+        return this.data.contatosWhatsAppDirecao[index];
+    }
+
     getMensagensWhatsAppLog() {
         return (this.data && Array.isArray(this.data.mensagensWhatsAppLog)) ? this.data.mensagensWhatsAppLog : [];
     }
