@@ -44,12 +44,12 @@ if (typeof window !== "undefined") {
 const defaultSigeData = {
     currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" },
-        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
-        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais" },
-        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais" },
-        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção" },
-        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional" }
+        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } },
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
+        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
+        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
+        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true } },
+        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } }
     ],
     pedidosUniformes: [
         {
@@ -1187,6 +1187,145 @@ const defaultSigeData = {
         emailContato: "contato@pedrorizzi.sc.gov.br"
     },
 
+    atasGabineteDirecao: [
+        {
+            id: "ata-dir-1",
+            data: "2026-09-18T10:30:00",
+            titulo: "Atendimento aos Responsáveis — Aluno Lucas Gabriel",
+            tipo: "pais",
+            tipoDesc: "Atendimento a Pais / Responsáveis",
+            participantes: "Direção Escolar, Responsável (Sra. Mariana), Orientadora Clarinda",
+            alunoRelacionado: "Lucas Gabriel",
+            turmaRelacionada: "3º Ano A",
+            pauta: "Acompanhamento da frequência escolar e combinados sobre apoio pedagógico no contraturno.",
+            combinados: "Responsável se comprometeu a garantir pontualidade e justificar eventuais atestados médicos em até 48h. Acompanhamento semanal pela OE.",
+            encaminhamentos: "Orientadora Clarinda acompanhará relatório semanal de presença.",
+            autor: "Direção Escolar",
+            status: "concluida"
+        },
+        {
+            id: "ata-dir-2",
+            data: "2026-09-15T14:00:00",
+            titulo: "Reunião de Alinhamento com o Conselho Tutelar",
+            tipo: "conselho_tutelar",
+            tipoDesc: "Órgãos Externos / Conselho Tutelar",
+            participantes: "Direção, Conselheiro Carlos Mendes, Equipe Multidisciplinar",
+            alunoRelacionado: "",
+            turmaRelacionada: "",
+            pauta: "Avaliação do fluxo de encaminhamentos do programa APOIA e acompanhamento das famílias em vulnerabilidade.",
+            combinados: "Definida reunião mensal de retorno na última quinta-feira de cada mês.",
+            encaminhamentos: "Secretaria enviará relação atualizada de infrequência quinzenal.",
+            autor: "Direção Escolar",
+            status: "concluida"
+        }
+    ],
+
+    eventosCalendarioEscolar: [
+        {
+            id: "cal-ev-1",
+            data: "2026-10-08",
+            hora: "08:00",
+            titulo: "Reunião Pedagógica Geral com o Corpo Docente",
+            categoria: "reuniao_pedagogica",
+            categoriaDesc: "Reunião Pedagógica",
+            descricao: "Alinhamento das metas do 3º trimestre, diretrizes avaliativas e planejamento interdisciplinar.",
+            publicoAlvo: "professores",
+            local: "Auditório da Escola",
+            status: "agendado"
+        },
+        {
+            id: "cal-ev-2",
+            data: "2026-10-12",
+            hora: "00:00",
+            titulo: "Feriado Nacional — Dia das Crianças / N. Sra. Aparecida",
+            categoria: "feriado_recesso",
+            categoriaDesc: "Feriado / Recesso",
+            descricao: "Não haverá expediente letivo nem administrativo.",
+            publicoAlvo: "escola_toda",
+            local: "Escola",
+            status: "agendado"
+        },
+        {
+            id: "cal-ev-3",
+            data: "2026-10-24",
+            hora: "09:00",
+            titulo: "Mostra Cultural & Científica Pedro Rizzi",
+            categoria: "evento_cultural",
+            categoriaDesc: "Evento Cultural / Feira",
+            descricao: "Apresentação dos projetos dos alunos do 1º ao 9º Ano para toda a comunidade escolar e famílias.",
+            publicoAlvo: "escola_toda",
+            local: "Pátio e Ginásio Escolar",
+            status: "agendado"
+        },
+        {
+            id: "cal-ev-4",
+            data: "2026-11-20",
+            hora: "17:00",
+            titulo: "Data-Limite: Fechamento de Notas e Faltas (3º Trimestre)",
+            categoria: "prazo_notas",
+            categoriaDesc: "Prazo de Notas e Diários",
+            descricao: "Prazo improrrogável para lançamento de notas e pareceres pelos professores no sistema.",
+            publicoAlvo: "professores",
+            local: "Sistema Online",
+            status: "agendado"
+        },
+        {
+            id: "cal-ev-5",
+            data: "2026-11-25",
+            hora: "08:00",
+            titulo: "Conselho de Classe Final e Pré-Deliberação",
+            categoria: "conselho_classe",
+            categoriaDesc: "Conselho de Classe",
+            descricao: "Avaliação final das turmas, análise de progressão continuada e recuperação final.",
+            publicoAlvo: "professores",
+            local: "Sala de Reuniões",
+            status: "agendado"
+        }
+    ],
+
+    contatosWhatsAppDirecao: [
+        {
+            id: "w-cont-1",
+            nome: "Sra. Mariana (Mãe Lucas Gabriel - 3º A)",
+            telefone: "47999881122",
+            tag: "Pais / Responsáveis",
+            notas: "Responsável comparece às convocações, prefere contato à tarde."
+        },
+        {
+            id: "w-cont-2",
+            nome: "Conselho Tutelar Polo Fazenda",
+            telefone: "4733445566",
+            tag: "Conselho Tutelar / SME",
+            notas: "Plantão do Conselho Tutelar para encaminhamentos APOIA."
+        },
+        {
+            id: "w-cont-3",
+            nome: "Presidência da APMF - Pedro Rizzi",
+            telefone: "47991223344",
+            tag: "Conselho Escolar / APMF",
+            notas: "Contato oficial da diretoria da Associação de Pais e Mestres."
+        },
+        {
+            id: "w-cont-4",
+            nome: "Prof. Ricardo - Representante Docente",
+            telefone: "47997665544",
+            tag: "Equipe Docente",
+            notas: "Comunicação rápida sobre pautas dos professores dos Anos Finais."
+        }
+    ],
+
+    mensagensWhatsAppLog: [
+        {
+            id: "w-log-1",
+            contatoNome: "Sra. Mariana (Mãe Lucas Gabriel)",
+            telefone: "47999881122",
+            tag: "Pais / Responsáveis",
+            mensagem: "Olá, aqui é da Direção do C.E. Pedro Rizzi. Confirmamos a reunião de acompanhamento agendada.",
+            enviadoEm: "2026-09-18T09:00:00",
+            status: "confirmado"
+        }
+    ],
+
     auditLogs: [
         { id: "log-1", data: "2026-09-10T14:30:00", usuario: "Administração", acao: "Cadastro de Nova Turma (7º Ano B)", setor: "Admin" },
         { id: "log-2", data: "2026-09-10T15:10:00", usuario: "Supervisão", acao: "Disparo de Cobrança WhatsApp (Prof. Ricardo)", setor: "Supervisão" },
@@ -1427,7 +1566,25 @@ class SigeDatabase {
             return defaultSigeData;
         }
         try {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            const merged = {
+                ...defaultSigeData,
+                ...parsed,
+                atasGabineteDirecao: parsed.atasGabineteDirecao || defaultSigeData.atasGabineteDirecao,
+                eventosCalendarioEscolar: parsed.eventosCalendarioEscolar || defaultSigeData.eventosCalendarioEscolar,
+                contatosWhatsAppDirecao: parsed.contatosWhatsAppDirecao || defaultSigeData.contatosWhatsAppDirecao,
+                mensagensWhatsAppLog: parsed.mensagensWhatsAppLog || defaultSigeData.mensagensWhatsAppLog
+            };
+            if (Array.isArray(merged.usuariosCadastrados)) {
+                merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
+                    const defaultUser = defaultSigeData.usuariosCadastrados.find(du => du.email === u.email);
+                    return {
+                        ...u,
+                        permissoes: u.permissoes || (defaultUser ? defaultUser.permissoes : { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false })
+                    };
+                });
+            }
+            return merged;
         } catch (e) {
             console.error("Erro ao carregar banco de dados local do SIGE:", e);
             return defaultSigeData;
@@ -2714,6 +2871,153 @@ class SigeDatabase {
         } catch (e) {
             console.error('Erro ao atualizar status por token:', e);
         }
+    }
+
+    // ==========================================
+    // MÉTODOS DO MÓDULO DA DIREÇÃO & GESTÃO
+    // ==========================================
+
+    getAtasGabinete() {
+        return (this.data && Array.isArray(this.data.atasGabineteDirecao)) ? this.data.atasGabineteDirecao : [];
+    }
+
+    addAtaGabinete(ata) {
+        if (!this.data.atasGabineteDirecao) this.data.atasGabineteDirecao = [];
+        const novaAta = {
+            id: generateSecureId('ata-dir'),
+            data: ata.data || new Date().toISOString(),
+            titulo: ata.titulo || 'Atendimento de Gabinete',
+            tipo: ata.tipo || 'pais',
+            tipoDesc: ata.tipoDesc || 'Atendimento Geral',
+            participantes: ata.participantes || '',
+            alunoRelacionado: ata.alunoRelacionado || '',
+            turmaRelacionada: ata.turmaRelacionada || '',
+            pauta: ata.pauta || '',
+            combinados: ata.combinados || '',
+            encaminhamentos: ata.encaminhamentos || '',
+            autor: this.getUserName() || 'Direção Escolar',
+            status: ata.status || 'concluida',
+            criadoEm: new Date().toISOString()
+        };
+        this.data.atasGabineteDirecao.unshift(novaAta);
+        this.addAuditLog('Cadastro de Ata de Gabinete (' + novaAta.titulo + ')', 'Direção');
+        this.saveData(this.data);
+        return novaAta;
+    }
+
+    deleteAtaGabinete(id) {
+        if (!this.data.atasGabineteDirecao) return;
+        this.data.atasGabineteDirecao = this.data.atasGabineteDirecao.filter(a => a.id !== id);
+        this.addAuditLog('Exclusão de Ata de Gabinete (ID: ' + id + ')', 'Direção');
+        this.saveData(this.data);
+    }
+
+    getEventosCalendarioEscolar() {
+        return (this.data && Array.isArray(this.data.eventosCalendarioEscolar)) ? this.data.eventosCalendarioEscolar : [];
+    }
+
+    addEventoCalendarioEscolar(ev) {
+        if (!this.data.eventosCalendarioEscolar) this.data.eventosCalendarioEscolar = [];
+        const novoEvento = {
+            id: generateSecureId('cal-ev'),
+            data: ev.data || getLocalDateISO(),
+            hora: ev.hora || '08:00',
+            titulo: ev.titulo || 'Evento Escolar',
+            categoria: ev.categoria || 'reuniao_pedagogica',
+            categoriaDesc: ev.categoriaDesc || 'Reunião Pedagógica',
+            descricao: ev.descricao || '',
+            publicoAlvo: ev.publicoAlvo || 'escola_toda',
+            local: ev.local || 'Escola',
+            status: ev.status || 'agendado',
+            criadoEm: new Date().toISOString()
+        };
+        this.data.eventosCalendarioEscolar.push(novoEvento);
+        // Ordena por data
+        this.data.eventosCalendarioEscolar.sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+        this.addAuditLog('Novo Evento no Calendário Letivo (' + novoEvento.titulo + ')', 'Direção');
+        this.saveData(this.data);
+        return novoEvento;
+    }
+
+    deleteEventoCalendarioEscolar(id) {
+        if (!this.data.eventosCalendarioEscolar) return;
+        this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => e.id !== id);
+        this.addAuditLog('Exclusão de Evento do Calendário (ID: ' + id + ')', 'Direção');
+        this.saveData(this.data);
+    }
+
+    getContatosWhatsApp() {
+        return (this.data && Array.isArray(this.data.contatosWhatsAppDirecao)) ? this.data.contatosWhatsAppDirecao : [];
+    }
+
+    addContatoWhatsApp(c) {
+        if (!this.data.contatosWhatsAppDirecao) this.data.contatosWhatsAppDirecao = [];
+        const novoContato = {
+            id: generateSecureId('w-cont'),
+            nome: c.nome || '',
+            telefone: (c.telefone || '').replace(/\D/g, ''),
+            tag: c.tag || 'Pais / Responsáveis',
+            notas: c.notas || '',
+            criadoEm: new Date().toISOString()
+        };
+        this.data.contatosWhatsAppDirecao.push(novoContato);
+        this.saveData(this.data);
+        return novoContato;
+    }
+
+    deleteContatoWhatsApp(id) {
+        if (!this.data.contatosWhatsAppDirecao) return;
+        this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => c.id !== id);
+        this.saveData(this.data);
+    }
+
+    getMensagensWhatsAppLog() {
+        return (this.data && Array.isArray(this.data.mensagensWhatsAppLog)) ? this.data.mensagensWhatsAppLog : [];
+    }
+
+    addMensagemWhatsAppLog(log) {
+        if (!this.data.mensagensWhatsAppLog) this.data.mensagensWhatsAppLog = [];
+        const novoLog = {
+            id: generateSecureId('w-log'),
+            contatoNome: log.contatoNome || '',
+            telefone: log.telefone || '',
+            tag: log.tag || '',
+            mensagem: log.mensagem || '',
+            enviadoEm: new Date().toISOString(),
+            status: log.status || 'enviado',
+            enviadoPor: this.getUserName() || 'Direção'
+        };
+        this.data.mensagensWhatsAppLog.unshift(novoLog);
+        this.saveData(this.data);
+        return novoLog;
+    }
+
+    salvarPermissoesUsuario(email, permissoesMap) {
+        if (!this.data || !Array.isArray(this.data.usuariosCadastrados)) return false;
+        const u = this.data.usuariosCadastrados.find(user => user.email.toLowerCase() === email.toLowerCase());
+        if (u) {
+            u.permissoes = { ...u.permissoes, ...permissoesMap };
+            this.addAuditLog('Atualização de Permissões Modulares (' + u.nome + ')', 'Admin');
+            this.saveData(this.data);
+            return true;
+        }
+        return false;
+    }
+
+    temPermissaoModulo(moduloId) {
+        const user = this.getLoggedUser();
+        if (!user) return false;
+        if (user.role === 'desenvolvedor') return true;
+        if (!user.permissoes) {
+            if (user.role === 'direcao') return true;
+            if (user.role === 'admin') return true;
+            if (moduloId === 'op' && (user.role.startsWith('orientadora') || user.role === 'secretaria')) return true;
+            if (moduloId === 'supervisao' && user.role === 'supervisao') return true;
+            if (moduloId === 'uniformes' && (user.role === 'secretaria' || user.role === 'direcao')) return true;
+            if (moduloId === 'mural') return true;
+            return false;
+        }
+        return !!user.permissoes[moduloId];
     }
 }
 

@@ -150,8 +150,9 @@ function renderDevUsersList() {
             <thead>
                 <tr style="background:#f1f5f9; text-align:left; color:#475569; border-bottom:2px solid #cbd5e1;">
                     <th style="padding:8px;">Nome / E-mail</th>
-                    <th style="padding:8px;">Nível de Acesso (Perfil)</th>
+                    <th style="padding:8px;">Perfil</th>
                     <th style="padding:8px;">Cargo</th>
+                    <th style="padding:8px; text-align:center;">Módulos Liberados (RBAC)</th>
                     <th style="padding:8px; text-align:center;">Ações</th>
                 </tr>
             </thead>
@@ -160,6 +161,7 @@ function renderDevUsersList() {
 
     users.forEach(u => {
         const isDevDefault = u.email.toLowerCase().trim() === "elcortelini@gmail.com";
+        const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
         html += `
             <tr style="border-bottom:1px solid #e2e8f0;">
                 <td style="padding:8px;">
@@ -170,6 +172,28 @@ function renderDevUsersList() {
                     <span class="role-badge-pill role-pill-${u.role}" style="font-size:0.75rem;">${getRoleLabel(u.role)}</span>
                 </td>
                 <td style="padding:8px; color:#334155;">${u.cargo || '-'}</td>
+                <td style="padding:8px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.75rem; justify-content:center;">
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#eff6ff; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Orientação Educacional">
+                            <input type="checkbox" ${perms.op ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'op', this.checked)"> OE
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#f8fafc; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Mural e Prazos">
+                            <input type="checkbox" ${perms.mural ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'mural', this.checked)"> Mural
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#fdf4ff; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Supervisão Pedagógica">
+                            <input type="checkbox" ${perms.supervisao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'supervisao', this.checked)"> Sup
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#f1f5f9; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Administração">
+                            <input type="checkbox" ${perms.admin ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'admin', this.checked)"> ADM
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:6px; font-weight:800; cursor:pointer;" title="Direção e Gestão Escolar">
+                            <input type="checkbox" ${perms.direcao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'direcao', this.checked)"> 👑 Direção
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:3px; background:#f0fdf4; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Controle de Uniformes">
+                            <input type="checkbox" ${perms.uniformes ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'uniformes', this.checked)"> Uniformes
+                        </label>
+                    </div>
+                </td>
                 <td style="padding:8px; text-align:center;">
                     ${isDevDefault ? `
                         <span style="color:#94a3b8; font-size:0.75rem; font-style:italic;">(Padrão Dev)</span>
@@ -185,6 +209,19 @@ function renderDevUsersList() {
 
     html += `</tbody></table>`;
     container.innerHTML = html;
+}
+
+function toggleUserModuloPermissao(email, moduloKey, isChecked) {
+    const users = sigeDB.getUsuarios();
+    const u = users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    if (u) {
+        if (!u.permissoes) {
+            u.permissoes = { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        }
+        u.permissoes[moduloKey] = isChecked;
+        sigeDB.salvarPermissoesUsuario(email, u.permissoes);
+        showToast(`Permissão "${moduloKey.toUpperCase()}" atualizada para ${u.nome}!`);
+    }
 }
 
 function submitAddDevUser(e) {
@@ -574,6 +611,11 @@ function setupTabNavigation() {
 }
 
 function switchTab(tabId) {
+    if (tabId === 'direcao' && !sigeDB.temPermissaoModulo('direcao')) {
+        showToast("⚠️ Acesso Restrito: Seu perfil de usuário não possui permissão para acessar o Módulo da Direção.", "warning");
+        tabId = 'op';
+    }
+
     const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
     const sections = document.querySelectorAll(".tab-content-section");
 
@@ -5071,25 +5113,1254 @@ function submitDemandaAdmin(e) {
 }
 
 // ==========================================
-// MÓDULO 5: DIREÇÃO & EMISSÃO DE AVISOS
+// MÓDULO 5: DIREÇÃO & GESTÃO EXECUTIVA
 // ==========================================
+
+let currentDirSubTab = 'atendimentos';
+let dirWhatsAppFiltroTag = 'todos';
+let dirAlunoDossieAtual = null;
+let dirAtaSelecionadaParaPrint = null;
+let dirRelatorioCache = null;
+
+function switchDirSubTab(subTabId) {
+    currentDirSubTab = subTabId;
+    const btns = document.querySelectorAll(".dir-subtab-btn");
+    const contents = document.querySelectorAll(".dir-subtab-content");
+
+    btns.forEach(b => {
+        if (b.dataset.dirsub === subTabId) {
+            b.classList.add("active");
+        } else {
+            b.classList.remove("active");
+        }
+    });
+
+    contents.forEach(c => {
+        if (c.id === `dirSubTab_${subTabId}`) {
+            c.classList.add("active");
+        } else {
+            c.classList.remove("active");
+        }
+    });
+
+    if (subTabId === 'atendimentos') renderDirAtendimentos();
+    else if (subTabId === 'dossie') {
+        popularDatalistAlunosDirecao();
+        if (dirAlunoDossieAtual) renderDirDossieAluno(dirAlunoDossieAtual);
+    }
+    else if (subTabId === 'whatsapp') renderDirWhatsApp();
+    else if (subTabId === 'atas') renderDirLivroAta();
+    else if (subTabId === 'relatorios') renderDirRelatorios();
+    else if (subTabId === 'calendario') renderDirCalendarioEscolar();
+}
+
 function renderModuleDirecao() {
+    popularTurmasSelectsDirecao();
+    popularDatalistAlunosDirecao();
+
+    // Sincronia / Indicador Cloud
+    const syncBadge = document.getElementById("dirSyncBadgeStatus");
+    if (syncBadge) {
+        if (sigeDB.isFirebaseConnected()) {
+            syncBadge.innerHTML = `<i class="fa-solid fa-cloud-check"></i> Base em Tempo Real (Firebase)`;
+            syncBadge.style.background = "#dcfce7";
+            syncBadge.style.color = "#166534";
+        } else {
+            syncBadge.innerHTML = `<i class="fa-solid fa-database"></i> Modo Local (Cache)`;
+            syncBadge.style.background = "#fef3c7";
+            syncBadge.style.color = "#92400e";
+        }
+    }
+
+    switchDirSubTab(currentDirSubTab);
+}
+
+function popularTurmasSelectsDirecao() {
+    const turmas = sigeDB.getTurmas();
+    const selects = [
+        document.getElementById("dirAtendFilterTurma"),
+        document.getElementById("dirRelTurmaSelect")
+    ];
+
+    selects.forEach(sel => {
+        if (!sel || sel.children.length > 1) return;
+        turmas.forEach(t => {
+            const opt = document.createElement("option");
+            opt.value = t.nome;
+            opt.textContent = `${t.nome} (${t.turno === 'matutino' ? 'Manhã' : 'Tarde'})`;
+            sel.appendChild(opt);
+        });
+    });
+}
+
+function popularDatalistAlunosDirecao() {
+    const datalist = document.getElementById("dirDossieAlunosDatalist");
+    if (!datalist) return;
+    datalist.innerHTML = "";
+
+    const alunos = sigeDB.getAlunosImportados();
+    const ops = sigeDB.getAgendamentosOP();
+    const nomesSet = new Set();
+
+    alunos.forEach(a => { if (a.nome) nomesSet.add(a.nome); });
+    ops.forEach(o => { if (o.aluno) nomesSet.add(o.aluno); });
+
+    Array.from(nomesSet).sort().forEach(nome => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        datalist.appendChild(opt);
+    });
+}
+
+// ----------------------------------------------------
+// SUB-ABA 1: ATENDIMENTOS DA ORIENTAÇÃO PEDAGÓGICA (OE)
+// ----------------------------------------------------
+function renderDirAtendimentos() {
     const totalOpElem = document.getElementById("dirStatTotalOP");
     const okSecElem = document.getElementById("dirStatOkSec");
-    const supPendElem = document.getElementById("dirStatSupPend");
-    const admPendElem = document.getElementById("dirStatAdmPend");
+    const okSecCountElem = document.getElementById("dirStatOkSecCount");
+    const pendentesElem = document.getElementById("dirStatPendentesOP");
+    const faltasElem = document.getElementById("dirStatFaltasOP");
+    const tbody = document.getElementById("dirTableAtendimentosOEBody");
+    const countInfo = document.getElementById("dirAtendCountInfo");
 
-    const allOp = sigeDB.getAgendamentosOP();
+    if (!tbody) return;
+
+    const allOp = sigeDB.getAgendamentosOP() || [];
     const realizedOp = allOp.filter(a => a.statusSecretaria === "realizado").length;
+    const faltasOp = allOp.filter(a => a.statusSecretaria === "falta").length;
+    const pendentesOp = allOp.filter(a => a.statusSecretaria !== "realizado" && a.statusSecretaria !== "falta").length;
     const pctOk = allOp.length > 0 ? Math.round((realizedOp / allOp.length) * 100) : 100;
-
-    const openSup = sigeDB.getDemandasSupervisao().filter(d => d.status !== "concluido").length;
-    const openAdm = sigeDB.getDemandasAdmin().filter(d => d.status !== "concluido").length;
 
     if (totalOpElem) totalOpElem.innerText = allOp.length;
     if (okSecElem) okSecElem.innerText = `${pctOk}%`;
-    if (supPendElem) supPendElem.innerText = openSup;
-    if (admPendElem) admPendElem.innerText = openAdm;
+    if (okSecCountElem) okSecCountElem.innerText = `${realizedOp} comparecimentos confirmados`;
+    if (pendentesElem) pendentesElem.innerText = pendentesOp;
+    if (faltasElem) faltasElem.innerText = faltasOp;
+
+    // Filtros
+    const busca = (document.getElementById("dirAtendFilterBusca")?.value || '').toLowerCase().trim();
+    const turma = document.getElementById("dirAtendFilterTurma")?.value || '';
+    const orientadora = document.getElementById("dirAtendFilterOrientadora")?.value || '';
+    const status = document.getElementById("dirAtendFilterStatus")?.value || '';
+
+    const filtrados = allOp.filter(a => {
+        if (busca) {
+            const matchAluno = (a.aluno || '').toLowerCase().includes(busca);
+            const matchResp = (a.responsavel || '').toLowerCase().includes(busca);
+            const matchMotivo = (a.motivo || '').toLowerCase().includes(busca);
+            if (!matchAluno && !matchResp && !matchMotivo) return false;
+        }
+        if (turma && a.turma !== turma) return false;
+        if (orientadora && !matchOrientadora(a, orientadora)) return false;
+        if (status) {
+            if (status === 'realizado' && a.statusSecretaria !== 'realizado') return false;
+            if (status === 'falta' && a.statusSecretaria !== 'falta') return false;
+            if (status === 'aguardando' && (a.statusSecretaria === 'realizado' || a.statusSecretaria === 'falta')) return false;
+        }
+        return true;
+    });
+
+    if (countInfo) {
+        countInfo.innerText = `Mostrando ${filtrados.length} de ${allOp.length} atendimentos da OE`;
+    }
+
+    if (filtrados.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="padding:2rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-folder-open" style="font-size:1.8rem; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                    Nenhum atendimento encontrado com os filtros selecionados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Ordena mais recentes primeiro
+    const ordenados = [...filtrados].sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+    tbody.innerHTML = ordenados.map(a => {
+        const dataFmt = formatDateBR(a.data);
+        let statusBadge = '';
+        if (a.statusSecretaria === 'realizado') {
+            statusBadge = `<span style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-check"></i> Compareceu</span>`;
+        } else if (a.statusSecretaria === 'falta') {
+            statusBadge = `<span style="background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> Falta</span>`;
+        } else {
+            statusBadge = `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Aguardando</span>`;
+        }
+
+        const safeAluno = (a.aluno || 'Estudante').replace(/'/g, "\\'");
+        const safeFone = (a.telefone || '').replace(/\D/g, '');
+
+        return `
+            <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                <td style="padding:12px 16px; font-weight:600; color:#1e293b;">
+                    <div>${dataFmt}</div>
+                    <div style="font-size:0.75rem; color:#64748b;">${a.horario || ''} (${a.turno || ''})</div>
+                </td>
+                <td style="padding:12px 16px;">
+                    <strong style="color:#0f172a; cursor:pointer;" onclick="selecionarAlunoParaDossie('${safeAluno}')" title="Clique para abrir o Dossiê do Aluno">${a.aluno}</strong>
+                    ${a.responsavel ? `<div style="font-size:0.75rem; color:#64748b;">Resp: ${a.responsavel}</div>` : ''}
+                </td>
+                <td style="padding:12px 16px;">
+                    <span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:700;">${a.turma || '-'}</span>
+                </td>
+                <td style="padding:12px 16px; font-size:0.82rem; color:#475569;">
+                    ${a.orientadora || 'Orientação'}
+                </td>
+                <td style="padding:12px 16px; font-size:0.82rem; color:#334155; max-width:200px;">
+                    <div style="font-weight:700; color:#0f172a;">${a.motivo || 'Atendimento Geral'}</div>
+                    ${a.observacoes ? `<div style="font-size:0.75rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.observacoes}</div>` : ''}
+                </td>
+                <td style="padding:12px 16px;">
+                    ${statusBadge}
+                </td>
+                <td style="padding:12px 16px; text-align:center;">
+                    <div style="display:inline-flex; gap:6px;">
+                        <button type="button" onclick="selecionarAlunoParaDossie('${safeAluno}')" class="btn" style="background:#eff6ff; color:#1d4ed8; padding:5px 10px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bfdbfe;" title="Ver Dossiê 360º do Estudante">
+                            <i class="fa-solid fa-id-card"></i> Dossiê
+                        </button>
+                        ${safeFone ? `
+                            <button type="button" onclick="prepararDisparoWhatsAppFamiliar('${safeAluno}', '${safeFone}')" class="btn" style="background:#f0fdf4; color:#166534; padding:5px 10px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bbf7d0;" title="Enviar WhatsApp Oficial">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function resetDirAtendFiltros() {
+    if (document.getElementById("dirAtendFilterBusca")) document.getElementById("dirAtendFilterBusca").value = "";
+    if (document.getElementById("dirAtendFilterTurma")) document.getElementById("dirAtendFilterTurma").value = "";
+    if (document.getElementById("dirAtendFilterOrientadora")) document.getElementById("dirAtendFilterOrientadora").value = "";
+    if (document.getElementById("dirAtendFilterStatus")) document.getElementById("dirAtendFilterStatus").value = "";
+    renderDirAtendimentos();
+}
+
+function selecionarAlunoParaDossie(nomeAluno) {
+    dirAlunoDossieAtual = nomeAluno;
+    switchDirSubTab('dossie');
+    renderDirDossieAluno(nomeAluno);
+}
+
+// ----------------------------------------------------
+// SUB-ABA 2: DOSSIÊ DO ALUNO (RAIO-X 360º)
+// ----------------------------------------------------
+function renderDirDossie() {
+    if (dirAlunoDossieAtual) {
+        renderDirDossieAluno(dirAlunoDossieAtual);
+    }
+}
+
+function carregarDossieAlunoSelecionado() {
+    const input = document.getElementById("dirDossieAlunoInput");
+    const nome = input ? input.value.trim() : "";
+    if (!nome) {
+        showToast("Digite ou selecione o nome de um aluno para carregar o Dossiê.", "warning");
+        return;
+    }
+    dirAlunoDossieAtual = nome;
+    renderDirDossieAluno(nome);
+}
+
+function renderDirDossieAluno(nomeAluno) {
+    const container = document.getElementById("dirDossieResultContainer");
+    if (!container) return;
+
+    const input = document.getElementById("dirDossieAlunoInput");
+    if (input) input.value = nomeAluno;
+
+    const alunos = sigeDB.getAlunosImportados() || [];
+    const allOp = sigeDB.getAgendamentosOP() || [];
+    const allUni = sigeDB.getPedidosUniformes ? sigeDB.getPedidosUniformes() : [];
+
+    // Localiza registro cadastral do aluno
+    const alunoCad = alunos.find(a => (a.nome || '').toLowerCase() === nomeAluno.toLowerCase()) || {
+        nome: nomeAluno,
+        turma: 'Turma sob verificação',
+        matricula: 'N/D',
+        telefones: []
+    };
+
+    // Filtra histórico de atendimentos e uniformes do estudante
+    const atendimentosAluno = allOp.filter(a => (a.aluno || '').toLowerCase() === nomeAluno.toLowerCase());
+    const uniformesAluno = allUni.filter(u => (u.aluno || '').toLowerCase() === nomeAluno.toLowerCase());
+
+    const totalAtend = atendimentosAluno.length;
+    const comparecidos = atendimentosAluno.filter(a => a.statusSecretaria === 'realizado').length;
+    const faltas = atendimentosAluno.filter(a => a.statusSecretaria === 'falta').length;
+    const pctPresenca = totalAtend > 0 ? Math.round((comparecidos / totalAtend) * 100) : 100;
+
+    let html = `
+        <div style="background:white; border-radius:16px; border:1px solid #e2e8f0; box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:1.5rem;">
+            <!-- Header do Estudante -->
+            <div style="background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; padding:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:54px; height:54px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
+                        🎓
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.35rem; font-weight:900; margin:0; letter-spacing:-0.3px;">${alunoCad.nome}</h3>
+                        <div style="font-size:0.85rem; opacity:0.9; margin-top:2px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <span><i class="fa-solid fa-graduation-cap"></i> Turma: <strong>${alunoCad.turma || 'Não enturmado'}</strong></span>
+                            ${alunoCad.matricula ? `<span><i class="fa-solid fa-id-badge"></i> Matrícula: <strong>${alunoCad.matricula}</strong></span>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="openPrintDossieModal('${nomeAluno.replace(/'/g, "\\'")}')" class="btn" style="background:#ffffff; color:#1e3a8a; font-weight:800; font-size:0.85rem; padding:8px 16px; border-radius:10px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                        <i class="fa-solid fa-print"></i> Imprimir Ficha 360º (PDF)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mini KPIs do Estudante -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; padding:1.2rem; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                <div style="background:white; padding:1rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Chamadas pela OE</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#2563eb; margin-top:2px;">${totalAtend}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">atendimentos registrados</div>
+                </div>
+
+                <div style="background:white; padding:1rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Presença da Família</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:${pctPresenca >= 75 ? '#10b981' : '#ef4444'}; margin-top:2px;">${pctPresenca}%</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">${comparecidos} presença(s) / ${faltas} falta(s)</div>
+                </div>
+
+                <div style="background:white; padding:1rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Pedidos de Uniforme</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:2px;">${uniformesAluno.length}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">solicitações pela secretaria</div>
+                </div>
+            </div>
+
+            <!-- Corpo com Histórico de Atendimentos -->
+            <div style="padding:1.5rem;">
+                <h4 style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;"></i> Histórico de Convocatórias e Pareceres da Orientação
+                </h4>
+
+                ${atendimentosAluno.length === 0 ? `
+                    <div style="padding:1.5rem; background:#f8fafc; border-radius:10px; text-align:center; color:#64748b; font-size:0.88rem;">
+                        Nenhuma convocatória ou atendimento pedagógico registrado para este estudante.
+                    </div>
+                ` : `
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        ${atendimentosAluno.map(a => `
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid ${a.statusSecretaria === 'realizado' ? '#10b981' : (a.statusSecretaria === 'falta' ? '#ef4444' : '#f59e0b')}; border-radius:10px; padding:1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+                                    <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                                        ${formatDateBR(a.data)} às ${a.horario || 'Horário agendado'} — ${a.orientadora || 'Orientadora'}
+                                    </div>
+                                    <span style="font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:10px; background:${a.statusSecretaria === 'realizado' ? '#dcfce7' : (a.statusSecretaria === 'falta' ? '#fee2e2' : '#fef3c7')}; color:${a.statusSecretaria === 'realizado' ? '#166534' : (a.statusSecretaria === 'falta' ? '#991b1b' : '#92400e')};">
+                                        ${a.statusSecretaria === 'realizado' ? '✅ Compareceu' : (a.statusSecretaria === 'falta' ? '❌ Falta Registrada' : '⏳ Aguardando')}
+                                    </span>
+                                </div>
+                                <div style="font-size:0.85rem; color:#334155; margin-bottom:4px;">
+                                    <strong>Motivo:</strong> ${a.motivo || 'Atendimento Geral'}
+                                </div>
+                                ${a.responsavel ? `<div style="font-size:0.8rem; color:#64748b;"><strong>Responsável Notificado:</strong> ${a.responsavel}</div>` : ''}
+                                ${a.observacoes ? `<div style="font-size:0.82rem; color:#475569; background:white; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; margin-top:6px;"><strong>Parecer da OE:</strong> ${a.observacoes}</div>` : ''}
+                            </div>
+                        `).join("")}
+                    </div>
+                `}
+
+                <!-- Histórico de Uniformes do Estudante -->
+                ${uniformesAluno.length > 0 ? `
+                    <h4 style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-top:1.5rem; margin-bottom:0.8rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Histórico de Uniformes Escolares
+                    </h4>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead style="background:#f1f5f9; text-align:left; color:#475569;">
+                                <tr>
+                                    <th style="padding:8px 12px;">Data Solicitação</th>
+                                    <th style="padding:8px 12px;">Tipo / Estação</th>
+                                    <th style="padding:8px 12px;">Tamanho</th>
+                                    <th style="padding:8px 12px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${uniformesAluno.map(u => `
+                                    <tr style="border-bottom:1px solid #e2e8f0;">
+                                        <td style="padding:8px 12px;">${formatDateBR(u.dataSolicitacao)}</td>
+                                        <td style="padding:8px 12px;">${u.tipoItem === 'kit_completo' ? 'Kit Completo' : 'Peças Avulsas'} (${u.estacao || 'Verão'})</td>
+                                        <td style="padding:8px 12px; font-weight:700;">Tam ${u.tamanho}</td>
+                                        <td style="padding:8px 12px;">
+                                            <span style="font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#f1f5f9;">${u.status || 'Registrado'}</span>
+                                        </td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+function openPrintDossieModal(alunoNome) {
+    const modal = document.getElementById("modalPrintDossieAluno");
+    const printArea = document.getElementById("printAreaDossieContent");
+    if (!modal || !printArea) return;
+
+    const alunos = sigeDB.getAlunosImportados() || [];
+    const allOp = sigeDB.getAgendamentosOP() || [];
+    const alunoCad = alunos.find(a => (a.nome || '').toLowerCase() === alunoNome.toLowerCase()) || { nome: alunoNome, turma: 'N/D' };
+    const atendimentos = allOp.filter(a => (a.aluno || '').toLowerCase() === alunoNome.toLowerCase());
+
+    printArea.innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.3rem; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
+            <div style="font-size:0.85rem; color:#475569;">Gabinete da Direção & Orientação Educacional — Itajaí / SC</div>
+            <h3 style="margin:8px 0 0 0; font-size:1.1rem; color:#1e3a8a;">Prontuário Individual de Acompanhamento do Estudante</h3>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.88rem; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:16px;">
+            <div><strong>Nome do Aluno:</strong> ${alunoCad.nome}</div>
+            <div><strong>Turma:</strong> ${alunoCad.turma || '-'}</div>
+            <div><strong>Matrícula:</strong> ${alunoCad.matricula || '-'}</div>
+            <div><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+
+        <h4 style="font-size:0.95rem; margin-bottom:8px; text-transform:uppercase;">Histórico de Atendimentos & Convocatórias da OE</h4>
+        ${atendimentos.length === 0 ? `<p style="font-size:0.85rem; color:#64748b;">Nenhuma ocorrência registrada no sistema.</p>` : `
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem; margin-bottom:24px;">
+                <thead>
+                    <tr style="background:#f1f5f9; text-align:left; border-bottom:1px solid #000;">
+                        <th style="padding:6px;">Data</th>
+                        <th style="padding:6px;">Orientadora</th>
+                        <th style="padding:6px;">Motivo</th>
+                        <th style="padding:6px;">Presença Família</th>
+                        <th style="padding:6px;">Parecer da OE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${atendimentos.map(a => `
+                        <tr style="border-bottom:1px solid #cbd5e1;">
+                            <td style="padding:6px;">${formatDateBR(a.data)} ${a.horario || ''}</td>
+                            <td style="padding:6px;">${a.orientadora || '-'}</td>
+                            <td style="padding:6px;">${a.motivo || '-'}</td>
+                            <td style="padding:6px;">${a.statusSecretaria === 'realizado' ? 'Presente' : (a.statusSecretaria === 'falta' ? 'Ausente' : 'Aguardando')}</td>
+                            <td style="padding:6px;">${a.observacoes || '-'}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `}
+
+        <div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center; font-size:0.82rem;">
+            <div style="width:40%; border-top:1px solid #000; padding-top:6px;">
+                Direção Escolar<br>Centro Educacional Pedro Rizzi
+            </div>
+            <div style="width:40%; border-top:1px solid #000; padding-top:6px;">
+                Responsável pelo Estudante<br>Grau de Parentesco: _______________
+            </div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+}
+
+function closePrintDossieModal() {
+    const modal = document.getElementById("modalPrintDossieAluno");
+    if (modal) modal.style.display = "none";
+}
+
+// ----------------------------------------------------
+// SUB-ABA 3: CENTRAL WHATSAPP DA DIREÇÃO
+// ----------------------------------------------------
+function renderDirWhatsApp() {
+    renderDirWhatsAppContatos();
+    renderDirWhatsAppLogs();
+    aplicarTemplateWhatsAppDirecao();
+}
+
+function renderDirWhatsAppContatos() {
+    const container = document.getElementById("dirWpContatosListContainer");
+    if (!container) return;
+
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+    const filtrados = contatos.filter(c => {
+        if (dirWhatsAppFiltroTag === 'todos') return true;
+        return c.tag === dirWhatsAppFiltroTag;
+    });
+
+    if (filtrados.length === 0) {
+        container.innerHTML = `<div style="padding:1rem; text-align:center; color:#64748b; font-size:0.82rem;">Nenhum contato cadastrado nesta categoria.</div>`;
+        return;
+    }
+
+    container.innerHTML = filtrados.map(c => `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; color:#0f172a; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.nome}</div>
+                <div style="font-size:0.78rem; color:#2563eb; font-weight:600;"><i class="fa-brands fa-whatsapp"></i> ${c.telefone}</div>
+                <div style="font-size:0.72rem; color:#64748b;">${c.tag || 'Geral'}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button type="button" onclick="usarContatoNoAssistenteWhatsApp('${c.nome.replace(/'/g, "\\'")}', '${c.telefone}', '${c.tag || ''}')" class="btn" style="background:#dcfce7; color:#166534; font-size:0.75rem; padding:4px 8px; border:none; border-radius:6px; font-weight:700;" title="Usar no envio">
+                    <i class="fa-solid fa-arrow-left"></i> Usar
+                </button>
+                <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="btn" style="background:#fee2e2; color:#991b1b; font-size:0.75rem; padding:4px 8px; border:none; border-radius:6px;" title="Excluir">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function renderDirWhatsAppLogs() {
+    const container = document.getElementById("dirWpLogListContainer");
+    if (!container) return;
+
+    const logs = sigeDB.getMensagensWhatsAppLog() || [];
+    if (logs.length === 0) {
+        container.innerHTML = `<div style="padding:1rem; text-align:center; color:#64748b; font-size:0.82rem;">Nenhum envio recente registrado.</div>`;
+        return;
+    }
+
+    container.innerHTML = logs.slice(0, 10).map(l => `
+        <div style="padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="color:#0f172a; display:block;">${l.contatoNome}</strong>
+                <span style="color:#64748b; font-size:0.72rem;">${formatDateBR(l.enviadoEm)} às ${new Date(l.enviadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</span>
+            </div>
+            <span style="background:#dcfce7; color:#166534; font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:8px;">Enviado</span>
+        </div>
+    `).join("");
+}
+
+function filtrarContatosDirWhatsApp(tag) {
+    dirWhatsAppFiltroTag = tag;
+    const btns = document.querySelectorAll(".btnDirWpTagFilter");
+    btns.forEach(b => {
+        if (b.dataset.tag === tag) b.classList.add("active");
+        else b.classList.remove("active");
+    });
+    renderDirWhatsAppContatos();
+}
+
+function usarContatoNoAssistenteWhatsApp(nome, fone, tag) {
+    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = nome;
+    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
+    if (document.getElementById("dirWpInputTag") && tag) document.getElementById("dirWpInputTag").value = tag;
+    showToast(`Contato "${nome}" selecionado para envio.`);
+}
+
+function prepararDisparoWhatsAppFamiliar(alunoNome, fone) {
+    switchDirSubTab('whatsapp');
+    if (document.getElementById("dirWpInputNome")) document.getElementById("dirWpInputNome").value = `Responsáveis por ${alunoNome}`;
+    if (document.getElementById("dirWpInputTelefone")) document.getElementById("dirWpInputTelefone").value = fone;
+    if (document.getElementById("dirWpTemplateSelect")) {
+        document.getElementById("dirWpTemplateSelect").value = "convocacao_gabinete";
+        aplicarTemplateWhatsAppDirecao();
+    }
+}
+
+function aplicarTemplateWhatsAppDirecao() {
+    const template = document.getElementById("dirWpTemplateSelect")?.value;
+    const textarea = document.getElementById("dirWpInputMensagem");
+    if (!textarea) return;
+
+    const nomeDest = document.getElementById("dirWpInputNome")?.value || 'Senhor(a) Responsável';
+
+    const templatesMap = {
+        convocacao_gabinete: `Olá, ${nomeDest}! Aqui é da Direção do Centro Educacional Pedro Rizzi.\n\nSolicitamos seu comparecimento à escola nesta semana para tratarmos do acompanhamento pedagógico e frequência escolar do(a) estudante.\n\nPor favor, confirme o recebimento desta mensagem e nos informe seu melhor dia e horário. Atenciosamente,\nDireção Escolar — C.E. Pedro Rizzi`,
+        lembrete_orientacao: `Prezado(a) ${nomeDest},\n\nLembramos que há um agendamento com a Orientação Educacional do C.E. Pedro Rizzi programado para esta semana.\n\nSua presença é fundamental para o sucesso escolar do estudante. Contamos com você!\nAtenciosamente, Direção & Orientação.`,
+        alerta_infrequencia: `Prezado(a) ${nomeDest},\n\nIdentificamos ausências reiteradas do estudante nos últimos dias letivos. Lembramos que a frequência escolar é obrigatória por lei e essencial para a aprendizagem.\n\nSolicitamos justificativa ou contato urgente com a Direção Escolar pelo telefone (47) 3348-0000.`,
+        comunicado_geral: `Comunicado Oficial da Direção — Centro Educacional Pedro Rizzi\n\nInformamos à comunidade escolar que...\n\nQualquer dúvida estamos à disposição na secretaria da escola.`,
+        personalizado: ""
+    };
+
+    if (templatesMap[template] !== undefined) {
+        textarea.value = templatesMap[template];
+    }
+}
+
+function executarEnvioWhatsAppDirecao(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const nome = document.getElementById("dirWpInputNome")?.value.trim();
+    let fone = document.getElementById("dirWpInputTelefone")?.value.replace(/\D/g, '');
+    const tag = document.getElementById("dirWpInputTag")?.value || 'Geral';
+    const msg = document.getElementById("dirWpInputMensagem")?.value.trim();
+
+    if (!nome || !fone || !msg) {
+        showToast("Preencha todos os campos obrigatórios para enviar.", "warning");
+        return;
+    }
+
+    // Adiciona código do país Brasil (55) se não informado
+    if (fone.length === 10 || fone.length === 11) {
+        fone = '55' + fone;
+    }
+
+    const url = `https://wa.me/${fone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+
+    sigeDB.addMensagemWhatsAppLog({
+        contatoNome: nome,
+        telefone: fone,
+        tag: tag,
+        mensagem: msg,
+        status: 'enviado'
+    });
+
+    renderDirWhatsAppLogs();
+    showToast(`WhatsApp aberto para ${nome}! Registro de envio salvo.`);
+}
+
+function openNovoContatoWhatsAppModal() {
+    const modal = document.getElementById("modalNovoContatoWhatsApp");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeNovoContatoWhatsAppModal() {
+    const modal = document.getElementById("modalNovoContatoWhatsApp");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarNovoContatoWhatsApp(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const nome = document.getElementById("wContInputNome")?.value.trim();
+    const telefone = document.getElementById("wContInputTelefone")?.value.trim();
+    const tag = document.getElementById("wContInputTag")?.value;
+    const notas = document.getElementById("wContInputNotas")?.value.trim();
+
+    if (!nome || !telefone) return;
+
+    sigeDB.addContatoWhatsApp({ nome, telefone, tag, notas });
+    closeNovoContatoWhatsAppModal();
+    renderDirWhatsAppContatos();
+    showToast(`Contato "${nome}" cadastrado com sucesso!`);
+}
+
+function excluirContatoWhatsApp(id) {
+    if (confirm("Tem certeza que deseja remover este contato da Direção?")) {
+        sigeDB.deleteContatoWhatsApp(id);
+        renderDirWhatsAppContatos();
+        showToast("Contato removido com sucesso.");
+    }
+}
+
+// ----------------------------------------------------
+// SUB-ABA 4: LIVRO-ATA DE GABINETE
+// ----------------------------------------------------
+function renderDirLivroAta() {
+    const container = document.getElementById("dirAtasListContainer");
+    if (!container) return;
+
+    const atas = sigeDB.getAtasGabinete() || [];
+    if (atas.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; padding:3rem 1.5rem; text-align:center; background:white; border-radius:14px; border:1px dashed #cbd5e1; color:#64748b;">
+                <i class="fa-solid fa-book" style="font-size:2.8rem; color:#cbd5e1; margin-bottom:12px;"></i>
+                <h4 style="color:#334155; margin-bottom:4px;">Nenhuma Ata Registrada</h4>
+                <p style="font-size:0.85rem;">Clique no botão "+ Nova Ata de Reunião" acima para registrar atendimentos formais realizados no gabinete.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = atas.map(a => {
+        const dataFmt = formatDateBR(a.data);
+        const horaFmt = a.data ? new Date(a.data).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
+        const safeTitulo = (a.titulo || '').replace(/'/g, "\\'");
+
+        return `
+            <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; padding:1.4rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between; position:relative;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <span style="font-size:0.75rem; font-weight:800; background:#f3e8ff; color:#7e22ce; padding:3px 8px; border-radius:10px;">
+                            ${a.tipoDesc || 'Atendimento Oficial'}
+                        </span>
+                        <span style="font-size:0.78rem; color:#64748b; font-weight:600;">
+                            <i class="fa-regular fa-calendar"></i> ${dataFmt} ${horaFmt ? `às ${horaFmt}` : ''}
+                        </span>
+                    </div>
+
+                    <h4 style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:6px;">${a.titulo}</h4>
+
+                    <div style="font-size:0.8rem; color:#475569; margin-bottom:8px;">
+                        <strong>Presentes:</strong> ${a.participantes || 'Não especificados'}
+                    </div>
+
+                    ${a.alunoRelacionado ? `
+                        <div style="font-size:0.8rem; color:#1e3a8a; background:#eff6ff; padding:4px 8px; border-radius:6px; margin-bottom:8px; display:inline-block;">
+                            <i class="fa-solid fa-user-graduate"></i> Estudante: <strong>${a.alunoRelacionado}</strong> ${a.turmaRelacionada ? `(${a.turmaRelacionada})` : ''}
+                        </div>
+                    ` : ''}
+
+                    <div style="font-size:0.82rem; color:#334155; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:8px;">
+                        <div style="font-weight:700; color:#0f172a; margin-bottom:2px;">Pauta Tratada:</div>
+                        <div style="line-height:1.4;">${a.pauta}</div>
+                    </div>
+
+                    <div style="font-size:0.82rem; color:#166534; background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0; margin-bottom:10px;">
+                        <div style="font-weight:700; color:#14532d; margin-bottom:2px;">Combinados Firmados:</div>
+                        <div style="line-height:1.4;">${a.combinados}</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:10px; margin-top:8px;">
+                    <span style="font-size:0.75rem; color:#94a3b8;">Registrado por ${a.autor || 'Direção'}</span>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" onclick="openPrintTermoAtaModal('${a.id}')" class="btn btn-primary" style="background:#9333ea; border-color:#9333ea; font-size:0.75rem; padding:5px 10px;" title="Imprimir Termo Oficial para Assinaturas">
+                            <i class="fa-solid fa-print"></i> Termo Timbrado
+                        </button>
+                        <button type="button" onclick="excluirAtaGabinete('${a.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:5px 8px;" title="Excluir Ata">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function openNovaAtaGabineteModal() {
+    const modal = document.getElementById("modalNovaAtaGabinete");
+    if (!modal) return;
+    const dataInput = document.getElementById("ataInputData");
+    if (dataInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        dataInput.value = now.toISOString().slice(0, 16);
+    }
+    modal.style.display = "flex";
+}
+
+function closeNovaAtaGabineteModal() {
+    const modal = document.getElementById("modalNovaAtaGabinete");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarNovaAtaGabinete(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const titulo = document.getElementById("ataInputTitulo")?.value.trim();
+    const data = document.getElementById("ataInputData")?.value;
+    const tipo = document.getElementById("ataInputTipo")?.value;
+    const tipoDesc = document.getElementById("ataInputTipo")?.selectedOptions[0]?.text;
+    const alunoRelacionado = document.getElementById("ataInputAluno")?.value.trim();
+    const turmaRelacionada = document.getElementById("ataInputTurma")?.value.trim();
+    const participantes = document.getElementById("ataInputParticipantes")?.value.trim();
+    const pauta = document.getElementById("ataInputPauta")?.value.trim();
+    const combinados = document.getElementById("ataInputCombinados")?.value.trim();
+
+    if (!titulo || !data || !participantes || !pauta || !combinados) {
+        showToast("Preencha todos os campos obrigatórios da ata.", "warning");
+        return;
+    }
+
+    sigeDB.addAtaGabinete({
+        titulo, data, tipo, tipoDesc,
+        alunoRelacionado, turmaRelacionada,
+        participantes, pauta, combinados
+    });
+
+    closeNovaAtaGabineteModal();
+    renderDirLivroAta();
+    showToast("Ata de Reunião de Gabinete registrada com sucesso!");
+}
+
+function excluirAtaGabinete(id) {
+    if (confirm("Deseja realmente excluir este registro de ata de gabinete?")) {
+        sigeDB.deleteAtaGabinete(id);
+        renderDirLivroAta();
+        showToast("Registro de ata excluído.");
+    }
+}
+
+function openPrintTermoAtaModal(ataId) {
+    const modal = document.getElementById("modalPrintTermoAta");
+    const printArea = document.getElementById("printAreaTermoAtaContent");
+    if (!modal || !printArea) return;
+
+    const atas = sigeDB.getAtasGabinete() || [];
+    const ata = atas.find(a => a.id === ataId);
+    if (!ata) return;
+
+    const dataObj = new Date(ata.data);
+    const dataExtenso = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const horaExtenso = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    printArea.innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:14px; margin-bottom:20px;">
+            <h2 style="margin:0; font-size:1.35rem; font-family:'Times New Roman', serif; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
+            <div style="font-size:0.9rem; color:#334155; margin-top:2px;">Secretaria Municipal de Educação de Itajaí / SC</div>
+            <div style="font-size:0.9rem; font-weight:bold; margin-top:4px;">Gabinete da Direção Escolar</div>
+            <h3 style="margin:12px 0 0 0; font-size:1.15rem; text-decoration:underline;">TERMO DE REUNIÃO E ALINHAMENTO DE GABINETE</h3>
+        </div>
+
+        <div style="margin-bottom:16px; font-size:0.95rem; line-height:1.7;">
+            Aos <strong>${dataExtenso}</strong>, às <strong>${horaExtenso}</strong>, nas dependências do Gabinete da Direção do Centro Educacional Pedro Rizzi, realizou-se a reunião sob a pauta: <strong>"${ata.titulo}"</strong>.
+        </div>
+
+        <div style="margin-bottom:14px; font-size:0.92rem;">
+            <strong>Participantes Presentes:</strong> ${ata.participantes}.
+            ${ata.alunoRelacionado ? `<br><strong>Estudante Referenciado:</strong> ${ata.alunoRelacionado} ${ata.turmaRelacionada ? `(${ata.turmaRelacionada})` : ''}` : ''}
+        </div>
+
+        <div style="margin-bottom:16px; font-size:0.92rem;">
+            <strong>Pauta Tratada & Relato dos Fatos:</strong>
+            <div style="background:#f8fafc; padding:10px; border-left:3px solid #64748b; margin-top:4px; font-style:italic;">
+                ${ata.pauta}
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px; font-size:0.92rem;">
+            <strong>Combinados, Prazos & Compromissos Assumidos:</strong>
+            <div style="background:#f8fafc; padding:10px; border-left:3px solid #000; margin-top:4px;">
+                ${ata.combinados}
+            </div>
+        </div>
+
+        <div style="font-size:0.9rem; margin-bottom:40px;">
+            Nada mais havendo a constar, lavrou-se o presente termo que, lido e achado conforme, segue devidamente assinado por todos os envolvidos.
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; text-align:center; font-size:0.85rem; margin-top:30px;">
+            <div>
+                <div style="border-top:1px solid #000; padding-top:6px;">
+                    <strong>Direção Escolar</strong><br>
+                    Centro Educacional Pedro Rizzi
+                </div>
+            </div>
+            <div>
+                <div style="border-top:1px solid #000; padding-top:6px;">
+                    <strong>Responsável / Convocado(a)</strong><br>
+                    CPF / Documento: __________________
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; text-align:center; font-size:0.85rem; margin-top:40px;">
+            <div>
+                <div style="border-top:1px solid #000; padding-top:6px;">
+                    <strong>Orientação Educacional (OE)</strong><br>
+                    Testemunha / Mediadora
+                </div>
+            </div>
+            <div>
+                <div style="border-top:1px solid #000; padding-top:6px;">
+                    <strong>Outro Participante / Testemunha</strong><br>
+                    Assinatura
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+}
+
+function closePrintTermoAtaModal() {
+    const modal = document.getElementById("modalPrintTermoAta");
+    if (modal) modal.style.display = "none";
+}
+
+// ----------------------------------------------------
+// SUB-ABA 5: RELATÓRIOS EXECUTIVOS & FECHAMENTOS
+// ----------------------------------------------------
+function renderDirRelatorios() {
+    if (!dirRelatorioCache) {
+        setDirRelPeriodo('mes_atual');
+        gerarRelatorioExecutivoDirecao();
+    }
+}
+
+function setDirRelPeriodo(preset) {
+    const dIni = document.getElementById("dirRelDataInicio");
+    const dFim = document.getElementById("dirRelDataFim");
+    if (!dIni || !dFim) return;
+
+    const ano = 2026;
+    if (preset === 'mes_atual') {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        dIni.value = `${y}-${m}-01`;
+        const lastDay = new Date(y, d.getMonth() + 1, 0).getDate();
+        dFim.value = `${y}-${m}-${lastDay}`;
+    } else if (preset === 'trimestre_1') {
+        dIni.value = `${ano}-02-10`;
+        dFim.value = `${ano}-05-15`;
+    } else if (preset === 'trimestre_2') {
+        dIni.value = `${ano}-05-18`;
+        dFim.value = `${ano}-08-31`;
+    } else if (preset === 'trimestre_3') {
+        dIni.value = `${ano}-09-01`;
+        dFim.value = `${ano}-12-18`;
+    } else if (preset === 'ano_todo') {
+        dIni.value = `${ano}-01-01`;
+        dFim.value = `${ano}-12-31`;
+    }
+}
+
+function gerarRelatorioExecutivoDirecao() {
+    const container = document.getElementById("dirRelatorioResultadosContainer");
+    if (!container) return;
+
+    const dataIni = document.getElementById("dirRelDataInicio")?.value || '2026-01-01';
+    const dataFim = document.getElementById("dirRelDataFim")?.value || '2026-12-31';
+    const turmaFiltro = document.getElementById("dirRelTurmaSelect")?.value || '';
+    const orientadoraFiltro = document.getElementById("dirRelOrientadoraSelect")?.value || '';
+
+    const allOp = sigeDB.getAgendamentosOP() || [];
+
+    const filtrados = allOp.filter(a => {
+        const d = a.data ? a.data.slice(0, 10) : '';
+        if (d && (d < dataIni || d > dataFim)) return false;
+        if (turmaFiltro && a.turma !== turmaFiltro) return false;
+        if (orientadoraFiltro && !matchOrientadora(a, orientadoraFiltro)) return false;
+        return true;
+    });
+
+    const total = filtrados.length;
+    const comparecidos = filtrados.filter(a => a.statusSecretaria === 'realizado').length;
+    const faltas = filtrados.filter(a => a.statusSecretaria === 'falta').length;
+    const aguardando = filtrados.filter(a => a.statusSecretaria !== 'realizado' && a.statusSecretaria !== 'falta').length;
+    const pctComparecimento = total > 0 ? Math.round((comparecidos / total) * 100) : 100;
+
+    // Agrupamento por motivos
+    const motivosMap = {};
+    filtrados.forEach(a => {
+        const m = a.motivo || 'Outros';
+        motivosMap[m] = (motivosMap[m] || 0) + 1;
+    });
+
+    // Agrupamento por turma
+    const turmasMap = {};
+    filtrados.forEach(a => {
+        const t = a.turma || 'Sem Turma';
+        turmasMap[t] = (turmasMap[t] || 0) + 1;
+    });
+
+    dirRelatorioCache = {
+        dataIni, dataFim, turmaFiltro, orientadoraFiltro,
+        total, comparecidos, faltas, aguardando, pctComparecimento,
+        filtrados, motivosMap, turmasMap
+    };
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+            <div>
+                <h3 style="font-size:1.25rem; font-weight:900; color:#0f172a; margin:0;">
+                    Relatório Consolidado de Atendimentos da Orientação
+                </h3>
+                <div style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                    Período: <strong>${formatDateBR(dataIni)}</strong> até <strong>${formatDateBR(dataFim)}</strong> 
+                    ${turmaFiltro ? `| Turma: <strong>${turmaFiltro}</strong>` : ''}
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="openPrintRelatorioModal()" class="btn btn-primary" style="background:#0284c7; border-color:#0284c7; width:auto; font-size:0.85rem;">
+                    <i class="fa-solid fa-print"></i> Imprimir Documento Oficial (PDF)
+                </button>
+                <button type="button" onclick="exportarRelatorioDirecaoCSV()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;">
+                    <i class="fa-solid fa-file-excel" style="color:#16a34a;"></i> Exportar CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Cards Estatísticos do Período -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
+            <div style="background:#f8fafc; padding:1.2rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Atendimentos no Período</div>
+                <div style="font-size:2.2rem; font-weight:900; color:#0284c7; margin-top:2px;">${total}</div>
+                <div style="font-size:0.75rem; color:#94a3b8;">convocações realizadas</div>
+            </div>
+
+            <div style="background:#f8fafc; padding:1.2rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Taxa de Comparecimento</div>
+                <div style="font-size:2.2rem; font-weight:900; color:${pctComparecimento >= 75 ? '#10b981' : '#ef4444'}; margin-top:2px;">${pctComparecimento}%</div>
+                <div style="font-size:0.75rem; color:#94a3b8;">${comparecidos} presentes / ${faltas} faltas</div>
+            </div>
+
+            <div style="background:#f8fafc; padding:1.2rem; border-radius:12px; border:1px solid #cbd5e1; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Turmas Atendidas</div>
+                <div style="font-size:2.2rem; font-weight:900; color:#7c3aed; margin-top:2px;">${Object.keys(turmasMap).length}</div>
+                <div style="font-size:0.75rem; color:#94a3b8;">turmas distintas</div>
+            </div>
+        </div>
+
+        <!-- Tabela Discriminada -->
+        <div style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead style="background:#f8fafc; color:#475569; text-align:left; border-bottom:2px solid #e2e8f0;">
+                    <tr>
+                        <th style="padding:10px 14px;">Data</th>
+                        <th style="padding:10px 14px;">Estudante</th>
+                        <th style="padding:10px 14px;">Turma</th>
+                        <th style="padding:10px 14px;">Orientadora</th>
+                        <th style="padding:10px 14px;">Motivo</th>
+                        <th style="padding:10px 14px;">Presença Família</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filtrados.length === 0 ? `
+                        <tr><td colspan="6" style="padding:2rem; text-align:center; color:#64748b;">Nenhum atendimento no período selecionado.</td></tr>
+                    ` : filtrados.map(a => `
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:10px 14px;">${formatDateBR(a.data)} ${a.horario || ''}</td>
+                            <td style="padding:10px 14px; font-weight:700; color:#0f172a;">${a.aluno}</td>
+                            <td style="padding:10px 14px;">${a.turma || '-'}</td>
+                            <td style="padding:10px 14px;">${a.orientadora || '-'}</td>
+                            <td style="padding:10px 14px;">${a.motivo || 'Geral'}</td>
+                            <td style="padding:10px 14px;">
+                                <span style="font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:10px; background:${a.statusSecretaria === 'realizado' ? '#dcfce7' : (a.statusSecretaria === 'falta' ? '#fee2e2' : '#fef3c7')}; color:${a.statusSecretaria === 'realizado' ? '#166534' : (a.statusSecretaria === 'falta' ? '#991b1b' : '#92400e')};">
+                                    ${a.statusSecretaria === 'realizado' ? 'Presente' : (a.statusSecretaria === 'falta' ? 'Falta' : 'Pendente')}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function openPrintRelatorioModal() {
+    if (!dirRelatorioCache) return;
+    const modal = document.getElementById("modalPrintRelatorioExecutivo");
+    const printArea = document.getElementById("printAreaRelatorioContent");
+    if (!modal || !printArea) return;
+
+    const { dataIni, dataFim, total, comparecidos, faltas, pctComparecimento, filtrados, turmasMap, motivosMap } = dirRelatorioCache;
+
+    printArea.innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:12px; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.35rem; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
+            <div style="font-size:0.85rem; color:#475569;">Secretaria Municipal de Educação de Itajaí / SC</div>
+            <h3 style="margin:8px 0 0 0; font-size:1.15rem; color:#0284c7;">Relatório Executivo Oficial de Atendimentos da Orientação</h3>
+            <div style="font-size:0.85rem; margin-top:4px;">Recorte: <strong>${formatDateBR(dataIni)}</strong> até <strong>${formatDateBR(dataFim)}</strong> | Emitido em: ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:20px; text-align:center;">
+            <div style="border:1px solid #000; padding:8px;">
+                <div style="font-size:0.75rem; text-transform:uppercase;">Total Atendimentos</div>
+                <div style="font-size:1.4rem; font-weight:bold;">${total}</div>
+            </div>
+            <div style="border:1px solid #000; padding:8px;">
+                <div style="font-size:0.75rem; text-transform:uppercase;">Comparecimento Pais</div>
+                <div style="font-size:1.4rem; font-weight:bold;">${comparecidos} (${pctComparecimento}%)</div>
+            </div>
+            <div style="border:1px solid #000; padding:8px;">
+                <div style="font-size:0.75rem; text-transform:uppercase;">Faltas Registradas</div>
+                <div style="font-size:1.4rem; font-weight:bold;">${faltas}</div>
+            </div>
+            <div style="border:1px solid #000; padding:8px;">
+                <div style="font-size:0.75rem; text-transform:uppercase;">Turmas Atingidas</div>
+                <div style="font-size:1.4rem; font-weight:bold;">${Object.keys(turmasMap).length}</div>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:0.8rem; margin-bottom:30px;">
+            <thead>
+                <tr style="background:#f1f5f9; text-align:left; border-bottom:1px solid #000;">
+                    <th style="padding:6px;">Data</th>
+                    <th style="padding:6px;">Estudante</th>
+                    <th style="padding:6px;">Turma</th>
+                    <th style="padding:6px;">Orientadora</th>
+                    <th style="padding:6px;">Motivo Principal</th>
+                    <th style="padding:6px;">Presença</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${filtrados.map(a => `
+                    <tr style="border-bottom:1px solid #cbd5e1;">
+                        <td style="padding:6px;">${formatDateBR(a.data)}</td>
+                        <td style="padding:6px; font-weight:bold;">${a.aluno}</td>
+                        <td style="padding:6px;">${a.turma || '-'}</td>
+                        <td style="padding:6px;">${a.orientadora || '-'}</td>
+                        <td style="padding:6px;">${a.motivo || '-'}</td>
+                        <td style="padding:6px;">${a.statusSecretaria === 'realizado' ? 'Compareceu' : (a.statusSecretaria === 'falta' ? 'Falta' : 'Aguardando')}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+
+        <div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center; font-size:0.82rem;">
+            <div style="width:40%; border-top:1px solid #000; padding-top:6px;">
+                Direção Geral<br>C.E. Pedro Rizzi
+            </div>
+            <div style="width:40%; border-top:1px solid #000; padding-top:6px;">
+                Equipe de Orientação Educacional<br>Séries Iniciais & Séries Finais
+            </div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+}
+
+function closePrintRelatorioModal() {
+    const modal = document.getElementById("modalPrintRelatorioExecutivo");
+    if (modal) modal.style.display = "none";
+}
+
+function exportarRelatorioDirecaoCSV() {
+    if (!dirRelatorioCache || !dirRelatorioCache.filtrados) return;
+    const { filtrados, dataIni, dataFim } = dirRelatorioCache;
+
+    const headers = ["Data", "Horário", "Estudante", "Turma", "Orientadora", "Responsável", "Motivo", "Status Presença", "Parecer"];
+    const rows = filtrados.map(a => [
+        formatDateBR(a.data),
+        a.horario || '',
+        `"${(a.aluno || '').replace(/"/g, '""')}"`,
+        `"${a.turma || ''}"`,
+        `"${a.orientadora || ''}"`,
+        `"${(a.responsavel || '').replace(/"/g, '""')}"`,
+        `"${(a.motivo || '').replace(/"/g, '""')}"`,
+        a.statusSecretaria || 'aguardando',
+        `"${(a.observacoes || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `relatorio_direcao_oe_${dataIni}_${dataFim}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Planilha CSV gerada e baixada com sucesso!");
+}
+
+// ----------------------------------------------------
+// SUB-ABA 6: CALENDÁRIO DO ANO LETIVO & PRAZOS
+// ----------------------------------------------------
+function renderDirCalendarioEscolar() {
+    const regua = document.getElementById("dirCalReguaPrazos");
+    const tbody = document.getElementById("dirTableEventosCalendarioBody");
+    if (!tbody) return;
+
+    const eventos = sigeDB.getEventosCalendarioEscolar() || [];
+
+    // Régua de Contagem Regressiva
+    if (regua) {
+        const hoje = new Date().toISOString().slice(0, 10);
+        const futuros = eventos.filter(e => (e.data || '') >= hoje).slice(0, 3);
+
+        if (futuros.length === 0) {
+            regua.innerHTML = `
+                <div style="grid-column: 1 / -1; background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #cbd5e1; font-size:0.85rem; color:#64748b; text-align:center;">
+                    Nenhum prazo próximo ou marco agendado para os próximos dias.
+                </div>
+            `;
+        } else {
+            regua.innerHTML = futuros.map(f => {
+                const diffDays = Math.ceil((new Date(f.data) - new Date(hoje)) / (1000 * 60 * 60 * 24));
+                return `
+                    <div style="background:white; padding:1.2rem; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #ea580c; box-shadow:var(--shadow-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.75rem; font-weight:800; background:#ffedd5; color:#c2410c; padding:2px 8px; border-radius:8px;">
+                                ${f.categoriaDesc || 'Marco Escolar'}
+                            </span>
+                            <span style="font-size:0.8rem; font-weight:800; color:#ea580c;">
+                                ${diffDays === 0 ? '🚨 É HOJE!' : `Faltam ${diffDays} dia(s)`}
+                            </span>
+                        </div>
+                        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:8px 0 4px 0;">${f.titulo}</h4>
+                        <div style="font-size:0.78rem; color:#64748b;">
+                            <i class="fa-regular fa-calendar"></i> ${formatDateBR(f.data)} ${f.hora ? `às ${f.hora}` : ''} | ${f.local || 'Escola'}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    if (eventos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="padding:2rem; text-align:center; color:#64748b;">
+                    Nenhum evento registrado no calendário do ano letivo.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = eventos.map(e => `
+        <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+            <td style="padding:12px 16px; font-weight:600; color:#1e293b;">
+                <div>${formatDateBR(e.data)}</div>
+                <div style="font-size:0.75rem; color:#64748b;">${e.hora ? `às ${e.hora}` : ''}</div>
+            </td>
+            <td style="padding:12px 16px;">
+                <span style="background:#ffedd5; color:#c2410c; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:700;">
+                    ${e.categoriaDesc || 'Evento'}
+                </span>
+            </td>
+            <td style="padding:12px 16px;">
+                <strong style="color:#0f172a; display:block;">${e.titulo}</strong>
+                ${e.descricao ? `<span style="font-size:0.75rem; color:#64748b;">${e.descricao}</span>` : ''}
+            </td>
+            <td style="padding:12px 16px; font-size:0.82rem; color:#475569;">
+                ${e.publicoAlvo === 'professores' ? '👨‍🏫 Professores' : (e.publicoAlvo === 'pais' ? '👨‍👩‍👦 Famílias' : (e.publicoAlvo === 'alunos' ? '🎓 Alunos' : '🌐 Toda Escola'))}
+            </td>
+            <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
+                ${e.local || '-'}
+            </td>
+            <td style="padding:12px 16px; text-align:center;">
+                <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function openNovoEventoCalendarioModal() {
+    const modal = document.getElementById("modalNovoEventoCalendario");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeNovoEventoCalendarioModal() {
+    const modal = document.getElementById("modalNovoEventoCalendario");
+    if (modal) modal.style.display = "none";
+}
+
+function salvarNovoEventoCalendario(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const titulo = document.getElementById("calInputTitulo")?.value.trim();
+    const data = document.getElementById("calInputData")?.value;
+    const hora = document.getElementById("calInputHora")?.value;
+    const categoria = document.getElementById("calInputCategoria")?.value;
+    const categoriaDesc = document.getElementById("calInputCategoria")?.selectedOptions[0]?.text;
+    const publicoAlvo = document.getElementById("calInputPublico")?.value;
+    const local = document.getElementById("calInputLocal")?.value.trim();
+    const descricao = document.getElementById("calInputDescricao")?.value.trim();
+
+    if (!titulo || !data) return;
+
+    sigeDB.addEventoCalendarioEscolar({
+        titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
+    });
+
+    closeNovoEventoCalendarioModal();
+    renderDirCalendarioEscolar();
+    showToast(`Evento "${titulo}" adicionado ao calendário escolar!`);
+}
+
+function excluirEventoCalendario(id) {
+    if (confirm("Deseja realmente remover este evento do calendário?")) {
+        sigeDB.deleteEventoCalendarioEscolar(id);
+        renderDirCalendarioEscolar();
+        showToast("Evento removido do calendário.");
+    }
 }
 
 function openAvisoModal() {

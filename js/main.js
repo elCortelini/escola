@@ -115,6 +115,9 @@ function loadSystems() {
         if (sys.id === 'recursos' && (finalUrl === 'sistema-gestao.html?aba=op' || !finalUrl || finalUrl === '#')) {
             finalUrl = "https://elcortelini.github.io/agendamento-cepr/";
         }
+        if (sys.id === 'direcao') {
+            finalUrl = "sistema-gestao.html?aba=direcao";
+        }
 
         const isConfigured = finalUrl && finalUrl !== '#';
         const isExternal = finalUrl && (finalUrl.startsWith("http://") || finalUrl.startsWith("https://"));

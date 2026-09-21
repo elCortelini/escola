@@ -1027,3 +1027,58 @@ footer p strong {
     .container { max-width: 100%; margin: 0; padding: 0; }
     .chart-card, .table-card, .kpi-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
 }
+
+/* Sub-Abas do Módulo da Direção */
+.dir-subnav-container {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+.dir-subnav-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
+}
+.dir-subtab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: #475569;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.dir-subtab-btn:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+.dir-subtab-btn.active {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+}
+.dir-subtab-btn i {
+    font-size: 1rem;
+}
+.dir-subtab-btn.active i {
+    color: #ffffff !important;
+}
+.dir-subtab-content {
+    display: none;
+}
+.dir-subtab-content.active {
+    display: block;
+    animation: fadeIn 0.25s ease;
+}
+
