@@ -9,6 +9,16 @@ function getLocalDateISO(d) {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function generateSecureId(prefix = '') {
+    const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : (Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 10));
+    return prefix ? `${prefix}-${uuid}` : uuid;
+}
+if (typeof window !== 'undefined') {
+    window.generateSecureId = generateSecureId;
+}
+
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
 /**
@@ -1828,7 +1838,7 @@ class SigeDatabase {
                 list.push(profData);
             }
         } else {
-            profData.id = "prof-" + Date.now();
+            profData.id = generateSecureId("prof");
             list.push(profData);
         }
         this.saveData(this.data);
@@ -1859,7 +1869,7 @@ class SigeDatabase {
                 list.push(profData);
             }
         } else {
-            profData.id = "prof-" + Date.now();
+            profData.id = generateSecureId("prof");
             list.push(profData);
         }
         
@@ -1906,7 +1916,7 @@ class SigeDatabase {
                 list.push(turmaData);
             }
         } else {
-            turmaData.id = "turma-" + Date.now();
+            turmaData.id = generateSecureId("turma");
             list.push(turmaData);
         }
         this.saveData(this.data);
@@ -2056,7 +2066,7 @@ class SigeDatabase {
             throw new Error(`Limite atingido! A orientadora (${agendamento.orientadora || 'Orientação'}) já possui 4 atendimentos agendados no turno ${agendamento.turno.toUpperCase()} nesta data.`);
         }
 
-        agendamento.id = "op-" + Date.now();
+        agendamento.id = generateSecureId("op");
         agendamento.criadoEm = new Date().toISOString();
         if (agendamento.aluno) {
             agendamento.aluno = cleanStudentName(agendamento.aluno);
@@ -2085,7 +2095,7 @@ class SigeDatabase {
     }
 
     addDemandaSupervisao(demanda) {
-        demanda.id = "sup-" + Date.now();
+        demanda.id = generateSecureId("sup");
         demanda.criadoEm = getLocalDateISO();
         if (!demanda.dataInicio) demanda.dataInicio = demanda.prazo || demanda.criadoEm;
         if (!demanda.dataFim) demanda.dataFim = demanda.dataInicio;
@@ -2116,7 +2126,7 @@ class SigeDatabase {
     }
 
     addProjetoSupervisao(proj) {
-        proj.id = "proj-" + Date.now();
+        proj.id = generateSecureId("proj");
         if (!proj.etapas) proj.etapas = [];
         if (!proj.checklistPreEvento) proj.checklistPreEvento = [];
         if (!proj.status) proj.status = "em_dia";
@@ -2153,7 +2163,7 @@ class SigeDatabase {
     }
 
     addProjetoOrientacao(proj) {
-        proj.id = "proj-op-" + Date.now();
+        proj.id = generateSecureId("proj-op");
         if (!proj.etapas) proj.etapas = [];
         if (!proj.checklistAcompanhamento) proj.checklistAcompanhamento = [];
         if (!proj.status) proj.status = "em_dia";
@@ -2198,7 +2208,7 @@ class SigeDatabase {
     }
 
     addAtividadeExternaSupervisao(act) {
-        act.id = "ext-" + Date.now();
+        act.id = generateSecureId("ext");
         if (!act.checklistLogistica) act.checklistLogistica = [];
         if (!this.data.atividadesExternasSupervisao) this.data.atividadesExternasSupervisao = [];
         this.data.atividadesExternasSupervisao.unshift(act);
@@ -2224,7 +2234,7 @@ class SigeDatabase {
     }
 
     addReuniaoPedagogicaSupervisao(reun) {
-        reun.id = "reun-" + Date.now();
+        reun.id = generateSecureId("reun");
         if (!this.data.reunioesPedagogicasSupervisao) this.data.reunioesPedagogicasSupervisao = [];
         this.data.reunioesPedagogicasSupervisao.unshift(reun);
         this.saveData(this.data);
@@ -2237,7 +2247,7 @@ class SigeDatabase {
     }
 
     addDemandaAdmin(demanda) {
-        demanda.id = "adm-" + Date.now();
+        demanda.id = generateSecureId("adm");
         demanda.criadoEm = getLocalDateISO();
         this.data.demandasAdmin.unshift(demanda);
         this.saveData(this.data);
@@ -2258,7 +2268,7 @@ class SigeDatabase {
     }
 
     addAviso(aviso) {
-        aviso.id = "av-" + Date.now();
+        aviso.id = generateSecureId("av");
         aviso.data = getLocalDateISO();
         this.data.muralAvisos.unshift(aviso);
         this.saveData(this.data);
@@ -2271,7 +2281,7 @@ class SigeDatabase {
     }
 
     addTarefaCalendario(tarefa) {
-        tarefa.id = "cal-" + Date.now();
+        tarefa.id = generateSecureId("cal");
         this.data.calendarioTarefas.unshift(tarefa);
         this.saveData(this.data);
         return tarefa;
@@ -2297,7 +2307,7 @@ class SigeDatabase {
     }
 
     addPedidoUniforme(pedido) {
-        pedido.id = "uni-" + Date.now();
+        pedido.id = generateSecureId("uni");
         pedido.criadoEm = new Date().toISOString();
         if (!pedido.status) pedido.status = "pendente_envio";
         if (pedido.aluno) {
@@ -2355,7 +2365,7 @@ class SigeDatabase {
             throw new Error("Nenhum pedido pendente válido selecionado!");
         }
 
-        const loteId = "lote-sme-" + Date.now();
+        const loteId = generateSecureId("lote-sme");
         const codigoLote = "REMESSA-" + new Date().toISOString().substring(0,7) + "-" + Math.floor(10 + Math.random()*90);
 
         const lote = {
@@ -2659,6 +2669,51 @@ class SigeDatabase {
             admin: 'Administrador'
         };
         return roleMap[role] || this.getUserName() || 'Gestão Escolar';
+    }
+
+    async criarTokenConfirmacao(agendamentoId) {
+        const ag = (this.data.agendamentosOP || []).find(a => a.id === agendamentoId);
+        if (!ag || !this.firestore) return null;
+        const token = generateSecureId('token');
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        const docData = {
+            agendamentoId: ag.id,
+            aluno: ag.aluno || '',
+            turma: ag.turma || '',
+            data: ag.data || '',
+            horario: ag.horario || '',
+            orientadora: ag.orientadora || '',
+            responsavel: ag.responsavel || '',
+            status: ag.statusSecretaria || 'aguardando',
+            expiresAt: expiresAt.toISOString(),
+            criadoEm: new Date().toISOString()
+        };
+        try {
+            await this.firestore.collection('confirmacoes_op').doc(token).set(docData);
+            return token;
+        } catch (e) {
+            console.error('Erro ao criar token de confirmacao:', e);
+            return null;
+        }
+    }
+
+    async atualizarStatusPorToken(agendamentoId, novoStatus, obs) {
+        if (!this.firestore || !agendamentoId) return;
+        try {
+            const ags = this.data.agendamentosOP || [];
+            const idx = ags.findIndex(a => a.id === agendamentoId);
+            if (idx !== -1) {
+                ags[idx].statusSecretaria = novoStatus;
+                if (obs) ags[idx].obsSecretaria = obs;
+                ags[idx].confirmadoEm = new Date().toISOString();
+                await this.firestore.collection('sige_pedro_rizzi').doc('database').set(
+                    { agendamentosOP: ags }, { merge: true }
+                );
+            }
+        } catch (e) {
+            console.error('Erro ao atualizar status por token:', e);
+        }
     }
 }
 

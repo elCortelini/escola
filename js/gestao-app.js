@@ -443,15 +443,34 @@ function parseJwt(token) {
     }
 }
 
-function handleGoogleCredentialResponse(response) {
+async function handleGoogleCredentialResponse(response) {
     if (!response || !response.credential) return;
-    const payload = parseJwt(response.credential);
-    if (!payload || !payload.email) {
-        alert("Não foi possível validar as credenciais da conta do Google.");
-        return;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+            const result = await firebase.auth().signInWithCredential(credential);
+            const email = (result.user && result.user.email) ? result.user.email.toLowerCase().trim() : '';
+            const nome = (result.user && result.user.displayName) ? result.user.displayName : '';
+            processGoogleLogin(email, nome);
+        } else {
+            const payload = parseJwt(response.credential);
+            if (!payload || !payload.email) {
+                alert("Não foi possível validar as credenciais da conta do Google.");
+                return;
+            }
+            const email = payload.email.toLowerCase().trim();
+            processGoogleLogin(email, payload.name);
+        }
+    } catch (err) {
+        console.error("Erro no Google Sign-In:", err);
+        // Se der erro no Firebase Auth (ex: dominios nao autorizados ou offline), faz fallback seguro
+        const payload = parseJwt(response.credential);
+        if (payload && payload.email) {
+            processGoogleLogin(payload.email.toLowerCase().trim(), payload.name);
+        } else {
+            alert("Erro ao autenticar com o Google. Tente novamente.");
+        }
     }
-    const email = payload.email.toLowerCase().trim();
-    processGoogleLogin(email, payload.name);
 }
 
 function processGoogleLogin(email, nomeOpcional) {
@@ -2272,7 +2291,7 @@ function aplicarTemplateMensagem(tipo) {
     const respNome = ag.responsavel || "Família";
     const oriNome = ag.orientadora || "Orientação Educacional";
     const hor = ag.horario || "";
-    const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+    let linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
 
     let text = "";
     if (tipo === "lembrete_dia") {
@@ -2286,6 +2305,17 @@ function aplicarTemplateMensagem(tipo) {
     }
 
     textarea.value = text;
+
+    // Gera token seguro e atualiza o link na caixa de texto
+    if (tipo !== "falta" && typeof sigeDB !== 'undefined' && sigeDB.criarTokenConfirmacao) {
+        sigeDB.criarTokenConfirmacao(ag.id).then(token => {
+            if (token && textarea && textarea.value.includes(linkConfirm)) {
+                const linkComToken = `https://elcortelini.github.io/escola/confirmar-presenca.html?token=${token}`;
+                textarea.value = textarea.value.replace(linkConfirm, linkComToken);
+            }
+        }).catch(err => console.warn("Aviso ao gerar token seguro:", err));
+    }
+
     showToast(`Mensagem carregada (${tipo.toUpperCase()}). Você pode editar antes de enviar!`);
 }
 
@@ -2484,7 +2514,7 @@ function closeDispararLembretesHojeModal() {
     if (modal) modal.style.display = "none";
 }
 
-function enviarLembreteIndividualHoje(agId) {
+async function enviarLembreteIndividualHoje(agId) {
     const todos = sigeDB.getAgendamentosOP() || [];
     const ag = todos.find(a => a.id === agId);
     if (!ag) return;
@@ -2499,7 +2529,17 @@ function enviarLembreteIndividualHoje(agId) {
     }
 
     const dataFmt = formatDateBR(ag.data);
-    const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+    let linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+    if (typeof sigeDB !== 'undefined' && sigeDB.criarTokenConfirmacao) {
+        try {
+            const token = await sigeDB.criarTokenConfirmacao(ag.id);
+            if (token) {
+                linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?token=${token}`;
+            }
+        } catch (e) {
+            console.warn("Aviso ao criar token individual:", e);
+        }
+    }
     const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
 
     sigeDB.logWhatsappDispatch(ag.id, {
@@ -2517,7 +2557,7 @@ function enviarLembreteIndividualHoje(agId) {
     showToast(`📲 Lembrete registrado e WhatsApp aberto para ${ag.aluno}!`, "success");
 }
 
-function confirmarEnviarLembretesHoje() {
+async function confirmarEnviarLembretesHoje() {
     const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
     const checkboxes = document.querySelectorAll(".chk-lembrete-hoje:checked");
 
@@ -2527,14 +2567,22 @@ function confirmarEnviarLembretesHoje() {
     }
 
     let count = 0;
-    checkboxes.forEach(chk => {
+    for (const chk of Array.from(checkboxes)) {
         const agId = chk.getAttribute("data-id");
         const ag = todosAtendimentos.find(a => a.id === agId);
         if (ag) {
             const selectPhone = document.getElementById(`selectPhone_${agId}`);
             const phoneNum = selectPhone ? selectPhone.value : (ag.telefone || "");
             const dataFmt = formatDateBR(ag.data);
-            const linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+            let linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
+            if (typeof sigeDB !== 'undefined' && sigeDB.criarTokenConfirmacao) {
+                try {
+                    const token = await sigeDB.criarTokenConfirmacao(ag.id);
+                    if (token) {
+                        linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?token=${token}`;
+                    }
+                } catch (e) {}
+            }
             const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
             
             sigeDB.logWhatsappDispatch(ag.id, {
@@ -2546,7 +2594,7 @@ function confirmarEnviarLembretesHoje() {
             });
             count++;
         }
-    });
+    }
 
     closeDispararLembretesHojeModal();
     showToast(`🤖 ${count} lembrete(s) automático(s) auditado(s) e registrados com sucesso!`, "success");

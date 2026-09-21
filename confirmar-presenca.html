@@ -168,7 +168,9 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const urlParams     = new URLSearchParams(window.location.search);
+    const tokenParam    = urlParams.get('token');
     const appointmentId = urlParams.get('id');
+    let isTokenMode       = false;
     let fullDatabaseData  = null;
     let targetAppointment = null;
 
@@ -181,7 +183,41 @@
     }
 
     async function loadAppointment() {
-        if (!appointmentId) { showError('Link inválido. O identificador do atendimento não foi informado na mensagem.'); return; }
+        if (!tokenParam && !appointmentId) {
+            showError('Link inválido. O identificador ou token do atendimento não foi informado na mensagem.');
+            return;
+        }
+
+        // MODO 1 (RECOMENDADO / SEGURO): Acesso isolado via Token sem expor base escolar
+        if (tokenParam) {
+            try {
+                const tokenDoc = await db.collection('confirmacoes_op').doc(tokenParam).get();
+                if (!tokenDoc.exists) {
+                    showError('Link de confirmação expirado ou não localizado no sistema escolar.');
+                    return;
+                }
+                const data = tokenDoc.data();
+                if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+                    showError('Este link de confirmação expirou. Por favor, solicite um novo envio à escola.');
+                    return;
+                }
+                isTokenMode = true;
+                targetAppointment = {
+                    ...data,
+                    statusSecretaria: data.status || 'aguardando'
+                };
+                renderAppointment(targetAppointment);
+                return;
+            } catch (err) {
+                console.warn("Falha ao buscar token, tentando fallback se houver id:", err);
+                if (!appointmentId) {
+                    showError('Erro ao consultar confirmação. Verifique sua conexão com a internet.');
+                    return;
+                }
+            }
+        }
+
+        // MODO 2 (LEGADO): Fallback para links antigos com parâmetro ?id=
         try {
             const doc = await db.collection('sige_pedro_rizzi').doc('database').get();
             if (!doc.exists) { showError('Banco de dados da escola temporariamente indisponível.'); return; }
@@ -228,20 +264,58 @@
     }
 
     async function confirmarPresenca() {
-        if (!fullDatabaseData || !targetAppointment) return;
+        if (!targetAppointment) return;
         const btn = document.getElementById('btnConfirmar');
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Confirmando...';
         try {
-            const ags = fullDatabaseData.agendamentosOP || [];
-            const idx = ags.findIndex(a => a.id === appointmentId);
-            if (idx !== -1) {
-                ags[idx].statusSecretaria = 'confirmado_whatsapp';
-                ags[idx].obsSecretaria    = '🟢 Presença confirmada pelo responsável via link do WhatsApp';
-                ags[idx].confirmadoEm     = new Date().toISOString();
-                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+            const agoraIso = new Date().toISOString();
+
+            if (isTokenMode && tokenParam) {
+                // Atualiza o documento público do token
+                await db.collection('confirmacoes_op').doc(tokenParam).set({
+                    status: 'confirmado_whatsapp',
+                    confirmadoEm: agoraIso
+                }, { merge: true });
+
+                // Tenta sincronizar também no documento central se acessível
+                const agId = targetAppointment.agendamentoId || appointmentId;
+                if (agId) {
+                    try {
+                        const centralDoc = await db.collection('sige_pedro_rizzi').doc('database').get();
+                        if (centralDoc.exists) {
+                            const dbData = centralDoc.data();
+                            const ags = dbData.agendamentosOP || [];
+                            const idx = ags.findIndex(a => a.id === agId);
+                            if (idx !== -1) {
+                                ags[idx].statusSecretaria = 'confirmado_whatsapp';
+                                ags[idx].obsSecretaria    = '🟢 Presença confirmada pelo responsável via token WhatsApp';
+                                ags[idx].confirmadoEm     = agoraIso;
+                                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                            }
+                        }
+                    } catch (syncErr) {
+                        console.warn("Atualizado no token com sucesso (sincronização central em background):", syncErr);
+                    }
+                }
+
                 hide('actionArea');
                 show('successState');
+                return;
+            }
+
+            // Modo Legado
+            if (fullDatabaseData) {
+                const ags = fullDatabaseData.agendamentosOP || [];
+                const idx = ags.findIndex(a => a.id === appointmentId);
+                if (idx !== -1) {
+                    ags[idx].statusSecretaria = 'confirmado_whatsapp';
+                    ags[idx].obsSecretaria    = '🟢 Presença confirmada pelo responsável via link do WhatsApp';
+                    ags[idx].confirmadoEm     = agoraIso;
+                    await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                    hide('actionArea');
+                    show('successState');
+                }
             }
         } catch (e) {
             console.error(e);
@@ -256,18 +330,55 @@
     }
 
     async function enviarCancelamento() {
-        if (!fullDatabaseData || !targetAppointment) return;
+        if (!targetAppointment) return;
         const motivo = document.getElementById('txtMotivo').value.trim();
         try {
-            const ags = fullDatabaseData.agendamentosOP || [];
-            const idx = ags.findIndex(a => a.id === appointmentId);
-            if (idx !== -1) {
-                ags[idx].statusSecretaria   = 'cancelado';
-                ags[idx].obsSecretaria      = 'Responsável informou via WhatsApp que não poderá comparecer. Motivo: ' + (motivo || 'Não informado');
-                ags[idx].canceladoViaLinkEm = new Date().toISOString();
-                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+            const agoraIso = new Date().toISOString();
+
+            if (isTokenMode && tokenParam) {
+                await db.collection('confirmacoes_op').doc(tokenParam).set({
+                    status: 'cancelado',
+                    motivoCancelamento: motivo || 'Não informado',
+                    canceladoEm: agoraIso
+                }, { merge: true });
+
+                const agId = targetAppointment.agendamentoId || appointmentId;
+                if (agId) {
+                    try {
+                        const centralDoc = await db.collection('sige_pedro_rizzi').doc('database').get();
+                        if (centralDoc.exists) {
+                            const dbData = centralDoc.data();
+                            const ags = dbData.agendamentosOP || [];
+                            const idx = ags.findIndex(a => a.id === agId);
+                            if (idx !== -1) {
+                                ags[idx].statusSecretaria   = 'cancelado';
+                                ags[idx].obsSecretaria      = 'Responsável informou via WhatsApp que não poderá comparecer. Motivo: ' + (motivo || 'Não informado');
+                                ags[idx].canceladoViaLinkEm = agoraIso;
+                                await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                            }
+                        }
+                    } catch (syncErr) {
+                        console.warn("Registrado no token (sincronização central em background):", syncErr);
+                    }
+                }
+
                 hide('actionArea');
                 show('cancelledState');
+                return;
+            }
+
+            // Modo Legado
+            if (fullDatabaseData) {
+                const ags = fullDatabaseData.agendamentosOP || [];
+                const idx = ags.findIndex(a => a.id === appointmentId);
+                if (idx !== -1) {
+                    ags[idx].statusSecretaria   = 'cancelado';
+                    ags[idx].obsSecretaria      = 'Responsável informou via WhatsApp que não poderá comparecer. Motivo: ' + (motivo || 'Não informado');
+                    ags[idx].canceladoViaLinkEm = agoraIso;
+                    await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
+                    hide('actionArea');
+                    show('cancelledState');
+                }
             }
         } catch (e) {
             console.error(e);
