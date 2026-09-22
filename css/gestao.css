@@ -2690,6 +2690,36 @@
     border-color: #bae6fd;
 }
 
+.rbac-mod-chip.active.mod-ext-recursos {
+    background: #ffedd5;
+    color: #c2410c;
+    border-color: #fed7aa;
+}
+
+.rbac-mod-chip.active.mod-ext-dash {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.rbac-mod-chip.active.mod-ext-contabil {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.rbac-mod-chip.active.mod-ext-biblio {
+    background: #fce7f3;
+    color: #be185d;
+    border-color: #fbcfe8;
+}
+
+.rbac-mod-chip.active.mod-ext-patrimonio {
+    background: #fef9c3;
+    color: #a16207;
+    border-color: #fef08a;
+}
+
 .rbac-status-badge {
     display: inline-flex;
     align-items: center;

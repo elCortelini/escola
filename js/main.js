@@ -92,7 +92,7 @@ const defaultSystems = [
     },
     {
         id: "recursos",
-        moduloKey: null,
+        moduloKey: "ext_recursos",
         title: "Agendamento de Recursos & Lab",
         iconClass: "fa-solid fa-calendar-check",
         bgClass: "theme-orange",
@@ -100,12 +100,12 @@ const defaultSystems = [
         description: "Reserva de horários para uso do Laboratório de Informática, projetores, auditório e recursos tecnológicos da escola.",
         url: "https://elcortelini.github.io/agendamento-cepr/",
         status: "online",
-        badge: "ACESSO LIVRE",
+        badge: "EXTERNO",
         isLive: true
     },
     {
         id: "dashboard",
-        moduloKey: null,
+        moduloKey: "ext_dashboard",
         title: "Dashboard de Avaliação",
         iconClass: "fa-solid fa-chart-line",
         bgClass: "theme-emerald",
@@ -118,7 +118,7 @@ const defaultSystems = [
     },
     {
         id: "contabil",
-        moduloKey: null,
+        moduloKey: "ext_contabil",
         title: "Sistema Contábil (APMF)",
         iconClass: "fa-solid fa-calculator",
         bgClass: "theme-blue",
@@ -131,7 +131,7 @@ const defaultSystems = [
     },
     {
         id: "biblioteca",
-        moduloKey: null,
+        moduloKey: "ext_biblioteca",
         title: "Sistema da Biblioteca",
         iconClass: "fa-solid fa-book-bookmark",
         bgClass: "theme-rose",
@@ -144,7 +144,7 @@ const defaultSystems = [
     },
     {
         id: "patrimonio",
-        moduloKey: null,
+        moduloKey: "ext_patrimonio",
         title: "Sistema de Patrimônio",
         iconClass: "fa-solid fa-boxes-stacked",
         bgClass: "theme-orange",
@@ -246,6 +246,14 @@ function renderPortalAuthBar() {
                     <a href="sistema-gestao.html?aba=admin#adminPendingUsersCard" style="background:#f59e0b; color:#0f172a; font-weight:800; padding:4px 10px; border-radius:8px; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 8px rgba(245,158,11,0.3);" title="Clique para gerenciar acessos pendentes">
                         <i class="fa-solid fa-user-clock"></i> ${pendentes.length} Pendente(s)
                     </a>
+                ` : ''}
+                ${isDev ? `
+                    <button type="button" onclick="openAddCustomSystemModal()" style="background:rgba(255,255,255,0.1); color:#4ade80; border:1px solid rgba(74,222,128,0.3); border-radius:8px; padding:4px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Adicionar Novo Sistema ao Portal">
+                        <i class="fa-solid fa-plus-circle"></i> <span>Novo Sistema</span>
+                    </button>
+                    <button type="button" onclick="openConfigModal()" style="background:rgba(255,255,255,0.1); color:#93c5fd; border:1px solid rgba(147,197,253,0.3); border-radius:8px; padding:4px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Configurar Links dos Sistemas Padrão">
+                        <i class="fa-solid fa-sliders"></i> <span>Links Padrão</span>
+                    </button>
                 ` : ''}
                 ${isDev ? `
                     <div class="portal-top-dev-view" style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); padding:3px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15);">
@@ -816,6 +824,17 @@ function deleteCustomSystem(id) {
 
 function openAgendamentoLabDirect(e) {
     if (e && e.preventDefault) e.preventDefault();
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser) {
+        alert("🔒 Módulo Protegido: É necessário se identificar no portal para acessar o Agendamento de Recursos.");
+        scrollToAuthCard();
+        return;
+    }
+    if (window.sigeDB && !window.sigeDB.temPermissaoModulo('ext_recursos')) {
+        alert("🔒 Acesso Restrito: Seu perfil atual não possui permissão de acesso ao Agendamento de Recursos & Laboratório.\n\nSolicite liberação ao desenvolvedor ou à direção escolar.");
+        return;
+    }
+
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
     let labUrl = savedUrls['recursos'] || "https://elcortelini.github.io/agendamento-cepr/";
     

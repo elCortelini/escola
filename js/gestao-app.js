@@ -436,7 +436,12 @@ function renderAdminPermissoesUsuarios() {
         { key: 'supervisao', label: 'Supervisão', fullLabel: 'Supervisão Pedagógica', icon: 'fa-clipboard-check', colorClass: 'mod-supervisao' },
         { key: 'admin', label: 'Administração', fullLabel: 'Administração Integrada', icon: 'fa-gears', colorClass: 'mod-admin' },
         { key: 'direcao', label: 'Direção', fullLabel: 'Direção Executiva', icon: 'fa-crown', colorClass: 'mod-direcao' },
-        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', icon: 'fa-shirt', colorClass: 'mod-uniformes' }
+        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', icon: 'fa-shirt', colorClass: 'mod-uniformes' },
+        { key: 'ext_recursos', label: 'Lab', fullLabel: 'Agendamento Lab & Recursos', icon: 'fa-calendar-check', colorClass: 'mod-ext-recursos' },
+        { key: 'ext_dashboard', label: 'Dash', fullLabel: 'Dashboard de Avaliação', icon: 'fa-chart-line', colorClass: 'mod-ext-dash' },
+        { key: 'ext_contabil', label: 'Contábil', fullLabel: 'Sistema Contábil (APMF)', icon: 'fa-calculator', colorClass: 'mod-ext-contabil' },
+        { key: 'ext_biblioteca', label: 'Biblio', fullLabel: 'Sistema da Biblioteca', icon: 'fa-book-bookmark', colorClass: 'mod-ext-biblio' },
+        { key: 'ext_patrimonio', label: 'Patrimônio', fullLabel: 'Sistema de Patrimônio', icon: 'fa-boxes-stacked', colorClass: 'mod-ext-patrimonio' }
     ];
 
     tbody.innerHTML = filtered.map(u => {
@@ -444,7 +449,7 @@ function renderAdminPermissoesUsuarios() {
         const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
         const iniciais = u.nome ? u.nome.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : 'U';
 
-        // Chips dos 6 Módulos
+        // Chips dos Módulos & Sistemas
         const chipsHtml = modulosConfig.map(m => {
             const isActive = isMasterDev ? true : !!perms[m.key];
             const activeClass = isActive ? `active ${m.colorClass}` : 'inactive';
@@ -477,14 +482,15 @@ function renderAdminPermissoesUsuarios() {
         }).join('');
 
         // Contagem de Módulos
-        const qtdAtivos = isMasterDev ? 6 : modulosConfig.filter(m => !!perms[m.key]).length;
+        const totalModulos = modulosConfig.length;
+        const qtdAtivos = isMasterDev ? totalModulos : modulosConfig.filter(m => !!perms[m.key]).length;
         let badgeStatus = '';
-        if (qtdAtivos === 6) {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-total"><i class="fa-solid fa-circle-check"></i> 6/6 Total</span>`;
+        if (qtdAtivos === totalModulos) {
+            badgeStatus = `<span class="rbac-status-badge rbac-status-total"><i class="fa-solid fa-circle-check"></i> ${qtdAtivos}/${totalModulos} Total</span>`;
         } else if (qtdAtivos === 0) {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-bloqueado"><i class="fa-solid fa-ban"></i> 0/6 Bloqueado</span>`;
+            badgeStatus = `<span class="rbac-status-badge rbac-status-bloqueado"><i class="fa-solid fa-ban"></i> 0/${totalModulos} Bloqueado</span>`;
         } else {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-parcial"><i class="fa-solid fa-shield-halved"></i> ${qtdAtivos}/6 Setorial</span>`;
+            badgeStatus = `<span class="rbac-status-badge rbac-status-parcial"><i class="fa-solid fa-shield-halved"></i> ${qtdAtivos}/${totalModulos} Parcial</span>`;
         }
 
         // Ações Rápidas por Usuário
@@ -562,7 +568,12 @@ function toggleUserModuloPermissaoCard(email, moduloKey) {
             supervisao: "Supervisão Pedagógica",
             admin: "Administração Integrada",
             direcao: "Direção Executiva",
-            uniformes: "Controle de Uniformes"
+            uniformes: "Controle de Uniformes",
+            ext_recursos: "Laboratório & Recursos",
+            ext_dashboard: "Dashboard de Avaliação",
+            ext_contabil: "Sistema Contábil (APMF)",
+            ext_biblioteca: "Sistema da Biblioteca",
+            ext_patrimonio: "Sistema de Patrimônio"
         }[moduloKey] || moduloKey.toUpperCase();
 
         const acao = u.permissoes[moduloKey] ? "LIBERADO" : "REVOGADO";
@@ -612,7 +623,7 @@ function openModalNovoUsuarioRBAC(emailParaEditar) {
             if (inputCargo) inputCargo.value = u.cargo || '';
 
             const perms = u.permissoes || sigeDB.getDefaultPermissoesByRole(u.role);
-            ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+            ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'].forEach(k => {
                 const chk = document.getElementById(`rbacChk_${k}`);
                 if (chk) chk.checked = !!perms[k];
             });
@@ -639,7 +650,7 @@ function closeModalNovoUsuarioRBAC() {
 
 function autoSelectRbacRoleDefaults(role) {
     const defaults = sigeDB.getDefaultPermissoesByRole(role);
-    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'].forEach(k => {
         const chk = document.getElementById(`rbacChk_${k}`);
         if (chk) chk.checked = !!defaults[k];
     });
@@ -655,7 +666,7 @@ function autoSelectRbacRoleDefaults(role) {
 }
 
 function setAllModalRbacCheckboxes(checked) {
-    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'].forEach(k => {
         const chk = document.getElementById(`rbacChk_${k}`);
         if (chk) chk.checked = !!checked;
     });
@@ -679,7 +690,12 @@ function submitNovoUsuarioRBAC(e) {
         supervisao: !!document.getElementById("rbacChk_supervisao")?.checked,
         admin: !!document.getElementById("rbacChk_admin")?.checked,
         direcao: !!document.getElementById("rbacChk_direcao")?.checked,
-        uniformes: !!document.getElementById("rbacChk_uniformes")?.checked
+        uniformes: !!document.getElementById("rbacChk_uniformes")?.checked,
+        ext_recursos: !!document.getElementById("rbacChk_ext_recursos")?.checked,
+        ext_dashboard: !!document.getElementById("rbacChk_ext_dashboard")?.checked,
+        ext_contabil: !!document.getElementById("rbacChk_ext_contabil")?.checked,
+        ext_biblioteca: !!document.getElementById("rbacChk_ext_biblioteca")?.checked,
+        ext_patrimonio: !!document.getElementById("rbacChk_ext_patrimonio")?.checked
     };
 
     sigeDB.addUsuario({ email, nome, role, cargo, permissoes });
@@ -1098,6 +1114,12 @@ window.ajustarModulosDefaultPendente = ajustarModulosDefaultPendente;
 window.execAprovarPendente = execAprovarPendente;
 window.execRecusarPendente = execRecusarPendente;
 window.scrollToPendingRequests = scrollToPendingRequests;
+window.openGerenciarTagsModal = openGerenciarTagsModal;
+window.closeGerenciarTagsModal = closeGerenciarTagsModal;
+window.renderGerenciarTagsList = renderGerenciarTagsList;
+window.adicionarNovaTagContato = adicionarNovaTagContato;
+window.renomearTagContato = renomearTagContato;
+window.excluirTagContato = excluirTagContato;
 
 // Funções do Painel RBAC (Controle de Acessos & Módulos)
 window.setRbacFilterPerfil = setRbacFilterPerfil;
@@ -7142,6 +7164,107 @@ function closeNovoContatoWhatsAppModal() {
     if (modal) modal.style.display = "none";
 }
 
+// ----------------------------------------------------
+// GERENCIADOR DE TAGS DE CONTATOS (POP-UP MODAL)
+// ----------------------------------------------------
+function openGerenciarTagsModal() {
+    const modal = document.getElementById("modalGerenciarTagsContatos");
+    if (!modal) return;
+    renderGerenciarTagsList();
+    modal.style.display = "flex";
+}
+
+function closeGerenciarTagsModal() {
+    const modal = document.getElementById("modalGerenciarTagsContatos");
+    if (modal) modal.style.display = "none";
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+    popularSelectTagsHistoricoWp();
+}
+
+function renderGerenciarTagsList() {
+    const container = document.getElementById("listaGerenciarTagsContainer");
+    if (!container) return;
+
+    const allTags = sigeDB.getAllTagsContatos() || [];
+    const contatos = sigeDB.getContatosWhatsApp() || [];
+
+    if (allTags.length === 0) {
+        container.innerHTML = `
+            <div style="padding:1.5rem; text-align:center; color:#94a3b8; font-size:0.83rem;">
+                Nenhuma tag cadastrada no momento. Adicione uma nova tag acima.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = allTags.map(tag => {
+        const count = contatos.filter(c => {
+            const cTags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : []);
+            return cTags.includes(tag);
+        }).length;
+
+        return `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:800;">
+                        🏷️ ${escapeHtml(tag)}
+                    </span>
+                    <span style="font-size:0.75rem; color:#64748b;">
+                        ${count} contato(s)
+                    </span>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button type="button" onclick="renomearTagContato('${tag.replace(/'/g, "\\'")}')" class="dir-btn-icon" style="min-width:28px; width:28px; height:28px; padding:0; font-size:0.75rem; border-radius:6px; background:#f1f5f9; color:#0284c7; border:none; cursor:pointer;" title="Renomear tag">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" onclick="excluirTagContato('${tag.replace(/'/g, "\\'")}')" class="dir-btn-icon" style="min-width:28px; width:28px; height:28px; padding:0; font-size:0.75rem; border-radius:6px; background:#fee2e2; color:#dc2626; border:none; cursor:pointer;" title="Excluir tag dos contatos">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function adicionarNovaTagContato(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const input = document.getElementById("inputNovaTagNome");
+    const val = input ? input.value.trim() : "";
+    if (!val) return;
+
+    if (sigeDB.adicionarTagWp(val)) {
+        showToast(`Tag "${val}" adicionada com sucesso!`);
+        if (input) input.value = "";
+        renderGerenciarTagsList();
+        renderDirWpTagsFilter();
+    } else {
+        showToast(`A tag "${val}" já existe.`, "warning");
+    }
+}
+
+function renomearTagContato(oldTag) {
+    const novoNome = prompt(`Digite o novo nome para a tag "${oldTag}":`, oldTag);
+    if (!novoNome || !novoNome.trim() || novoNome.trim() === oldTag) return;
+
+    sigeDB.renomearTagWp(oldTag, novoNome.trim());
+    showToast(`Tag alterada para "${novoNome.trim()}".`);
+    renderGerenciarTagsList();
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+}
+
+function excluirTagContato(tagName) {
+    if (!confirm(`Deseja realmente remover a tag "${tagName}" de todos os contatos?`)) return;
+
+    sigeDB.excluirTagWp(tagName);
+    if (selectedWpTags.has(tagName)) selectedWpTags.delete(tagName);
+    showToast(`Tag "${tagName}" removida com sucesso.`);
+    renderGerenciarTagsList();
+    renderDirWpTagsFilter();
+    renderDirWhatsAppContatos();
+}
+
 function adicionarSugestaoTagContato(tag) {
     const input = document.getElementById("wContInputTags");
     if (!input) return;
@@ -7735,6 +7858,18 @@ function getCalCategoriaBadge(cat, desc) {
     return `<span style="background:${bg}; color:${color}; padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:800; display:inline-block; white-space:nowrap;">${desc || 'Evento'}</span>`;
 }
 
+const NOMES_MESES_CALENDARIO = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+function getMesNomeFromData(dataStr) {
+    if (!dataStr) return "";
+    const parts = String(dataStr).split("-");
+    if (parts.length >= 2) {
+        const m = parseInt(parts[1], 10);
+        if (m >= 1 && m <= 12) return NOMES_MESES_CALENDARIO[m - 1];
+    }
+    return "";
+}
+
 const MESES_CONFIG_2026 = [
     { mes: "Janeiro", trimNome: "Férias Escolares", trimClass: "trimestre-recesso", dias: 0, horas: 0, icone: "fa-umbrella-beach", corBadge: "#64748b" },
     { mes: "Fevereiro", trimNome: "1º Trimestre", trimClass: "trimestre-1", dias: 11, horas: 44, icone: "fa-seedling", corBadge: "#2563eb", sub: "Início letivo: 11/02" },
@@ -7803,13 +7938,14 @@ function renderDirCalendarioEscolar() {
     const catFilter = document.getElementById("dirCalFilterCategoria")?.value || "";
 
     const filtrados = eventos.filter(e => {
-        if (mesFilter && (e.mes || "") !== mesFilter) return false;
+        const evMes = e.mes || getMesNomeFromData(e.data);
+        if (mesFilter && evMes !== mesFilter) return false;
         if (catFilter) {
             if (catFilter === 'feriado' && e.categoria !== 'feriado' && e.categoria !== 'recesso' && e.categoria !== 'feriado_recesso') return false;
             else if (catFilter !== 'feriado' && e.categoria !== catFilter) return false;
         }
         if (busca) {
-            const str = `${e.titulo || ''} ${e.descricao || ''} ${e.mes || ''} ${e.dataExibicao || ''} ${e.local || ''}`.toLowerCase();
+            const str = `${e.titulo || ''} ${e.descricao || ''} ${evMes} ${e.dataExibicao || ''} ${e.local || ''}`.toLowerCase();
             if (!str.includes(busca)) return false;
         }
         return true;
@@ -7824,7 +7960,7 @@ function renderDirCalendarioEscolar() {
         const mesesParaExibir = mesFilter ? MESES_CONFIG_2026.filter(m => m.mes === mesFilter) : MESES_CONFIG_2026;
         
         gridBody.innerHTML = mesesParaExibir.map(cfg => {
-            const eventosDoMes = filtrados.filter(e => (e.mes || "") === cfg.mes);
+            const eventosDoMes = filtrados.filter(e => (e.mes || getMesNomeFromData(e.data)) === cfg.mes);
 
             return `
                 <div class="cal-month-card ${cfg.trimClass}">
@@ -8077,15 +8213,17 @@ function salvarNovoEventoCalendario(e) {
     }
 
     const categoriaDesc = calCategoriasMapDesc[categoria] || "Evento Escolar";
+    const mes = getMesNomeFromData(data);
+    const dataExibicao = formatDateBR(data);
 
     if (id) {
         sigeDB.updateEventoCalendarioEscolar(id, {
-            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
+            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao, mes, dataExibicao
         });
         showToast(`Evento "${titulo}" atualizado com sucesso!`);
     } else {
         sigeDB.addEventoCalendarioEscolar({
-            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
+            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao, mes, dataExibicao
         });
         showToast(`Evento "${titulo}" adicionado ao calendário!`);
     }
@@ -8431,7 +8569,7 @@ function renderAdminPendingUsers() {
 
     card.style.display = 'block';
 
-    const modulos = [
+    const modulosInternos = [
         { key: 'op', label: 'OE', fullLabel: 'Orientação Educacional', color: '#fef3c7', textColor: '#92400e' },
         { key: 'mural', label: 'Mural', fullLabel: 'Mural & Prazos', color: '#f1f5f9', textColor: '#334155' },
         { key: 'supervisao', label: 'Supervisão', fullLabel: 'Supervisão Pedagógica', color: '#f5f3ff', textColor: '#6b21a8' },
@@ -8440,32 +8578,54 @@ function renderAdminPendingUsers() {
         { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', color: '#e0f2fe', textColor: '#0369a1' }
     ];
 
+    const sistemasExternos = [
+        { key: 'ext_recursos', label: '💻 Lab', fullLabel: 'Agendamento Lab & Recursos', color: '#ffedd5', textColor: '#c2410c' },
+        { key: 'ext_dashboard', label: '📊 Dash', fullLabel: 'Dashboard de Avaliação', color: '#dcfce7', textColor: '#15803d' },
+        { key: 'ext_contabil', label: '💰 Contábil', fullLabel: 'Sistema Contábil (APMF)', color: '#dbeafe', textColor: '#1d4ed8' },
+        { key: 'ext_biblioteca', label: '📚 Biblio', fullLabel: 'Sistema da Biblioteca', color: '#fce7f3', textColor: '#be185d' },
+        { key: 'ext_patrimonio', label: '📦 Patrimônio', fullLabel: 'Sistema de Patrimônio', color: '#fef9c3', textColor: '#a16207' }
+    ];
+
     tbody.innerHTML = pendentes.map((u, idx) => {
         const dataFormatada = u.solicitadoEm || (u.dataSolicitacao ? new Date(u.dataSolicitacao).toLocaleDateString('pt-BR') : 'Recente');
+        const userRole = u.role || 'docentes';
+        const defaults = sigeDB.getDefaultPermissoesByRole(userRole);
+        const perms = u.permissoes || defaults;
+
         return `
             <tr style="border-bottom: 1px solid #fed7aa;">
                 <td style="padding:10px 12px;">
                     <strong style="color:#0f172a; display:block; font-size:0.9rem;">${escapeHtml(u.nome)}</strong>
                     <span style="color:#64748b; font-size:0.78rem;"><i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}</span>
+                    ${u.telefone ? `<span style="color:#0284c7; font-size:0.75rem; display:block;"><i class="fa-brands fa-whatsapp"></i> ${escapeHtml(u.telefone)}</span>` : ''}
                 </td>
                 <td style="padding:10px 12px; color:#64748b; font-size:0.8rem;">
                     <i class="fa-regular fa-clock"></i> ${escapeHtml(dataFormatada)}
                 </td>
                 <td style="padding:10px 12px;">
                     <select id="pending_role_${idx}" onchange="ajustarModulosDefaultPendente(${idx})" style="padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.82rem; font-weight:700; width:100%; background:white;">
-                        <option value="docentes">👨‍🏫 Docente</option>
-                        <option value="orientacao">🧭 Orientação Educacional</option>
-                        <option value="supervisao">📋 Supervisão Pedagógica</option>
-                        <option value="secretaria">📑 Secretaria Escolar</option>
-                        <option value="direcao">👑 Direção Escolar</option>
-                        <option value="apoio">🔧 Apoio / TI</option>
+                        <option value="docentes" ${userRole === 'docentes' ? 'selected' : ''}>👨‍🏫 Docente</option>
+                        <option value="orientacao" ${userRole.startsWith('orient') ? 'selected' : ''}>🧭 Orientação Educacional</option>
+                        <option value="supervisao" ${userRole === 'supervisao' ? 'selected' : ''}>📋 Supervisão Pedagógica</option>
+                        <option value="secretaria" ${userRole === 'secretaria' ? 'selected' : ''}>📑 Secretaria Escolar</option>
+                        <option value="direcao" ${userRole === 'direcao' ? 'selected' : ''}>👑 Direção Escolar</option>
+                        <option value="apoio" ${userRole === 'apoio' ? 'selected' : ''}>🔧 Apoio / TI</option>
                     </select>
                 </td>
                 <td style="padding:10px 12px;">
-                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                        ${modulos.map(m => `
-                            <label style="display:inline-flex; align-items:center; gap:4px; background:${m.color}; color:${m.textColor}; border:1px solid rgba(0,0,0,0.08); padding:3px 7px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:800;" title="${m.fullLabel}">
-                                <input type="checkbox" id="pending_mod_${idx}_${m.key}" ${m.key === 'mural' ? 'checked' : ''}> ${m.label}
+                    <div style="font-size:0.7rem; font-weight:800; color:#64748b; margin-bottom:4px; text-transform:uppercase;">Módulos SIGE:</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+                        ${modulosInternos.map(m => `
+                            <label style="display:inline-flex; align-items:center; gap:3px; background:${m.color}; color:${m.textColor}; border:1px solid rgba(0,0,0,0.08); padding:2px 6px; border-radius:6px; font-size:0.73rem; cursor:pointer; font-weight:800;" title="${m.fullLabel}">
+                                <input type="checkbox" id="pending_mod_${idx}_${m.key}" ${perms[m.key] ? 'checked' : ''}> ${m.label}
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div style="font-size:0.7rem; font-weight:800; color:#ea580c; margin-bottom:4px; text-transform:uppercase;">Sistemas Externos:</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                        ${sistemasExternos.map(m => `
+                            <label style="display:inline-flex; align-items:center; gap:3px; background:${m.color}; color:${m.textColor}; border:1px solid rgba(0,0,0,0.08); padding:2px 6px; border-radius:6px; font-size:0.73rem; cursor:pointer; font-weight:800;" title="${m.fullLabel}">
+                                <input type="checkbox" id="pending_mod_${idx}_${m.key}" ${perms[m.key] ? 'checked' : ''}> ${m.label}
                             </label>
                         `).join('')}
                     </div>
@@ -8490,7 +8650,7 @@ function ajustarModulosDefaultPendente(idx) {
     if (!roleSelect) return;
     const role = roleSelect.value;
     const defaults = sigeDB.getDefaultPermissoesByRole(role);
-    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'].forEach(k => {
         const chk = document.getElementById(`pending_mod_${idx}_${k}`);
         if (chk) chk.checked = !!defaults[k];
     });
@@ -8505,7 +8665,12 @@ function execAprovarPendente(email, idx) {
         supervisao: !!document.getElementById(`pending_mod_${idx}_supervisao`)?.checked,
         admin: !!document.getElementById(`pending_mod_${idx}_admin`)?.checked,
         direcao: !!document.getElementById(`pending_mod_${idx}_direcao`)?.checked,
-        uniformes: !!document.getElementById(`pending_mod_${idx}_uniformes`)?.checked
+        uniformes: !!document.getElementById(`pending_mod_${idx}_uniformes`)?.checked,
+        ext_recursos: !!document.getElementById(`pending_mod_${idx}_ext_recursos`)?.checked,
+        ext_dashboard: !!document.getElementById(`pending_mod_${idx}_ext_dashboard`)?.checked,
+        ext_contabil: !!document.getElementById(`pending_mod_${idx}_ext_contabil`)?.checked,
+        ext_biblioteca: !!document.getElementById(`pending_mod_${idx}_ext_biblioteca`)?.checked,
+        ext_patrimonio: !!document.getElementById(`pending_mod_${idx}_ext_patrimonio`)?.checked
     };
 
     const user = sigeDB.aprovarUsuarioPendente(email, role, perms);
@@ -8627,7 +8792,12 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
         { key: 'supervisao', label: 'Supervisão', fullLabel: 'Supervisão Pedagógica', icon: 'fa-clipboard-check', colorClass: 'mod-supervisao' },
         { key: 'admin', label: 'ADM', fullLabel: 'Administração Integrada', icon: 'fa-gears', colorClass: 'mod-admin' },
         { key: 'direcao', label: 'Dir', fullLabel: 'Direção Executiva', icon: 'fa-crown', colorClass: 'mod-direcao' },
-        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', icon: 'fa-shirt', colorClass: 'mod-uniformes' }
+        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', icon: 'fa-shirt', colorClass: 'mod-uniformes' },
+        { key: 'ext_recursos', label: 'Lab', fullLabel: 'Agendamento Lab & Recursos', icon: 'fa-calendar-check', colorClass: 'mod-ext-recursos' },
+        { key: 'ext_dashboard', label: 'Dash', fullLabel: 'Dashboard de Avaliação', icon: 'fa-chart-line', colorClass: 'mod-ext-dash' },
+        { key: 'ext_contabil', label: 'Contábil', fullLabel: 'Sistema Contábil (APMF)', icon: 'fa-calculator', colorClass: 'mod-ext-contabil' },
+        { key: 'ext_biblioteca', label: 'Biblio', fullLabel: 'Sistema da Biblioteca', icon: 'fa-book-bookmark', colorClass: 'mod-ext-biblio' },
+        { key: 'ext_patrimonio', label: 'Patrimônio', fullLabel: 'Sistema de Patrimônio', icon: 'fa-boxes-stacked', colorClass: 'mod-ext-patrimonio' }
     ];
 
     tbody.innerHTML = lista.map(p => {
@@ -8760,7 +8930,12 @@ function toggleProfissionalModuloChip(id, moduloKey) {
         supervisao: "Supervisão Pedagógica",
         admin: "Administração Integrada",
         direcao: "Direção Executiva",
-        uniformes: "Controle de Uniformes"
+        uniformes: "Controle de Uniformes",
+        ext_recursos: "Laboratório & Recursos",
+        ext_dashboard: "Dashboard de Avaliação",
+        ext_contabil: "Sistema Contábil (APMF)",
+        ext_biblioteca: "Sistema da Biblioteca",
+        ext_patrimonio: "Sistema de Patrimônio"
     }[moduloKey] || moduloKey.toUpperCase();
 
     const acao = prof.permissoes[moduloKey] ? "LIBERADO" : "REVOGADO";
@@ -8894,7 +9069,7 @@ function updateAllDynamicSelects() {
 }
 
 function setAllProfissionalModulos(checked = true) {
-    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes"];
+    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes", "ext_recursos", "ext_dashboard", "ext_contabil", "ext_biblioteca", "ext_patrimonio"];
     keys.forEach(k => {
         const chk = document.getElementById(`proChk_${k}`);
         if (chk) chk.checked = !!checked;
@@ -8903,7 +9078,7 @@ function setAllProfissionalModulos(checked = true) {
 
 function autoSuggestModulosPorSetor(setor) {
     const defaults = sigeDB.getDefaultPermissoesByRole(setor);
-    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes"];
+    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes", "ext_recursos", "ext_dashboard", "ext_contabil", "ext_biblioteca", "ext_patrimonio"];
     keys.forEach(k => {
         const chk = document.getElementById(`proChk_${k}`);
         if (chk) chk.checked = !!defaults[k];
@@ -8924,12 +9099,7 @@ function openCadastroProfissionalModal(id = null) {
     const inputTurno = document.getElementById("proInputTurno");
     const inputTurmas = document.getElementById("proInputTurmas");
 
-    const chkOp = document.getElementById("proChk_op");
-    const chkMural = document.getElementById("proChk_mural");
-    const chkSup = document.getElementById("proChk_supervisao");
-    const chkAdmin = document.getElementById("proChk_admin");
-    const chkDir = document.getElementById("proChk_direcao");
-    const chkUni = document.getElementById("proChk_uniformes");
+    const allKeys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes", "ext_recursos", "ext_dashboard", "ext_contabil", "ext_biblioteca", "ext_patrimonio"];
 
     if (!modal) return;
 
@@ -8949,12 +9119,10 @@ function openCadastroProfissionalModal(id = null) {
             if (inputTurmas) inputTurmas.value = prof.turmasOuSalas || "";
 
             const perms = prof.permissoes || sigeDB.getDefaultPermissoesByRole(prof.setor);
-            if (chkOp) chkOp.checked = !!perms.op;
-            if (chkMural) chkMural.checked = !!perms.mural;
-            if (chkSup) chkSup.checked = !!perms.supervisao;
-            if (chkAdmin) chkAdmin.checked = !!perms.admin;
-            if (chkDir) chkDir.checked = !!perms.direcao;
-            if (chkUni) chkUni.checked = !!perms.uniformes;
+            allKeys.forEach(k => {
+                const chk = document.getElementById(`proChk_${k}`);
+                if (chk) chk.checked = !!perms[k];
+            });
         }
     } else {
         if (title) title.innerHTML = `<i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Colaborador & Acesso ao Sistema`;
@@ -9002,7 +9170,12 @@ function submitCadastroProfissional(e) {
         supervisao: !!document.getElementById("proChk_supervisao")?.checked,
         admin: !!document.getElementById("proChk_admin")?.checked,
         direcao: !!document.getElementById("proChk_direcao")?.checked,
-        uniformes: !!document.getElementById("proChk_uniformes")?.checked
+        uniformes: !!document.getElementById("proChk_uniformes")?.checked,
+        ext_recursos: !!document.getElementById("proChk_ext_recursos")?.checked,
+        ext_dashboard: !!document.getElementById("proChk_ext_dashboard")?.checked,
+        ext_contabil: !!document.getElementById("proChk_ext_contabil")?.checked,
+        ext_biblioteca: !!document.getElementById("proChk_ext_biblioteca")?.checked,
+        ext_patrimonio: !!document.getElementById("proChk_ext_patrimonio")?.checked
     };
 
     try {
@@ -9065,62 +9238,106 @@ function excluirProfessor(profId) {
     excluirProfissional(profId);
 }
 
-// GESTÃO DE TURMAS & TURNOS
+// GESTÃO DE TURMAS & TURNOS (FORMATO COMPACTO EM ÍCONES AGRUPADOS)
 function renderTurmasAdminTable() {
-    const tbody = document.getElementById("admTurmasTableBody");
-    if (!tbody) return;
+    const container = document.getElementById("admTurmasIconesContainer") || document.getElementById("admTurmasTableBody");
+    if (!container) return;
 
-    const turmas = sigeDB.getTurmasEscola();
-    if (!turmas || turmas.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" style="padding:1.5rem; text-align:center; color:#64748b;">
-                    <i class="fa-solid fa-graduation-cap" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i>
-                    Nenhuma turma cadastrada no momento. Clique em "+ Nova Turma" para cadastrar.
-                </td>
-            </tr>
+    const turmas = sigeDB.getTurmasEscola() || [];
+    if (turmas.length === 0) {
+        container.innerHTML = `
+            <div style="padding:2rem; text-align:center; color:#64748b; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                <i class="fa-solid fa-graduation-cap" style="font-size:2rem; color:#94a3b8; margin-bottom:8px; display:block;"></i>
+                Nenhuma turma cadastrada no momento. Clique em "+ Nova Turma" para cadastrar.
+            </div>
         `;
         return;
     }
 
-    const badgeTurno = (t) => {
-        switch (t) {
-            case "matutino": return `<span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🌅 Matutino</span>`;
-            case "vespertino": return `<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">☀️ Vespertino</span>`;
-            case "integral": return `<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🕒 Integral</span>`;
-            case "noturno": return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🌙 Noturno</span>`;
-            default: return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">Geral</span>`;
-        }
-    };
+    const turnosConfig = [
+        { key: "matutino", nome: "Turno Matutino", icone: "fa-sun", corBadge: "#b45309", bg: "#fef3c7", border: "#fde68a" },
+        { key: "vespertino", nome: "Turno Vespertino", icone: "fa-cloud-sun", corBadge: "#0369a1", bg: "#e0f2fe", border: "#bae6fd" },
+        { key: "integral", nome: "Turno Integral", icone: "fa-clock", corBadge: "#15803d", bg: "#dcfce7", border: "#bbf7d0" },
+        { key: "noturno", nome: "Turno Noturno", icone: "fa-moon", corBadge: "#4338ca", bg: "#e0e7ff", border: "#c7d2fe" }
+    ];
 
-    tbody.innerHTML = turmas.map(t => {
-        return `
-            <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:12px 14px; font-weight:800; color:#0f172a;">
-                    <i class="fa-solid fa-graduation-cap" style="color:#0284c7; margin-right:6px;"></i> ${escapeHtml(t.nome)}
-                    <span style="font-size:0.75rem; color:#64748b; font-weight:normal; margin-left:4px;">(${escapeHtml(t.anoLetivo || '2026')})</span>
-                </td>
-                <td style="padding:12px 14px;">${badgeTurno(t.turno)}</td>
-                <td style="padding:12px 14px; color:#334155; font-size:0.83rem;">${escapeHtml(t.nivel || "Ensino Fundamental")}</td>
-                <td style="padding:12px 14px; color:#0f172a; font-weight:700; font-size:0.83rem;">
-                    <i class="fa-solid fa-door-open" style="color:#64748b;"></i> ${escapeHtml(t.sala || "Sem sala")}
-                </td>
-                <td style="padding:12px 14px; color:#334155; font-weight:600; font-size:0.83rem;">
-                    ${escapeHtml(t.regente || "Não definido")}
-                </td>
-                <td style="padding:12px 14px; text-align:right;">
-                    <div style="display:flex; justify-content:flex-end; gap:6px;">
-                        <button onclick="editarTurma('${t.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Turma">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>
-                        <button onclick="excluirTurma('${t.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Turma">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
+    let html = '';
+
+    turnosConfig.forEach(cfg => {
+        const turmasDoTurno = turmas.filter(t => (t.turno || '').toLowerCase() === cfg.key);
+        if (turmasDoTurno.length === 0) return;
+
+        html += `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="background:${cfg.bg}; color:${cfg.corBadge}; border:1px solid ${cfg.border}; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+                        <i class="fa-solid ${cfg.icone}"></i> ${cfg.nome}
+                    </span>
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:700;">(${turmasDoTurno.length} turma(s))</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                    ${turmasDoTurno.map(t => {
+                        const tooltip = `Turma ${t.nome} (${t.anoLetivo || '2026'})\n• Nível: ${t.nivel || 'Ensino Fundamental'}\n• Sala: ${t.sala || 'Geral'}\n• Regente: ${t.regente || 'Não definido'}`;
+                        return `
+                            <div style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; box-shadow:0 1px 2px rgba(0,0,0,0.03); transition:all 0.2s;" title="${escapeHtml(tooltip)}">
+                                <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:${cfg.bg}; color:${cfg.corBadge}; font-size:0.72rem;">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </span>
+                                <span style="font-weight:800; font-size:0.83rem; color:#0f172a; cursor:pointer;" onclick="editarTurma('${t.id}')">
+                                    ${escapeHtml(t.nome)}
+                                </span>
+                                <button type="button" onclick="editarTurma('${t.id}')" style="background:none; border:none; color:#0284c7; cursor:pointer; padding:2px; font-size:0.72rem; line-height:1;" title="Editar Turma">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" onclick="excluirTurma('${t.id}')" style="background:none; border:none; color:#dc2626; cursor:pointer; padding:2px; font-size:0.72rem; line-height:1;" title="Excluir Turma">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
         `;
-    }).join('');
+    });
+
+    // Outros turnos se houver
+    const chavesConhecidas = turnosConfig.map(c => c.key);
+    const outrasTurmas = turmas.filter(t => !chavesConhecidas.includes((t.turno || '').toLowerCase()));
+    if (outrasTurmas.length > 0) {
+        html += `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:6px;">
+                        📌 Geral / Outros
+                    </span>
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:700;">(${outrasTurmas.length} turma(s))</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                    ${outrasTurmas.map(t => {
+                        const tooltip = `Turma ${t.nome} (${t.anoLetivo || '2026'})\n• Nível: ${t.nivel || 'Ensino Fundamental'}\n• Sala: ${t.sala || 'Geral'}\n• Regente: ${t.regente || 'Não definido'}`;
+                        return `
+                            <div style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);" title="${escapeHtml(tooltip)}">
+                                <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.72rem;">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </span>
+                                <span style="font-weight:800; font-size:0.83rem; color:#0f172a; cursor:pointer;" onclick="editarTurma('${t.id}')">
+                                    ${escapeHtml(t.nome)}
+                                </span>
+                                <button type="button" onclick="editarTurma('${t.id}')" style="background:none; border:none; color:#0284c7; cursor:pointer; padding:2px; font-size:0.72rem; line-height:1;" title="Editar Turma">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" onclick="excluirTurma('${t.id}')" style="background:none; border:none; color:#dc2626; cursor:pointer; padding:2px; font-size:0.72rem; line-height:1;" title="Excluir Turma">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
 }
 
 function openCadastroTurmaModal(id = null) {

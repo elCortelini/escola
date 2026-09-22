@@ -44,12 +44,17 @@ if (typeof window !== "undefined") {
 const defaultSigeData = {
     currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } },
-        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
-        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
-        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false } },
-        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true } },
-        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } }
+        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "marcos.silva789@edu.itajai.sc.gov.br", nome: "Prof. Marcos Vinícius da Silva", role: "docentes", cargo: "Docente — Matemática (6º ao 9º Ano)", status: "pendente", cadastroCompleto: false, telefone: "(47) 99123-4567", solicitadoEm: "22/09/2026 07:45", dataSolicitacao: "2026-09-22T07:45:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "juliana.pedagoga@edu.itajai.sc.gov.br", nome: "Juliana Santos de Oliveira", role: "supervisao", cargo: "Supervisão Pedagógica", status: "pendente", cadastroCompleto: false, telefone: "(47) 99876-5432", solicitadoEm: "22/09/2026 08:02", dataSolicitacao: "2026-09-22T08:02:00.000Z", permissoes: { op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "rodrigo.ti@edu.itajai.sc.gov.br", nome: "Rodrigo Furtado de Lima", role: "apoio", cargo: "Apoio Técnico & TI", status: "pendente", cadastroCompleto: false, telefone: "(47) 99234-5678", solicitadoEm: "22/09/2026 08:10", dataSolicitacao: "2026-09-22T08:10:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true } },
+        { email: "beatriz.oe@edu.itajai.sc.gov.br", nome: "Beatriz Mendonça Duarte", role: "orientadora_clarinda", cargo: "Orientadora Educacional", status: "pendente", cadastroCompleto: false, telefone: "(47) 99765-4321", solicitadoEm: "22/09/2026 08:15", dataSolicitacao: "2026-09-22T08:15:00.000Z", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "lucas.sec@edu.itajai.sc.gov.br", nome: "Lucas Gabriel Albuquerque", role: "secretaria", cargo: "Secretaria Escolar", status: "pendente", cadastroCompleto: false, telefone: "(47) 99432-5566", solicitadoEm: "22/09/2026 08:20", dataSolicitacao: "2026-09-22T08:20:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [
         {
@@ -1390,23 +1395,48 @@ class SigeDatabase {
 
     // Gerenciador de Usuários e Login por E-mail (RBAC Modular)
     getDefaultPermissoesByRole(role) {
-        if (!role) return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        const base = {
+            op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+            ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+        };
+        if (!role) return base;
         if (role === "desenvolvedor" || role === "direcao" || role === "admin") {
-            return { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+            return {
+                op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+            };
         }
         if (role.startsWith("orientadora") || role === "orientacao") {
-            return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+            return {
+                op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+            };
         }
         if (role.startsWith("supervisora") || role === "supervisao") {
-            return { op: true, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false };
+            return {
+                op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+            };
         }
         if (role === "secretaria") {
-            return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true };
+            return {
+                op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true,
+                ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+            };
         }
         if (role === "docentes" || role === "comunidade") {
-            return { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+            return {
+                op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+            };
         }
-        return { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        if (role === "apoio") {
+            return {
+                op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true
+            };
+        }
+        return base;
     }
 
     getUsuarios() {
@@ -1420,7 +1450,7 @@ class SigeDatabase {
                     cargo: "Desenvolvedor do Sistema",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 },
                 { 
                     email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
@@ -1429,7 +1459,7 @@ class SigeDatabase {
                     cargo: "Orientadora Educacional — Séries Finais",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
                 },
                 { 
                     email: "daiane@escola.gov.br", 
@@ -1438,7 +1468,7 @@ class SigeDatabase {
                     cargo: "Orientadora Educacional — Séries Finais",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
                 },
                 { 
                     email: "clarinda@escola.gov.br", 
@@ -1447,7 +1477,7 @@ class SigeDatabase {
                     cargo: "Orientadora Educacional — Séries Iniciais",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
                 },
                 { 
                     email: "secretaria@escola.gov.br", 
@@ -1456,7 +1486,7 @@ class SigeDatabase {
                     cargo: "Secretaria & Recepção",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true }
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 },
                 { 
                     email: "direcao@escola.gov.br", 
@@ -1465,55 +1495,114 @@ class SigeDatabase {
                     cargo: "Direção & Gestão Institucional",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 }
             ];
             saveNeeded = true;
-        } else {
-            const hasDaianeOfficial = this.data.usuariosCadastrados.some(u => u.email.toLowerCase().includes("daiane.aquino04548"));
-            if (!hasDaianeOfficial) {
-                this.data.usuariosCadastrados.push({ 
-                    email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
-                    nome: "Daiane Caetano Costa de Aquino", 
-                    role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
-                });
+        }
+
+        // 5 Exemplos de Usuários que entraram no sistema e aguardam autorização do desenvolvedor
+        const exemplosUsuariosPendentes = [
+            {
+                email: "marcos.silva789@edu.itajai.sc.gov.br",
+                nome: "Prof. Marcos Vinícius da Silva",
+                role: "docentes",
+                cargo: "Docente - Matemática",
+                status: "pendente",
+                cadastroCompleto: false,
+                telefone: "(47) 99876-1122",
+                solicitadoEm: "21/09/2026 08:30",
+                dataSolicitacao: "2026-09-21T08:30:00.000Z",
+                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+            },
+            {
+                email: "juliana.pedagoga@edu.itajai.sc.gov.br",
+                nome: "Juliana Santos de Oliveira",
+                role: "supervisao",
+                cargo: "Supervisora Pedagógica",
+                status: "pendente",
+                cadastroCompleto: false,
+                telefone: "(47) 99765-2233",
+                solicitadoEm: "21/09/2026 09:15",
+                dataSolicitacao: "2026-09-21T09:15:00.000Z",
+                permissoes: { op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+            },
+            {
+                email: "rodrigo.ti@edu.itajai.sc.gov.br",
+                nome: "Rodrigo Furtado de Lima",
+                role: "apoio",
+                cargo: "Apoio Técnico & TI",
+                status: "pendente",
+                cadastroCompleto: false,
+                telefone: "(47) 99654-3344",
+                solicitadoEm: "22/09/2026 07:45",
+                dataSolicitacao: "2026-09-22T07:45:00.000Z",
+                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true }
+            },
+            {
+                email: "beatriz.oe@edu.itajai.sc.gov.br",
+                nome: "Beatriz Mendonça Duarte",
+                role: "orientacao",
+                cargo: "Orientadora Educacional",
+                status: "pendente",
+                cadastroCompleto: false,
+                telefone: "(47) 99543-4455",
+                solicitadoEm: "22/09/2026 08:00",
+                dataSolicitacao: "2026-09-22T08:00:00.000Z",
+                permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+            },
+            {
+                email: "lucas.sec@edu.itajai.sc.gov.br",
+                nome: "Lucas Gabriel Albuquerque",
+                role: "secretaria",
+                cargo: "Secretaria Escolar",
+                status: "pendente",
+                cadastroCompleto: false,
+                telefone: "(47) 99432-5566",
+                solicitadoEm: "22/09/2026 08:20",
+                dataSolicitacao: "2026-09-22T08:20:00.000Z",
+                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: true }
+            }
+        ];
+
+        exemplosUsuariosPendentes.forEach(ex => {
+            const existe = this.data.usuariosCadastrados.some(u => u.email.toLowerCase().trim() === ex.email.toLowerCase().trim());
+            if (!existe) {
+                this.data.usuariosCadastrados.push(ex);
                 saveNeeded = true;
             }
+        });
 
-            // Garante objeto de permissões completo e status em todos os usuários existentes
-            this.data.usuariosCadastrados.forEach(u => {
-                if (!u.status) {
-                    u.status = 'aprovado';
-                    saveNeeded = true;
-                }
-                if (u.cadastroCompleto === undefined) {
-                    u.cadastroCompleto = (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || (u.telefone && u.telefone.length >= 10));
-                    saveNeeded = true;
-                }
-                if (!u.permissoes || typeof u.permissoes !== 'object') {
-                    u.permissoes = this.getDefaultPermissoesByRole(u.role);
-                    saveNeeded = true;
-                } else {
-                    const defaults = this.getDefaultPermissoesByRole(u.role);
-                    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
-                        if (u.permissoes[k] === undefined) {
-                            u.permissoes[k] = !!defaults[k];
-                            saveNeeded = true;
-                        }
-                    });
-                }
-                // O desenvolvedor master sempre tem todos os acessos
-                if (u.email.toLowerCase().trim() === "elcortelini@gmail.com") {
-                    u.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
-                    u.status = 'aprovado';
-                    u.cadastroCompleto = true;
-                }
-            });
-        }
+        // Garante objeto de permissões completo e status em todos os usuários existentes
+        const permKeys = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'];
+        this.data.usuariosCadastrados.forEach(u => {
+            if (!u.status) {
+                u.status = 'aprovado';
+                saveNeeded = true;
+            }
+            if (u.cadastroCompleto === undefined) {
+                u.cadastroCompleto = (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || (u.telefone && u.telefone.length >= 10));
+                saveNeeded = true;
+            }
+            if (!u.permissoes || typeof u.permissoes !== 'object') {
+                u.permissoes = this.getDefaultPermissoesByRole(u.role);
+                saveNeeded = true;
+            } else {
+                const defaults = this.getDefaultPermissoesByRole(u.role);
+                permKeys.forEach(k => {
+                    if (u.permissoes[k] === undefined) {
+                        u.permissoes[k] = !!defaults[k];
+                        saveNeeded = true;
+                    }
+                });
+            }
+            // O desenvolvedor master sempre tem todos os acessos
+            if (u.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+                permKeys.forEach(k => { u.permissoes[k] = true; });
+                u.status = 'aprovado';
+                u.cadastroCompleto = true;
+            }
+        });
 
         if (saveNeeded) {
             this.saveData(this.data);
@@ -1558,28 +1647,49 @@ class SigeDatabase {
         if (!email) return false;
         if (email.toLowerCase().trim() === "elcortelini@gmail.com") {
             // Desenvolvedor sempre total
-            return this.salvarPermissoesUsuario(email, { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true });
+            return this.salvarPermissoesUsuario(email, { 
+                op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+            });
         }
 
         let perms = {};
         switch (preset) {
             case 'total':
-                perms = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+                perms = { 
+                    op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
+                    ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+                };
                 break;
             case 'pedagogico':
-                perms = { op: true, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false };
+                perms = { 
+                    op: true, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false,
+                    ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+                };
                 break;
             case 'administrativo':
-                perms = { op: false, mural: true, supervisao: false, admin: true, direcao: true, uniformes: true };
+                perms = { 
+                    op: false, mural: true, supervisao: false, admin: true, direcao: true, uniformes: true,
+                    ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+                };
                 break;
             case 'apenas_op':
-                perms = { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+                perms = { 
+                    op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                    ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: false
+                };
                 break;
             case 'apenas_mural':
-                perms = { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+                perms = { 
+                    op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                    ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: false
+                };
                 break;
             case 'bloqueado':
-                perms = { op: false, mural: false, supervisao: false, admin: false, direcao: false, uniformes: false };
+                perms = { 
+                    op: false, mural: false, supervisao: false, admin: false, direcao: false, uniformes: false,
+                    ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: false
+                };
                 break;
             default:
                 return false;
@@ -3316,11 +3426,14 @@ class SigeDatabase {
 
     addEventoCalendarioEscolar(ev) {
         if (!this.data.eventosCalendarioEscolar) this.data.eventosCalendarioEscolar = [];
+        const dataVal = ev.data || getLocalDateISO();
         const novoEvento = {
             id: generateSecureId('cal-ev'),
-            data: ev.data || getLocalDateISO(),
+            data: dataVal,
             hora: ev.hora || '08:00',
             titulo: ev.titulo || 'Evento Escolar',
+            mes: ev.mes || this.getMesNomeFromData(dataVal),
+            dataExibicao: ev.dataExibicao || this.formatDateBR(dataVal),
             categoria: ev.categoria || 'reuniao_pedagogica',
             categoriaDesc: ev.categoriaDesc || 'Reunião Pedagógica',
             descricao: ev.descricao || '',
@@ -3337,22 +3450,47 @@ class SigeDatabase {
         return novoEvento;
     }
 
+    getMesNomeFromData(dataStr) {
+        if (!dataStr) return "";
+        const parts = String(dataStr).split("-");
+        if (parts.length >= 2) {
+            const m = parseInt(parts[1], 10);
+            const nomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            if (m >= 1 && m <= 12) return nomes[m - 1];
+        }
+        return "";
+    }
+
+    formatDateBR(dataStr) {
+        if (!dataStr) return "";
+        const parts = String(dataStr).split("-");
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dataStr;
+    }
+
     updateEventoCalendarioEscolar(id, dados) {
         if (!this.data || !Array.isArray(this.data.eventosCalendarioEscolar)) return null;
         const index = this.data.eventosCalendarioEscolar.findIndex(e => e.id === id);
         if (index === -1) return null;
 
+        const currentEv = this.data.eventosCalendarioEscolar[index];
+        const newData = dados.data !== undefined ? dados.data : currentEv.data;
+
         this.data.eventosCalendarioEscolar[index] = {
-            ...this.data.eventosCalendarioEscolar[index],
-            data: dados.data !== undefined ? dados.data : this.data.eventosCalendarioEscolar[index].data,
-            hora: dados.hora !== undefined ? dados.hora : this.data.eventosCalendarioEscolar[index].hora,
-            titulo: dados.titulo !== undefined ? dados.titulo : this.data.eventosCalendarioEscolar[index].titulo,
-            categoria: dados.categoria !== undefined ? dados.categoria : this.data.eventosCalendarioEscolar[index].categoria,
-            categoriaDesc: dados.categoriaDesc !== undefined ? dados.categoriaDesc : this.data.eventosCalendarioEscolar[index].categoriaDesc,
-            descricao: dados.descricao !== undefined ? dados.descricao : this.data.eventosCalendarioEscolar[index].descricao,
-            publicoAlvo: dados.publicoAlvo !== undefined ? dados.publicoAlvo : this.data.eventosCalendarioEscolar[index].publicoAlvo,
-            local: dados.local !== undefined ? dados.local : this.data.eventosCalendarioEscolar[index].local,
-            status: dados.status !== undefined ? dados.status : this.data.eventosCalendarioEscolar[index].status,
+            ...currentEv,
+            data: newData,
+            hora: dados.hora !== undefined ? dados.hora : currentEv.hora,
+            titulo: dados.titulo !== undefined ? dados.titulo : currentEv.titulo,
+            mes: dados.mes !== undefined ? dados.mes : (dados.data ? this.getMesNomeFromData(dados.data) : (currentEv.mes || this.getMesNomeFromData(newData))),
+            dataExibicao: dados.dataExibicao !== undefined ? dados.dataExibicao : (dados.data ? this.formatDateBR(dados.data) : (currentEv.dataExibicao || this.formatDateBR(newData))),
+            categoria: dados.categoria !== undefined ? dados.categoria : currentEv.categoria,
+            categoriaDesc: dados.categoriaDesc !== undefined ? dados.categoriaDesc : currentEv.categoriaDesc,
+            descricao: dados.descricao !== undefined ? dados.descricao : currentEv.descricao,
+            publicoAlvo: dados.publicoAlvo !== undefined ? dados.publicoAlvo : currentEv.publicoAlvo,
+            local: dados.local !== undefined ? dados.local : currentEv.local,
+            status: dados.status !== undefined ? dados.status : currentEv.status,
             atualizadoEm: new Date().toISOString()
         };
 
@@ -3423,6 +3561,9 @@ class SigeDatabase {
     getAllTagsContatos() {
         const contatos = this.getContatosWhatsApp();
         const tagsSet = new Set();
+        if (this.data && Array.isArray(this.data.tagsPersonalizadasWp)) {
+            this.data.tagsPersonalizadasWp.forEach(t => { if (t && typeof t === 'string' && t.trim()) tagsSet.add(t.trim()); });
+        }
         contatos.forEach(c => {
             if (Array.isArray(c.tags)) {
                 c.tags.forEach(t => { if (t && typeof t === 'string' && t.trim()) tagsSet.add(t.trim()); });
@@ -3431,6 +3572,90 @@ class SigeDatabase {
             }
         });
         return Array.from(tagsSet).sort();
+    }
+
+    adicionarTagWp(tag) {
+        if (!tag || !tag.trim()) return false;
+        const cleanTag = tag.trim();
+        if (!this.data) this.data = {};
+        if (!Array.isArray(this.data.tagsPersonalizadasWp)) this.data.tagsPersonalizadasWp = [];
+        if (!this.data.tagsPersonalizadasWp.includes(cleanTag)) {
+            this.data.tagsPersonalizadasWp.push(cleanTag);
+            this.saveData(this.data);
+            return true;
+        }
+        return false;
+    }
+
+    renomearTagWp(oldTag, newTag) {
+        if (!oldTag || !newTag || !oldTag.trim() || !newTag.trim()) return false;
+        const oTag = oldTag.trim();
+        const nTag = newTag.trim();
+        if (oTag === nTag) return false;
+
+        if (!this.data) this.data = {};
+        if (Array.isArray(this.data.tagsPersonalizadasWp)) {
+            const idx = this.data.tagsPersonalizadasWp.indexOf(oTag);
+            if (idx !== -1) {
+                this.data.tagsPersonalizadasWp[idx] = nTag;
+            }
+        }
+
+        let modified = false;
+        if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
+            this.data.contatosWhatsAppDirecao.forEach(c => {
+                if (Array.isArray(c.tags)) {
+                    const tIdx = c.tags.indexOf(oTag);
+                    if (tIdx !== -1) {
+                        c.tags[tIdx] = nTag;
+                        c.atualizadoEm = new Date().toISOString();
+                        modified = true;
+                    }
+                } else if (c.tag && typeof c.tag === 'string') {
+                    const tags = c.tag.split(',').map(t => t.trim());
+                    const tIdx = tags.indexOf(oTag);
+                    if (tIdx !== -1) {
+                        tags[tIdx] = nTag;
+                        c.tag = tags.join(', ');
+                        c.tags = tags;
+                        c.atualizadoEm = new Date().toISOString();
+                        modified = true;
+                    }
+                }
+            });
+        }
+
+        this.saveData(this.data);
+        return true;
+    }
+
+    excluirTagWp(tag) {
+        if (!tag || !tag.trim()) return false;
+        const target = tag.trim();
+
+        if (!this.data) this.data = {};
+        if (Array.isArray(this.data.tagsPersonalizadasWp)) {
+            this.data.tagsPersonalizadasWp = this.data.tagsPersonalizadasWp.filter(t => t !== target);
+        }
+
+        if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
+            this.data.contatosWhatsAppDirecao.forEach(c => {
+                if (Array.isArray(c.tags)) {
+                    if (c.tags.includes(target)) {
+                        c.tags = c.tags.filter(t => t !== target);
+                        c.atualizadoEm = new Date().toISOString();
+                    }
+                } else if (c.tag && typeof c.tag === 'string') {
+                    const tags = c.tag.split(',').map(t => t.trim()).filter(t => t !== target);
+                    c.tag = tags.join(', ');
+                    c.tags = tags;
+                    c.atualizadoEm = new Date().toISOString();
+                }
+            });
+        }
+
+        this.saveData(this.data);
+        return true;
     }
 
     addContatoWhatsApp(c) {
