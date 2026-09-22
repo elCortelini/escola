@@ -4054,27 +4054,45 @@
                 </button>
             </div>
 
-            <!-- Banner com download da tabela-modelo -->
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div style="font-size:0.8125rem; color:#1e40af; line-height:1.4;">
-                    <strong><i class="fa-solid fa-circle-info"></i> Formato Aceito:</strong> Colunas separadas por ponto-e-vírgula (<code>;</code>) ou vírgula (<code>,</code>): <strong>Nome; Telefone; Tags; Observacoes</strong>
+            <!-- Opção 1: Importar via Link Direto do Google Planilhas -->
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px; margin-bottom:14px;">
+                <label style="font-weight:800; font-size:0.82rem; color:#166534; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <i class="fa-solid fa-file-excel" style="color:#16a34a; font-size:1.1rem;"></i> 1. Importar Direto pelo Link do Google Planilhas:
+                </label>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="url" id="dirWpGoogleSheetUrlInput" value="https://docs.google.com/spreadsheets/d/1oo4ctkFpLUJ-p3igKgfes1og0R3dTY2S/edit?gid=124470542#gid=124470542" placeholder="https://docs.google.com/spreadsheets/d/..." class="dir-input" style="flex:1; min-width:260px; font-size:0.82rem; background:white;">
+                    <button type="button" id="btnCarregarGoogleSheet" onclick="carregarContatosGoogleSheet()" class="dir-btn dir-btn-primary" style="background:#16a34a; border-color:#16a34a; white-space:nowrap; padding:8px 16px; font-size:0.8125rem;">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Carregar Dados da Planilha
+                    </button>
                 </div>
-                <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn dir-btn-secondary" style="min-height:36px; padding:6px 14px; font-size:0.75rem; border-color:#93c5fd; background:#ffffff; color:#0284c7;">
+                <div style="font-size:0.75rem; color:#15803d; margin-top:6px; line-height:1.4;">
+                    <i class="fa-solid fa-circle-info"></i> <strong>Importante:</strong> Para importação direta pelo link, certifique-se de que a planilha está com o compartilhamento configurado como <em>"Qualquer pessoa com o link"</em> (Leitor) no Google Drive.
+                </div>
+            </div>
+
+            <!-- Banner com download da tabela-modelo -->
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="font-size:0.8125rem; color:#1e40af; line-height:1.4;">
+                    <strong><i class="fa-solid fa-circle-info"></i> Formato das Colunas:</strong> Suporta copiar/colar direto do Google Planilhas (Tabulação), CSV com ponto-e-vírgula (<code>;</code>) ou vírgula (<code>,</code>).
+                </div>
+                <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem; border-color:#93c5fd; background:#ffffff; color:#0284c7;">
                     <i class="fa-solid fa-download"></i> Baixar Planilha Modelo (.CSV)
                 </button>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:16px;">
                 <div>
-                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">1. Selecione o Arquivo .CSV do seu computador:</label>
-                    <input type="file" id="dirWpImportCsvFileInput" accept=".csv, text/csv, text/plain" onchange="handleCsvFileSelected(event)" class="dir-input" style="padding:8px; background:#f8fafc;">
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">
+                        2. Ou cole as linhas da planilha diretamente aqui (Ctrl+C no Sheets e Ctrl+V aqui):
+                    </label>
+                    <textarea id="dirWpImportCsvTextarea" oninput="processarPreviaTextoCsv()" rows="5" placeholder="Nome	Telefone	Tags	Observações
+Mariana Santos	47999881122	Pais / Responsáveis, 3º Ano A	Mãe do Lucas
+Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" class="dir-textarea" style="font-family:monospace; font-size:0.8125rem;"></textarea>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">2. Ou cole o texto da planilha diretamente aqui:</label>
-                    <textarea id="dirWpImportCsvTextarea" oninput="processarPreviaTextoCsv()" rows="5" placeholder="Nome;Telefone;Tags;Observacoes
-Mariana Santos;47999881122;Pais / Responsáveis, 3º Ano A;Mãe do Lucas
-Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" class="dir-textarea" style="font-family:monospace; font-size:0.8125rem;"></textarea>
+                    <label style="font-weight:700; font-size:0.75rem; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">3. Ou selecione um Arquivo .CSV do seu computador:</label>
+                    <input type="file" id="dirWpImportCsvFileInput" accept=".csv, text/csv, text/plain" onchange="handleCsvFileSelected(event)" class="dir-input" style="padding:8px; background:#f8fafc;">
                 </div>
 
                 <!-- Prévia dos Registros Identificados -->
@@ -4245,8 +4263,8 @@ Prof. Ricardo;47997665544;Equipe Docente, Matemática;Representante Docente" cla
 
     <!-- JS Files -->
     <script src="js/calendario-oficial-data.js?v=20260921_v30"></script>
-    <script src="js/gestao-data.js?v=20260922_v34"></script>
-    <script src="js/gestao-app.js?v=20260922_v34"></script>
+    <script src="js/gestao-data.js?v=20260922_v35"></script>
+    <script src="js/gestao-app.js?v=20260922_v35"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

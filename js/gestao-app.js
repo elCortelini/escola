@@ -6551,6 +6551,66 @@ function handleCsvFileSelected(event) {
     reader.readAsText(file, "UTF-8");
 }
 
+async function carregarContatosGoogleSheet() {
+    const input = document.getElementById("dirWpGoogleSheetUrlInput");
+    if (!input) return;
+    const url = input.value.trim();
+    if (!url) {
+        showToast("Cole o link da sua planilha do Google antes de carregar.", "warning");
+        return;
+    }
+
+    // Extrai o ID da planilha
+    const matchId = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!matchId || !matchId[1]) {
+        alert("Link do Google Planilhas inválido. O link deve conter '/spreadsheets/d/ID_DA_PLANILHA/'");
+        return;
+    }
+    const sheetId = matchId[1];
+
+    // Extrai o gid (se houver)
+    let gid = '0';
+    const matchGid = url.match(/[#&?]gid=([0-9]+)/);
+    if (matchGid && matchGid[1]) {
+        gid = matchGid[1];
+    }
+
+    const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+    const btn = document.getElementById("btnCarregarGoogleSheet");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Carregando...`;
+    }
+
+    try {
+        const response = await fetch(csvExportUrl);
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error("A planilha está com acesso restrito no Google Drive.\n\nPara importar direto pelo link:\n1. Abra sua planilha no Google Sheets.\n2. Clique no botão azul 'Compartilhar' (canto superior direito).\n3. Em 'Acesso geral', mude de 'Restrito' para 'Qualquer pessoa com o link' (como Leitor).\n4. Clique em Concluído e tente novamente.");
+            }
+            throw new Error(`Erro HTTP ${response.status} ao acessar a planilha.`);
+        }
+        const text = await response.text();
+        if (text.includes("<!DOCTYPE html") || text.includes("<html") || text.includes("accounts.google.com")) {
+            throw new Error("A planilha requer login na sua Conta do Google.\n\nPara importar direto pelo link, altere o compartilhamento para 'Qualquer pessoa com o link' (Leitor) no Google Sheets.");
+        }
+
+        const textarea = document.getElementById("dirWpImportCsvTextarea");
+        if (textarea) {
+            textarea.value = text;
+            processarPreviaTextoCsv();
+        }
+        showToast("Dados da planilha carregados com sucesso! Verifique a prévia abaixo.", "success");
+    } catch (err) {
+        alert(`Não foi possível carregar a planilha automaticamente:\n\n${err.message}\n\n💡 DICA RÁPIDA: Você também pode abrir a sua planilha no Google Sheets, selecionar as linhas de contatos, copiar (Ctrl+C) e colar diretamente na caixa de texto logo abaixo!`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Carregar Dados da Planilha`;
+        }
+    }
+}
+
 function processarPreviaTextoCsv() {
     const textarea = document.getElementById("dirWpImportCsvTextarea");
     const container = document.getElementById("dirWpCsvPreviewContainer");
@@ -6568,35 +6628,84 @@ function processarPreviaTextoCsv() {
         return;
     }
 
-    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
-    const parsed = [];
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) {
+        parsedCsvContactsPreview = [];
+        return;
+    }
 
-    lines.forEach((line, idx) => {
-        // Detecta delimitador: ponto-e-vírgula ou vírgula
-        const delimitador = line.includes(";") ? ";" : ",";
-        const parts = line.split(delimitador).map(p => p.trim());
+    // Detecta delimitador: tabulação (\t), ponto-e-vírgula (;) ou vírgula (,)
+    const firstLine = lines[0];
+    let delimitador = ';';
+    if (firstLine.includes('\t')) delimitador = '\t';
+    else if (firstLine.includes(';')) delimitador = ';';
+    else if (firstLine.includes(',')) delimitador = ',';
 
-        // Se for linha de cabeçalho (contém "nome" ou "telefone"), pula
-        if (idx === 0 && (parts[0].toLowerCase().includes("nome") || (parts[1] && parts[1].toLowerCase().includes("tel")))) {
-            return;
+    const parsedRows = lines.map(l => {
+        let inQuotes = false;
+        let token = '';
+        const tokens = [];
+        for (let i = 0; i < l.length; i++) {
+            const char = l[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === delimitador && !inQuotes) {
+                tokens.push(token.trim().replace(/^"|"$/g, ''));
+                token = '';
+            } else {
+                token += char;
+            }
         }
+        tokens.push(token.trim().replace(/^"|"$/g, ''));
+        return tokens;
+    });
 
-        const nome = parts[0] || '';
-        const fone = (parts[1] || '').replace(/\D/g, '');
-        const rawTags = parts[2] || 'Pais / Responsáveis';
-        const notas = parts[3] || '';
+    let headerIdx = -1;
+    let colNome = 0, colFone = 1, colTag = 2, colNotas = 3;
 
-        if (nome && fone) {
-            // Divide tags por vírgula se houver mais de uma
-            const tags = rawTags.split(",").map(t => t.trim()).filter(Boolean);
+    // Detecta se a primeira linha é cabeçalho
+    const firstRowLower = parsedRows[0].map(c => c.toLowerCase());
+    const hasHeader = firstRowLower.some(c => 
+        c.includes('nome') || c.includes('aluno') || c.includes('contato') || 
+        c.includes('tel') || c.includes('whats') || c.includes('celular') || c.includes('fone')
+    );
+
+    if (hasHeader) {
+        headerIdx = 0;
+        firstRowLower.forEach((col, idx) => {
+            if (col.includes('tel') || col.includes('whats') || col.includes('cel') || col.includes('fone')) {
+                colFone = idx;
+            } else if (col.includes('nome') || col.includes('aluno') || col.includes('responsáv') || col.includes('responsav') || col.includes('estudante') || col.includes('contato')) {
+                colNome = idx;
+            } else if (col.includes('tag') || col.includes('turma') || col.includes('ano') || col.includes('setor') || col.includes('grau')) {
+                colTag = idx;
+            } else if (col.includes('obs') || col.includes('nota') || col.includes('desc') || col.includes('recado')) {
+                colNotas = idx;
+            }
+        });
+    }
+
+    const parsed = [];
+    const startRow = headerIdx >= 0 ? headerIdx + 1 : 0;
+
+    for (let i = startRow; i < parsedRows.length; i++) {
+        const row = parsedRows[i];
+        const nome = row[colNome] || '';
+        const rawFone = row[colFone] || '';
+        const fone = rawFone.replace(/\D/g, '');
+        const rawTag = (colTag >= 0 && row[colTag]) ? row[colTag] : 'Geral';
+        const notas = (colNotas >= 0 && row[colNotas]) ? row[colNotas] : '';
+
+        if (nome && fone && fone.length >= 8) {
+            const tags = rawTag.split(/[,/]/).map(t => t.trim()).filter(Boolean);
             parsed.push({
                 nome: nome,
                 telefone: fone,
-                tags: tags.length > 0 ? tags : ['Pais / Responsáveis'],
+                tags: tags.length > 0 ? tags : ['Geral'],
                 notas: notas
             });
         }
-    });
+    }
 
     parsedCsvContactsPreview = parsed;
 

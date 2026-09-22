@@ -226,7 +226,7 @@ function renderPortalAuthBar() {
                     <span style="font-weight:800; color:#ffffff;">${loggedUser.nome}</span>
                     <span class="portal-role-pill">${cargoText}</span>
                     ${isSimulating ? `
-                        <span style="background:#f59e0b; color:#fff; font-size:0.72rem; font-weight:800; padding:2px 8px; border-radius:10px;">
+                        <span style="background:#f59e0b; color:#0f172a; font-size:0.72rem; font-weight:800; padding:2px 8px; border-radius:10px;">
                             <i class="fa-solid fa-eye"></i> Simulando: ${getRoleLabel(activeRole)}
                         </span>
                     ` : ''}
@@ -234,9 +234,29 @@ function renderPortalAuthBar() {
                 </div>
             </div>
             <div class="portal-auth-actions">
-                <a href="sistema-gestao.html" class="portal-btn-sige">
-                    <i class="fa-solid fa-layer-group"></i> Abrir SIGE
-                </a>
+                ${isDev ? `
+                    <div class="portal-top-dev-view" style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); padding:3px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15);">
+                        <label for="topDevViewSelector" style="color:#fbbf24; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:4px; white-space:nowrap;">
+                            <i class="fa-solid fa-eye"></i> Visão:
+                        </label>
+                        <select id="topDevViewSelector" onchange="switchDevView(this.value)" style="background:#1e293b; color:#f8fafc; border:1px solid #475569; border-radius:6px; padding:3px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; outline:none;">
+                            <option value="desenvolvedor" ${activeRole === 'desenvolvedor' ? 'selected' : ''}>👑 Desenvolvedor (Total)</option>
+                            <option value="orientadora_daiane" ${activeRole === 'orientadora_daiane' ? 'selected' : ''}>💜 OE — Daiane (Finais)</option>
+                            <option value="orientadora_clarinda" ${activeRole === 'orientadora_clarinda' ? 'selected' : ''}>💜 OE — Clarinda (Iniciais)</option>
+                            <option value="supervisao" ${activeRole === 'supervisao' ? 'selected' : ''}>📚 Supervisão Escolar</option>
+                            <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Direção Escolar</option>
+                            <option value="uniformes" ${activeRole === 'uniformes' ? 'selected' : ''}>👕 Uniformes</option>
+                            <option value="secretaria" ${activeRole === 'secretaria' ? 'selected' : ''}>📋 Secretaria</option>
+                            <option value="docentes" ${activeRole === 'docentes' ? 'selected' : ''}>👨‍🏫 Docentes</option>
+                            <option value="visitante" ${activeRole === 'visitante' ? 'selected' : ''}>🔒 Visitante</option>
+                        </select>
+                        ${isSimulating ? `
+                            <button type="button" onclick="resetDevView()" style="background:#f59e0b; color:#0f172a; border:none; border-radius:6px; padding:3px 8px; font-size:0.72rem; font-weight:800; cursor:pointer;" title="Restaurar Visão Desenvolvedor">
+                                <i class="fa-solid fa-rotate-left"></i> Restaurar
+                            </button>
+                        ` : ''}
+                    </div>
+                ` : ''}
                 <button type="button" onclick="portalLogout()" class="portal-btn-logout" title="Encerrar sessão e deslogar">
                     <i class="fa-solid fa-right-from-bracket"></i> Deslogar / Sair
                 </button>
@@ -262,7 +282,7 @@ function renderPortalAuthBar() {
     }
 }
 
-// 2. Painel Central Hero (Login Completo ou Card do Usuário com Simulador Dev)
+// 2. Painel Central Hero (Apenas quando NÃO logado)
 function renderPortalAuthHeroCard() {
     const card = document.getElementById('portalAuthCard');
     if (!card) return;
@@ -270,7 +290,7 @@ function renderPortalAuthHeroCard() {
     const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
     if (!loggedUser) {
-        // TELA DE LOGIN (QUANDO NÃO ESTÁ LOGADO)
+        card.style.display = 'block';
         card.innerHTML = `
             <div class="portal-login-card-inner">
                 <div class="login-card-header">
@@ -296,111 +316,9 @@ function renderPortalAuthHeroCard() {
             </div>
         `;
     } else {
-        // TELA DO USUÁRIO LOGADO + SIMULADOR DEV
-        const isDev = loggedUser.role === "desenvolvedor";
-        const activeRole = window.sigeDB ? window.sigeDB.getRole() : loggedUser.role;
-        const isSimulating = isDev && activeRole !== "desenvolvedor";
-        const modulosKeys = ['op', 'mural', 'supervisao', 'direcao', 'uniformes', 'admin'];
-        const allowedCount = modulosKeys.filter(k => window.sigeDB.temPermissaoModulo(k)).length;
-        const cargoText = loggedUser.cargo || getRoleLabel(loggedUser.role);
-        const userIcon = getRoleIcon(loggedUser.role);
-
-        card.innerHTML = `
-            <div class="portal-user-profile-card">
-                <div class="user-profile-header">
-                    <div class="user-profile-avatar-wrap">
-                        <div class="user-profile-avatar">
-                            <i class="${userIcon}"></i>
-                        </div>
-                        <span class="online-indicator-dot" title="Sessão Ativa"></span>
-                    </div>
-
-                    <div class="user-profile-info">
-                        <div class="user-profile-top-row">
-                            <span class="user-status-tag"><i class="fa-solid fa-circle-check"></i> USUÁRIO CONECTADO</span>
-                            <span class="user-role-badge">${cargoText}</span>
-                        </div>
-                        <h2 class="user-profile-name">${loggedUser.nome}</h2>
-                        <div class="user-profile-meta">
-                            <span><i class="fa-solid fa-envelope"></i> ${loggedUser.email}</span>
-                            <span class="user-perms-count"><i class="fa-solid fa-shield-halved"></i> ${allowedCount}/6 módulos liberados</span>
-                        </div>
-                    </div>
-
-                    <div class="user-profile-actions">
-                        <a href="sistema-gestao.html" class="btn-profile-primary">
-                            <i class="fa-solid fa-layer-group"></i> Abrir SIGE Integrado
-                        </a>
-                        <button type="button" onclick="portalLogout()" class="btn-profile-logout" title="Encerrar sessão e deslogar">
-                            <i class="fa-solid fa-right-from-bracket"></i> Deslogar / Trocar Usuário
-                        </button>
-                    </div>
-                </div>
-
-                <!-- SELETOR DE VISÃO (EXCLUSIVO PARA O DESENVOLVEDOR DO SISTEMA) -->
-                ${isDev ? `
-                <div class="dev-view-switcher-panel ${isSimulating ? 'simulation-active-pulse' : ''}">
-                    <div class="dev-view-header">
-                        <div class="dev-view-title">
-                            <i class="fa-solid fa-sliders"></i>
-                            <div>
-                                <strong>Simulador de Visão de Usuário (Exclusivo do Desenvolvedor)</strong>
-                                <p>Escolha sob qual visão você deseja navegar para testar exatamente como cada perfil entra e interage no sistema:</p>
-                            </div>
-                        </div>
-                        ${isSimulating ? `
-                            <button type="button" onclick="resetDevView()" class="btn-restore-dev-view">
-                                <i class="fa-solid fa-rotate-left"></i> Restaurar Visão Desenvolvedor (Acesso Total)
-                            </button>
-                        ` : ''}
-                    </div>
-
-                    <div class="dev-view-control-row">
-                        <label for="devViewSelector" class="dev-view-label">
-                            <i class="fa-solid fa-eye"></i> Visão Ativa no Portal:
-                        </label>
-                        <select id="devViewSelector" class="dev-view-select" onchange="switchDevView(this.value)">
-                            <option value="desenvolvedor" ${activeRole === 'desenvolvedor' ? 'selected' : ''}>👑 Visão Desenvolvedor (Acesso Total a TODAS as funcionalidades)</option>
-                            <option value="orientadora_daiane" ${activeRole === 'orientadora_daiane' ? 'selected' : ''}>💜 Visão: Orientação Educacional (OE) — Daiane Aquino (Séries Finais)</option>
-                            <option value="orientadora_clarinda" ${activeRole === 'orientadora_clarinda' ? 'selected' : ''}>💜 Visão: Orientação Educacional (OE) — Clarinda Pereira (Séries Iniciais)</option>
-                            <option value="supervisao" ${activeRole === 'supervisao' ? 'selected' : ''}>📚 Visão: Supervisão Escolar & Diário Docente</option>
-                            <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Visão: Direção Escolar & Gestão Institucional</option>
-                            <option value="uniformes" ${activeRole === 'uniformes' ? 'selected' : ''}>👕 Visão: Controle de Uniformes & Logística</option>
-                            <option value="secretaria" ${activeRole === 'secretaria' ? 'selected' : ''}>📋 Visão: Secretaria Escolar & Atendimento</option>
-                            <option value="docentes" ${activeRole === 'docentes' ? 'selected' : ''}>👨‍🏫 Visão: Docentes / Professores (Somente Leitura Geral)</option>
-                            <option value="visitante" ${activeRole === 'visitante' ? 'selected' : ''}>🔒 Visão: Visitante / Sem Permissão</option>
-                        </select>
-                    </div>
-
-                    ${isSimulating ? `
-                        <div class="simulation-alert-banner">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Você está simulando a visão de <strong>${getRoleLabel(activeRole)}</strong>. Os cards de módulos, pilares e restrições abaixo estão se comportando exatamente como este perfil experimenta.</span>
-                        </div>
-                    ` : `
-                        <div class="dev-all-access-banner">
-                            <i class="fa-solid fa-unlock-keyhole"></i>
-                            <span>Visão Desenvolvedor: você possui <strong>Acesso Total a 100% das funcionalidades e módulos</strong>.</span>
-                        </div>
-                    `}
-                </div>
-                ` : ''}
-            </div>
-        `;
-    }
-}
-
-function heroLoginWithSelect(value) {
-    if (!value) return;
-    if (window.sigeDB) {
-        const user = window.sigeDB.loginWithEmail(value);
-        if (user) {
-            renderPortalAuth();
-            updateActionPillars();
-            loadSystems();
-        } else {
-            alert("Não foi possível identificar o usuário selecionado.");
-        }
+        // Quando logado, NÃO mostra o card central (tudo fica discretamente no topo)
+        card.style.display = 'none';
+        card.innerHTML = '';
     }
 }
 
