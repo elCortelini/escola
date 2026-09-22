@@ -1249,11 +1249,35 @@ class SigeDatabase {
     getLoggedUser() {
         const loggedEmail = localStorage.getItem("sige_logged_email");
         if (!loggedEmail) return null;
+        const cleanEmail = loggedEmail.toLowerCase().trim();
         const users = this.getUsuarios();
-        const found = users.find(u => u.email.toLowerCase().trim() === loggedEmail.toLowerCase().trim());
+        let found = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
+
+        // Se estiver na equipe escolar, garante que as permissões mais recentes da equipe prevalecem
+        if (this.data && Array.isArray(this.data.equipeEscola)) {
+            const prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === cleanEmail);
+            if (prof) {
+                if (!found) {
+                    let roleKey = prof.setor || "docentes";
+                    if (prof.setor === "orientacao") {
+                        roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                    }
+                    found = {
+                        email: prof.email.toLowerCase().trim(),
+                        nome: prof.nome,
+                        role: roleKey,
+                        cargo: prof.cargoFuncao || prof.setor,
+                        permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
+                    };
+                } else if (prof.permissoes) {
+                    found.permissoes = prof.permissoes;
+                }
+            }
+        }
+
         if (found) return found;
-        if (loggedEmail.toLowerCase().trim() === "elcortelini@gmail.com") {
-            return { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema" };
+        if (cleanEmail === "elcortelini@gmail.com") {
+            return { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } };
         }
         return null;
     }
@@ -1264,6 +1288,25 @@ class SigeDatabase {
         const users = this.getUsuarios();
         let user = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
 
+        // Se não encontrado em usuariosCadastrados, busca na equipe escolar
+        if (!user && this.data && Array.isArray(this.data.equipeEscola)) {
+            const prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === cleanEmail);
+            if (prof) {
+                let roleKey = prof.setor || "docentes";
+                if (prof.setor === "orientacao") {
+                    roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                }
+                user = { 
+                    email: prof.email.toLowerCase().trim(), 
+                    nome: prof.nome, 
+                    role: roleKey, 
+                    cargo: prof.cargoFuncao || prof.setor,
+                    permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
+                };
+                this.addUsuario(user);
+            }
+        }
+
         if (!user) {
             if (cleanEmail === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanEmail === "daiane@escola.gov.br") {
                 user = { 
@@ -1273,7 +1316,7 @@ class SigeDatabase {
                     cargo: "Orientadora Educacional — Séries Finais" 
                 };
                 this.addUsuario(user);
-            } else if (cleanEmail === "clarinda@escola.gov.br") {
+            } else if (cleanEmail === "clarinda@escola.gov.br" || cleanEmail.includes("clarinda.pereira")) {
                 user = { 
                     email: cleanEmail, 
                     nome: "Clarinda Rosa Pereira", 
@@ -1286,7 +1329,8 @@ class SigeDatabase {
                     email: "elcortelini@gmail.com", 
                     nome: "Elevi Cortelini (Desenvolvedor)", 
                     role: "desenvolvedor", 
-                    cargo: "Desenvolvedor do Sistema" 
+                    cargo: "Desenvolvedor do Sistema",
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
                 };
                 this.addUsuario(user);
             }
