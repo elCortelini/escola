@@ -51,92 +51,8 @@ const defaultSigeData = {
         { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
-    pedidosUniformes: [
-        {
-            id: "uni-101",
-            dataSolicitacao: "2026-09-12",
-            aluno: "Enzo Gabriel Santos",
-            turma: "1º Ano A",
-            genero: "Masculino",
-            motivo: "aluno_novo",
-            motivoDesc: "Aluno Novo na Escola",
-            tipoItem: "kit_completo",
-            estacao: "verao",
-            tamanho: "8",
-            pecasAvulsas: [],
-            observacoes: "Matrícula recente realizada na secretaria.",
-            responsavelPedido: "secretaria",
-            status: "enviado_sme",
-            loteSmeId: "lote-sme-01",
-            dataEnvioSme: "2026-09-15",
-            previsaoRecebimentoSme: "2026-09-25",
-            dataChegadaEscola: null,
-            dataEntregaAluno: null,
-            entreguePor: null,
-            criadoEm: "2026-09-12T10:00:00"
-        },
-        {
-            id: "uni-102",
-            dataSolicitacao: "2026-09-14",
-            aluno: "Isabella Rocha Lima",
-            turma: "4º Ano B",
-            genero: "Feminino",
-            motivo: "troca_tamanho",
-            motivoDesc: "Troca por tamanho maior",
-            tipoItem: "avulso",
-            estacao: "inverno",
-            tamanho: "12",
-            pecasAvulsas: ["moleton", "calca"],
-            observacoes: "Calça antiga ficou curta.",
-            responsavelPedido: "direcao",
-            status: "pendente_envio",
-            loteSmeId: null,
-            dataEnvioSme: null,
-            previsaoRecebimentoSme: null,
-            dataChegadaEscola: null,
-            dataEntregaAluno: null,
-            entreguePor: null,
-            criadoEm: "2026-09-14T14:20:00"
-        },
-        {
-            id: "uni-103",
-            dataSolicitacao: "2026-09-10",
-            aluno: "Matheus Henrique Alves",
-            turma: "7º Ano B",
-            genero: "Masculino",
-            motivo: "aluno_novo",
-            motivoDesc: "Aluno Novo",
-            tipoItem: "kit_completo",
-            estacao: "inverno",
-            tamanho: "14",
-            pecasAvulsas: [],
-            observacoes: "Transferência da rede municipal.",
-            responsavelPedido: "orientacao",
-            status: "disponivel_estoque",
-            loteSmeId: "lote-sme-01",
-            dataEnvioSme: "2026-09-15",
-            previsaoRecebimentoSme: "2026-09-25",
-            dataChegadaEscola: "2026-09-17",
-            dataEntregaAluno: null,
-            entreguePor: null,
-            criadoEm: "2026-09-10T09:00:00"
-        }
-    ],
-    lotesSME: [
-        {
-            id: "lote-sme-01",
-            codigoLote: "REMESSA-2026-09-A",
-            dataCorte: "2026-09-15",
-            dataEnvioSme: "2026-09-15",
-            previsaoRecebimento: "2026-09-25",
-            dataChegadaReal: "2026-09-17",
-            status: "recebido_parcial",
-            observacoes: "Remessa enviada via Ofício nº 42/2026 para SME.",
-            pedidosIds: ["uni-101", "uni-103"],
-            responsavelFechamento: "Secretaria Escolar",
-            criadoEm: "2026-09-15T16:00:00"
-        }
-    ],
+    pedidosUniformes: [],
+    lotesSME: [],
     estoqueUniformes: {
         masculino: {
             "camiseta": { "8": 2, "10": 4, "12": 1, "14": 0, "16": 3, "P": 2, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
@@ -1117,6 +1033,30 @@ class SigeDatabase {
                             this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !delSet.has(a.id));
                         }
 
+                        // Limpeza de pedidos e lotes de exemplo de uniformes
+                        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
+                        if (Array.isArray(this.data.pedidosUniformes)) {
+                            this.data.pedidosUniformes = this.data.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
+                        }
+                        if (Array.isArray(this.data.lotesSME)) {
+                            this.data.lotesSME = this.data.lotesSME.filter(l => l.id !== "lote-sme-01");
+                        }
+
+                        // Limpeza de usuários de teste pendentes
+                        const emailsExemplosRemover = [
+                            "marcos.silva789@edu.itajai.sc.gov.br",
+                            "juliana.pedagoga@edu.itajai.sc.gov.br",
+                            "rodrigo.ti@edu.itajai.sc.gov.br",
+                            "beatriz.oe@edu.itajai.sc.gov.br",
+                            "lucas.sec@edu.itajai.sc.gov.br"
+                        ];
+                        if (Array.isArray(this.data.usuariosCadastrados)) {
+                            this.data.usuariosCadastrados = this.data.usuariosCadastrados.filter(u => {
+                                const mail = (u.email || '').toLowerCase().trim();
+                                return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
+                            });
+                        }
+
                         // Mesclagem inteligente de Contatos WhatsApp evitando ressurreição de excluídos e preservando edições locais
                         const delWpSet = new Set(combinedDeletedWpIds);
                         if (Array.isArray(remoteData.contatosWhatsAppDirecao)) {
@@ -1339,6 +1279,40 @@ class SigeDatabase {
                         permissoes: u.permissoes || (defaultUser ? defaultUser.permissoes : { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false })
                     };
                 });
+
+                const emailsExemplosRemover = [
+                    "marcos.silva789@edu.itajai.sc.gov.br",
+                    "juliana.pedagoga@edu.itajai.sc.gov.br",
+                    "rodrigo.ti@edu.itajai.sc.gov.br",
+                    "beatriz.oe@edu.itajai.sc.gov.br",
+                    "lucas.sec@edu.itajai.sc.gov.br"
+                ];
+                merged.usuariosCadastrados = merged.usuariosCadastrados.filter(u => {
+                    const mail = (u.email || '').toLowerCase().trim();
+                    return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
+                });
+            }
+
+            // Limpeza dos pedidos de exemplo e lotes de uniformes
+            const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
+            if (Array.isArray(merged.pedidosUniformes)) {
+                merged.pedidosUniformes = merged.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
+            } else {
+                merged.pedidosUniformes = [];
+            }
+            if (Array.isArray(merged.lotesSME)) {
+                merged.lotesSME = merged.lotesSME.filter(l => l.id !== "lote-sme-01");
+            } else {
+                merged.lotesSME = [];
+            }
+
+            if (!parsed.limpezaExemplosUniformes_v1) {
+                merged.pedidosUniformes = (merged.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
+                merged.lotesSME = (merged.lotesSME || []).filter(l => l.id !== "lote-sme-01");
+                merged.limpezaExemplosUniformes_v1 = true;
+                try {
+                    localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(merged));
+                } catch(e) {}
             }
 
             // Migração v28: Limpeza de dados de teste (Atendimentos OP, Atas) e Carga do Calendário Oficial 2026
@@ -1511,6 +1485,23 @@ class SigeDatabase {
                 return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
             });
             if (this.data.usuariosCadastrados.length !== antesLen) {
+                saveNeeded = true;
+            }
+        }
+
+        // Limpeza dos dados de exemplo do controle de pedidos e entrega de uniformes
+        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
+        if (Array.isArray(this.data.pedidosUniformes)) {
+            const antesLenPedidos = this.data.pedidosUniformes.length;
+            this.data.pedidosUniformes = this.data.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
+            if (this.data.pedidosUniformes.length !== antesLenPedidos) {
+                saveNeeded = true;
+            }
+        }
+        if (Array.isArray(this.data.lotesSME)) {
+            const antesLenLotes = this.data.lotesSME.length;
+            this.data.lotesSME = this.data.lotesSME.filter(l => l.id !== "lote-sme-01");
+            if (this.data.lotesSME.length !== antesLenLotes) {
                 saveNeeded = true;
             }
         }
@@ -2907,6 +2898,15 @@ class SigeDatabase {
             this.saveData(this.data);
         }
         return this.data.pedidosUniformes;
+    }
+
+    limparPedidosUniformes() {
+        this.data.pedidosUniformes = [];
+        this.data.lotesSME = [];
+        this.saveData(this.data);
+        this.syncToFirebase();
+        this.logAuditEvent("Uniformes Escolares", "Limpeza de todos os pedidos e lotes de uniformes", "Desenvolvedor");
+        return true;
     }
 
     addPedidoUniforme(pedido) {
