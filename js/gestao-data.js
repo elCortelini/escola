@@ -49,12 +49,7 @@ const defaultSigeData = {
         { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "marcos.silva789@edu.itajai.sc.gov.br", nome: "Prof. Marcos Vinícius da Silva", role: "docentes", cargo: "Docente — Matemática (6º ao 9º Ano)", status: "pendente", cadastroCompleto: false, telefone: "(47) 99123-4567", solicitadoEm: "22/09/2026 07:45", dataSolicitacao: "2026-09-22T07:45:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "juliana.pedagoga@edu.itajai.sc.gov.br", nome: "Juliana Santos de Oliveira", role: "supervisao", cargo: "Supervisão Pedagógica", status: "pendente", cadastroCompleto: false, telefone: "(47) 99876-5432", solicitadoEm: "22/09/2026 08:02", dataSolicitacao: "2026-09-22T08:02:00.000Z", permissoes: { op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "rodrigo.ti@edu.itajai.sc.gov.br", nome: "Rodrigo Furtado de Lima", role: "apoio", cargo: "Apoio Técnico & TI", status: "pendente", cadastroCompleto: false, telefone: "(47) 99234-5678", solicitadoEm: "22/09/2026 08:10", dataSolicitacao: "2026-09-22T08:10:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true } },
-        { email: "beatriz.oe@edu.itajai.sc.gov.br", nome: "Beatriz Mendonça Duarte", role: "orientadora_clarinda", cargo: "Orientadora Educacional", status: "pendente", cadastroCompleto: false, telefone: "(47) 99765-4321", solicitadoEm: "22/09/2026 08:15", dataSolicitacao: "2026-09-22T08:15:00.000Z", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "lucas.sec@edu.itajai.sc.gov.br", nome: "Lucas Gabriel Albuquerque", role: "secretaria", cargo: "Secretaria Escolar", status: "pendente", cadastroCompleto: false, telefone: "(47) 99432-5566", solicitadoEm: "22/09/2026 08:20", dataSolicitacao: "2026-09-22T08:20:00.000Z", permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [
         {
@@ -1501,77 +1496,24 @@ class SigeDatabase {
             saveNeeded = true;
         }
 
-        // 5 Exemplos de Usuários que entraram no sistema e aguardam autorização do desenvolvedor
-        const exemplosUsuariosPendentes = [
-            {
-                email: "marcos.silva789@edu.itajai.sc.gov.br",
-                nome: "Prof. Marcos Vinícius da Silva",
-                role: "docentes",
-                cargo: "Docente - Matemática",
-                status: "pendente",
-                cadastroCompleto: false,
-                telefone: "(47) 99876-1122",
-                solicitadoEm: "21/09/2026 08:30",
-                dataSolicitacao: "2026-09-21T08:30:00.000Z",
-                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-            },
-            {
-                email: "juliana.pedagoga@edu.itajai.sc.gov.br",
-                nome: "Juliana Santos de Oliveira",
-                role: "supervisao",
-                cargo: "Supervisora Pedagógica",
-                status: "pendente",
-                cadastroCompleto: false,
-                telefone: "(47) 99765-2233",
-                solicitadoEm: "21/09/2026 09:15",
-                dataSolicitacao: "2026-09-21T09:15:00.000Z",
-                permissoes: { op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-            },
-            {
-                email: "rodrigo.ti@edu.itajai.sc.gov.br",
-                nome: "Rodrigo Furtado de Lima",
-                role: "apoio",
-                cargo: "Apoio Técnico & TI",
-                status: "pendente",
-                cadastroCompleto: false,
-                telefone: "(47) 99654-3344",
-                solicitadoEm: "22/09/2026 07:45",
-                dataSolicitacao: "2026-09-22T07:45:00.000Z",
-                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true }
-            },
-            {
-                email: "beatriz.oe@edu.itajai.sc.gov.br",
-                nome: "Beatriz Mendonça Duarte",
-                role: "orientacao",
-                cargo: "Orientadora Educacional",
-                status: "pendente",
-                cadastroCompleto: false,
-                telefone: "(47) 99543-4455",
-                solicitadoEm: "22/09/2026 08:00",
-                dataSolicitacao: "2026-09-22T08:00:00.000Z",
-                permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-            },
-            {
-                email: "lucas.sec@edu.itajai.sc.gov.br",
-                nome: "Lucas Gabriel Albuquerque",
-                role: "secretaria",
-                cargo: "Secretaria Escolar",
-                status: "pendente",
-                cadastroCompleto: false,
-                telefone: "(47) 99432-5566",
-                solicitadoEm: "22/09/2026 08:20",
-                dataSolicitacao: "2026-09-22T08:20:00.000Z",
-                permissoes: { op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: false, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: true }
-            }
+        // Limpeza dos 5 exemplos de usuários pendentes de teste para que não reapareçam no refresh
+        const emailsExemplosRemover = [
+            "marcos.silva789@edu.itajai.sc.gov.br",
+            "juliana.pedagoga@edu.itajai.sc.gov.br",
+            "rodrigo.ti@edu.itajai.sc.gov.br",
+            "beatriz.oe@edu.itajai.sc.gov.br",
+            "lucas.sec@edu.itajai.sc.gov.br"
         ];
-
-        exemplosUsuariosPendentes.forEach(ex => {
-            const existe = this.data.usuariosCadastrados.some(u => u.email.toLowerCase().trim() === ex.email.toLowerCase().trim());
-            if (!existe) {
-                this.data.usuariosCadastrados.push(ex);
+        if (Array.isArray(this.data.usuariosCadastrados)) {
+            const antesLen = this.data.usuariosCadastrados.length;
+            this.data.usuariosCadastrados = this.data.usuariosCadastrados.filter(u => {
+                const mail = (u.email || '').toLowerCase().trim();
+                return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
+            });
+            if (this.data.usuariosCadastrados.length !== antesLen) {
                 saveNeeded = true;
             }
-        });
+        }
 
         // Garante objeto de permissões completo e status em todos os usuários existentes
         const permKeys = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'];

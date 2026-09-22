@@ -320,26 +320,34 @@ function parseJwt(token) {
     }
 }
 
+let _heroGisRetries = 0;
 function initHeroGoogleAuth() {
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
+            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "873519405621-escola-integrarizzi.apps.googleusercontent.com";
             window.google.accounts.id.initialize({
-                client_id: "873519405621-escola-integrarizzi.apps.googleusercontent.com",
+                client_id: googleClientId,
                 callback: handleHeroGoogleCredentialResponse,
                 auto_select: false
             });
             const container = document.getElementById("g_id_signin_hero");
             if (container) {
+                container.innerHTML = "";
                 window.google.accounts.id.renderButton(container, {
                     theme: "outline",
                     size: "large",
-                    width: 360,
-                    text: "continue_with"
+                    width: 320,
+                    text: "continue_with",
+                    shape: "rectangular",
+                    logo_alignment: "left"
                 });
             }
         } catch (err) {
             console.log("Inicialização do Google GIS no Hero:", err);
         }
+    } else if (_heroGisRetries < 15) {
+        _heroGisRetries++;
+        setTimeout(initHeroGoogleAuth, 300);
     }
 }
 
@@ -362,23 +370,10 @@ function handleHeroGoogleCredentialResponse(response) {
 function heroLoginWithGoogle() {
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
-            window.google.accounts.id.prompt((notification) => {
-                if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment())) {
-                    console.log("Google GIS prompt not displayed:", notification);
-                    const emailPrompt = prompt("Informe seu e-mail institucional oficial da conta do Google (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br):");
-                    if (emailPrompt && emailPrompt.trim()) {
-                        processHeroLoginWithEmail(emailPrompt.trim());
-                    }
-                }
-            });
-            return;
+            window.google.accounts.id.prompt();
         } catch (e) {
             console.log("Erro ao acionar prompt do Google:", e);
         }
-    }
-    const emailPrompt = prompt("Informe seu e-mail institucional oficial da conta do Google (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br):");
-    if (emailPrompt && emailPrompt.trim()) {
-        processHeroLoginWithEmail(emailPrompt.trim());
     }
 }
 
@@ -442,13 +437,9 @@ function renderPortalAuthHeroCard() {
                 </div>
 
                 <div class="login-card-body" style="max-width:540px; margin:0 auto; width:100%;">
-                    <!-- BOTÃO OFICIAL GOOGLE EM DESTAQUE -->
-                    <div style="display:flex; flex-direction:column; gap:8px; align-items:center; width:100%;">
-                        <div id="g_id_signin_hero" style="display:flex; justify-content:center;"></div>
-                        <button type="button" onclick="heroLoginWithGoogle()" class="btn-google-login" style="width:100%; padding:12px 18px; font-size:0.95rem; font-weight:800; background:#ffffff; color:#1f2937; border:1.5px solid #cbd5e1; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer; transition:all 0.2s;">
-                            <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
-                            <span>Fazer Login com a Conta do Google</span>
-                        </button>
+                    <!-- BOTÃO OFICIAL GOOGLE (EXCLUSIVO) -->
+                    <div style="display:flex; justify-content:center; width:100%; margin-bottom:4px;">
+                        <div id="g_id_signin_hero" style="min-height:44px; display:flex; justify-content:center; width:100%;"></div>
                     </div>
 
                     <!-- DIVISOR OU -->
@@ -880,6 +871,9 @@ function openConfigModal() {
     if (document.getElementById('url_recursos')) document.getElementById('url_recursos').value = savedUrls['recursos'] || '';
     if (document.getElementById('url_biblioteca')) document.getElementById('url_biblioteca').value = savedUrls['biblioteca'] || '';
     if (document.getElementById('url_patrimonio')) document.getElementById('url_patrimonio').value = savedUrls['patrimonio'] || '';
+    if (document.getElementById('google_client_id')) {
+        document.getElementById('google_client_id').value = localStorage.getItem('pedro_rizzi_google_client_id') || '';
+    }
 
     modal.style.display = 'flex';
 }
@@ -1013,8 +1007,17 @@ if (configForm) {
             patrimonio: document.getElementById('url_patrimonio') ? document.getElementById('url_patrimonio').value.trim() : ''
         };
         localStorage.setItem('pedro_rizzi_urls', JSON.stringify(savedUrls));
+
+        const googleClientId = document.getElementById('google_client_id') ? document.getElementById('google_client_id').value.trim() : '';
+        if (googleClientId) {
+            localStorage.setItem('pedro_rizzi_google_client_id', googleClientId);
+        } else {
+            localStorage.removeItem('pedro_rizzi_google_client_id');
+        }
+
         closeConfigModal();
         loadSystems();
+        initHeroGoogleAuth();
         alert('Configurações e links atualizados com sucesso!');
     });
 }

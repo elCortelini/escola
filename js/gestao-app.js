@@ -1073,8 +1073,9 @@ function loginWithGooglePrompt() {
 function initGoogleAuth() {
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
+            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "873519405621-escola-integrarizzi.apps.googleusercontent.com";
             window.google.accounts.id.initialize({
-                client_id: "873519405621-escola-integrarizzi.apps.googleusercontent.com",
+                client_id: googleClientId,
                 callback: handleGoogleCredentialResponse,
                 auto_select: false
             });
