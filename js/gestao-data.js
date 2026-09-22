@@ -1792,6 +1792,11 @@ class SigeDatabase {
         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
     }
 
+    addAuditLog(acao, modulo = "Admin") {
+        const usuario = (typeof this.getRole === "function" && this.getRole()) || "Admin";
+        this.logAuditEvent(modulo, acao, usuario);
+    }
+
     getWhatsappConfig() {
         if (!this.data.whatsappConfig) {
             this.data.whatsappConfig = {

@@ -8013,7 +8013,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
     if (lista.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="padding:2.5rem 1rem; text-align:center; color:#64748b;">
+                <td colspan="5" style="padding:2.5rem 1rem; text-align:center; color:#64748b;">
                     <i class="fa-solid fa-user-slash" style="font-size:2rem; margin-bottom:10px; display:block; color:#cbd5e1;"></i>
                     <strong style="display:block; font-size:1rem; color:#1e293b;">Nenhum colaborador encontrado</strong>
                     <span style="font-size:0.83rem; color:#64748b;">Verifique os critérios do filtro ou clique no botão "+ Cadastrar Colaborador & Acesso".</span>
@@ -8025,13 +8025,13 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
 
     const badgeSetor = (setor) => {
         switch (setor) {
-            case "docentes": return `<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👨‍🏫 Docente</span>`;
-            case "orientacao": return `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🧭 Orientação (OE)</span>`;
-            case "supervisao": return `<span style="background:#f5f3ff; color:#6b21a8; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📋 Supervisão</span>`;
-            case "direcao": return `<span style="background:#ecfdf5; color:#065f46; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👑 Direção</span>`;
-            case "secretaria": return `<span style="background:#cff4fc; color:#055160; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📑 Secretaria</span>`;
-            case "apoio": return `<span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🔧 Apoio / TI</span>`;
-            default: return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">Geral</span>`;
+            case "docentes": return `<span style="background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">👨‍🏫 Docente</span>`;
+            case "orientacao": return `<span style="background:#fef3c7; color:#92400e; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">🧭 Orientação (OE)</span>`;
+            case "supervisao": return `<span style="background:#f5f3ff; color:#6b21a8; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">📋 Supervisão</span>`;
+            case "direcao": return `<span style="background:#ecfdf5; color:#065f46; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">👑 Direção</span>`;
+            case "secretaria": return `<span style="background:#cff4fc; color:#055160; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">📑 Secretaria</span>`;
+            case "apoio": return `<span style="background:#f1f5f9; color:#475569; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">🔧 Apoio / TI</span>`;
+            default: return `<span style="background:#f1f5f9; color:#334155; padding:2px 7px; border-radius:6px; font-size:0.76rem; font-weight:800;">Geral</span>`;
         }
     };
 
@@ -8066,7 +8066,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                     <span class="rbac-mod-chip active ${m.colorClass} disabled" title="${escapeHtml(titleTooltip)}">
                         <i class="fa-solid ${m.icon}"></i>
                         <span>${m.label}</span>
-                        <i class="fa-solid fa-lock" style="font-size:0.65rem; opacity:0.75;"></i>
+                        <i class="fa-solid fa-lock" style="font-size:0.62rem; opacity:0.75;"></i>
                     </span>
                 `;
             }
@@ -8079,43 +8079,32 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                     aria-label="${m.fullLabel} para ${escapeHtml(p.nome)}">
                     <i class="fa-solid ${m.icon}"></i>
                     <span>${m.label}</span>
-                    <i class="fa-solid ${iconStatus}" style="font-size:0.7rem;"></i>
+                    <i class="fa-solid ${iconStatus}" style="font-size:0.65rem;"></i>
                 </button>
             `;
         }).join('');
 
-        // Contagem de Módulos & Badge de Status
-        const qtdAtivos = isMasterDev ? 6 : modulosConfig.filter(m => !!perms[m.key]).length;
-        let badgeStatus = '';
-        if (qtdAtivos === 6) {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-total" title="Acesso total a todos os 6 módulos"><i class="fa-solid fa-circle-check"></i> 6/6 Total</span>`;
-        } else if (qtdAtivos === 0) {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-bloqueado" title="Sem acesso a nenhum módulo"><i class="fa-solid fa-ban"></i> 0/6 Bloq.</span>`;
-        } else {
-            badgeStatus = `<span class="rbac-status-badge rbac-status-parcial" title="Acesso setorial liberado"><i class="fa-solid fa-shield-halved"></i> ${qtdAtivos}/6 Setorial</span>`;
-        }
-
         // Célula do WhatsApp com Link
-        let waCell = `<span style="color:#94a3b8; font-size:0.8rem;">Sem contato</span>`;
+        let waCell = `<span style="color:#94a3b8; font-size:0.76rem;">Sem contato</span>`;
         if (waLink) {
             waCell = `
-                <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#15803d; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:5px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.8rem;">
-                    <i class="fa-brands fa-whatsapp" style="font-size:0.95rem; color:#16a34a;"></i> ${escapeHtml(p.telefone)}
+                <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#15803d; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#dcfce7; padding:3px 7px; border-radius:6px; font-size:0.76rem; white-space:nowrap;">
+                    <i class="fa-brands fa-whatsapp" style="font-size:0.88rem; color:#16a34a;"></i> ${escapeHtml(p.telefone)}
                 </a>
             `;
         } else if (p.telefone) {
-            waCell = `<span style="color:#475569; font-size:0.8rem; font-weight:600;"><i class="fa-solid fa-phone" style="font-size:0.75rem;"></i> ${escapeHtml(p.telefone)}</span>`;
+            waCell = `<span style="color:#475569; font-size:0.76rem; font-weight:600;"><i class="fa-solid fa-phone" style="font-size:0.7rem;"></i> ${escapeHtml(p.telefone)}</span>`;
         }
 
         return `
             <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:10px 14px;">
+                <td style="padding:8px 10px;">
                     <div class="rbac-user-cell">
                         <div class="rbac-user-avatar" style="${isMasterDev ? 'background:#7c3aed; color:white;' : ''}">${escapeHtml(iniciais)}</div>
                         <div class="rbac-user-details">
-                            <span class="rbac-user-name" style="display:flex; align-items:center; gap:6px;">
+                            <span class="rbac-user-name" style="display:flex; align-items:center; gap:5px;">
                                 ${escapeHtml(p.nome)}
-                                ${isMasterDev ? '<span style="font-size:0.68rem; background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:4px; font-weight:800;"><i class="fa-solid fa-crown"></i> DEV</span>' : ''}
+                                ${isMasterDev ? '<span style="font-size:0.65rem; background:#ede9fe; color:#6d28d9; padding:1px 5px; border-radius:4px; font-weight:800;"><i class="fa-solid fa-crown"></i> DEV</span>' : ''}
                             </span>
                             <span class="rbac-user-email">
                                 ${p.email ? `<i class="fa-regular fa-envelope"></i> ${escapeHtml(p.email)}` : '<span style="color:#94a3b8; font-style:italic;">Sem e-mail</span>'}
@@ -8123,40 +8112,29 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                         </div>
                     </div>
                 </td>
-                <td style="padding:10px 14px;">
+                <td style="padding:8px 10px;">
                     <div>${badgeSetor(p.setor)}</div>
-                    <div style="font-size:0.78rem; font-weight:700; color:#334155; margin-top:3px;">${escapeHtml(p.cargoFuncao || p.setor)}</div>
-                    ${p.disciplina ? `<div style="font-size:0.74rem; color:#64748b;">${escapeHtml(p.disciplina)}</div>` : ''}
+                    <div style="font-size:0.76rem; font-weight:700; color:#334155; margin-top:2px;">${escapeHtml(p.cargoFuncao || p.setor)}</div>
+                    ${p.disciplina ? `<div style="font-size:0.72rem; color:#64748b;">${escapeHtml(p.disciplina)}</div>` : ''}
                 </td>
-                <td style="padding:10px 14px;">
+                <td style="padding:8px 10px;">
                     ${waCell}
                 </td>
-                <td style="padding:10px 14px; font-size:0.8rem; color:#475569;">
-                    <div style="font-weight:700; color:#1e293b;">
-                        <i class="fa-regular fa-clock" style="color:#64748b; font-size:0.75rem;"></i> ${escapeHtml(p.turnos || "Integral")}
-                    </div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                        ${p.turmasOuSalas ? escapeHtml(p.turmasOuSalas) : 'Geral'}
-                    </div>
-                </td>
-                <td style="padding:10px 14px;">
+                <td style="padding:8px 10px;">
                     <div class="rbac-modules-grid">
                         ${chipsHtml}
                     </div>
                 </td>
-                <td style="padding:10px 14px; text-align:center;">
-                    ${badgeStatus}
-                </td>
-                <td style="padding:10px 14px; text-align:right;">
-                    <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
-                        <button type="button" onclick="openDisparoAvisoProfessorModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:none; cursor:pointer;" title="Disparar Aviso WhatsApp">
+                <td style="padding:8px 10px; text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:5px; align-items:center;">
+                        <button type="button" onclick="openDisparoAvisoProfessorModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.72rem; padding:4px 7px; border-radius:6px; border:none; cursor:pointer;" title="Disparar Aviso WhatsApp">
                             <i class="fa-brands fa-whatsapp"></i>
                         </button>
-                        <button type="button" onclick="openCadastroProfissionalModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;" title="Editar Cadastro & Permissões">
+                        <button type="button" onclick="openCadastroProfissionalModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.72rem; padding:4px 7px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;" title="Editar Cadastro & Permissões">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                         ${isMasterDev ? '' : `
-                            <button type="button" onclick="excluirProfissional('${escapeHtml(p.id)}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:none; cursor:pointer;" title="Excluir Colaborador">
+                            <button type="button" onclick="excluirProfissional('${escapeHtml(p.id)}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.72rem; padding:4px 7px; border-radius:6px; border:none; cursor:pointer;" title="Excluir Colaborador">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         `}
@@ -8441,23 +8419,28 @@ function submitCadastroProfissional(e) {
         uniformes: !!document.getElementById("proChk_uniformes")?.checked
     };
 
-    sigeDB.saveProfissional({
-        id: id || null,
-        nome,
-        setor,
-        cargoFuncao,
-        disciplina,
-        telefone: telefone || "",
-        email: email || "",
-        turnos,
-        turmasOuSalas,
-        permissoes
-    });
+    try {
+        sigeDB.saveProfissional({
+            id: id || null,
+            nome,
+            setor,
+            cargoFuncao,
+            disciplina,
+            telefone: telefone || "",
+            email: email || "",
+            turnos,
+            turmasOuSalas,
+            permissoes
+        });
 
-    closeCadastroProfissionalModal();
-    updateAllDynamicSelects();
-    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
-    showToast(id ? "✅ Cadastro e permissões do colaborador atualizados!" : "✅ Novo colaborador e credenciais registrados com sucesso!");
+        closeCadastroProfissionalModal();
+        updateAllDynamicSelects();
+        renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        showToast(id ? "✅ Cadastro e permissões do colaborador atualizados!" : "✅ Novo colaborador e credenciais registrados com sucesso!");
+    } catch (err) {
+        console.error("Erro ao salvar colaborador:", err);
+        showToast("❌ Erro ao salvar colaborador: " + err.message);
+    }
     return false;
 }
 
