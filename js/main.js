@@ -303,6 +303,127 @@ function renderPortalAuthBar() {
     }
 }
 
+// ==========================================
+// GOOGLE IDENTITY SERVICES (GIS) & LOGIN HERO
+// ==========================================
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Erro ao decodificar JWT do Google:", e);
+        return null;
+    }
+}
+
+function initHeroGoogleAuth() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+            window.google.accounts.id.initialize({
+                client_id: "873519405621-escola-integrarizzi.apps.googleusercontent.com",
+                callback: handleHeroGoogleCredentialResponse,
+                auto_select: false
+            });
+            const container = document.getElementById("g_id_signin_hero");
+            if (container) {
+                window.google.accounts.id.renderButton(container, {
+                    theme: "outline",
+                    size: "large",
+                    width: 360,
+                    text: "continue_with"
+                });
+            }
+        } catch (err) {
+            console.log("Inicialização do Google GIS no Hero:", err);
+        }
+    }
+}
+
+function handleHeroGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+    try {
+        const payload = parseJwt(response.credential);
+        if (!payload || !payload.email) {
+            alert("Não foi possível validar as credenciais da conta do Google.");
+            return;
+        }
+        const email = payload.email.toLowerCase().trim();
+        processHeroLoginWithEmail(email);
+    } catch (err) {
+        console.error("Erro no Google Sign-In do Hero:", err);
+        alert("Ocorreu um erro ao processar o login com o Google. Tente digitar seu e-mail institucional.");
+    }
+}
+
+function heroLoginWithGoogle() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+            window.google.accounts.id.prompt((notification) => {
+                if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment())) {
+                    console.log("Google GIS prompt not displayed:", notification);
+                    const emailPrompt = prompt("Informe seu e-mail institucional oficial da conta do Google (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br):");
+                    if (emailPrompt && emailPrompt.trim()) {
+                        processHeroLoginWithEmail(emailPrompt.trim());
+                    }
+                }
+            });
+            return;
+        } catch (e) {
+            console.log("Erro ao acionar prompt do Google:", e);
+        }
+    }
+    const emailPrompt = prompt("Informe seu e-mail institucional oficial da conta do Google (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br):");
+    if (emailPrompt && emailPrompt.trim()) {
+        processHeroLoginWithEmail(emailPrompt.trim());
+    }
+}
+
+function processHeroLoginWithEmail(email) {
+    if (!email) return;
+    if (!window.sigeDB) return;
+
+    const res = window.sigeDB.loginWithEmail(email);
+
+    if (res.code === 'INVALID_DOMAIN') {
+        alert(`🔒 Acesso Não Permitido\n\n${res.message}\n\nPor favor, utilize sua conta Google Institucional (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br).`);
+        return;
+    }
+
+    if (res.code === 'FIRST_ACCESS_PENDING') {
+        alert(`📝 Solicitação de Primeiro Acesso Registrada!\n\n${res.message}`);
+        const input = document.getElementById('heroLoginEmailInput');
+        if (input) input.value = '';
+        return;
+    }
+
+    if (res.code === 'PENDING_APPROVAL') {
+        alert(`⏳ Acesso em Análise\n\n${res.message}`);
+        const input = document.getElementById('heroLoginEmailInput');
+        if (input) input.value = '';
+        return;
+    }
+
+    if (res.code === 'BLOCKED') {
+        alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
+        return;
+    }
+
+    if (res.code === 'NEEDS_ONBOARDING') {
+        abrirModalOnboardingCadastro(res.user);
+        return;
+    }
+
+    if (res.success && res.user) {
+        renderPortalAuth();
+        updateActionPillars();
+        loadSystems();
+    }
+}
+
 // 2. Painel Central Hero (Apenas quando NÃO logado)
 function renderPortalAuthHeroCard() {
     const card = document.getElementById('portalAuthCard');
@@ -314,28 +435,70 @@ function renderPortalAuthHeroCard() {
         card.style.display = 'block';
         card.innerHTML = `
             <div class="portal-login-card-inner">
-                <div class="login-card-header">
-                    <div class="login-badge"><i class="fa-solid fa-shield-halved"></i> IDENTIFICAÇÃO DO USUÁRIO</div>
+                <div class="login-card-header" style="margin-bottom: 1.2rem;">
+                    <div class="login-badge"><i class="fa-solid fa-shield-halved"></i> IDENTIFICAÇÃO & ACESSO SEGURO</div>
                     <h2 class="login-card-title"><i class="fa-solid fa-id-card-clip"></i> Acesso ao Portal IntegraRizzi</h2>
-                    <p class="login-card-subtitle">Informe seu e-mail funcional institucional (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br) para autenticar e liberar suas ferramentas:</p>
+                    <p class="login-card-subtitle">Entre com sua conta Google Institucional oficial da Rede Municipal de Ensino (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br):</p>
                 </div>
 
-                <div class="login-card-body" style="max-width:560px; margin:0 auto; width:100%;">
+                <div class="login-card-body" style="max-width:540px; margin:0 auto; width:100%;">
+                    <!-- BOTÃO OFICIAL GOOGLE EM DESTAQUE -->
+                    <div style="display:flex; flex-direction:column; gap:8px; align-items:center; width:100%;">
+                        <div id="g_id_signin_hero" style="display:flex; justify-content:center;"></div>
+                        <button type="button" onclick="heroLoginWithGoogle()" class="btn-google-login" style="width:100%; padding:12px 18px; font-size:0.95rem; font-weight:800; background:#ffffff; color:#1f2937; border:1.5px solid #cbd5e1; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer; transition:all 0.2s;">
+                            <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+                            <span>Fazer Login com a Conta do Google</span>
+                        </button>
+                    </div>
+
+                    <!-- DIVISOR OU -->
+                    <div style="display:flex; align-items:center; margin:14px 0 10px 0; color:#94a3b8; font-size:0.75rem; font-weight:800; letter-spacing:0.5px;">
+                        <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+                        <span style="padding:0 10px; text-transform:uppercase;">ou digite seu e-mail institucional</span>
+                        <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+                    </div>
+
+                    <!-- ENTRADA POR EMAIL -->
                     <form class="login-method-box" onsubmit="event.preventDefault(); heroLoginWithEmail();" style="border:none; background:transparent; padding:0;">
-                        <label class="login-method-label" style="font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-envelope"></i> E-mail Institucional Oficial:</label>
                         <div class="login-input-row" style="display:flex; gap:10px;">
-                            <input type="email" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br" required style="flex:1; padding:12px 14px; font-size:0.95rem; border-radius:10px; border:2px solid #cbd5e1;" />
-                            <button type="submit" class="hero-login-btn btn-enter-email" style="padding:12px 22px; font-size:0.95rem; font-weight:800; border-radius:10px; background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(37,99,235,0.3);">
+                            <input type="email" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br" required style="flex:1; padding:11px 14px; font-size:0.92rem; border-radius:10px; border:2px solid #cbd5e1;" />
+                            <button type="submit" class="hero-login-btn btn-enter-email" style="padding:11px 20px; font-size:0.92rem; font-weight:800; border-radius:10px; background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(37,99,235,0.3);">
                                 <i class="fa-solid fa-right-to-bracket"></i> Entrar
                             </button>
                         </div>
-                        <div style="margin-top:12px; font-size:0.82rem; color:#64748b; line-height:1.4;">
-                            <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> <strong>Primeiro Acesso:</strong> Ao informar seu e-mail institucional pela primeira vez, sua solicitação será registrada e aguardará a habilitação de módulos pelo Desenvolvedor do Sistema.
-                        </div>
                     </form>
+
+                    <!-- BOX DE AJUDA / ESQUECEU O EMAIL INSTITUCIONAL -->
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:14px 16px; margin-top:12px; display:flex; flex-direction:column; gap:10px; box-shadow:0 2px 8px rgba(22,163,74,0.06);">
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; margin-top:1px;">
+                                <i class="fa-solid fa-circle-question"></i>
+                            </div>
+                            <div style="flex:1;">
+                                <strong style="color:#166534; font-size:0.9rem; display:block; margin-bottom:2px;">
+                                    Esqueceu ou não sabe seu e-mail institucional?
+                                </strong>
+                                <span style="font-size:0.82rem; color:#15803d; line-height:1.45; display:block;">
+                                    Entre em contato com o instrutor de informática <strong>Elevi Cortelini</strong> pelo WhatsApp para consultar seu e-mail ou solicitar liberação de acesso:
+                                </span>
+                            </div>
+                        </div>
+                        <div style="text-align:center; padding-top:2px;">
+                            <a href="https://api.whatsapp.com/send?phone=5548996692174&text=Ol%C3%A1%20Elevi%2C%20n%C3%A3o%20sei%20ou%20esqueci%20meu%20e-mail%20institucional%20do%20IntegraRizzi%20e%20preciso%20de%20ajuda." target="_blank" rel="noopener noreferrer" style="background:#16a34a; color:white; font-weight:800; font-size:0.86rem; padding:9px 18px; border-radius:10px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow:0 3px 10px rgba(22,163,74,0.3); transition:all 0.2s;">
+                                <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i> Falar com Elevi Cortelini — (48) 99669-2174
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.78rem; color:#64748b; line-height:1.4; margin-top:6px; text-align:center;">
+                        <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> <strong>Primeiro Acesso:</strong> Ao autenticar com seu e-mail institucional pela primeira vez, sua solicitação será registrada e aguardará habilitação de módulos.
+                    </div>
                 </div>
             </div>
         `;
+        setTimeout(() => {
+            initHeroGoogleAuth();
+        }, 100);
     } else {
         // Quando logado, NÃO mostra o card central (tudo fica discretamente no topo)
         card.style.display = 'none';
@@ -352,43 +515,7 @@ function heroLoginWithEmail() {
         input.focus();
         return;
     }
-
-    if (window.sigeDB) {
-        const res = window.sigeDB.loginWithEmail(email);
-        
-        if (res.code === 'INVALID_DOMAIN') {
-            alert(`🔒 Acesso Negado\n\n${res.message}\n\nE-mails pessoais (como @gmail.com ou @hotmail.com) não são aceitos.`);
-            return;
-        }
-
-        if (res.code === 'FIRST_ACCESS_PENDING') {
-            alert(`📝 Solicitação Registrada!\n\n${res.message}`);
-            input.value = '';
-            return;
-        }
-
-        if (res.code === 'PENDING_APPROVAL') {
-            alert(`⏳ Acesso em Análise\n\n${res.message}`);
-            input.value = '';
-            return;
-        }
-
-        if (res.code === 'BLOCKED') {
-            alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
-            return;
-        }
-
-        if (res.code === 'NEEDS_ONBOARDING') {
-            abrirModalOnboardingCadastro(res.user);
-            return;
-        }
-
-        if (res.success && res.user) {
-            renderPortalAuth();
-            updateActionPillars();
-            loadSystems();
-        }
-    }
+    processHeroLoginWithEmail(email);
 }
 
 function abrirModalOnboardingCadastro(user) {
@@ -853,6 +980,9 @@ window.renderPortalAuth = renderPortalAuth;
 window.renderPortalAuthBar = renderPortalAuthBar;
 window.renderPortalAuthHeroCard = renderPortalAuthHeroCard;
 window.heroLoginWithEmail = heroLoginWithEmail;
+window.heroLoginWithGoogle = heroLoginWithGoogle;
+window.initHeroGoogleAuth = initHeroGoogleAuth;
+window.handleHeroGoogleCredentialResponse = handleHeroGoogleCredentialResponse;
 window.switchDevView = switchDevView;
 window.resetDevView = resetDevView;
 window.portalLogout = portalLogout;
