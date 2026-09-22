@@ -49,15 +49,25 @@ function checkSigeAuth() {
     const loginModal = document.getElementById("modalSigeLogin");
     const roleWrapper = document.getElementById("roleSelectorContainerWrapper");
     const btnDev = document.getElementById("btnDevManageUsers");
+    const btnTopAlert = document.getElementById("btnTopBarPendingAlert");
+    const topPendingCount = document.getElementById("topBarPendingCountText");
     const userText = document.getElementById("loggedUserEmailText");
     const opFilter = document.getElementById("opFilterOrientadora");
 
     if (!user) {
         if (loginModal) loginModal.style.display = "flex";
+        if (btnTopAlert) btnTopAlert.style.display = "none";
         return false;
     }
 
     if (loginModal) loginModal.style.display = "none";
+
+    // Se o usuário logado ainda não concluiu o cadastro obrigatório (WhatsApp + consentimento)
+    if (!user.cadastroCompleto) {
+        setTimeout(() => {
+            abrirModalOnboardingCadastro(user);
+        }, 100);
+    }
 
     if (userText) {
         userText.innerHTML = `<i class="fa-solid fa-user-circle"></i> <strong>${user.nome}</strong> (${user.email})`;
@@ -70,6 +80,21 @@ function checkSigeAuth() {
     const isDev = user.role === "desenvolvedor";
     if (roleWrapper) roleWrapper.style.display = isDev ? "inline-flex" : "none";
     if (btnDev) btnDev.style.display = isDev ? "inline-flex" : "none";
+
+    // Alerta de solicitações pendentes na barra do topo (Exclusivo Desenvolvedor)
+    if (btnTopAlert) {
+        if (isDev) {
+            const pendentes = sigeDB.getUsuariosPendentes();
+            if (pendentes.length > 0) {
+                btnTopAlert.style.display = "inline-flex";
+                if (topPendingCount) topPendingCount.innerText = `${pendentes.length} Pendente(s)`;
+            } else {
+                btnTopAlert.style.display = "none";
+            }
+        } else {
+            btnTopAlert.style.display = "none";
+        }
+    }
 
     // Trava de Orientadoras: Orientadora Clarinda / Daiane vêm bloqueadas para a sua própria visão
     if (opFilter) {
@@ -94,14 +119,128 @@ function submitSigeLogin(e) {
     const email = emailInput.value.trim();
     if (!email) return;
 
-    const user = sigeDB.loginWithEmail(email);
-    if (user) {
-        showToast(`Bem-vindo(a), ${user.nome}!`);
+    const res = sigeDB.loginWithEmail(email);
+
+    if (res.code === 'INVALID_DOMAIN') {
+        alert(`🔒 Acesso Negado\n\n${res.message}\n\nE-mails pessoais (como @gmail.com ou @hotmail.com) não são aceitos.`);
+        return;
+    }
+
+    if (res.code === 'FIRST_ACCESS_PENDING') {
+        alert(`📝 Solicitação Registrada!\n\n${res.message}`);
+        emailInput.value = '';
+        return;
+    }
+
+    if (res.code === 'PENDING_APPROVAL') {
+        alert(`⏳ Acesso em Análise\n\n${res.message}`);
+        emailInput.value = '';
+        return;
+    }
+
+    if (res.code === 'BLOCKED') {
+        alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
+        return;
+    }
+
+    if (res.code === 'NEEDS_ONBOARDING') {
+        const loginModal = document.getElementById("modalSigeLogin");
+        if (loginModal) loginModal.style.display = "none";
+        abrirModalOnboardingCadastro(res.user);
+        return;
+    }
+
+    if (res.success && res.user) {
+        showToast(`Bem-vindo(a), ${res.user.nome}!`);
         checkSigeAuth();
         renderAllModules();
-    } else {
-        alert("E-mail não cadastrado no sistema. Verifique a digitação ou solicite autorização ao Desenvolvedor (elcortelini@gmail.com).");
     }
+}
+
+function abrirModalOnboardingCadastro(user) {
+    const modal = document.getElementById("modalOnboardingCadastro");
+    if (!modal) return;
+    document.getElementById("onboardingEmail").value = user.email || "";
+    document.getElementById("onboardingNome").value = user.nome || "";
+    document.getElementById("onboardingCargo").value = (user.cargo && !user.cargo.includes('Aguardando')) ? user.cargo : "";
+    document.getElementById("onboardingTurno").value = user.turno || "Matutino";
+    const phoneInput = document.getElementById("onboardingWhatsapp");
+    if (user.whatsapp || user.telefone) {
+        phoneInput.value = user.whatsapp || user.telefone;
+        mascaraTelefoneInput(phoneInput);
+    } else {
+        phoneInput.value = "";
+    }
+    document.getElementById("onboardingAutorizacaoWhatsApp").checked = false;
+    modal.style.display = "flex";
+}
+
+function mascaraTelefoneInput(input) {
+    if (!input) return;
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length > 10) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
+    } else if (v.length > 6) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
+    } else if (v.length > 2) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
+    } else if (v.length > 0) {
+        input.value = `(${v}`;
+    }
+}
+
+function submitOnboardingCadastro() {
+    const email = document.getElementById("onboardingEmail").value.trim();
+    const nome = document.getElementById("onboardingNome").value.trim();
+    const cargo = document.getElementById("onboardingCargo").value.trim();
+    const turno = document.getElementById("onboardingTurno").value;
+    const whatsapp = document.getElementById("onboardingWhatsapp").value.trim();
+    const autorizou = document.getElementById("onboardingAutorizacaoWhatsApp").checked;
+
+    if (!nome) {
+        alert("Por favor, preencha seu nome completo.");
+        return;
+    }
+    if (!cargo) {
+        alert("Por favor, informe seu cargo ou função.");
+        return;
+    }
+    const cleanPhone = whatsapp.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+        alert("Por favor, informe um telefone de WhatsApp válido com DDD (mínimo 10 dígitos).");
+        return;
+    }
+    if (!autorizou) {
+        alert("É obrigatório marcar a caixa autorizando o recebimento de mensagens oficiais no seu WhatsApp.");
+        return;
+    }
+
+    if (window.sigeDB) {
+        const user = window.sigeDB.concluirCadastroUsuario(email, {
+            nome,
+            cargo,
+            turno,
+            whatsapp: cleanPhone,
+            autorizaMensagensWhatsApp: true
+        });
+
+        if (user) {
+            const modal = document.getElementById("modalOnboardingCadastro");
+            if (modal) modal.style.display = "none";
+            showToast("🎉 Cadastro concluído com sucesso! Bem-vindo(a) ao IntegraRizzi.");
+            checkSigeAuth();
+            renderAllModules();
+        }
+    }
+}
+
+function cancelarOnboardingCadastro() {
+    const modal = document.getElementById("modalOnboardingCadastro");
+    if (modal) modal.style.display = "none";
+    if (window.sigeDB) window.sigeDB.logout();
+    checkSigeAuth();
+    renderAllModules();
 }
 
 function fillLoginEmail(email) {
@@ -864,13 +1003,39 @@ async function handleGoogleCredentialResponse(response) {
 }
 
 function processGoogleLogin(email, nomeOpcional) {
-    const user = sigeDB.loginWithEmail(email);
-    if (user) {
-        showToast(`Google Auth: Bem-vindo(a), ${user.nome}!`);
+    const res = sigeDB.loginWithEmail(email);
+
+    if (res.code === 'INVALID_DOMAIN') {
+        alert(`🔒 Acesso Não Permitido\n\n${res.message}\n\nPor favor, utilize sua conta Google Institucional (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br).`);
+        return;
+    }
+
+    if (res.code === 'FIRST_ACCESS_PENDING') {
+        alert(`📝 Solicitação de Primeiro Acesso Registrada!\n\n${res.message}`);
+        return;
+    }
+
+    if (res.code === 'PENDING_APPROVAL') {
+        alert(`⏳ Acesso em Análise\n\n${res.message}`);
+        return;
+    }
+
+    if (res.code === 'BLOCKED') {
+        alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
+        return;
+    }
+
+    if (res.code === 'NEEDS_ONBOARDING') {
+        const loginModal = document.getElementById("modalSigeLogin");
+        if (loginModal) loginModal.style.display = "none";
+        abrirModalOnboardingCadastro(res.user);
+        return;
+    }
+
+    if (res.success && res.user) {
+        showToast(`Google Auth: Bem-vindo(a), ${res.user.nome}!`);
         checkSigeAuth();
         renderAllModules();
-    } else {
-        alert(`🔒 Acesso Negado\n\nA conta do Google (${email}) não possui permissão de acesso cadastrada.\n\nPor favor, solicite a inclusão do seu e-mail ao Desenvolvedor do Sistema (elcortelini@gmail.com).`);
     }
 }
 
@@ -923,6 +1088,15 @@ window.marcarAguardandoSecretaria = marcarAguardandoSecretaria;
 window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 window.loginWithGooglePrompt = loginWithGooglePrompt;
 window.processGoogleLogin = processGoogleLogin;
+window.abrirModalOnboardingCadastro = abrirModalOnboardingCadastro;
+window.submitOnboardingCadastro = submitOnboardingCadastro;
+window.cancelarOnboardingCadastro = cancelarOnboardingCadastro;
+window.mascaraTelefoneInput = mascaraTelefoneInput;
+window.renderAdminPendingUsers = renderAdminPendingUsers;
+window.ajustarModulosDefaultPendente = ajustarModulosDefaultPendente;
+window.execAprovarPendente = execAprovarPendente;
+window.execRecusarPendente = execRecusarPendente;
+window.scrollToPendingRequests = scrollToPendingRequests;
 
 // Funções do Painel RBAC (Controle de Acessos & Módulos)
 window.setRbacFilterPerfil = setRbacFilterPerfil;
@@ -8063,7 +8237,153 @@ function filtrarEquipeEscolarTexto() {
     renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
 }
 
+function renderAdminPendingUsers() {
+    const card = document.getElementById("adminPendingUsersCard");
+    const tbody = document.getElementById("adminPendingUsersTableBody");
+    const badgeCount = document.getElementById("badgePendingUsersCount");
+    if (!card || !tbody) return;
+
+    const logged = sigeDB.getLoggedUser();
+    const isDev = logged && (logged.role === 'desenvolvedor' || logged.email.toLowerCase().trim() === 'elcortelini@gmail.com');
+    if (!isDev) {
+        card.style.display = 'none';
+        return;
+    }
+
+    const pendentes = sigeDB.getUsuariosPendentes();
+    if (badgeCount) {
+        badgeCount.innerText = `${pendentes.length} Pendente(s)`;
+    }
+
+    const btnTopAlert = document.getElementById("btnTopBarPendingAlert");
+    const topPendingCount = document.getElementById("topBarPendingCountText");
+    if (btnTopAlert) {
+        if (pendentes.length > 0) {
+            btnTopAlert.style.display = "inline-flex";
+            if (topPendingCount) topPendingCount.innerText = `${pendentes.length} Pendente(s)`;
+        } else {
+            btnTopAlert.style.display = "none";
+        }
+    }
+
+    if (pendentes.length === 0) {
+        card.style.display = 'none';
+        tbody.innerHTML = '';
+        return;
+    }
+
+    card.style.display = 'block';
+
+    const modulos = [
+        { key: 'op', label: 'OE', fullLabel: 'Orientação Educacional', color: '#fef3c7', textColor: '#92400e' },
+        { key: 'mural', label: 'Mural', fullLabel: 'Mural & Prazos', color: '#f1f5f9', textColor: '#334155' },
+        { key: 'supervisao', label: 'Supervisão', fullLabel: 'Supervisão Pedagógica', color: '#f5f3ff', textColor: '#6b21a8' },
+        { key: 'admin', label: 'ADM', fullLabel: 'Administração Integrada', color: '#eff6ff', textColor: '#1e40af' },
+        { key: 'direcao', label: '👑 Direção', fullLabel: 'Direção Executiva', color: '#ecfdf5', textColor: '#065f46' },
+        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', color: '#e0f2fe', textColor: '#0369a1' }
+    ];
+
+    tbody.innerHTML = pendentes.map((u, idx) => {
+        const dataFormatada = u.solicitadoEm || (u.dataSolicitacao ? new Date(u.dataSolicitacao).toLocaleDateString('pt-BR') : 'Recente');
+        return `
+            <tr style="border-bottom: 1px solid #fed7aa;">
+                <td style="padding:10px 12px;">
+                    <strong style="color:#0f172a; display:block; font-size:0.9rem;">${escapeHtml(u.nome)}</strong>
+                    <span style="color:#64748b; font-size:0.78rem;"><i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}</span>
+                </td>
+                <td style="padding:10px 12px; color:#64748b; font-size:0.8rem;">
+                    <i class="fa-regular fa-clock"></i> ${escapeHtml(dataFormatada)}
+                </td>
+                <td style="padding:10px 12px;">
+                    <select id="pending_role_${idx}" onchange="ajustarModulosDefaultPendente(${idx})" style="padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.82rem; font-weight:700; width:100%; background:white;">
+                        <option value="docentes">👨‍🏫 Docente</option>
+                        <option value="orientacao">🧭 Orientação Educacional</option>
+                        <option value="supervisao">📋 Supervisão Pedagógica</option>
+                        <option value="secretaria">📑 Secretaria Escolar</option>
+                        <option value="direcao">👑 Direção Escolar</option>
+                        <option value="apoio">🔧 Apoio / TI</option>
+                    </select>
+                </td>
+                <td style="padding:10px 12px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        ${modulos.map(m => `
+                            <label style="display:inline-flex; align-items:center; gap:4px; background:${m.color}; color:${m.textColor}; border:1px solid rgba(0,0,0,0.08); padding:3px 7px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:800;" title="${m.fullLabel}">
+                                <input type="checkbox" id="pending_mod_${idx}_${m.key}" ${m.key === 'mural' ? 'checked' : ''}> ${m.label}
+                            </label>
+                        `).join('')}
+                    </div>
+                </td>
+                <td style="padding:10px 12px; text-align:right;">
+                    <div style="display:inline-flex; gap:6px;">
+                        <button type="button" onclick="execAprovarPendente('${escapeHtml(u.email)}', ${idx})" class="btn" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 6px rgba(22,163,74,0.3);">
+                            <i class="fa-solid fa-check"></i> Aprovar
+                        </button>
+                        <button type="button" onclick="execRecusarPendente('${escapeHtml(u.email)}')" class="btn" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:6px 8px; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Recusar solicitação">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function ajustarModulosDefaultPendente(idx) {
+    const roleSelect = document.getElementById(`pending_role_${idx}`);
+    if (!roleSelect) return;
+    const role = roleSelect.value;
+    const defaults = sigeDB.getDefaultPermissoesByRole(role);
+    ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+        const chk = document.getElementById(`pending_mod_${idx}_${k}`);
+        if (chk) chk.checked = !!defaults[k];
+    });
+}
+
+function execAprovarPendente(email, idx) {
+    const roleSelect = document.getElementById(`pending_role_${idx}`);
+    const role = roleSelect ? roleSelect.value : 'docentes';
+    const perms = {
+        op: !!document.getElementById(`pending_mod_${idx}_op`)?.checked,
+        mural: !!document.getElementById(`pending_mod_${idx}_mural`)?.checked,
+        supervisao: !!document.getElementById(`pending_mod_${idx}_supervisao`)?.checked,
+        admin: !!document.getElementById(`pending_mod_${idx}_admin`)?.checked,
+        direcao: !!document.getElementById(`pending_mod_${idx}_direcao`)?.checked,
+        uniformes: !!document.getElementById(`pending_mod_${idx}_uniformes`)?.checked
+    };
+
+    const user = sigeDB.aprovarUsuarioPendente(email, role, perms);
+    if (user) {
+        showToast(`✅ Acesso de ${user.nome} autorizado com sucesso!`);
+        renderAdminPendingUsers();
+        renderEquipeEscolarTable();
+        renderAdminPermissoesUsuarios();
+    }
+}
+
+function execRecusarPendente(email) {
+    if (!confirm(`Deseja realmente recusar e remover a solicitação de acesso para ${email}?`)) return;
+    if (sigeDB.recusarUsuarioPendente(email)) {
+        showToast(`Solicitação de ${email} removida.`);
+        renderAdminPendingUsers();
+        renderEquipeEscolarTable();
+        renderAdminPermissoesUsuarios();
+    }
+}
+
+function scrollToPendingRequests() {
+    if (typeof switchSigeTab === 'function') {
+        switchSigeTab('admin');
+    }
+    setTimeout(() => {
+        const card = document.getElementById('adminPendingUsersCard');
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 150);
+}
+
 function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto = equipeBuscaTexto) {
+    renderAdminPendingUsers();
     const tbody = document.getElementById("admEquipeTableBody");
     if (!tbody) return;
 

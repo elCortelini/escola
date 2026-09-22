@@ -672,51 +672,303 @@ const defaultSigeData = {
 
     contatosWhatsAppDirecao: [
         {
+            id: "w-cont-plan-1",
+            nome: "Jackson Silvano",
+            telefone: "47984862755",
+            tags: ["Equipe Escolar","Direção Escolar"],
+            tag: "Equipe Escolar, Direção Escolar",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Direção Escolar | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-2",
+            nome: "Giovana Schizzi Zanin",
+            telefone: "47996257868",
+            tags: ["Equipe Escolar","Geral"],
+            tag: "Equipe Escolar, Geral",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-3",
+            nome: "Lívia Rodrigues",
+            telefone: "47996247185",
+            tags: ["Equipe Escolar","2° ano 203","Vespertino"],
+            tag: "Equipe Escolar, 2° ano 203, Vespertino",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 2° ano 203 | Obs: 5° feira hora atividade | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-4",
+            nome: "Cristiane Diel",
+            telefone: "47999606060",
+            tags: ["Equipe Escolar","Geral"],
+            tag: "Equipe Escolar, Geral",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Obs: 4ª feira hora atividade e 5ª e 6ª feiras, aulas presenciais. | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-5",
+            nome: "Danielle Lima de Aguiar",
+            telefone: "47996693910",
+            tags: ["Equipe Escolar","EVA","Matutino"],
+            tag: "Equipe Escolar, EVA, Matutino",
+            turno: "Matutino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: EVA | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-6",
+            nome: "Natana Souza da Rosa",
+            telefone: "48996532118",
+            tags: ["Equipe Escolar","801","802","803"],
+            tag: "Equipe Escolar, 801, 802, 803",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 801,802,803 | Obs: Terça feira vespertino hora atividade | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-7",
+            nome: "Luã de Souza Cardoso",
+            telefone: "47984760514",
+            tags: ["Equipe Escolar","3","4","6","7 e 8 anos"],
+            tag: "Equipe Escolar, 3, 4, 6, 7 e 8 anos",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 3, 4, 6, 7 e 8 anos | Obs: H.Atividade nas sextas. | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-8",
+            nome: "Debora Felix",
+            telefone: "47984015052",
+            tags: ["Equipe Escolar","4 ° ano 402","Matutino"],
+            tag: "Equipe Escolar, 4 ° ano 402, Matutino",
+            turno: "Matutino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 4 ° ano 402 | Obs: Hora atividade - Terça-feira | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-9",
+            nome: "Ester Roberta Pereira de Souza",
+            telefone: "47996984977",
+            tags: ["Equipe Escolar","2º","3º","4º","5º","6º anos"],
+            tag: "Equipe Escolar, 2º, 3º, 4º, 5º, 6º anos",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 2º, 3º, 4º, 5º, 6º anos | Obs: H A  Segunda feira | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-10",
+            nome: "Roberta Silva dos Santos",
+            telefone: "82999549677",
+            tags: ["Equipe Escolar","501","Matutino"],
+            tag: "Equipe Escolar, 501, Matutino",
+            turno: "Matutino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 501 | Obs: H A  Segunda feira | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-11",
+            nome: "Patricia Valente Tinoco",
+            telefone: "47996207082",
+            tags: ["Equipe Escolar","202","306"],
+            tag: "Equipe Escolar, 202, 306",
+            turno: "Ambos",
+            autorizaWhatsApp: false,
+            notas: "Turmas/Atuação: 202/306 | Autorizou WhatsApp: Não"
+        },
+        {
+            id: "w-cont-plan-12",
+            nome: "Angela Maria dos Santos",
+            telefone: "47992166619",
+            tags: ["Equipe Escolar","504","Vespertino"],
+            tag: "Equipe Escolar, 504, Vespertino",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 504 | Obs: H.A. nas sextas feiras. | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-13",
+            nome: "Aline Santos",
+            telefone: "47984779459",
+            tags: ["Equipe Escolar","2°","4° e 5°"],
+            tag: "Equipe Escolar, 2°, 4° e 5°",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 2°,4° e 5° | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-14",
+            nome: "Josiane Campos",
+            telefone: "47996562003",
+            tags: ["Equipe Escolar","1° ao 5°"],
+            tag: "Equipe Escolar, 1° ao 5°",
+            turno: "Ambos",
+            autorizaWhatsApp: false,
+            notas: "Turmas/Atuação: 1° ao 5° | Autorizou WhatsApp: Não"
+        },
+        {
+            id: "w-cont-plan-15",
+            nome: "Alessandra da Silva Azevedo de Pontes",
+            telefone: "47996419389",
+            tags: ["Equipe Escolar","Todas turmas","Vespertino"],
+            tag: "Equipe Escolar, Todas turmas, Vespertino",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Todas turmas | Obs: AAEE | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-16",
+            nome: "Esther Cristina dos Santos Neves",
+            telefone: "47984483243",
+            tags: ["Equipe Escolar","Psicologa","Matutino"],
+            tag: "Equipe Escolar, Psicologa, Matutino",
+            turno: "Matutino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Psicologa | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-17",
+            nome: "Josiane da Silva",
+            telefone: "47996189352",
+            tags: ["Equipe Escolar","1°ano e E.V.A"],
+            tag: "Equipe Escolar, 1°ano e E.V.A",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 1°ano e E.V.A | Obs: H.A  nas sextas feiras | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-18",
+            nome: "Marilene Anderle Schaefer",
+            telefone: "479989067766",
+            tags: ["Equipe Escolar","Sala - AEE"],
+            tag: "Equipe Escolar, Sala - AEE",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Sala - AEE | Obs: H.A. nas sextas-feiras | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-19",
+            nome: "Joselina Evaristo Hernandes",
+            telefone: "479984289307",
+            tags: ["Equipe Escolar","504 - AAEE","Vespertino"],
+            tag: "Equipe Escolar, 504 - AAEE, Vespertino",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: 504 - AAEE | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-20",
+            nome: "Márcia Regina Cabral de Souza",
+            telefone: "47999156461",
+            tags: ["Equipe Escolar","EVA","Vespertino"],
+            tag: "Equipe Escolar, EVA, Vespertino",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: EVA | Obs: H.A nas sextas-feiras | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-21",
+            nome: "SIMONNE ALVES DOS SANTOS KLOCZAK",
+            telefone: "43998048585",
+            tags: ["Equipe Escolar","MATEMÁTICA"],
+            tag: "Equipe Escolar, MATEMÁTICA",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: MATEMÁTICA | Obs: H.A. TERÇA-FEIRA | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-22",
+            nome: "Maristela Aparecida Vieira",
+            telefone: "47996769161",
+            tags: ["Equipe Escolar","Supervisora Escolar"],
+            tag: "Equipe Escolar, Supervisora Escolar",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Supervisora Escolar | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-23",
+            nome: "Michele Aranha Siqueira",
+            telefone: "47988200196",
+            tags: ["Equipe Escolar","Inglês"],
+            tag: "Equipe Escolar, Inglês",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Inglês | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-24",
+            nome: "Nathalia Cristina Nerino dos Santos",
+            telefone: "47991590214",
+            tags: ["Equipe Escolar","Arte"],
+            tag: "Equipe Escolar, Arte",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Turmas/Atuação: Arte | Obs: H.A nas quartas-feiras | Autorizou WhatsApp: Sim"
+        },
+        {
+            id: "w-cont-plan-25",
+            nome: "Sueyzi da Silva Vilhena",
+            telefone: "96984326893",
+            tags: ["Equipe Escolar","Geral"],
+            tag: "Equipe Escolar, Geral",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
+            notas: "Autorizou WhatsApp: Sim"
+        },
+        {
             id: "w-cont-1",
             nome: "Sra. Mariana (Mãe Lucas Gabriel)",
             telefone: "47999881122",
-            tags: ["Pais / Responsáveis", "3º Ano A", "Conselho de Classe"],
+            tags: ["Pais / Responsáveis","3º Ano A","Conselho de Classe"],
             tag: "Pais / Responsáveis, 3º Ano A",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
             notas: "Responsável comparece às convocações, prefere contato à tarde."
         },
         {
             id: "w-cont-2",
             nome: "Conselho Tutelar Polo Fazenda",
             telefone: "4733445566",
-            tags: ["Conselho Tutelar / SME", "Órgãos Externos"],
+            tags: ["Conselho Tutelar / SME","Órgãos Externos"],
             tag: "Conselho Tutelar / SME",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
             notas: "Plantão do Conselho Tutelar para encaminhamentos APOIA."
         },
         {
             id: "w-cont-3",
             nome: "Presidência da APMF - Pedro Rizzi",
             telefone: "47991223344",
-            tags: ["Conselho Escolar / APMF", "Financeiro"],
+            tags: ["Conselho Escolar / APMF","Financeiro"],
             tag: "Conselho Escolar / APMF",
+            turno: "Ambos",
+            autorizaWhatsApp: true,
             notas: "Contato oficial da diretoria da Associação de Pais e Mestres."
-        },
-        {
-            id: "w-cont-4",
-            nome: "Prof. Ricardo - Representante Docente",
-            telefone: "47997665544",
-            tags: ["Equipe Docente", "Anos Finais", "Matemática"],
-            tag: "Equipe Docente",
-            notas: "Comunicação rápida sobre pautas dos professores dos Anos Finais."
         },
         {
             id: "w-cont-5",
             nome: "Sr. Carlos (Pai de Isabella Rocha)",
             telefone: "47988776655",
-            tags: ["Pais / Responsáveis", "4º Ano B"],
+            tags: ["Pais / Responsáveis","4º Ano B"],
             tag: "Pais / Responsáveis, 4º Ano B",
+            turno: "Vespertino",
+            autorizaWhatsApp: true,
             notas: "Pai da aluna Isabella Rocha."
         },
         {
             id: "w-cont-6",
             nome: "Sra. Juliana (Mãe de Enzo Gabriel)",
             telefone: "47992334455",
-            tags: ["Pais / Responsáveis", "1º Ano A", "Alunos Novos"],
+            tags: ["Pais / Responsáveis","1º Ano A","Alunos Novos"],
             tag: "Pais / Responsáveis, 1º Ano A",
+            turno: "Matutino",
+            autorizaWhatsApp: true,
             notas: "Mãe do aluno novo matriculado recentemente."
         }
     ],
@@ -986,11 +1238,31 @@ class SigeDatabase {
                 contatosWhatsAppDirecao: parsed.contatosWhatsAppDirecao || defaultSigeData.contatosWhatsAppDirecao,
                 mensagensWhatsAppLog: parsed.mensagensWhatsAppLog || defaultSigeData.mensagensWhatsAppLog
             };
+
+            // Sincroniza e mescla os contatos oficiais da planilha com a lista salva localmente
+            if (!Array.isArray(merged.contatosWhatsAppDirecao) || merged.contatosWhatsAppDirecao.length === 0) {
+                merged.contatosWhatsAppDirecao = [...defaultSigeData.contatosWhatsAppDirecao];
+            } else {
+                defaultSigeData.contatosWhatsAppDirecao.forEach(defCont => {
+                    const cleanDefTel = defCont.telefone ? defCont.telefone.replace(/\D/g, '') : '';
+                    const jaExiste = merged.contatosWhatsAppDirecao.some(c => {
+                        const cleanC = c.telefone ? c.telefone.replace(/\D/g, '') : '';
+                        return (cleanDefTel && cleanC && cleanDefTel === cleanC) ||
+                               (c.nome && defCont.nome && c.nome.toLowerCase().trim() === defCont.nome.toLowerCase().trim());
+                    });
+                    if (!jaExiste) {
+                        merged.contatosWhatsAppDirecao.push(defCont);
+                    }
+                });
+            }
+
             if (Array.isArray(merged.usuariosCadastrados)) {
                 merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
                     const defaultUser = defaultSigeData.usuariosCadastrados.find(du => du.email === u.email);
                     return {
                         ...u,
+                        status: u.status || 'aprovado',
+                        cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || !!(u.telefone && u.telefone.length >= 10)),
                         permissoes: u.permissoes || (defaultUser ? defaultUser.permissoes : { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false })
                     };
                 });
@@ -1073,6 +1345,8 @@ class SigeDatabase {
                     nome: "Elevi Cortelini (Desenvolvedor)", 
                     role: "desenvolvedor", 
                     cargo: "Desenvolvedor do Sistema",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
                 },
                 { 
@@ -1080,6 +1354,8 @@ class SigeDatabase {
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
                     cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 },
                 { 
@@ -1087,6 +1363,8 @@ class SigeDatabase {
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
                     cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 },
                 { 
@@ -1094,6 +1372,8 @@ class SigeDatabase {
                     nome: "Clarinda Rosa Pereira", 
                     role: "orientadora_clarinda", 
                     cargo: "Orientadora Educacional — Séries Iniciais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 },
                 { 
@@ -1101,6 +1381,8 @@ class SigeDatabase {
                     nome: "Secretaria Escolar", 
                     role: "secretaria", 
                     cargo: "Secretaria & Recepção",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true }
                 },
                 { 
@@ -1108,6 +1390,8 @@ class SigeDatabase {
                     nome: "Direção Escolar", 
                     role: "direcao", 
                     cargo: "Direção & Gestão Institucional",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
                 }
             ];
@@ -1120,13 +1404,23 @@ class SigeDatabase {
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
                     cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 });
                 saveNeeded = true;
             }
 
-            // Garante objeto de permissões completo em todos os usuários existentes
+            // Garante objeto de permissões completo e status em todos os usuários existentes
             this.data.usuariosCadastrados.forEach(u => {
+                if (!u.status) {
+                    u.status = 'aprovado';
+                    saveNeeded = true;
+                }
+                if (u.cadastroCompleto === undefined) {
+                    u.cadastroCompleto = (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || (u.telefone && u.telefone.length >= 10));
+                    saveNeeded = true;
+                }
                 if (!u.permissoes || typeof u.permissoes !== 'object') {
                     u.permissoes = this.getDefaultPermissoesByRole(u.role);
                     saveNeeded = true;
@@ -1142,6 +1436,8 @@ class SigeDatabase {
                 // O desenvolvedor master sempre tem todos os acessos
                 if (u.email.toLowerCase().trim() === "elcortelini@gmail.com") {
                     u.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+                    u.status = 'aprovado';
+                    u.cadastroCompleto = true;
                 }
             });
         }
@@ -1250,12 +1546,168 @@ class SigeDatabase {
         return novosAdicionados;
     }
 
+    isEmailInstitucional(email) {
+        if (!email) return false;
+        const clean = email.toLowerCase().trim();
+        if (clean === "dev" || clean === "admin" || clean === "desenvolvedor" || clean === "elcortelini@gmail.com") return true;
+        return clean.endsWith("@edu.itajai.sc.gov.br") || 
+               clean.endsWith("@itajai.sc.gov.br") || 
+               clean.endsWith("@escola.gov.br") || 
+               clean.endsWith("@escola.internal");
+    }
+
+    getUsuariosPendentes() {
+        const list = this.getUsuarios();
+        return list.filter(u => u.status === 'pendente');
+    }
+
+    aprovarUsuarioPendente(email, role = 'docentes', permissoes = null, cargo = '') {
+        if (!email) return false;
+        const clean = email.toLowerCase().trim();
+        const list = this.getUsuarios();
+        const user = list.find(u => u.email.toLowerCase().trim() === clean);
+        if (!user) return false;
+
+        user.status = 'aprovado';
+        user.role = role;
+        user.permissoes = permissoes || this.getDefaultPermissoesByRole(role);
+        if (cargo) user.cargo = cargo;
+        user.dataAprovacao = new Date().toISOString();
+
+        // Sincroniza com equipe escolar
+        if (this.data && Array.isArray(this.data.equipeEscola)) {
+            let prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === clean);
+            if (prof) {
+                prof.status = 'aprovado';
+                prof.permissoes = user.permissoes;
+                prof.setor = role;
+                if (cargo) prof.cargoFuncao = cargo;
+            } else {
+                this.data.equipeEscola.push({
+                    id: user.id || ('eq_' + Date.now()),
+                    nome: user.nome,
+                    email: user.email,
+                    telefone: user.telefone || user.whatsapp || '',
+                    setor: role,
+                    cargoFuncao: user.cargo || 'Colaborador Escolar',
+                    status: 'aprovado',
+                    permissoes: user.permissoes,
+                    turmasOuSalas: '',
+                    turno: 'Matutino'
+                });
+            }
+        }
+
+        this.addAuditLog(`Aprovação de Acesso (${user.nome} - ${user.email} - Perfil: ${role})`, 'Desenvolvedor');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return user;
+    }
+
+    recusarUsuarioPendente(email) {
+        if (!email) return false;
+        const clean = email.toLowerCase().trim();
+        let list = this.getUsuarios();
+        list = list.filter(u => u.email.toLowerCase().trim() !== clean);
+        this.data.usuariosCadastrados = list;
+        this.addAuditLog(`Recusa/Exclusão de Solicitação de Acesso (${clean})`, 'Desenvolvedor');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
+    }
+
+    concluirCadastroUsuario(email, dados) {
+        if (!email || !dados) return false;
+        const clean = email.toLowerCase().trim();
+        const list = this.getUsuarios();
+        let user = list.find(u => u.email.toLowerCase().trim() === clean);
+        if (!user) return false;
+
+        if (dados.nome) user.nome = dados.nome.trim();
+        if (dados.cargo) user.cargo = dados.cargo.trim();
+        if (dados.turno) user.turno = dados.turno;
+        const cleanPhone = (dados.whatsapp || '').replace(/\D/g, '');
+        user.whatsapp = cleanPhone;
+        user.telefone = cleanPhone;
+        user.autorizaMensagensWhatsApp = !!dados.autorizaMensagensWhatsApp;
+        user.dataConsentimento = new Date().toISOString();
+        user.cadastroCompleto = true;
+
+        // Atualiza ou insere na lista de contatos do WhatsApp (contatosWhatsAppDirecao)
+        if (!Array.isArray(this.data.contatosWhatsAppDirecao)) {
+            this.data.contatosWhatsAppDirecao = [];
+        }
+        const contExistente = this.data.contatosWhatsAppDirecao.find(c => 
+            (c.telefone && c.telefone.replace(/\D/g, '') === cleanPhone) ||
+            (c.nome && c.nome.toLowerCase().trim() === user.nome.toLowerCase().trim())
+        );
+
+        const tagTurno = user.turno || "Geral";
+        if (contExistente) {
+            contExistente.nome = user.nome;
+            contExistente.telefone = cleanPhone;
+            contExistente.autorizaWhatsApp = true;
+            contExistente.turno = user.turno || contExistente.turno || "Ambos";
+            if (!contExistente.tags) contExistente.tags = [];
+            if (!contExistente.tags.includes("Equipe Escolar")) contExistente.tags.push("Equipe Escolar");
+            contExistente.tag = contExistente.tags.join(", ");
+            contExistente.notas = `Cargo: ${user.cargo || '-'} | Consentimento WhatsApp: Sim (${new Date().toLocaleDateString('pt-BR')})`;
+        } else {
+            this.data.contatosWhatsAppDirecao.push({
+                id: 'w-cont-user-' + Date.now(),
+                nome: user.nome,
+                telefone: cleanPhone,
+                tags: ["Equipe Escolar", tagTurno],
+                tag: `Equipe Escolar, ${tagTurno}`,
+                turno: user.turno || "Ambos",
+                autorizaWhatsApp: true,
+                notas: `Cargo: ${user.cargo || '-'} | Consentimento WhatsApp: Sim (${new Date().toLocaleDateString('pt-BR')})`
+            });
+        }
+
+        // Sincroniza com equipe escolar
+        if (this.data && Array.isArray(this.data.equipeEscola)) {
+            let prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === clean);
+            if (prof) {
+                prof.nome = user.nome;
+                prof.telefone = cleanPhone;
+                if (user.cargo) prof.cargoFuncao = user.cargo;
+                if (user.turno) prof.turno = user.turno;
+            } else {
+                this.data.equipeEscola.push({
+                    id: user.id || ('eq_' + Date.now()),
+                    nome: user.nome,
+                    email: user.email,
+                    telefone: cleanPhone,
+                    setor: user.role || 'docentes',
+                    cargoFuncao: user.cargo || 'Colaborador Escolar',
+                    status: 'aprovado',
+                    permissoes: user.permissoes,
+                    turmasOuSalas: '',
+                    turno: user.turno || 'Matutino'
+                });
+            }
+        }
+
+        localStorage.setItem("sige_logged_email", user.email);
+        this.setRole(user.role || 'comunidade');
+        this.addAuditLog(`Conclusão de Cadastro & Consentimento WhatsApp (${user.nome} - ${user.email})`, 'Usuário');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return user;
+    }
+
     getLoggedUser() {
         const loggedEmail = localStorage.getItem("sige_logged_email");
         if (!loggedEmail) return null;
         const cleanEmail = loggedEmail.toLowerCase().trim();
         const users = this.getUsuarios();
         let found = users.find(u => (u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail));
+
+        if (found && found.status === 'pendente') {
+            localStorage.removeItem("sige_logged_email");
+            return null;
+        }
 
         // Se estiver na equipe escolar, garante que as permissões mais recentes da equipe prevalecem
         if (this.data && Array.isArray(this.data.equipeEscola)) {
@@ -1271,10 +1723,12 @@ class SigeDatabase {
                     }
                     found = {
                         id: prof.id,
-                        email: prof.email ? prof.email.toLowerCase().trim() : cleanEmail,
-                        nome: prof.nome,
-                        role: roleKey,
+                        email: prof.email ? prof.email.toLowerCase().trim() : cleanEmail, 
+                        nome: prof.nome, 
+                        role: roleKey, 
                         cargo: prof.cargoFuncao || prof.setor,
+                        status: prof.status || "aprovado",
+                        cadastroCompleto: !!(prof.telefone && prof.telefone.length >= 10),
                         permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
                     };
                 } else if (prof.permissoes) {
@@ -1290,6 +1744,8 @@ class SigeDatabase {
                 nome: "Elevi Cortelini (Desenvolvedor)", 
                 role: "desenvolvedor", 
                 cargo: "Desenvolvedor do Sistema", 
+                status: "aprovado",
+                cadastroCompleto: true,
                 permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } 
             };
         }
@@ -1297,10 +1753,48 @@ class SigeDatabase {
     }
 
     loginWithEmail(emailOrId) {
-        if (!emailOrId) return null;
+        if (!emailOrId) return { success: false, code: 'EMPTY', message: 'Por favor, informe seu e-mail institucional.' };
         let cleanInput = emailOrId.toLowerCase().trim();
         if (cleanInput === "dev" || cleanInput === "admin" || cleanInput === "desenvolvedor") {
             cleanInput = "elcortelini@gmail.com";
+        }
+
+        // Validação Estrita: Apenas e-mails institucionais oficiais são permitidos
+        if (!this.isEmailInstitucional(cleanInput)) {
+            return {
+                success: false,
+                code: 'INVALID_DOMAIN',
+                message: 'Apenas e-mails institucionais oficiais (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br) são permitidos para acesso ao IntegraRizzi.'
+            };
+        }
+
+        // Caso Especial: Desenvolvedor do Sistema (Acesso Pleno Garantido)
+        if (cleanInput === "elcortelini@gmail.com") {
+            let devUser = this.getUsuarios().find(u => u.email.toLowerCase().trim() === "elcortelini@gmail.com");
+            if (!devUser) {
+                devUser = { 
+                    email: "elcortelini@gmail.com", 
+                    nome: "Elevi Cortelini (Desenvolvedor)", 
+                    role: "desenvolvedor", 
+                    cargo: "Desenvolvedor do Sistema",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                };
+                this.addUsuario(devUser);
+            } else {
+                devUser.status = "aprovado";
+                devUser.cadastroCompleto = true;
+                devUser.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+            }
+            localStorage.setItem("sige_logged_email", devUser.email);
+            this.setRole("desenvolvedor");
+            return {
+                success: true,
+                code: 'SUCCESS',
+                message: 'Acesso como Desenvolvedor concedido com sucesso!',
+                user: devUser
+            };
         }
 
         const users = this.getUsuarios();
@@ -1319,16 +1813,19 @@ class SigeDatabase {
                 }
                 user = { 
                     id: prof.id,
-                    email: prof.email ? prof.email.toLowerCase().trim() : `${prof.id}@escola.internal`, 
+                    email: prof.email ? prof.email.toLowerCase().trim() : cleanInput, 
                     nome: prof.nome, 
                     role: roleKey, 
                     cargo: prof.cargoFuncao || prof.setor,
+                    status: prof.status || "aprovado",
+                    cadastroCompleto: !!(prof.telefone && prof.telefone.length >= 10),
                     permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
                 };
                 this.addUsuario(user);
             }
         }
 
+        // Casos de Orientadoras Oficiais
         if (!user) {
             if (cleanInput === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanInput === "daiane@escola.gov.br") {
                 user = { 
@@ -1336,6 +1833,8 @@ class SigeDatabase {
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
                     cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 };
                 this.addUsuario(user);
@@ -1345,31 +1844,88 @@ class SigeDatabase {
                     nome: "Clarinda Rosa Pereira", 
                     role: "orientadora_clarinda", 
                     cargo: "Orientadora Educacional — Séries Iniciais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
                     permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
-                };
-                this.addUsuario(user);
-            } else if (cleanInput === "elcortelini@gmail.com") {
-                user = { 
-                    email: "elcortelini@gmail.com", 
-                    nome: "Elevi Cortelini (Desenvolvedor)", 
-                    role: "desenvolvedor", 
-                    cargo: "Desenvolvedor do Sistema",
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
                 };
                 this.addUsuario(user);
             }
         }
 
-        if (user) {
-            localStorage.setItem("sige_logged_email", user.email);
-            if (user.role === 'desenvolvedor') {
-                this.setRole("desenvolvedor");
-            } else {
-                this.setRole(user.role);
-            }
-            return user;
+        // Se ainda não existir: PRIMEIRO ACESSO COM E-MAIL INSTITUCIONAL
+        if (!user) {
+            const userPart = cleanInput.split('@')[0];
+            const nomeSugerido = userPart
+                .split('.')
+                .map(part => part.replace(/\d+/g, ''))
+                .filter(Boolean)
+                .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+                .join(' ') || "Colaborador Escolar";
+
+            const novoPendente = {
+                id: 'user_' + Date.now(),
+                email: cleanInput,
+                nome: nomeSugerido,
+                role: 'comunidade',
+                cargo: 'Aguardando Atribuição pelo Desenvolvedor',
+                status: 'pendente',
+                cadastroCompleto: false,
+                permissoes: { op: false, mural: false, supervisao: false, admin: false, direcao: false, uniformes: false },
+                dataSolicitacao: new Date().toISOString(),
+                solicitadoEm: new Date().toLocaleString('pt-BR')
+            };
+            this.addUsuario(novoPendente);
+
+            return {
+                success: false,
+                code: 'FIRST_ACCESS_PENDING',
+                message: '✅ Solicitação de Primeiro Acesso registrada com sucesso!\n\nSeu acesso aguarda autorização do Desenvolvedor do Sistema (elcortelini@gmail.com), que irá habilitar os módulos correspondentes à sua função escolar.',
+                user: novoPendente
+            };
         }
-        return null;
+
+        // Se o usuário foi encontrado, verifica o status de aprovação
+        if (user.status === 'pendente') {
+            return {
+                success: false,
+                code: 'PENDING_APPROVAL',
+                message: '⏳ Seu cadastro de Primeiro Acesso ainda está em análise aguardando autorização do Desenvolvedor do Sistema (elcortelini@gmail.com).\n\nAssim que os módulos forem liberados, você poderá entrar no sistema.',
+                user
+            };
+        }
+
+        if (user.status === 'bloqueado') {
+            return {
+                success: false,
+                code: 'BLOCKED',
+                message: '🔒 Seu acesso ao sistema está desativado. Entre em contato com a Direção ou Desenvolvedor.',
+                user
+            };
+        }
+
+        // Se aprovado, mas ainda não concluiu o preenchimento cadastral (WhatsApp + consentimento)
+        if (!user.cadastroCompleto) {
+            return {
+                success: false,
+                code: 'NEEDS_ONBOARDING',
+                message: '🎉 Seu acesso foi autorizado pelo Desenvolvedor! Conclua o preenchimento do seu cadastro para acessar as ferramentas.',
+                user
+            };
+        }
+
+        // Login autorizado com cadastro concluído
+        localStorage.setItem("sige_logged_email", user.email);
+        if (user.role === 'desenvolvedor') {
+            this.setRole("desenvolvedor");
+        } else {
+            this.setRole(user.role || 'comunidade');
+        }
+        return {
+            success: true,
+            code: 'SUCCESS',
+            message: `Bem-vindo(a), ${user.nome}!`,
+            user
+        };
     }
 
     logout() {

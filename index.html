@@ -188,6 +188,74 @@
         </div>
     </div>
 
+    <!-- Modal de Conclusão de Cadastro Obrigatório (Onboarding de Primeiro Acesso Autorizado) -->
+    <div id="modalOnboardingCadastro" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:1rem; overflow-y:auto;">
+        <div style="background:white; padding:2rem; border-radius:24px; max-width:580px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.4); border:2px solid #3b82f6; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+                <div style="width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <div>
+                    <h3 style="font-size:1.3rem; font-weight:900; color:#0f172a; margin:0;">Concluir Cadastro no IntegraRizzi</h3>
+                    <p style="font-size:0.84rem; color:#64748b; margin:3px 0 0 0;">Seu acesso institucional foi autorizado! Complete seus dados para acessar o sistema.</p>
+                </div>
+            </div>
+
+            <form id="formOnboardingCadastro" onsubmit="event.preventDefault(); submitOnboardingCadastro();" style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">E-mail Institucional Autorizado:</label>
+                    <input type="email" id="onboardingEmail" readonly style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; font-size:0.9rem; color:#475569; font-weight:700;">
+                </div>
+
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo: <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="onboardingNome" required placeholder="Digite seu nome completo" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:600;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="onboardingCargo" required placeholder="Ex: Docente Matemática / Auxiliar" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
+                        <select id="onboardingTurno" required style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem; font-weight:700; background:white;">
+                            <option value="Matutino">Matutino</option>
+                            <option value="Vespertino">Vespertino</option>
+                            <option value="Noturno">Noturno</option>
+                            <option value="Integral / Ambos">Integral / Ambos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                        <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> Telefone de WhatsApp (com DDD): <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input type="tel" id="onboardingWhatsapp" required placeholder="(47) 99999-9999" maxlength="15" oninput="mascaraTelefoneInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.95rem; font-weight:700; letter-spacing:0.5px;">
+                    <span style="font-size:0.75rem; color:#64748b; margin-top:2px; display:block;">Número utilizado para recados oficiais da equipe gestora e notificações escolares.</span>
+                </div>
+
+                <!-- Confirmação Obrigatória de Recebimento de Mensagens -->
+                <div style="background:#eff6ff; border:2px solid #93c5fd; border-radius:14px; padding:14px; margin-top:6px;">
+                    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-size:0.86rem; color:#1e3a8a; font-weight:700; line-height:1.45;">
+                        <input type="checkbox" id="onboardingAutorizacaoWhatsApp" required style="width:20px; height:20px; margin-top:2px; accent-color:#2563eb; cursor:pointer; flex-shrink:0;">
+                        <span>Declaro que as informações prestadas são verdadeiras e <u>AUTORIZO</u> expressamente o recebimento de mensagens e comunicados oficiais da escola no meu telefone de WhatsApp informado.</span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+                    <button type="button" onclick="cancelarOnboardingCadastro()" style="background:none; border:none; color:#64748b; font-size:0.85rem; cursor:pointer; font-weight:700;">
+                        <i class="fa-solid fa-arrow-left"></i> Cancelar / Sair
+                    </button>
+                    <button type="submit" style="padding:12px 24px; font-size:0.95rem; font-weight:800; border-radius:12px; background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                        <i class="fa-solid fa-circle-check"></i> Concluir Cadastro & Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <p><strong>Centro Educacional Pedro Rizzi</strong> — Itajaí / SC</p>
@@ -195,7 +263,7 @@
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
-    <script src="js/gestao-data.js?v=20260922_v35"></script>
-    <script src="js/main.js?v=20260922_v35"></script>
+    <script src="js/gestao-data.js?v=20260922_v36"></script>
+    <script src="js/main.js?v=20260922_v36"></script>
 </body>
 </html>

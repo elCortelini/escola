@@ -210,12 +210,20 @@ function renderPortalAuthBar() {
     const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
     if (loggedUser) {
+        // Se o usuário logado ainda não concluiu o cadastro obrigatório (WhatsApp + consentimento)
+        if (!loggedUser.cadastroCompleto) {
+            setTimeout(() => {
+                abrirModalOnboardingCadastro(loggedUser);
+            }, 100);
+        }
+
         const isDev = loggedUser.role === "desenvolvedor";
         const activeRole = window.sigeDB ? window.sigeDB.getRole() : loggedUser.role;
         const isSimulating = isDev && activeRole !== "desenvolvedor";
         const modulosKeys = ['op', 'mural', 'supervisao', 'direcao', 'uniformes', 'admin'];
         const allowedCount = modulosKeys.filter(k => window.sigeDB.temPermissaoModulo(k)).length;
         const cargoText = loggedUser.cargo || getRoleLabel(loggedUser.role);
+        const pendentes = isDev && window.sigeDB ? window.sigeDB.getUsuariosPendentes() : [];
 
         authBar.innerHTML = `
             <div class="portal-user-badge">
@@ -234,6 +242,11 @@ function renderPortalAuthBar() {
                 </div>
             </div>
             <div class="portal-auth-actions">
+                ${isDev && pendentes.length > 0 ? `
+                    <a href="sistema-gestao.html?aba=admin#adminPendingUsersCard" style="background:#f59e0b; color:#0f172a; font-weight:800; padding:4px 10px; border-radius:8px; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 8px rgba(245,158,11,0.3);" title="Clique para gerenciar acessos pendentes">
+                        <i class="fa-solid fa-user-clock"></i> ${pendentes.length} Pendente(s)
+                    </a>
+                ` : ''}
                 ${isDev ? `
                     <div class="portal-top-dev-view" style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); padding:3px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15);">
                         <label for="topDevViewSelector" style="color:#fbbf24; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:4px; white-space:nowrap;">
@@ -296,20 +309,20 @@ function renderPortalAuthHeroCard() {
                 <div class="login-card-header">
                     <div class="login-badge"><i class="fa-solid fa-shield-halved"></i> IDENTIFICAÇÃO DO USUÁRIO</div>
                     <h2 class="login-card-title"><i class="fa-solid fa-id-card-clip"></i> Acesso ao Portal IntegraRizzi</h2>
-                    <p class="login-card-subtitle">Informe seu e-mail funcional ou institucional cadastrado para autenticar e liberar suas ferramentas escolares:</p>
+                    <p class="login-card-subtitle">Informe seu e-mail funcional institucional (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br) para autenticar e liberar suas ferramentas:</p>
                 </div>
 
                 <div class="login-card-body" style="max-width:560px; margin:0 auto; width:100%;">
                     <form class="login-method-box" onsubmit="event.preventDefault(); heroLoginWithEmail();" style="border:none; background:transparent; padding:0;">
-                        <label class="login-method-label" style="font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-envelope"></i> E-mail Institucional ou Autorizado:</label>
+                        <label class="login-method-label" style="font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-envelope"></i> E-mail Institucional Oficial:</label>
                         <div class="login-input-row" style="display:flex; gap:10px;">
-                            <input type="email" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br ou elcortelini@gmail.com" required style="flex:1; padding:12px 14px; font-size:0.95rem; border-radius:10px; border:2px solid #cbd5e1;" />
+                            <input type="email" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br" required style="flex:1; padding:12px 14px; font-size:0.95rem; border-radius:10px; border:2px solid #cbd5e1;" />
                             <button type="submit" class="hero-login-btn btn-enter-email" style="padding:12px 22px; font-size:0.95rem; font-weight:800; border-radius:10px; background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(37,99,235,0.3);">
                                 <i class="fa-solid fa-right-to-bracket"></i> Entrar
                             </button>
                         </div>
                         <div style="margin-top:12px; font-size:0.82rem; color:#64748b; line-height:1.4;">
-                            <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> Cada usuário visualiza os módulos (Orientação, Supervisão, Direção, Uniformes, Painel Dev, etc.) de acordo com as permissões atribuídas ao seu e-mail.
+                            <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> <strong>Primeiro Acesso:</strong> Ao informar seu e-mail institucional pela primeira vez, sua solicitação será registrada e aguardará a habilitação de módulos pelo Desenvolvedor do Sistema.
                         </div>
                     </form>
                 </div>
@@ -327,21 +340,135 @@ function heroLoginWithEmail() {
     if (!input) return;
     const email = input.value.trim();
     if (!email) {
-        alert("Por favor, digite seu e-mail funcional ou identificador.");
+        alert("Por favor, digite seu e-mail institucional oficial (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br).");
         input.focus();
         return;
     }
 
     if (window.sigeDB) {
-        const user = window.sigeDB.loginWithEmail(email);
-        if (user) {
+        const res = window.sigeDB.loginWithEmail(email);
+        
+        if (res.code === 'INVALID_DOMAIN') {
+            alert(`🔒 Acesso Negado\n\n${res.message}\n\nE-mails pessoais (como @gmail.com ou @hotmail.com) não são aceitos.`);
+            return;
+        }
+
+        if (res.code === 'FIRST_ACCESS_PENDING') {
+            alert(`📝 Solicitação Registrada!\n\n${res.message}`);
+            input.value = '';
+            return;
+        }
+
+        if (res.code === 'PENDING_APPROVAL') {
+            alert(`⏳ Acesso em Análise\n\n${res.message}`);
+            input.value = '';
+            return;
+        }
+
+        if (res.code === 'BLOCKED') {
+            alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
+            return;
+        }
+
+        if (res.code === 'NEEDS_ONBOARDING') {
+            abrirModalOnboardingCadastro(res.user);
+            return;
+        }
+
+        if (res.success && res.user) {
             renderPortalAuth();
             updateActionPillars();
             loadSystems();
-        } else {
-            alert(`E-mail ou usuário "${email}" não localizado na equipe cadastrada.\n\nVerifique a digitação ou entre como Desenvolvedor para cadastrá-lo.`);
         }
     }
+}
+
+function abrirModalOnboardingCadastro(user) {
+    const modal = document.getElementById("modalOnboardingCadastro");
+    if (!modal) return;
+    document.getElementById("onboardingEmail").value = user.email || "";
+    document.getElementById("onboardingNome").value = user.nome || "";
+    document.getElementById("onboardingCargo").value = (user.cargo && !user.cargo.includes('Aguardando')) ? user.cargo : "";
+    document.getElementById("onboardingTurno").value = user.turno || "Matutino";
+    const phoneInput = document.getElementById("onboardingWhatsapp");
+    if (user.whatsapp || user.telefone) {
+        phoneInput.value = user.whatsapp || user.telefone;
+        mascaraTelefoneInput(phoneInput);
+    } else {
+        phoneInput.value = "";
+    }
+    document.getElementById("onboardingAutorizacaoWhatsApp").checked = false;
+    modal.style.display = "flex";
+}
+
+function mascaraTelefoneInput(input) {
+    if (!input) return;
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length > 10) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
+    } else if (v.length > 6) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
+    } else if (v.length > 2) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
+    } else if (v.length > 0) {
+        input.value = `(${v}`;
+    }
+}
+
+function submitOnboardingCadastro() {
+    const email = document.getElementById("onboardingEmail").value.trim();
+    const nome = document.getElementById("onboardingNome").value.trim();
+    const cargo = document.getElementById("onboardingCargo").value.trim();
+    const turno = document.getElementById("onboardingTurno").value;
+    const whatsapp = document.getElementById("onboardingWhatsapp").value.trim();
+    const autorizou = document.getElementById("onboardingAutorizacaoWhatsApp").checked;
+
+    if (!nome) {
+        alert("Por favor, informe seu nome completo.");
+        return;
+    }
+    if (!cargo) {
+        alert("Por favor, informe seu cargo ou função.");
+        return;
+    }
+    const cleanPhone = whatsapp.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+        alert("Por favor, informe um telefone de WhatsApp válido com DDD (mínimo 10 dígitos).");
+        return;
+    }
+    if (!autorizou) {
+        alert("É obrigatório marcar a caixa autorizando o recebimento de mensagens oficiais no seu WhatsApp.");
+        return;
+    }
+
+    if (window.sigeDB) {
+        const user = window.sigeDB.concluirCadastroUsuario(email, {
+            nome,
+            cargo,
+            turno,
+            whatsapp: cleanPhone,
+            autorizaMensagensWhatsApp: true
+        });
+
+        if (user) {
+            const modal = document.getElementById("modalOnboardingCadastro");
+            if (modal) modal.style.display = "none";
+            alert("🎉 Cadastro concluído com sucesso! Bem-vindo(a) ao IntegraRizzi.");
+            renderPortalAuth();
+            updateActionPillars();
+            loadSystems();
+        }
+    }
+}
+
+function cancelarOnboardingCadastro() {
+    const modal = document.getElementById("modalOnboardingCadastro");
+    if (modal) modal.style.display = "none";
+    if (window.sigeDB) window.sigeDB.logout();
+    renderPortalAuth();
+    updateActionPillars();
+    loadSystems();
 }
 
 function switchDevView(role) {
