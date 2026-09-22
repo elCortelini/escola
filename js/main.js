@@ -1,10 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.sigeDB) {
-        window.sigeDB.init();
+    try {
+        if (window.sigeDB && typeof window.sigeDB.init === 'function') {
+            window.sigeDB.init();
+        }
+        renderPortalAuth();
+        updateActionPillars();
+        loadSystems();
+    } catch (err) {
+        console.error("Erro ao inicializar portal IntegraRizzi:", err);
     }
-    renderPortalAuth();
-    updateActionPillars();
-    loadSystems();
 });
 
 const defaultSystems = [
@@ -251,10 +255,7 @@ function renderPortalAuthBar() {
             </div>
             <div class="portal-auth-actions">
                 <button type="button" onclick="scrollToAuthCard()" class="portal-login-btn">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Ir para o Login
-                </button>
-                <button type="button" onclick="heroLoginDev()" class="portal-btn-logout" style="color:#cbd5e1; border-color:#475569;" title="Entrar como Desenvolvedor">
-                    <i class="fa-solid fa-laptop-code"></i> Acesso Dev
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Identificar-se / Login
                 </button>
             </div>
         `;
@@ -270,61 +271,27 @@ function renderPortalAuthHeroCard() {
 
     if (!loggedUser) {
         // TELA DE LOGIN (QUANDO NÃO ESTÁ LOGADO)
-        const equipe = window.sigeDB ? window.sigeDB.getEquipeEscola() : [];
-        let optionsHtml = '';
-
-        // Agrupa perfis
-        const devOption = `<option value="elcortelini@gmail.com">👑 Elevi Cortelini (Desenvolvedor do Sistema — Acesso Total)</option>`;
-        optionsHtml += devOption;
-
-        equipe.forEach(p => {
-            const val = p.email || p.id;
-            const cargo = p.cargoFuncao || getRoleLabel(p.setor) || 'Equipe';
-            optionsHtml += `<option value="${val}">👤 ${p.nome} — ${cargo}</option>`;
-        });
-
         card.innerHTML = `
             <div class="portal-login-card-inner">
                 <div class="login-card-header">
                     <div class="login-badge"><i class="fa-solid fa-shield-halved"></i> IDENTIFICAÇÃO DO USUÁRIO</div>
                     <h2 class="login-card-title"><i class="fa-solid fa-id-card-clip"></i> Acesso ao Portal IntegraRizzi</h2>
-                    <p class="login-card-subtitle">Identifique-se abaixo para que o portal monte seus módulos, pilares de ação e ferramentas conforme suas credenciais e permissões escolares:</p>
+                    <p class="login-card-subtitle">Informe seu e-mail funcional ou institucional cadastrado para autenticar e liberar suas ferramentas escolares:</p>
                 </div>
 
-                <div class="login-card-body">
-                    <!-- Opção 1: Seleção de Perfil na Equipe -->
-                    <div class="login-method-box">
-                        <label class="login-method-label"><i class="fa-solid fa-users"></i> 1. Selecione seu Perfil na Equipe Escolar:</label>
-                        <div class="login-input-row">
-                            <select id="heroLoginSelect" class="hero-login-select" onchange="heroLoginWithSelect(this.value)">
-                                <option value="">-- Escolha seu nome ou cargo na lista --</option>
-                                ${optionsHtml}
-                            </select>
-                            <button type="button" class="hero-login-btn btn-enter-select" onclick="heroLoginWithSelect(document.getElementById('heroLoginSelect').value)">
-                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar
+                <div class="login-card-body" style="max-width:560px; margin:0 auto; width:100%;">
+                    <form class="login-method-box" onsubmit="event.preventDefault(); heroLoginWithEmail();" style="border:none; background:transparent; padding:0;">
+                        <label class="login-method-label" style="font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-envelope"></i> E-mail Institucional ou Autorizado:</label>
+                        <div class="login-input-row" style="display:flex; gap:10px;">
+                            <input type="email" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br ou elcortelini@gmail.com" required style="flex:1; padding:12px 14px; font-size:0.95rem; border-radius:10px; border:2px solid #cbd5e1;" />
+                            <button type="submit" class="hero-login-btn btn-enter-email" style="padding:12px 22px; font-size:0.95rem; font-weight:800; border-radius:10px; background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(37,99,235,0.3);">
+                                <i class="fa-solid fa-right-to-bracket"></i> Entrar
                             </button>
                         </div>
-                    </div>
-
-                    <div class="login-separator"><span>OU INFORME SEU E-MAIL</span></div>
-
-                    <!-- Opção 2: Entrada por E-mail -->
-                    <form class="login-method-box" onsubmit="event.preventDefault(); heroLoginWithEmail();">
-                        <label class="login-method-label"><i class="fa-solid fa-envelope"></i> 2. Digite seu E-mail Funcional:</label>
-                        <div class="login-input-row">
-                            <input type="text" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br ou elcortelini@gmail.com" />
-                            <button type="submit" class="hero-login-btn btn-enter-email">
-                                <i class="fa-solid fa-key"></i> Autenticar
-                            </button>
+                        <div style="margin-top:12px; font-size:0.82rem; color:#64748b; line-height:1.4;">
+                            <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> Cada usuário visualiza os módulos (Orientação, Supervisão, Direção, Uniformes, Painel Dev, etc.) de acordo com as permissões atribuídas ao seu e-mail.
                         </div>
                     </form>
-
-                    <!-- Atalho Rápido para o Desenvolvedor -->
-                    <div class="login-dev-quick">
-                        <button type="button" class="btn-dev-quick-login" onclick="heroLoginDev()">
-                            <i class="fa-solid fa-laptop-code" style="color:#7c3aed;"></i> Acesso Imediato como <strong>Desenvolvedor do Sistema</strong> (Acesso Total & Visões)
-                        </button>
-                    </div>
                 </div>
             </div>
         `;
@@ -456,15 +423,6 @@ function heroLoginWithEmail() {
         } else {
             alert(`E-mail ou usuário "${email}" não localizado na equipe cadastrada.\n\nVerifique a digitação ou entre como Desenvolvedor para cadastrá-lo.`);
         }
-    }
-}
-
-function heroLoginDev() {
-    if (window.sigeDB) {
-        window.sigeDB.loginWithEmail("elcortelini@gmail.com");
-        renderPortalAuth();
-        updateActionPillars();
-        loadSystems();
     }
 }
 
@@ -830,9 +788,7 @@ function openAgendamentoLabDirect(e) {
 window.renderPortalAuth = renderPortalAuth;
 window.renderPortalAuthBar = renderPortalAuthBar;
 window.renderPortalAuthHeroCard = renderPortalAuthHeroCard;
-window.heroLoginWithSelect = heroLoginWithSelect;
 window.heroLoginWithEmail = heroLoginWithEmail;
-window.heroLoginDev = heroLoginDev;
 window.switchDevView = switchDevView;
 window.resetDevView = resetDevView;
 window.portalLogout = portalLogout;

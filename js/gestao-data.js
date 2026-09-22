@@ -763,6 +763,10 @@ class SigeDatabase {
         this.setupAutoSyncListeners();
     }
 
+    init() {
+        return this;
+    }
+
     sanitizeStudentNames() {
         if (!this.data) return;
         let changed = false;
