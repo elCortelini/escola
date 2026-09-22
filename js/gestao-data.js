@@ -1171,6 +1171,9 @@ class SigeDatabase {
         const userToRemove = list.find(u => u.email.toLowerCase().trim() === email.toLowerCase().trim());
         list = list.filter(u => u.email.toLowerCase().trim() !== email.toLowerCase().trim());
         this.data.usuariosCadastrados = list;
+        if (this.data && Array.isArray(this.data.equipeEscola)) {
+            this.data.equipeEscola = this.data.equipeEscola.filter(p => !p.email || p.email.toLowerCase().trim() !== email.toLowerCase().trim());
+        }
         if (userToRemove) {
             this.addAuditLog(`Remoção de Usuário (${userToRemove.nome} - ${userToRemove.email})`, 'Admin');
         }
@@ -1586,8 +1589,54 @@ class SigeDatabase {
     }
 
     getEquipeEscolar() {
-        if (!this.data.equipeEscola || !Array.isArray(this.data.equipeEscola)) {
+        let saveNeeded = false;
+        if (!this.data.equipeEscola || !Array.isArray(this.data.equipeEscola) || this.data.equipeEscola.length === 0) {
             this.data.equipeEscola = defaultSigeData.equipeEscola || [];
+            saveNeeded = true;
+        }
+
+        // Garante que o Desenvolvedor Master conste na equipe escolar
+        const hasDev = this.data.equipeEscola.some(p => p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com");
+        if (!hasDev) {
+            this.data.equipeEscola.unshift({
+                id: "dev-master",
+                nome: "Elevi Cortelini (Desenvolvedor)",
+                setor: "desenvolvedor",
+                cargoFuncao: "Desenvolvedor & Administrador Master do Sistema",
+                disciplina: "TI & Engenharia de Sistemas",
+                telefone: "47999990000",
+                email: "elcortelini@gmail.com",
+                turnos: "integral",
+                turmasOuSalas: "Gabinete & Servidor",
+                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+            });
+            saveNeeded = true;
+        }
+
+        // Garante identificador id e objeto de permissoes em cada membro da equipe
+        this.data.equipeEscola.forEach((p, idx) => {
+            if (!p.id) {
+                p.id = "prof-" + (idx + 1);
+                saveNeeded = true;
+            }
+            if (!p.permissoes || typeof p.permissoes !== 'object') {
+                p.permissoes = this.getDefaultPermissoesByRole(p.setor);
+                saveNeeded = true;
+            } else {
+                const defaults = this.getDefaultPermissoesByRole(p.setor);
+                ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].forEach(k => {
+                    if (p.permissoes[k] === undefined) {
+                        p.permissoes[k] = !!defaults[k];
+                        saveNeeded = true;
+                    }
+                });
+            }
+            if (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+                p.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+            }
+        });
+
+        if (saveNeeded) {
             this.saveData(this.data);
         }
         return this.data.equipeEscola;
@@ -1595,40 +1644,77 @@ class SigeDatabase {
 
     saveProfissional(profData) {
         let list = this.getEquipeEscolar();
+        if (!profData.permissoes) {
+            profData.permissoes = this.getDefaultPermissoesByRole(profData.setor);
+        }
+
+        let savedItem = null;
         if (profData.id) {
             const index = list.findIndex(p => p.id === profData.id);
             if (index >= 0) {
                 list[index] = { ...list[index], ...profData };
+                savedItem = list[index];
             } else {
                 list.push(profData);
+                savedItem = profData;
             }
         } else {
             profData.id = generateSecureId("prof");
             list.push(profData);
+            savedItem = profData;
         }
-        
-        if (profData.setor === "docentes") {
-            this.saveProfessor(profData);
-        } else if (profData.setor === "orientacao") {
-            this.saveOrientadora(profData.id, profData.nome, profData.telefone, profData.email);
-        } else if (profData.setor === "supervisao") {
-            this.saveSupervisora(profData.id, profData.nome, profData.telefone, profData.email);
+
+        this.data.equipeEscola = list;
+
+        // Se tiver e-mail cadastrado, sincroniza imediatamente com usuariosCadastrados
+        if (savedItem.email && savedItem.email.includes("@")) {
+            let roleKey = savedItem.setor;
+            if (savedItem.setor === "orientacao") {
+                roleKey = (savedItem.nome && savedItem.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+            }
+            this.addUsuario({
+                email: savedItem.email.toLowerCase().trim(),
+                nome: savedItem.nome,
+                role: roleKey,
+                cargo: savedItem.cargoFuncao || savedItem.setor,
+                permissoes: savedItem.permissoes
+            });
+        }
+
+        if (savedItem.setor === "docentes") {
+            this.saveProfessor(savedItem);
+        } else if (savedItem.setor === "orientacao") {
+            this.saveOrientadora(savedItem.id, savedItem.nome, savedItem.telefone, savedItem.email);
+        } else if (savedItem.setor === "supervisao") {
+            this.saveSupervisora(savedItem.id, savedItem.nome, savedItem.telefone, savedItem.email);
         }
 
         this.saveData(this.data);
-        this.logAuditEvent("Equipe Escolar", `Salvo profissional ${profData.nome} (${profData.cargoFuncao || profData.setor})`, "Administração");
-        return profData;
+        this.logAuditEvent("Equipe Escolar", `Salvo colaborador ${savedItem.nome} (${savedItem.cargoFuncao || savedItem.setor})`, "Administração");
+        return savedItem;
     }
 
     deleteProfissional(id) {
         let list = this.getEquipeEscolar();
         const prof = list.find(p => p.id === id);
+        if (!prof) return false;
+
+        // Protege o desenvolvedor principal contra exclusao
+        if (prof.email && prof.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+            return false;
+        }
+
         this.data.equipeEscola = list.filter(p => p.id !== id);
+
+        // Remove correspondente de usuariosCadastrados se tiver e-mail
+        if (prof.email) {
+            this.removeUsuario(prof.email);
+        }
+
         this.deleteProfessor(id);
         this.saveData(this.data);
-        if (prof) {
-            this.logAuditEvent("Equipe Escolar", `Removido profissional ${prof.nome}`, "Administração");
-        }
+        this.logAuditEvent("Equipe Escolar", `Removido colaborador ${prof.nome}`, "Administração");
+        return true;
     }
 
     getTurmasEscola() {
@@ -2720,16 +2806,34 @@ class SigeDatabase {
         return true;
     }
 
-    salvarPermissoesUsuario(email, permissoesMap) {
-        if (!this.data || !Array.isArray(this.data.usuariosCadastrados)) return false;
-        const u = this.data.usuariosCadastrados.find(user => user.email.toLowerCase() === email.toLowerCase());
-        if (u) {
-            u.permissoes = { ...u.permissoes, ...permissoesMap };
-            this.addAuditLog('Atualização de Permissões Modulares (' + u.nome + ')', 'Admin');
-            this.saveData(this.data);
-            return true;
+    salvarPermissoesUsuario(emailOuId, permissoesMap) {
+        if (!emailOuId) return false;
+        const key = String(emailOuId).toLowerCase().trim();
+        let updated = false;
+
+        // Atualiza na equipe escolar (busca por id ou por email)
+        if (this.data && Array.isArray(this.data.equipeEscola)) {
+            const prof = this.data.equipeEscola.find(p => (p.id && p.id.toLowerCase() === key) || (p.email && p.email.toLowerCase().trim() === key));
+            if (prof) {
+                prof.permissoes = { ...prof.permissoes, ...permissoesMap };
+                updated = true;
+            }
         }
-        return false;
+
+        // Atualiza em usuariosCadastrados (busca por email)
+        if (this.data && Array.isArray(this.data.usuariosCadastrados)) {
+            const u = this.data.usuariosCadastrados.find(user => user.email && user.email.toLowerCase().trim() === key);
+            if (u) {
+                u.permissoes = { ...u.permissoes, ...permissoesMap };
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            this.addAuditLog('Atualização de Permissões Modulares (' + key + ')', 'Admin');
+            this.saveData(this.data);
+        }
+        return updated;
     }
 
     temPermissaoModulo(moduloId) {

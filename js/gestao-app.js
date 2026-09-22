@@ -600,6 +600,7 @@ function deleteDevUser(email) {
             showToast("Usuário removido com sucesso!");
             renderDevUsersList();
             renderAdminPermissoesUsuarios();
+            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
         } else {
             alert("Não é possível remover o desenvolvedor principal.");
         }
@@ -935,6 +936,19 @@ window.autoSelectRbacRoleDefaults = autoSelectRbacRoleDefaults;
 window.setAllModalRbacCheckboxes = setAllModalRbacCheckboxes;
 window.submitNovoUsuarioRBAC = submitNovoUsuarioRBAC;
 window.sincronizarUsuariosComEquipeUI = sincronizarUsuariosComEquipeUI;
+
+// Funções Unificadas: Equipe Escolar & Gestão de Acessos RBAC
+window.renderEquipeEscolarTable = renderEquipeEscolarTable;
+window.filtrarEquipeEscolar = filtrarEquipeEscolar;
+window.filtrarEquipeEscolarTexto = filtrarEquipeEscolarTexto;
+window.toggleProfissionalModuloChip = toggleProfissionalModuloChip;
+window.openCadastroProfissionalModal = openCadastroProfissionalModal;
+window.closeCadastroProfissionalModal = closeCadastroProfissionalModal;
+window.submitCadastroProfissional = submitCadastroProfissional;
+window.editarProfissional = editarProfissional;
+window.excluirProfissional = excluirProfissional;
+window.setAllProfissionalModulos = setAllProfissionalModulos;
+window.autoSuggestModulosPorSetor = autoSuggestModulosPorSetor;
 
 // ==========================================
 // NAVEGAÇÃO POR ABAS
@@ -7908,19 +7922,22 @@ function showToast(msg) {
 // ==========================================
 
 let currentSetorFilter = "todos";
+let equipeBuscaTexto = "";
 
 function filtrarEquipeEscolar(setor) {
-    currentSetorFilter = setor;
+    currentSetorFilter = setor || "todos";
     
     const setores = ["todos", "docentes", "orientacao", "supervisao", "direcao", "secretaria", "apoio"];
     setores.forEach(s => {
         const btn = document.getElementById(`btnFilterSetor_${s}`);
         if (btn) {
-            if (s === setor) {
+            if (s === currentSetorFilter) {
+                btn.classList.add("active");
                 btn.style.background = "#1e293b";
-                btn.style.color = "white";
+                btn.style.color = "#ffffff";
                 btn.style.fontWeight = "700";
             } else {
+                btn.classList.remove("active");
                 btn.style.background = "#f1f5f9";
                 btn.style.color = "#334155";
                 btn.style.fontWeight = "normal";
@@ -7928,25 +7945,78 @@ function filtrarEquipeEscolar(setor) {
         }
     });
 
-    renderEquipeEscolarTable(setor);
+    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
 }
 
-function renderEquipeEscolarTable(setorFiltro = "todos") {
+function filtrarEquipeEscolarTexto() {
+    const input = document.getElementById("equipeSearchInput");
+    equipeBuscaTexto = input ? input.value.trim().toLowerCase() : "";
+    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+}
+
+function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto = equipeBuscaTexto) {
     const tbody = document.getElementById("admEquipeTableBody");
     if (!tbody) return;
 
     const equipe = sigeDB.getEquipeEscolar();
+    if (!equipe || !Array.isArray(equipe)) return;
+
+    // Atualiza KPIs Globais do Card Unificado
+    const kpiTotal = document.getElementById("equipeKpiTotal");
+    const kpiAcesso = document.getElementById("equipeKpiAcessoLiberado");
+    const kpiDocentes = document.getElementById("equipeKpiDocentes");
+    const kpiGestao = document.getElementById("equipeKpiGestao");
+
+    let countAcesso = 0;
+    let countDocentes = 0;
+    let countGestao = 0;
+
+    equipe.forEach(p => {
+        const isMasterDev = (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com");
+        const perms = p.permissoes || {};
+        const modulosAtivos = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'].filter(k => !!perms[k]);
+        if (isMasterDev || modulosAtivos.length > 0) {
+            countAcesso++;
+        }
+        if (p.setor === "docentes") {
+            countDocentes++;
+        } else {
+            countGestao++;
+        }
+    });
+
+    if (kpiTotal) kpiTotal.innerText = equipe.length;
+    if (kpiAcesso) kpiAcesso.innerText = countAcesso;
+    if (kpiDocentes) kpiDocentes.innerText = countDocentes;
+    if (kpiGestao) kpiGestao.innerText = countGestao;
+
+    // Aplica Filtro de Setor
     let lista = equipe;
-    if (setorFiltro !== "todos") {
-        lista = equipe.filter(p => p.setor === setorFiltro);
+    if (setorFiltro && setorFiltro !== "todos") {
+        lista = lista.filter(p => p.setor === setorFiltro);
     }
 
-    if (!lista || lista.length === 0) {
+    // Aplica Filtro de Busca Textual
+    if (buscaTexto) {
+        const termo = buscaTexto.toLowerCase();
+        lista = lista.filter(p => {
+            const nome = (p.nome || '').toLowerCase();
+            const email = (p.email || '').toLowerCase();
+            const cargo = (p.cargoFuncao || '').toLowerCase();
+            const disc = (p.disciplina || '').toLowerCase();
+            const tel = (p.telefone || '').replace(/\D/g, "");
+            const turmas = (p.turmasOuSalas || '').toLowerCase();
+            return nome.includes(termo) || email.includes(termo) || cargo.includes(termo) || disc.includes(termo) || tel.includes(termo) || turmas.includes(termo);
+        });
+    }
+
+    if (lista.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="padding:1.5rem; text-align:center; color:#64748b;">
-                    <i class="fa-solid fa-folder-open" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i>
-                    Nenhum colaborador encontrado para o setor selecionado. Clique em "+ Novo Profissional" para cadastrar.
+                <td colspan="7" style="padding:2.5rem 1rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-user-slash" style="font-size:2rem; margin-bottom:10px; display:block; color:#cbd5e1;"></i>
+                    <strong style="display:block; font-size:1rem; color:#1e293b;">Nenhum colaborador encontrado</strong>
+                    <span style="font-size:0.83rem; color:#64748b;">Verifique os critérios do filtro ou clique no botão "+ Cadastrar Colaborador & Acesso".</span>
                 </td>
             </tr>
         `;
@@ -7956,59 +8026,183 @@ function renderEquipeEscolarTable(setorFiltro = "todos") {
     const badgeSetor = (setor) => {
         switch (setor) {
             case "docentes": return `<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👨‍🏫 Docente</span>`;
-            case "orientacao": return `<span style="background:#f3e8ff; color:#6b21a8; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🧭 Orientação (OP)</span>`;
-            case "supervisao": return `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📋 Supervisão</span>`;
-            case "direcao": return `<span style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👑 Direção</span>`;
+            case "orientacao": return `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🧭 Orientação (OE)</span>`;
+            case "supervisao": return `<span style="background:#f5f3ff; color:#6b21a8; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📋 Supervisão</span>`;
+            case "direcao": return `<span style="background:#ecfdf5; color:#065f46; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">👑 Direção</span>`;
             case "secretaria": return `<span style="background:#cff4fc; color:#055160; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">📑 Secretaria</span>`;
             case "apoio": return `<span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">🔧 Apoio / TI</span>`;
             default: return `<span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:800;">Geral</span>`;
         }
     };
 
+    const modulosConfig = [
+        { key: 'op', label: 'OE', fullLabel: 'Orientação Educacional', icon: 'fa-heart-pulse', colorClass: 'mod-op' },
+        { key: 'mural', label: 'Mural', fullLabel: 'Mural & Prazos', icon: 'fa-chalkboard-user', colorClass: 'mod-mural' },
+        { key: 'supervisao', label: 'Supervisão', fullLabel: 'Supervisão Pedagógica', icon: 'fa-clipboard-check', colorClass: 'mod-supervisao' },
+        { key: 'admin', label: 'ADM', fullLabel: 'Administração Integrada', icon: 'fa-gears', colorClass: 'mod-admin' },
+        { key: 'direcao', label: 'Dir', fullLabel: 'Direção Executiva', icon: 'fa-crown', colorClass: 'mod-direcao' },
+        { key: 'uniformes', label: 'Uniformes', fullLabel: 'Controle de Uniformes', icon: 'fa-shirt', colorClass: 'mod-uniformes' }
+    ];
+
     tbody.innerHTML = lista.map(p => {
+        const isMasterDev = (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com");
         const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
         const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
-        const waLink = waPhone ? `https://api.whatsapp.com/send?phone=${waPhone}` : "#";
+        const waLink = waPhone ? `https://api.whatsapp.com/send?phone=${waPhone}` : null;
+        const iniciais = p.nome ? p.nome.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : 'P';
+        const perms = p.permissoes || {};
+
+        // Chips dos 6 Módulos Interativos (com 1 clique ativa / desativa)
+        const chipsHtml = modulosConfig.map(m => {
+            const isActive = isMasterDev ? true : !!perms[m.key];
+            const activeClass = isActive ? `active ${m.colorClass}` : 'inactive';
+            const iconStatus = isActive ? 'fa-check' : 'fa-xmark';
+            const titleTooltip = isMasterDev 
+                ? `${m.fullLabel}: Acesso Master Obrigatório` 
+                : `${m.fullLabel}: Clique para ${isActive ? 'Revogar' : 'Liberar'} acesso`;
+
+            if (isMasterDev) {
+                return `
+                    <span class="rbac-mod-chip active ${m.colorClass} disabled" title="${escapeHtml(titleTooltip)}">
+                        <i class="fa-solid ${m.icon}"></i>
+                        <span>${m.label}</span>
+                        <i class="fa-solid fa-lock" style="font-size:0.65rem; opacity:0.75;"></i>
+                    </span>
+                `;
+            }
+
+            return `
+                <button type="button" 
+                    onclick="toggleProfissionalModuloChip('${escapeHtml(p.id)}', '${m.key}')" 
+                    class="rbac-mod-chip ${activeClass}" 
+                    title="${escapeHtml(titleTooltip)}"
+                    aria-label="${m.fullLabel} para ${escapeHtml(p.nome)}">
+                    <i class="fa-solid ${m.icon}"></i>
+                    <span>${m.label}</span>
+                    <i class="fa-solid ${iconStatus}" style="font-size:0.7rem;"></i>
+                </button>
+            `;
+        }).join('');
+
+        // Contagem de Módulos & Badge de Status
+        const qtdAtivos = isMasterDev ? 6 : modulosConfig.filter(m => !!perms[m.key]).length;
+        let badgeStatus = '';
+        if (qtdAtivos === 6) {
+            badgeStatus = `<span class="rbac-status-badge rbac-status-total" title="Acesso total a todos os 6 módulos"><i class="fa-solid fa-circle-check"></i> 6/6 Total</span>`;
+        } else if (qtdAtivos === 0) {
+            badgeStatus = `<span class="rbac-status-badge rbac-status-bloqueado" title="Sem acesso a nenhum módulo"><i class="fa-solid fa-ban"></i> 0/6 Bloq.</span>`;
+        } else {
+            badgeStatus = `<span class="rbac-status-badge rbac-status-parcial" title="Acesso setorial liberado"><i class="fa-solid fa-shield-halved"></i> ${qtdAtivos}/6 Setorial</span>`;
+        }
+
+        // Célula do WhatsApp com Link
+        let waCell = `<span style="color:#94a3b8; font-size:0.8rem;">Sem contato</span>`;
+        if (waLink) {
+            waCell = `
+                <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#15803d; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:5px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.8rem;">
+                    <i class="fa-brands fa-whatsapp" style="font-size:0.95rem; color:#16a34a;"></i> ${escapeHtml(p.telefone)}
+                </a>
+            `;
+        } else if (p.telefone) {
+            waCell = `<span style="color:#475569; font-size:0.8rem; font-weight:600;"><i class="fa-solid fa-phone" style="font-size:0.75rem;"></i> ${escapeHtml(p.telefone)}</span>`;
+        }
 
         return `
             <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:12px 14px; font-weight:800; color:#0f172a;">
-                    <i class="fa-solid fa-user" style="color:#2563eb; margin-right:6px;"></i> ${escapeHtml(p.nome)}
+                <td style="padding:10px 14px;">
+                    <div class="rbac-user-cell">
+                        <div class="rbac-user-avatar" style="${isMasterDev ? 'background:#7c3aed; color:white;' : ''}">${escapeHtml(iniciais)}</div>
+                        <div class="rbac-user-details">
+                            <span class="rbac-user-name" style="display:flex; align-items:center; gap:6px;">
+                                ${escapeHtml(p.nome)}
+                                ${isMasterDev ? '<span style="font-size:0.68rem; background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:4px; font-weight:800;"><i class="fa-solid fa-crown"></i> DEV</span>' : ''}
+                            </span>
+                            <span class="rbac-user-email">
+                                ${p.email ? `<i class="fa-regular fa-envelope"></i> ${escapeHtml(p.email)}` : '<span style="color:#94a3b8; font-style:italic;">Sem e-mail</span>'}
+                            </span>
+                        </div>
+                    </div>
                 </td>
-                <td style="padding:12px 14px;">
+                <td style="padding:10px 14px;">
                     <div>${badgeSetor(p.setor)}</div>
-                    <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${escapeHtml(p.cargoFuncao || p.setor)}</div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#334155; margin-top:3px;">${escapeHtml(p.cargoFuncao || p.setor)}</div>
+                    ${p.disciplina ? `<div style="font-size:0.74rem; color:#64748b;">${escapeHtml(p.disciplina)}</div>` : ''}
                 </td>
-                <td style="padding:12px 14px; color:#334155; font-weight:600; font-size:0.83rem;">
-                    ${escapeHtml(p.disciplina || "Geral")}
+                <td style="padding:10px 14px;">
+                    ${waCell}
                 </td>
-                <td style="padding:12px 14px;">
-                    ${p.telefone ? `
-                        <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#16a34a; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#dcfce7; padding:4px 8px; border-radius:6px; font-size:0.82rem;">
-                            <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> ${escapeHtml(p.telefone)}
-                        </a>
-                    ` : '<span style="color:#94a3b8; font-size:0.82rem;">Sem telefone</span>'}
+                <td style="padding:10px 14px; font-size:0.8rem; color:#475569;">
+                    <div style="font-weight:700; color:#1e293b;">
+                        <i class="fa-regular fa-clock" style="color:#64748b; font-size:0.75rem;"></i> ${escapeHtml(p.turnos || "Integral")}
+                    </div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                        ${p.turmasOuSalas ? escapeHtml(p.turmasOuSalas) : 'Geral'}
+                    </div>
                 </td>
-                <td style="padding:12px 14px; color:#64748b; font-size:0.83rem;">
-                    <div><strong>Turno:</strong> ${escapeHtml(p.turnos || "Integral")}</div>
-                    <div><strong>Turmas/Salas:</strong> ${escapeHtml(p.turmasOuSalas || "Geral")}</div>
+                <td style="padding:10px 14px;">
+                    <div class="rbac-modules-grid">
+                        ${chipsHtml}
+                    </div>
                 </td>
-                <td style="padding:12px 14px; text-align:right;">
-                    <div style="display:flex; justify-content:flex-end; gap:6px;">
-                        <button onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.75rem; padding:4px 8px;" title="Disparar Aviso WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i> Aviso
+                <td style="padding:10px 14px; text-align:center;">
+                    ${badgeStatus}
+                </td>
+                <td style="padding:10px 14px; text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
+                        <button type="button" onclick="openDisparoAvisoProfessorModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#16a34a; color:white; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:none; cursor:pointer;" title="Disparar Aviso WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
                         </button>
-                        <button onclick="editarProfissional('${p.id}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px;" title="Editar Colaborador">
+                        <button type="button" onclick="openCadastroProfissionalModal('${escapeHtml(p.id)}')" class="btn-sec" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;" title="Editar Cadastro & Permissões">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="excluirProfissional('${p.id}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:4px 8px;" title="Excluir Colaborador">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                        ${isMasterDev ? '' : `
+                            <button type="button" onclick="excluirProfissional('${escapeHtml(p.id)}')" class="btn-sec" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:5px 8px; border-radius:6px; border:none; cursor:pointer;" title="Excluir Colaborador">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        `}
                     </div>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+function toggleProfissionalModuloChip(id, moduloKey) {
+    if (!id || !moduloKey) return;
+    const equipe = sigeDB.getEquipeEscolar();
+    const prof = equipe.find(p => p.id === id);
+    if (!prof) return;
+
+    if (prof.email && prof.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+        showToast("👑 O Desenvolvedor Master possui acesso irrestrito a todos os módulos!");
+        return;
+    }
+
+    if (!prof.permissoes) {
+        prof.permissoes = sigeDB.getDefaultPermissoesByRole(prof.setor);
+    }
+
+    const currentState = !!prof.permissoes[moduloKey];
+    prof.permissoes[moduloKey] = !currentState;
+
+    sigeDB.salvarPermissoesUsuario(prof.id, prof.permissoes);
+    if (prof.email) {
+        sigeDB.salvarPermissoesUsuario(prof.email, prof.permissoes);
+    }
+
+    const moduloNome = {
+        op: "Orientação Educacional (OE)",
+        mural: "Mural & Prazos",
+        supervisao: "Supervisão Pedagógica",
+        admin: "Administração Integrada",
+        direcao: "Direção Executiva",
+        uniformes: "Controle de Uniformes"
+    }[moduloKey] || moduloKey.toUpperCase();
+
+    const acao = prof.permissoes[moduloKey] ? "LIBERADO" : "REVOGADO";
+    showToast(`${acao}: Acesso ao módulo ${moduloNome} para ${prof.nome}!`);
+
+    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
 }
 
 function updateAllDynamicSelects() {
@@ -8135,6 +8329,23 @@ function updateAllDynamicSelects() {
     }
 }
 
+function setAllProfissionalModulos(checked = true) {
+    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes"];
+    keys.forEach(k => {
+        const chk = document.getElementById(`proChk_${k}`);
+        if (chk) chk.checked = !!checked;
+    });
+}
+
+function autoSuggestModulosPorSetor(setor) {
+    const defaults = sigeDB.getDefaultPermissoesByRole(setor);
+    const keys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes"];
+    keys.forEach(k => {
+        const chk = document.getElementById(`proChk_${k}`);
+        if (chk) chk.checked = !!defaults[k];
+    });
+}
+
 function openCadastroProfissionalModal(id = null) {
     if (id && typeof id !== "string") id = null;
     const modal = document.getElementById("modalCadastroProfissional");
@@ -8149,13 +8360,20 @@ function openCadastroProfissionalModal(id = null) {
     const inputTurno = document.getElementById("proInputTurno");
     const inputTurmas = document.getElementById("proInputTurmas");
 
+    const chkOp = document.getElementById("proChk_op");
+    const chkMural = document.getElementById("proChk_mural");
+    const chkSup = document.getElementById("proChk_supervisao");
+    const chkAdmin = document.getElementById("proChk_admin");
+    const chkDir = document.getElementById("proChk_direcao");
+    const chkUni = document.getElementById("proChk_uniformes");
+
     if (!modal) return;
 
     if (id && typeof id === "string") {
         const equipe = sigeDB.getEquipeEscolar();
         const prof = equipe.find(p => p.id === id);
         if (prof) {
-            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro do Colaborador`;
+            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro & Permissões do Colaborador`;
             if (inputId) inputId.value = prof.id;
             if (inputNome) inputNome.value = prof.nome || "";
             if (inputSetor) inputSetor.value = prof.setor || "docentes";
@@ -8165,9 +8383,17 @@ function openCadastroProfissionalModal(id = null) {
             if (inputEmail) inputEmail.value = prof.email || "";
             if (inputTurno) inputTurno.value = prof.turnos || "matutino";
             if (inputTurmas) inputTurmas.value = prof.turmasOuSalas || "";
+
+            const perms = prof.permissoes || sigeDB.getDefaultPermissoesByRole(prof.setor);
+            if (chkOp) chkOp.checked = !!perms.op;
+            if (chkMural) chkMural.checked = !!perms.mural;
+            if (chkSup) chkSup.checked = !!perms.supervisao;
+            if (chkAdmin) chkAdmin.checked = !!perms.admin;
+            if (chkDir) chkDir.checked = !!perms.direcao;
+            if (chkUni) chkUni.checked = !!perms.uniformes;
         }
     } else {
-        if (title) title.innerHTML = `<i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Profissional da Escola`;
+        if (title) title.innerHTML = `<i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Colaborador & Acesso ao Sistema`;
         if (inputId) inputId.value = "";
         if (inputNome) inputNome.value = "";
         if (inputSetor) inputSetor.value = "docentes";
@@ -8177,6 +8403,8 @@ function openCadastroProfissionalModal(id = null) {
         if (inputEmail) inputEmail.value = "";
         if (inputTurno) inputTurno.value = "matutino";
         if (inputTurmas) inputTurmas.value = "";
+
+        autoSuggestModulosPorSetor("docentes");
     }
 
     modal.style.setProperty("display", "flex", "important");
@@ -8204,6 +8432,15 @@ function submitCadastroProfissional(e) {
         return false;
     }
 
+    const permissoes = {
+        op: !!document.getElementById("proChk_op")?.checked,
+        mural: !!document.getElementById("proChk_mural")?.checked,
+        supervisao: !!document.getElementById("proChk_supervisao")?.checked,
+        admin: !!document.getElementById("proChk_admin")?.checked,
+        direcao: !!document.getElementById("proChk_direcao")?.checked,
+        uniformes: !!document.getElementById("proChk_uniformes")?.checked
+    };
+
     sigeDB.saveProfissional({
         id: id || null,
         nome,
@@ -8213,13 +8450,14 @@ function submitCadastroProfissional(e) {
         telefone: telefone || "",
         email: email || "",
         turnos,
-        turmasOuSalas
+        turmasOuSalas,
+        permissoes
     });
 
     closeCadastroProfissionalModal();
     updateAllDynamicSelects();
-    renderAllModules();
-    showToast(id ? "✅ Cadastro de colaborador atualizado!" : "✅ Novo profissional registrado na equipe!");
+    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+    showToast(id ? "✅ Cadastro e permissões do colaborador atualizados!" : "✅ Novo colaborador e credenciais registrados com sucesso!");
     return false;
 }
 
@@ -8232,11 +8470,16 @@ function excluirProfissional(id) {
     const prof = equipe.find(p => p.id === id);
     if (!prof) return;
 
-    if (confirm(`Tem certeza que deseja remover o cadastro de ${prof.nome} (${prof.cargoFuncao || prof.setor})?`)) {
+    if (prof.email && prof.email.toLowerCase().trim() === "elcortelini@gmail.com") {
+        alert("⚠️ O perfil do Desenvolvedor Principal (Master) é protegido pelo sistema e não pode ser excluído.");
+        return;
+    }
+
+    if (confirm(`Tem certeza que deseja remover o cadastro de ${prof.nome} (${prof.cargoFuncao || prof.setor}) e revogar seus acessos ao sistema?`)) {
         sigeDB.deleteProfissional(id);
         updateAllDynamicSelects();
-        renderAllModules();
-        showToast("🗑️ Colaborador removido com sucesso.");
+        renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        showToast("🗑️ Colaborador e acessos removidos com sucesso.");
     }
 }
 
