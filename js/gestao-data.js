@@ -991,6 +991,10 @@ const defaultSigeData = {
         { id: "log-3", data: "2026-09-10T16:20:00", usuario: "Secretaria", acao: "Agendamento OP Registrado (Lucas Gabriel)", setor: "Orientação" }
     ],
 
+    deletedContatosWpIds: [],
+    deletedEventoCalendarioIds: [],
+    contatosWhatsAppDirecaoSeeded: true,
+
     firebaseConfig: {
         enabled: true,
         apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
@@ -1095,12 +1099,78 @@ class SigeDatabase {
                         const remoteDeletedOPIds = remoteData.deletedOPIds || [];
                         const combinedDeletedIds = Array.from(new Set([...localDeletedOPIds, ...remoteDeletedOPIds]));
 
+                        const localDeletedWpIds = this.data?.deletedContatosWpIds || [];
+                        const remoteDeletedWpIds = remoteData.deletedContatosWpIds || [];
+                        const combinedDeletedWpIds = Array.from(new Set([...localDeletedWpIds, ...remoteDeletedWpIds]));
+
+                        const localDeletedCalIds = this.data?.deletedEventoCalendarioIds || [];
+                        const remoteDeletedCalIds = remoteData.deletedEventoCalendarioIds || [];
+                        const combinedDeletedCalIds = Array.from(new Set([...localDeletedCalIds, ...remoteDeletedCalIds]));
+
                         this.data = { ...defaultSigeData, ...this.data, ...remoteData };
                         this.data.deletedOPIds = combinedDeletedIds;
+                        this.data.deletedContatosWpIds = combinedDeletedWpIds;
+                        this.data.deletedEventoCalendarioIds = combinedDeletedCalIds;
 
                         if (Array.isArray(this.data.agendamentosOP) && combinedDeletedIds.length > 0) {
                             const delSet = new Set(combinedDeletedIds);
                             this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !delSet.has(a.id));
+                        }
+
+                        // Mesclagem inteligente de Contatos WhatsApp evitando ressurreição de excluídos e preservando edições locais
+                        const delWpSet = new Set(combinedDeletedWpIds);
+                        if (Array.isArray(remoteData.contatosWhatsAppDirecao)) {
+                            const contatosMap = new Map();
+                            remoteData.contatosWhatsAppDirecao.forEach(c => {
+                                if (c && c.id && !delWpSet.has(c.id)) {
+                                    contatosMap.set(c.id, c);
+                                }
+                            });
+                            (this.data.contatosWhatsAppDirecao || []).forEach(localC => {
+                                if (localC && localC.id && !delWpSet.has(localC.id)) {
+                                    const remoteC = contatosMap.get(localC.id);
+                                    if (!remoteC) {
+                                        contatosMap.set(localC.id, localC);
+                                    } else {
+                                        const localTime = new Date(localC.atualizadoEm || localC.criadoEm || 0).getTime();
+                                        const remoteTime = new Date(remoteC.atualizadoEm || remoteC.criadoEm || 0).getTime();
+                                        if (localTime >= remoteTime) {
+                                            contatosMap.set(localC.id, localC);
+                                        }
+                                    }
+                                }
+                            });
+                            this.data.contatosWhatsAppDirecao = Array.from(contatosMap.values());
+                        } else if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
+                            this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => !delWpSet.has(c.id));
+                        }
+
+                        // Mesclagem inteligente de Eventos do Calendário Escolar
+                        const delCalSet = new Set(combinedDeletedCalIds);
+                        if (Array.isArray(remoteData.eventosCalendarioEscolar)) {
+                            const calMap = new Map();
+                            remoteData.eventosCalendarioEscolar.forEach(e => {
+                                if (e && e.id && !delCalSet.has(e.id)) {
+                                    calMap.set(e.id, e);
+                                }
+                            });
+                            (this.data.eventosCalendarioEscolar || []).forEach(localE => {
+                                if (localE && localE.id && !delCalSet.has(localE.id)) {
+                                    const remoteE = calMap.get(localE.id);
+                                    if (!remoteE) {
+                                        calMap.set(localE.id, localE);
+                                    } else {
+                                        const localTime = new Date(localE.atualizadoEm || localE.criadoEm || 0).getTime();
+                                        const remoteTime = new Date(remoteE.atualizadoEm || remoteE.criadoEm || 0).getTime();
+                                        if (localTime >= remoteTime) {
+                                            calMap.set(localE.id, localE);
+                                        }
+                                    }
+                                }
+                            });
+                            this.data.eventosCalendarioEscolar = Array.from(calMap.values()).sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+                        } else if (Array.isArray(this.data.eventosCalendarioEscolar)) {
+                            this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => !delCalSet.has(e.id));
                         }
 
                         this.sanitizeStudentNames();
@@ -1236,24 +1306,27 @@ class SigeDatabase {
                 atasGabineteDirecao: parsed.atasGabineteDirecao || defaultSigeData.atasGabineteDirecao,
                 eventosCalendarioEscolar: parsed.eventosCalendarioEscolar || defaultSigeData.eventosCalendarioEscolar,
                 contatosWhatsAppDirecao: parsed.contatosWhatsAppDirecao || defaultSigeData.contatosWhatsAppDirecao,
-                mensagensWhatsAppLog: parsed.mensagensWhatsAppLog || defaultSigeData.mensagensWhatsAppLog
+                mensagensWhatsAppLog: parsed.mensagensWhatsAppLog || defaultSigeData.mensagensWhatsAppLog,
+                deletedContatosWpIds: parsed.deletedContatosWpIds || [],
+                deletedEventoCalendarioIds: parsed.deletedEventoCalendarioIds || []
             };
 
-            // Sincroniza e mescla os contatos oficiais da planilha com a lista salva localmente
-            if (!Array.isArray(merged.contatosWhatsAppDirecao) || merged.contatosWhatsAppDirecao.length === 0) {
-                merged.contatosWhatsAppDirecao = [...defaultSigeData.contatosWhatsAppDirecao];
+            const delWpSet = new Set(merged.deletedContatosWpIds || []);
+            const delCalSet = new Set(merged.deletedEventoCalendarioIds || []);
+
+            // Filtra e preserva as edições e exclusões locais de contatos do WhatsApp
+            if (!Array.isArray(parsed.contatosWhatsAppDirecao)) {
+                // Primeira inicialização: usa os contatos padrão excluindo os deletados
+                merged.contatosWhatsAppDirecao = (defaultSigeData.contatosWhatsAppDirecao || []).filter(c => !delWpSet.has(c.id));
+                merged.contatosWhatsAppDirecaoSeeded = true;
             } else {
-                defaultSigeData.contatosWhatsAppDirecao.forEach(defCont => {
-                    const cleanDefTel = defCont.telefone ? defCont.telefone.replace(/\D/g, '') : '';
-                    const jaExiste = merged.contatosWhatsAppDirecao.some(c => {
-                        const cleanC = c.telefone ? c.telefone.replace(/\D/g, '') : '';
-                        return (cleanDefTel && cleanC && cleanDefTel === cleanC) ||
-                               (c.nome && defCont.nome && c.nome.toLowerCase().trim() === defCont.nome.toLowerCase().trim());
-                    });
-                    if (!jaExiste) {
-                        merged.contatosWhatsAppDirecao.push(defCont);
-                    }
-                });
+                // Mantém integralmente os contatos salvos localmente pelo usuário, garantindo remoção de excluídos
+                merged.contatosWhatsAppDirecao = parsed.contatosWhatsAppDirecao.filter(c => !delWpSet.has(c.id));
+            }
+
+            // Filtra e preserva as exclusões do Calendário Escolar
+            if (Array.isArray(merged.eventosCalendarioEscolar)) {
+                merged.eventosCalendarioEscolar = merged.eventosCalendarioEscolar.filter(e => !delCalSet.has(e.id));
             }
 
             if (Array.isArray(merged.usuariosCadastrados)) {
@@ -2407,6 +2480,21 @@ class SigeDatabase {
         return this.data.configEscola;
     }
 
+    getLogoEscola() {
+        const cfg = this.getConfigEscola();
+        return (cfg && cfg.logo) ? cfg.logo : "img/logo-pedro-rizzi.png";
+    }
+
+    saveLogoEscola(base64Data) {
+        return this.saveConfigEscola({ logo: base64Data });
+    }
+
+    resetLogoEscola() {
+        const cfg = this.getConfigEscola();
+        delete cfg.logo;
+        return this.saveConfigEscola({ logo: "img/logo-pedro-rizzi.png" });
+    }
+
     getAuditLogs() {
         if (!this.data.auditLogs || !Array.isArray(this.data.auditLogs)) {
             this.data.auditLogs = defaultSigeData.auditLogs || [];
@@ -3222,6 +3310,10 @@ class SigeDatabase {
         return (this.data && Array.isArray(this.data.eventosCalendarioEscolar)) ? this.data.eventosCalendarioEscolar : [];
     }
 
+    getCalendarioEscolar() {
+        return this.getEventosCalendarioEscolar();
+    }
+
     addEventoCalendarioEscolar(ev) {
         if (!this.data.eventosCalendarioEscolar) this.data.eventosCalendarioEscolar = [];
         const novoEvento = {
@@ -3235,19 +3327,50 @@ class SigeDatabase {
             publicoAlvo: ev.publicoAlvo || 'escola_toda',
             local: ev.local || 'Escola',
             status: ev.status || 'agendado',
-            criadoEm: new Date().toISOString()
+            criadoEm: new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
         };
         this.data.eventosCalendarioEscolar.push(novoEvento);
-        // Ordena por data
         this.data.eventosCalendarioEscolar.sort((a, b) => (a.data || '').localeCompare(b.data || ''));
         this.addAuditLog('Novo Evento no Calendário Letivo (' + novoEvento.titulo + ')', 'Direção');
         this.saveData(this.data);
         return novoEvento;
     }
 
+    updateEventoCalendarioEscolar(id, dados) {
+        if (!this.data || !Array.isArray(this.data.eventosCalendarioEscolar)) return null;
+        const index = this.data.eventosCalendarioEscolar.findIndex(e => e.id === id);
+        if (index === -1) return null;
+
+        this.data.eventosCalendarioEscolar[index] = {
+            ...this.data.eventosCalendarioEscolar[index],
+            data: dados.data !== undefined ? dados.data : this.data.eventosCalendarioEscolar[index].data,
+            hora: dados.hora !== undefined ? dados.hora : this.data.eventosCalendarioEscolar[index].hora,
+            titulo: dados.titulo !== undefined ? dados.titulo : this.data.eventosCalendarioEscolar[index].titulo,
+            categoria: dados.categoria !== undefined ? dados.categoria : this.data.eventosCalendarioEscolar[index].categoria,
+            categoriaDesc: dados.categoriaDesc !== undefined ? dados.categoriaDesc : this.data.eventosCalendarioEscolar[index].categoriaDesc,
+            descricao: dados.descricao !== undefined ? dados.descricao : this.data.eventosCalendarioEscolar[index].descricao,
+            publicoAlvo: dados.publicoAlvo !== undefined ? dados.publicoAlvo : this.data.eventosCalendarioEscolar[index].publicoAlvo,
+            local: dados.local !== undefined ? dados.local : this.data.eventosCalendarioEscolar[index].local,
+            status: dados.status !== undefined ? dados.status : this.data.eventosCalendarioEscolar[index].status,
+            atualizadoEm: new Date().toISOString()
+        };
+
+        this.data.eventosCalendarioEscolar.sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+        this.addAuditLog('Edição de Evento do Calendário (' + this.data.eventosCalendarioEscolar[index].titulo + ')', 'Direção');
+        this.saveData(this.data);
+        return this.data.eventosCalendarioEscolar[index];
+    }
+
     deleteEventoCalendarioEscolar(id) {
-        if (!this.data.eventosCalendarioEscolar) return;
-        this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => e.id !== id);
+        if (!this.data) return;
+        if (!this.data.deletedEventoCalendarioIds) this.data.deletedEventoCalendarioIds = [];
+        if (!this.data.deletedEventoCalendarioIds.includes(id)) {
+            this.data.deletedEventoCalendarioIds.push(id);
+        }
+        if (Array.isArray(this.data.eventosCalendarioEscolar)) {
+            this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => e.id !== id);
+        }
         this.addAuditLog('Exclusão de Evento do Calendário (ID: ' + id + ')', 'Direção');
         this.saveData(this.data);
     }
@@ -3293,6 +3416,10 @@ class SigeDatabase {
         return (this.data && Array.isArray(this.data.contatosWhatsAppDirecao)) ? this.data.contatosWhatsAppDirecao : [];
     }
 
+    getContatosWhatsAppDirecao() {
+        return this.getContatosWhatsApp();
+    }
+
     getAllTagsContatos() {
         const contatos = this.getContatosWhatsApp();
         const tagsSet = new Set();
@@ -3323,8 +3450,12 @@ class SigeDatabase {
             telefone: (c.telefone || '').replace(/\D/g, ''),
             tags: tagsArr,
             tag: tagsArr.join(', '),
+            cargo: c.cargo || c.notas || '',
             notas: c.notas || '',
-            criadoEm: new Date().toISOString()
+            turno: c.turno || 'Ambos',
+            autorizaWhatsApp: c.autorizaWhatsApp !== undefined ? c.autorizaWhatsApp : true,
+            criadoEm: new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
         };
         this.data.contatosWhatsAppDirecao.push(novoContato);
         this.saveData(this.data);
@@ -3350,12 +3481,13 @@ class SigeDatabase {
 
             const existe = this.data.contatosWhatsAppDirecao.find(ex => ex.telefone === fone);
             if (existe) {
-                // Atualiza tags e nome
                 existe.nome = c.nome;
                 const setCombinado = new Set([...(existe.tags || [existe.tag || 'Geral']), ...tagsArr]);
                 existe.tags = Array.from(setCombinado);
                 existe.tag = existe.tags.join(', ');
                 if (c.notas) existe.notas = c.notas;
+                if (c.cargo) existe.cargo = c.cargo;
+                existe.atualizadoEm = new Date().toISOString();
             } else {
                 this.data.contatosWhatsAppDirecao.push({
                     id: generateSecureId('w-cont'),
@@ -3363,8 +3495,12 @@ class SigeDatabase {
                     telefone: fone,
                     tags: tagsArr,
                     tag: tagsArr.join(', '),
+                    cargo: c.cargo || c.notas || '',
                     notas: c.notas || '',
-                    criadoEm: new Date().toISOString()
+                    turno: c.turno || 'Ambos',
+                    autorizaWhatsApp: true,
+                    criadoEm: new Date().toISOString(),
+                    atualizadoEm: new Date().toISOString()
                 });
                 adicionados++;
             }
@@ -3375,13 +3511,19 @@ class SigeDatabase {
     }
 
     deleteContatoWhatsApp(id) {
-        if (!this.data.contatosWhatsAppDirecao) return;
-        this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => c.id !== id);
+        if (!this.data) return;
+        if (!this.data.deletedContatosWpIds) this.data.deletedContatosWpIds = [];
+        if (!this.data.deletedContatosWpIds.includes(id)) {
+            this.data.deletedContatosWpIds.push(id);
+        }
+        if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
+            this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => c.id !== id);
+        }
         this.saveData(this.data);
     }
 
     updateContatoWhatsApp(id, dados) {
-        if (!this.data.contatosWhatsAppDirecao) return null;
+        if (!this.data || !Array.isArray(this.data.contatosWhatsAppDirecao)) return null;
         const index = this.data.contatosWhatsAppDirecao.findIndex(c => c.id === id);
         if (index === -1) return null;
 
@@ -3395,17 +3537,38 @@ class SigeDatabase {
 
         this.data.contatosWhatsAppDirecao[index] = {
             ...this.data.contatosWhatsAppDirecao[index],
-            nome: dados.nome || this.data.contatosWhatsAppDirecao[index].nome,
-            telefone: (dados.telefone || this.data.contatosWhatsAppDirecao[index].telefone || '').replace(/\D/g, ''),
+            nome: dados.nome !== undefined ? dados.nome : this.data.contatosWhatsAppDirecao[index].nome,
+            telefone: (dados.telefone !== undefined ? dados.telefone : (this.data.contatosWhatsAppDirecao[index].telefone || '')).replace(/\D/g, ''),
             tags: tagsArr,
             tag: tagsArr.join(', '),
-            cargo: dados.cargo || dados.notas || this.data.contatosWhatsAppDirecao[index].cargo || '',
-            notas: dados.notas || this.data.contatosWhatsAppDirecao[index].notas || '',
+            cargo: dados.cargo !== undefined ? dados.cargo : (dados.notas !== undefined ? dados.notas : (this.data.contatosWhatsAppDirecao[index].cargo || '')),
+            notas: dados.notas !== undefined ? dados.notas : (this.data.contatosWhatsAppDirecao[index].notas || ''),
+            turno: dados.turno !== undefined ? dados.turno : (this.data.contatosWhatsAppDirecao[index].turno || 'Ambos'),
             atualizadoEm: new Date().toISOString()
         };
 
         this.saveData(this.data);
         return this.data.contatosWhatsAppDirecao[index];
+    }
+
+    deleteContatoWpDirecao(id) {
+        return this.deleteContatoWhatsApp(id);
+    }
+
+    updateContatoWpDirecao(id, dados) {
+        return this.updateContatoWhatsApp(id, dados);
+    }
+
+    restaurarContatosPadrao() {
+        if (!this.data) this.data = {};
+        this.data.deletedContatosWpIds = [];
+        this.data.contatosWhatsAppDirecao = JSON.parse(JSON.stringify(defaultSigeData.contatosWhatsAppDirecao || []));
+        this.saveData(this.data);
+        return this.data.contatosWhatsAppDirecao;
+    }
+
+    getTurmas() {
+        return this.getTurmasEscola();
     }
 
     getMensagensWhatsAppLog() {
@@ -3516,3 +3679,4 @@ class SigeDatabase {
 // Instância Global
 const sigeDB = new SigeDatabase();
 window.sigeDB = sigeDB;
+window.SigeDatabase = SigeDatabase;

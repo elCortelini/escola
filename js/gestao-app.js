@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initApp() {
     checkSigeAuth();
     initGoogleAuth();
+    updateAllSchoolLogoDisplays();
     setupRoleSelector();
     setupTabNavigation();
     setupNotificationBell();
@@ -1190,6 +1191,10 @@ function switchTab(tabId) {
     if (btn) btn.classList.add("active");
 
     renderAllModules();
+
+    if (tabId === 'direcao') {
+        switchDirSubTab(currentDirSubTab || 'whatsapp');
+    }
 }
 
 // ==========================================
@@ -1269,13 +1274,13 @@ function clickNotification(targetTab, notifId) {
 // RENDERIZAÇÃO GERAL DOS MÓDULOS
 // ==========================================
 function renderAllModules() {
-    renderModuleMuralECalendario();
-    renderModuleOrientacaoPedagogica();
-    renderModuleSupervisao();
-    renderModuleAdministracao();
-    renderModuleDirecao();
-    renderModuleUniformes();
-    updateBadgesCounts();
+    try { renderModuleMuralECalendario(); } catch (e) { console.error("Erro em renderModuleMuralECalendario:", e); }
+    try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
+    try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
+    try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
+    try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
+    try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+    try { updateBadgesCounts(); } catch (e) { console.error("Erro em updateBadgesCounts:", e); }
 }
 
 function updateBadgesCounts() {
@@ -2677,7 +2682,7 @@ function gerarDeclaracaoComparecimento(id) {
             <div class="cert-box">
                 <div>
                     <div class="header">
-                        <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:65px; display:block; margin:0 auto 10px auto;">
+                        <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:65px; display:block; margin:0 auto 10px auto; object-fit:contain;">
                         <h2>CENTRO EDUCACIONAL PEDRO RIZZI</h2>
                         <p>SETOR DE ORIENTAÇÃO EDUCACIONAL (OE)</p>
                         <p style="font-size:12px; margin-top:2px;">Rua Agílio Cunha, 812 - Cidade Nova - Itajaí - SC • Fone: (47) 3508-0264</p>
@@ -3522,7 +3527,7 @@ function imprimirAtendimentosDoDia(dateIso) {
         <body>
             <div class="print-header">
                 <div style="display:flex; align-items:center;">
-                    <img src="img/logo-pedro-rizzi.png" alt="Logo Escola" style="max-height:55px; margin-right:12px;">
+                    <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; margin-right:12px; object-fit:contain;">
                     <div>
                         <h1 class="school-title">Centro Educacional Pedro Rizzi</h1>
                         <h2 class="sub-title">${subTitleText}</h2>
@@ -4385,7 +4390,7 @@ function imprimirRelatorioAtendimentosOP() {
         <body>
             <div class="header-container">
                 <div style="display:flex; align-items:center;">
-                    <img src="img/logo-pedro-rizzi.png" class="logo-img" alt="Logo Escola">
+                    <img src="${sigeDB.getLogoEscola()}" class="logo-img" alt="Logo Escola" style="object-fit:contain;">
                     <div class="title-area">
                         <h1 class="school-name">CENTRO EDUCACIONAL PEDRO RIZZI</h1>
                         <h2 class="sub-name">Orientação Educacional (OE) — Relatório Consolidado por Data</h2>
@@ -4508,7 +4513,7 @@ function imprimirProntuarioAlunoCurrent() {
         <body>
             <div class="header-container">
                 <div style="display:flex; align-items:center;">
-                    <img src="img/logo-pedro-rizzi.png" class="logo-img" alt="Logo Escola">
+                    <img src="${sigeDB.getLogoEscola()}" class="logo-img" alt="Logo Escola" style="object-fit:contain;">
                     <div>
                         <h1 class="school-name">CENTRO EDUCACIONAL PEDRO RIZZI</h1>
                         <h2 class="sub-name">Orientação Educacional — Prontuário Individual do Aluno</h2>
@@ -5779,44 +5784,54 @@ function renderModuleDirecao() {
         }
     }
 
-    switchDirSubTab(currentDirSubTab);
+    switchDirSubTab(currentDirSubTab || 'whatsapp');
 }
 
 function popularTurmasSelectsDirecao() {
-    const turmas = sigeDB.getTurmas();
-    const selects = [
-        document.getElementById("dirAtendFilterTurma"),
-        document.getElementById("dirRelTurmaSelect")
-    ];
+    try {
+        const turmas = (typeof sigeDB.getTurmasEscola === 'function') 
+            ? sigeDB.getTurmasEscola() 
+            : (typeof sigeDB.getTurmas === 'function' ? sigeDB.getTurmas() : []);
+        const selects = [
+            document.getElementById("dirAtendFilterTurma"),
+            document.getElementById("dirRelTurmaSelect")
+        ];
 
-    selects.forEach(sel => {
-        if (!sel || sel.children.length > 1) return;
-        turmas.forEach(t => {
-            const opt = document.createElement("option");
-            opt.value = t.nome;
-            opt.textContent = `${t.nome} (${t.turno === 'matutino' ? 'Manhã' : 'Tarde'})`;
-            sel.appendChild(opt);
+        selects.forEach(sel => {
+            if (!sel || sel.children.length > 1) return;
+            turmas.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.nome;
+                opt.textContent = `${t.nome} (${t.turno === 'matutino' ? 'Manhã' : 'Tarde'})`;
+                sel.appendChild(opt);
+            });
         });
-    });
+    } catch (err) {
+        console.warn("Aviso ao popular turmas da Direção:", err);
+    }
 }
 
 function popularDatalistAlunosDirecao() {
-    const datalist = document.getElementById("dirDossieAlunosDatalist");
-    if (!datalist) return;
-    datalist.innerHTML = "";
+    try {
+        const datalist = document.getElementById("dirDossieAlunosDatalist");
+        if (!datalist) return;
+        datalist.innerHTML = "";
 
-    const alunos = sigeDB.getAlunosImportados();
-    const ops = sigeDB.getAgendamentosOP();
-    const nomesSet = new Set();
+        const alunos = (typeof sigeDB.getAlunosImportados === 'function') ? sigeDB.getAlunosImportados() : [];
+        const ops = (typeof sigeDB.getAgendamentosOP === 'function') ? sigeDB.getAgendamentosOP() : [];
+        const nomesSet = new Set();
 
-    alunos.forEach(a => { if (a.nome) nomesSet.add(a.nome); });
-    ops.forEach(o => { if (o.aluno) nomesSet.add(o.aluno); });
+        alunos.forEach(a => { if (a && a.nome) nomesSet.add(a.nome); });
+        ops.forEach(o => { if (o && o.aluno) nomesSet.add(o.aluno); });
 
-    Array.from(nomesSet).sort().forEach(nome => {
-        const opt = document.createElement("option");
-        opt.value = nome;
-        datalist.appendChild(opt);
-    });
+        Array.from(nomesSet).sort().forEach(nome => {
+            const opt = document.createElement("option");
+            opt.value = nome;
+            datalist.appendChild(opt);
+        });
+    } catch (err) {
+        console.warn("Aviso ao popular datalist de alunos da Direção:", err);
+    }
 }
 
 // ----------------------------------------------------
@@ -6129,6 +6144,7 @@ function openPrintDossieModal(alunoNome) {
 
     printArea.innerHTML = `
         <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+            <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:60px; object-fit:contain; margin-bottom:8px;">
             <h2 style="margin:0; font-size:1.3rem; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
             <div style="font-size:0.85rem; color:#475569;">Gabinete da Direção & Orientação Educacional — Itajaí / SC</div>
             <h3 style="margin:8px 0 0 0; font-size:1.1rem; color:#1e3a8a;">Prontuário Individual de Acompanhamento do Estudante</h3>
@@ -7340,6 +7356,7 @@ function openPrintTermoAtaModal(ataId) {
 
     printArea.innerHTML = `
         <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:14px; margin-bottom:20px;">
+            <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:60px; object-fit:contain; margin-bottom:8px;">
             <h2 style="margin:0; font-size:1.35rem; font-family:'Times New Roman', serif; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
             <div style="font-size:0.9rem; color:#334155; margin-top:2px;">Secretaria Municipal de Educação de Itajaí / SC</div>
             <div style="font-size:0.9rem; font-weight:bold; margin-top:4px;">Gabinete da Direção Escolar</div>
@@ -7584,6 +7601,7 @@ function openPrintRelatorioModal() {
 
     printArea.innerHTML = `
         <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:12px; margin-bottom:16px;">
+            <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:60px; object-fit:contain; margin-bottom:8px;">
             <h2 style="margin:0; font-size:1.35rem; text-transform:uppercase;">Centro Educacional Pedro Rizzi</h2>
             <div style="font-size:0.85rem; color:#475569;">Secretaria Municipal de Educação de Itajaí / SC</div>
             <h3 style="margin:8px 0 0 0; font-size:1.15rem; color:#0284c7;">Relatório Executivo Oficial de Atendimentos da Orientação</h3>
@@ -7867,6 +7885,9 @@ function renderDirCalendarioEscolar() {
                                         <span title="Público-Alvo"><i class="fa-solid fa-users" style="font-size:0.7rem; color:#94a3b8;"></i> ${publicoIcon}</span>
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <span style="font-size:0.72rem; color:#94a3b8;" title="Local"><i class="fa-solid fa-location-dot" style="font-size:0.7rem;"></i> ${ev.local || 'Escola'}</span>
+                                            <button type="button" onclick="openEditarEventoCalendarioModal('${ev.id}')" style="background:none; border:none; color:#0284c7; cursor:pointer; padding:2px 4px; border-radius:4px; font-size:0.75rem;" title="Editar evento">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
                                             <button type="button" onclick="excluirEventoCalendario('${ev.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px 4px; border-radius:4px; font-size:0.75rem;" title="Remover do calendário">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -7923,7 +7944,10 @@ function renderDirCalendarioEscolar() {
                         <td style="padding:12px 16px; font-size:0.82rem; color:#64748b;">
                             ${e.local || 'C.E. Pedro Rizzi'}
                         </td>
-                        <td style="padding:12px 16px; text-align:center;">
+                        <td style="padding:12px 16px; text-align:center; white-space:nowrap;">
+                            <button type="button" onclick="openEditarEventoCalendarioModal('${e.id}')" class="btn-sec" style="font-size:0.75rem; padding:4px 8px; margin-right:4px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;" title="Editar Evento">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
                             <button type="button" onclick="excluirEventoCalendario('${e.id}')" class="btn-sec btn-sec-fail" style="font-size:0.75rem; padding:4px 8px;" title="Remover do Calendário">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -7943,6 +7967,139 @@ function resetDirCalFiltros() {
     if (m) m.value = "";
     if (c) c.value = "";
     renderDirCalendarioEscolar();
+}
+
+// ----------------------------------------------------
+// GESTÃO DE EVENTOS DO CALENDÁRIO (NOVO, EDITAR, EXCLUIR)
+// ----------------------------------------------------
+function openNovoEventoCalendarioModal() {
+    const modal = document.getElementById("modalNovoEventoCalendario");
+    if (!modal) return;
+
+    const idInput = document.getElementById("calInputId");
+    const tituloInput = document.getElementById("calInputTitulo");
+    const dataInput = document.getElementById("calInputData");
+    const horaInput = document.getElementById("calInputHora");
+    const catInput = document.getElementById("calInputCategoria");
+    const pubInput = document.getElementById("calInputPublico");
+    const locInput = document.getElementById("calInputLocal");
+    const descInput = document.getElementById("calInputDescricao");
+
+    if (idInput) idInput.value = "";
+    if (tituloInput) tituloInput.value = "";
+    if (dataInput) dataInput.value = getLocalDateISO();
+    if (horaInput) horaInput.value = "08:00";
+    if (catInput) catInput.value = "reuniao_pedagogica";
+    if (pubInput) pubInput.value = "professores";
+    if (locInput) locInput.value = "Auditório da Escola";
+    if (descInput) descInput.value = "";
+
+    const titleElem = document.getElementById("modalNovoEventoTitle");
+    if (titleElem) titleElem.innerText = "Adicionar Evento ao Calendário Escolar";
+    const btnText = document.getElementById("btnSalvarEventoText");
+    if (btnText) btnText.innerText = "Salvar no Calendário";
+
+    modal.style.display = "flex";
+}
+
+function openEditarEventoCalendarioModal(id) {
+    const eventos = sigeDB.getEventosCalendarioEscolar() || [];
+    const ev = eventos.find(e => e.id === id);
+    if (!ev) {
+        showToast("Evento não encontrado.", "warning");
+        return;
+    }
+
+    const modal = document.getElementById("modalNovoEventoCalendario");
+    if (!modal) return;
+
+    const idInput = document.getElementById("calInputId");
+    const tituloInput = document.getElementById("calInputTitulo");
+    const dataInput = document.getElementById("calInputData");
+    const horaInput = document.getElementById("calInputHora");
+    const catInput = document.getElementById("calInputCategoria");
+    const pubInput = document.getElementById("calInputPublico");
+    const locInput = document.getElementById("calInputLocal");
+    const descInput = document.getElementById("calInputDescricao");
+
+    if (idInput) idInput.value = ev.id;
+    if (tituloInput) tituloInput.value = ev.titulo || "";
+    if (dataInput) dataInput.value = ev.data || getLocalDateISO();
+    if (horaInput) horaInput.value = ev.hora || "";
+    if (catInput) catInput.value = ev.categoria || "reuniao_pedagogica";
+    if (pubInput) pubInput.value = ev.publicoAlvo || "escola_toda";
+    if (locInput) locInput.value = ev.local || "";
+    if (descInput) descInput.value = ev.descricao || "";
+
+    const titleElem = document.getElementById("modalNovoEventoTitle");
+    if (titleElem) titleElem.innerText = "Editar Evento do Calendário";
+    const btnText = document.getElementById("btnSalvarEventoText");
+    if (btnText) btnText.innerText = "Atualizar Evento";
+
+    modal.style.display = "flex";
+}
+
+function closeNovoEventoCalendarioModal() {
+    const modal = document.getElementById("modalNovoEventoCalendario");
+    if (modal) modal.style.display = "none";
+}
+
+const calCategoriasMapDesc = {
+    reuniao_pedagogica: "Reunião Pedagógica",
+    conselho_classe: "Conselho de Classe",
+    reuniao_app: "Reunião APP",
+    reuniao_gestao: "Reunião Gestão & Equipe",
+    civica: "Homenagem Cívica",
+    leitura: "Parada para Leitura",
+    avaliacao: "Avaliação Trimestral",
+    reuniao_pais: "Reunião de Pais / Boletins",
+    formacao: "Formação Continuada",
+    feriado: "Feriado / Recesso Escolar",
+    evento_cultural: "Evento Festivo / Esportivo",
+    marco_letivo: "Marco Letivo Oficial"
+};
+
+function salvarNovoEventoCalendario(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const id = document.getElementById("calInputId")?.value.trim();
+    const titulo = document.getElementById("calInputTitulo")?.value.trim();
+    const data = document.getElementById("calInputData")?.value;
+    const hora = document.getElementById("calInputHora")?.value.trim();
+    const categoria = document.getElementById("calInputCategoria")?.value || "reuniao_pedagogica";
+    const publicoAlvo = document.getElementById("calInputPublico")?.value || "escola_toda";
+    const local = document.getElementById("calInputLocal")?.value.trim() || "C.E. Pedro Rizzi";
+    const descricao = document.getElementById("calInputDescricao")?.value.trim() || "";
+
+    if (!titulo || !data) {
+        showToast("Preencha o título e a data do evento.", "warning");
+        return;
+    }
+
+    const categoriaDesc = calCategoriasMapDesc[categoria] || "Evento Escolar";
+
+    if (id) {
+        sigeDB.updateEventoCalendarioEscolar(id, {
+            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
+        });
+        showToast(`Evento "${titulo}" atualizado com sucesso!`);
+    } else {
+        sigeDB.addEventoCalendarioEscolar({
+            titulo, data, hora, categoria, categoriaDesc, publicoAlvo, local, descricao
+        });
+        showToast(`Evento "${titulo}" adicionado ao calendário!`);
+    }
+
+    closeNovoEventoCalendarioModal();
+    renderDirCalendarioEscolar();
+}
+
+function excluirEventoCalendario(id) {
+    if (confirm("Tem certeza que deseja remover este evento do calendário escolar?")) {
+        sigeDB.deleteEventoCalendarioEscolar(id);
+        renderDirCalendarioEscolar();
+        showToast("Evento removido do calendário.");
+    }
 }
 
 function restaurarCalendarioOficialExcel() {
@@ -9080,6 +9237,48 @@ function renderConfigEscolaForm() {
     if (inputAno) inputAno.value = config.anoLetivo || "2026";
     if (inputPer) inputPer.value = config.periodoAtual || "3º Trimestre";
     if (inputTel) inputTel.value = config.telefoneContato || "(47) 3348-0000";
+
+    updateAllSchoolLogoDisplays();
+}
+
+function updateAllSchoolLogoDisplays(src) {
+    const logoSrc = src || ((window.sigeDB && typeof window.sigeDB.getLogoEscola === 'function') ? window.sigeDB.getLogoEscola() : "img/logo-pedro-rizzi.png");
+    const imgs = document.querySelectorAll(".cfg-logo-preview-img, .global-school-logo-img");
+    imgs.forEach(img => {
+        if (img) img.src = logoSrc;
+    });
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files ? event.target.files[0] : null;
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast("Por favor, selecione um arquivo de imagem válido (PNG, JPG, SVG, WebP).", "warning");
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        showToast("A imagem do logotipo deve ter no máximo 2MB.", "warning");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result;
+        sigeDB.saveLogoEscola(base64);
+        updateAllSchoolLogoDisplays(base64);
+        showToast("Logotipo oficial da escola atualizado e salvo!");
+    };
+    reader.readAsDataURL(file);
+}
+
+function resetarLogoEscolaPadrao() {
+    if (confirm("Deseja restaurar o logotipo oficial padrão do Centro Educacional Pedro Rizzi?")) {
+        sigeDB.resetLogoEscola();
+        updateAllSchoolLogoDisplays("img/logo-pedro-rizzi.png");
+        showToast("Logotipo padrão restaurado com sucesso!");
+    }
 }
 
 function salvarConfiguracoesEscola(e) {
@@ -10223,10 +10422,13 @@ function imprimirRelatorioLoteSME(loteId) {
             </style>
         </head>
         <body>
-            <div class="header">
-                <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
-                <h3 style="margin:4px 0 0 0; font-size:15px; color:#475569;">SOLICITAÇÃO OFICIAL DE UNIFORMES À SME — ${lote.codigoLote}</h3>
-                <div style="font-size:11px; color:#64748b;">Secretaria Municipal de Educação — Itajaí / SC</div>
+            <div class="header" style="display:flex; align-items:center; justify-content:center; gap:16px;">
+                <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; object-fit:contain;">
+                <div>
+                    <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                    <h3 style="margin:4px 0 0 0; font-size:15px; color:#475569;">SOLICITAÇÃO OFICIAL DE UNIFORMES À SME — ${lote.codigoLote}</h3>
+                    <div style="font-size:11px; color:#64748b;">Secretaria Municipal de Educação — Itajaí / SC</div>
+                </div>
             </div>
 
             <div class="meta-box">
@@ -10361,6 +10563,7 @@ function renderPreviewRelacaoEntregaTurma() {
 
     area.innerHTML = `
         <div style="text-align:center; margin-bottom:1.2rem; border-bottom:2px solid #0f172a; padding-bottom:10px;">
+            <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; object-fit:contain; margin-bottom:6px;">
             <h2 style="margin:0; font-size:1.3rem; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
             <h4 style="margin:4px 0 0 0; font-size:1rem; color:#475569; font-weight:800;">RELAÇÃO DE ENTREGA DE UNIFORME ESCOLAR — ${tituloTurma.toUpperCase()}</h4>
             <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">Emissão em: ${dataHoje} | Via Oficial de Distribuição & Assinatura de Recebimento</div>
@@ -10456,10 +10659,13 @@ function imprimirTermoIndividualUniforme(pedidoId) {
             </style>
         </head>
         <body>
-            <div class="header">
-                <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
-                <h4 style="margin:5px 0 0 0; font-size:15px; color:#334155;">TERMO DE RECEBIMENTO DE UNIFORME ESCOLAR</h4>
-                <div style="font-size:12px; color:#64748b;">Itajaí / SC — Secretaria Escolar</div>
+            <div class="header" style="display:flex; align-items:center; justify-content:center; gap:16px;">
+                <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; object-fit:contain;">
+                <div>
+                    <h2 style="margin:0; font-size:18px;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
+                    <h4 style="margin:5px 0 0 0; font-size:15px; color:#334155;">TERMO DE RECEBIMENTO DE UNIFORME ESCOLAR</h4>
+                    <div style="font-size:12px; color:#64748b;">Itajaí / SC — Secretaria Escolar</div>
+                </div>
             </div>
 
             <p>Declaramos que o(a) estudante abaixo discriminado(a) recebeu da escola os itens de uniforme escolar especificados:</p>
@@ -10593,6 +10799,7 @@ function imprimirListaEntregaLoteSME(loteId) {
         </head>
         <body>
             <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:15px;">
+                <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; object-fit:contain; margin-bottom:6px;">
                 <h2 style="margin:0; font-size:17px; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
                 <h3 style="margin:4px 0 0 0; font-size:14px; color:#475569; font-weight:800;">LISTA DE ENTREGA DE KITS DE UNIFORME POR TURMA — REMESSA ${lote.codigoLote}</h3>
                 <div style="font-size:11px; color:#64748b; margin-top:4px;">Data de Envio/Corte: ${dataCorteFmt} | Emissão em: ${dataHoje} | Total de Estudantes: ${pedidosDoLote.length}</div>
@@ -10678,6 +10885,7 @@ function imprimirRelatorioEntregasConcluidas() {
         </head>
         <body>
             <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:15px;">
+                <img src="${sigeDB.getLogoEscola()}" alt="Logo Escola" style="max-height:55px; object-fit:contain; margin-bottom:6px;">
                 <h2 style="margin:0; font-size:18px; color:#0f172a; font-weight:900;">CENTRO EDUCACIONAL PEDRO RIZZI</h2>
                 <h3 style="margin:4px 0 0 0; font-size:15px; color:#166534; font-weight:800;">RELATÓRIO OFICIAL DE UNIFORMES ENTREGUES AOS ESTUDANTES</h3>
                 <div style="font-size:11px; color:#64748b; margin-top:4px;">Emissão em: ${dataHoje} | Total de Entregas Concluídas: ${pedidos.length}</div>
