@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.sigeDB) {
         window.sigeDB.init();
     }
-    renderPortalAuthBar();
+    renderPortalAuth();
     updateActionPillars();
     loadSystems();
 });
@@ -161,7 +161,44 @@ function getCustomSystems() {
     }
 }
 
-// Renderiza a barra de status de autenticação / RBAC no topo do portal
+function getRoleLabel(role) {
+    const map = {
+        desenvolvedor: "Desenvolvedor do Sistema",
+        direcao: "Direção Escolar & Gestão",
+        supervisao: "Supervisão Escolar & Diário",
+        orientadora_daiane: "Orientadora Educacional — Séries Finais",
+        orientadora_clarinda: "Orientadora Educacional — Séries Iniciais",
+        secretaria: "Secretaria Escolar & Recepção",
+        uniformes: "Controle de Uniformes & Logística",
+        docentes: "Corpo Docente / Professores",
+        comunidade: "Comunidade / Alunos / Pais",
+        visitante: "Visitante / Não Autenticado"
+    };
+    return map[role] || (role ? role.toUpperCase() : "Membro da Equipe");
+}
+
+function getRoleIcon(role) {
+    const map = {
+        desenvolvedor: "fa-solid fa-shield-halved",
+        direcao: "fa-solid fa-crown",
+        supervisao: "fa-solid fa-book-open-reader",
+        orientadora_daiane: "fa-solid fa-heart-pulse",
+        orientadora_clarinda: "fa-solid fa-heart-pulse",
+        secretaria: "fa-solid fa-clipboard-check",
+        uniformes: "fa-solid fa-shirt",
+        docentes: "fa-solid fa-chalkboard-user",
+        visitante: "fa-solid fa-user-lock"
+    };
+    return map[role] || "fa-solid fa-user";
+}
+
+// Renderiza a autenticação tanto na barra superior quanto no card central
+function renderPortalAuth() {
+    renderPortalAuthBar();
+    renderPortalAuthHeroCard();
+}
+
+// 1. Barra Compacta Superior
 function renderPortalAuthBar() {
     const authBar = document.getElementById('portalAuthBar');
     if (!authBar) return;
@@ -169,94 +206,295 @@ function renderPortalAuthBar() {
     const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
     if (loggedUser) {
+        const isDev = loggedUser.role === "desenvolvedor";
+        const activeRole = window.sigeDB ? window.sigeDB.getRole() : loggedUser.role;
+        const isSimulating = isDev && activeRole !== "desenvolvedor";
         const modulosKeys = ['op', 'mural', 'supervisao', 'direcao', 'uniformes', 'admin'];
         const allowedCount = modulosKeys.filter(k => window.sigeDB.temPermissaoModulo(k)).length;
-        const cargoText = loggedUser.cargo || loggedUser.role || "Membro da Equipe";
+        const cargoText = loggedUser.cargo || getRoleLabel(loggedUser.role);
 
         authBar.innerHTML = `
             <div class="portal-user-badge">
                 <div class="portal-avatar-mini" title="${loggedUser.nome}">
-                    <i class="fa-solid fa-user-shield"></i>
+                    <i class="${getRoleIcon(loggedUser.role)}"></i>
                 </div>
                 <div class="portal-user-meta">
-                    <span style="font-weight:800; color:#ffffff;">${loggedUser.nome || loggedUser.email}</span>
+                    <span style="font-weight:800; color:#ffffff;">${loggedUser.nome}</span>
                     <span class="portal-role-pill">${cargoText}</span>
-                    <span style="color:#94a3b8; font-size:0.75rem;"><i class="fa-solid fa-envelope"></i> ${loggedUser.email}</span>
-                    <span style="color:#4ade80; font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${allowedCount}/6 módulos liberados</span>
+                    ${isSimulating ? `
+                        <span style="background:#f59e0b; color:#fff; font-size:0.72rem; font-weight:800; padding:2px 8px; border-radius:10px;">
+                            <i class="fa-solid fa-eye"></i> Simulando: ${getRoleLabel(activeRole)}
+                        </span>
+                    ` : ''}
+                    <span style="color:#4ade80; font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-shield-halved"></i> ${allowedCount}/6 módulos liberados</span>
                 </div>
             </div>
             <div class="portal-auth-actions">
                 <a href="sistema-gestao.html" class="portal-btn-sige">
-                    <i class="fa-solid fa-layer-group"></i> Abrir SIGE Integrado
+                    <i class="fa-solid fa-layer-group"></i> Abrir SIGE
                 </a>
-                <button type="button" onclick="portalLogout()" class="portal-btn-logout" title="Alternar usuário ou desconectar">
-                    <i class="fa-solid fa-right-from-bracket"></i> Trocar Usuário
+                <button type="button" onclick="portalLogout()" class="portal-btn-logout" title="Encerrar sessão e deslogar">
+                    <i class="fa-solid fa-right-from-bracket"></i> Deslogar / Sair
                 </button>
             </div>
         `;
     } else {
-        const equipe = window.sigeDB ? window.sigeDB.getEquipeEscola() : [];
-        const equipeComEmail = equipe.filter(p => p.email && p.email.trim());
-
-        let optionsHtml = '';
-        equipeComEmail.forEach(p => {
-            optionsHtml += `<option value="${p.email}">${p.nome} (${p.cargoFuncao || p.setor || 'Equipe'})</option>`;
-        });
-
         authBar.innerHTML = `
             <div class="portal-user-badge">
                 <div class="portal-avatar-mini" style="background:#475569;" title="Identificação Escolar">
-                    <i class="fa-solid fa-id-badge"></i>
+                    <i class="fa-solid fa-lock"></i>
                 </div>
                 <div class="portal-user-meta">
-                    <span style="font-weight:800; color:#f8fafc; font-size:0.85rem;">Portal de Acessos RBAC</span>
-                    <span style="color:#94a3b8; font-size:0.75rem;">Selecione seu perfil escolar ou entre com seu e-mail para carregar suas permissões automáticas:</span>
+                    <span style="font-weight:800; color:#f8fafc; font-size:0.85rem;">Portal IntegraRizzi — Identificação Necessária</span>
+                    <span style="color:#94a3b8; font-size:0.75rem;">Faça seu login para liberar suas ferramentas e atendimentos escolares</span>
                 </div>
             </div>
-            <div class="portal-login-form-inline">
-                <select id="portalUserSelect" class="portal-login-select" onchange="portalLoginWithSelect(this.value)">
-                    <option value="">-- Selecione seu usuário na Equipe --</option>
-                    ${optionsHtml}
-                </select>
-                <button type="button" onclick="portalPromptLoginEmail()" class="portal-login-btn">
-                    <i class="fa-solid fa-key"></i> Digitar E-mail
+            <div class="portal-auth-actions">
+                <button type="button" onclick="scrollToAuthCard()" class="portal-login-btn">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Ir para o Login
+                </button>
+                <button type="button" onclick="heroLoginDev()" class="portal-btn-logout" style="color:#cbd5e1; border-color:#475569;" title="Entrar como Desenvolvedor">
+                    <i class="fa-solid fa-laptop-code"></i> Acesso Dev
                 </button>
             </div>
         `;
     }
 }
 
-function portalLoginWithSelect(email) {
-    if (!email) return;
+// 2. Painel Central Hero (Login Completo ou Card do Usuário com Simulador Dev)
+function renderPortalAuthHeroCard() {
+    const card = document.getElementById('portalAuthCard');
+    if (!card) return;
+
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+
+    if (!loggedUser) {
+        // TELA DE LOGIN (QUANDO NÃO ESTÁ LOGADO)
+        const equipe = window.sigeDB ? window.sigeDB.getEquipeEscola() : [];
+        let optionsHtml = '';
+
+        // Agrupa perfis
+        const devOption = `<option value="elcortelini@gmail.com">👑 Elevi Cortelini (Desenvolvedor do Sistema — Acesso Total)</option>`;
+        optionsHtml += devOption;
+
+        equipe.forEach(p => {
+            const val = p.email || p.id;
+            const cargo = p.cargoFuncao || getRoleLabel(p.setor) || 'Equipe';
+            optionsHtml += `<option value="${val}">👤 ${p.nome} — ${cargo}</option>`;
+        });
+
+        card.innerHTML = `
+            <div class="portal-login-card-inner">
+                <div class="login-card-header">
+                    <div class="login-badge"><i class="fa-solid fa-shield-halved"></i> IDENTIFICAÇÃO DO USUÁRIO</div>
+                    <h2 class="login-card-title"><i class="fa-solid fa-id-card-clip"></i> Acesso ao Portal IntegraRizzi</h2>
+                    <p class="login-card-subtitle">Identifique-se abaixo para que o portal monte seus módulos, pilares de ação e ferramentas conforme suas credenciais e permissões escolares:</p>
+                </div>
+
+                <div class="login-card-body">
+                    <!-- Opção 1: Seleção de Perfil na Equipe -->
+                    <div class="login-method-box">
+                        <label class="login-method-label"><i class="fa-solid fa-users"></i> 1. Selecione seu Perfil na Equipe Escolar:</label>
+                        <div class="login-input-row">
+                            <select id="heroLoginSelect" class="hero-login-select" onchange="heroLoginWithSelect(this.value)">
+                                <option value="">-- Escolha seu nome ou cargo na lista --</option>
+                                ${optionsHtml}
+                            </select>
+                            <button type="button" class="hero-login-btn btn-enter-select" onclick="heroLoginWithSelect(document.getElementById('heroLoginSelect').value)">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="login-separator"><span>OU INFORME SEU E-MAIL</span></div>
+
+                    <!-- Opção 2: Entrada por E-mail -->
+                    <form class="login-method-box" onsubmit="event.preventDefault(); heroLoginWithEmail();">
+                        <label class="login-method-label"><i class="fa-solid fa-envelope"></i> 2. Digite seu E-mail Funcional:</label>
+                        <div class="login-input-row">
+                            <input type="text" id="heroLoginEmailInput" class="hero-login-input" placeholder="ex: seu.nome@edu.itajai.sc.gov.br ou elcortelini@gmail.com" />
+                            <button type="submit" class="hero-login-btn btn-enter-email">
+                                <i class="fa-solid fa-key"></i> Autenticar
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Atalho Rápido para o Desenvolvedor -->
+                    <div class="login-dev-quick">
+                        <button type="button" class="btn-dev-quick-login" onclick="heroLoginDev()">
+                            <i class="fa-solid fa-laptop-code" style="color:#7c3aed;"></i> Acesso Imediato como <strong>Desenvolvedor do Sistema</strong> (Acesso Total & Visões)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        // TELA DO USUÁRIO LOGADO + SIMULADOR DEV
+        const isDev = loggedUser.role === "desenvolvedor";
+        const activeRole = window.sigeDB ? window.sigeDB.getRole() : loggedUser.role;
+        const isSimulating = isDev && activeRole !== "desenvolvedor";
+        const modulosKeys = ['op', 'mural', 'supervisao', 'direcao', 'uniformes', 'admin'];
+        const allowedCount = modulosKeys.filter(k => window.sigeDB.temPermissaoModulo(k)).length;
+        const cargoText = loggedUser.cargo || getRoleLabel(loggedUser.role);
+        const userIcon = getRoleIcon(loggedUser.role);
+
+        card.innerHTML = `
+            <div class="portal-user-profile-card">
+                <div class="user-profile-header">
+                    <div class="user-profile-avatar-wrap">
+                        <div class="user-profile-avatar">
+                            <i class="${userIcon}"></i>
+                        </div>
+                        <span class="online-indicator-dot" title="Sessão Ativa"></span>
+                    </div>
+
+                    <div class="user-profile-info">
+                        <div class="user-profile-top-row">
+                            <span class="user-status-tag"><i class="fa-solid fa-circle-check"></i> USUÁRIO CONECTADO</span>
+                            <span class="user-role-badge">${cargoText}</span>
+                        </div>
+                        <h2 class="user-profile-name">${loggedUser.nome}</h2>
+                        <div class="user-profile-meta">
+                            <span><i class="fa-solid fa-envelope"></i> ${loggedUser.email}</span>
+                            <span class="user-perms-count"><i class="fa-solid fa-shield-halved"></i> ${allowedCount}/6 módulos liberados</span>
+                        </div>
+                    </div>
+
+                    <div class="user-profile-actions">
+                        <a href="sistema-gestao.html" class="btn-profile-primary">
+                            <i class="fa-solid fa-layer-group"></i> Abrir SIGE Integrado
+                        </a>
+                        <button type="button" onclick="portalLogout()" class="btn-profile-logout" title="Encerrar sessão e deslogar">
+                            <i class="fa-solid fa-right-from-bracket"></i> Deslogar / Trocar Usuário
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SELETOR DE VISÃO (EXCLUSIVO PARA O DESENVOLVEDOR DO SISTEMA) -->
+                ${isDev ? `
+                <div class="dev-view-switcher-panel ${isSimulating ? 'simulation-active-pulse' : ''}">
+                    <div class="dev-view-header">
+                        <div class="dev-view-title">
+                            <i class="fa-solid fa-sliders"></i>
+                            <div>
+                                <strong>Simulador de Visão de Usuário (Exclusivo do Desenvolvedor)</strong>
+                                <p>Escolha sob qual visão você deseja navegar para testar exatamente como cada perfil entra e interage no sistema:</p>
+                            </div>
+                        </div>
+                        ${isSimulating ? `
+                            <button type="button" onclick="resetDevView()" class="btn-restore-dev-view">
+                                <i class="fa-solid fa-rotate-left"></i> Restaurar Visão Desenvolvedor (Acesso Total)
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="dev-view-control-row">
+                        <label for="devViewSelector" class="dev-view-label">
+                            <i class="fa-solid fa-eye"></i> Visão Ativa no Portal:
+                        </label>
+                        <select id="devViewSelector" class="dev-view-select" onchange="switchDevView(this.value)">
+                            <option value="desenvolvedor" ${activeRole === 'desenvolvedor' ? 'selected' : ''}>👑 Visão Desenvolvedor (Acesso Total a TODAS as funcionalidades)</option>
+                            <option value="orientadora_daiane" ${activeRole === 'orientadora_daiane' ? 'selected' : ''}>💜 Visão: Orientação Educacional (OE) — Daiane Aquino (Séries Finais)</option>
+                            <option value="orientadora_clarinda" ${activeRole === 'orientadora_clarinda' ? 'selected' : ''}>💜 Visão: Orientação Educacional (OE) — Clarinda Pereira (Séries Iniciais)</option>
+                            <option value="supervisao" ${activeRole === 'supervisao' ? 'selected' : ''}>📚 Visão: Supervisão Escolar & Diário Docente</option>
+                            <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Visão: Direção Escolar & Gestão Institucional</option>
+                            <option value="uniformes" ${activeRole === 'uniformes' ? 'selected' : ''}>👕 Visão: Controle de Uniformes & Logística</option>
+                            <option value="secretaria" ${activeRole === 'secretaria' ? 'selected' : ''}>📋 Visão: Secretaria Escolar & Atendimento</option>
+                            <option value="docentes" ${activeRole === 'docentes' ? 'selected' : ''}>👨‍🏫 Visão: Docentes / Professores (Somente Leitura Geral)</option>
+                            <option value="visitante" ${activeRole === 'visitante' ? 'selected' : ''}>🔒 Visão: Visitante / Sem Permissão</option>
+                        </select>
+                    </div>
+
+                    ${isSimulating ? `
+                        <div class="simulation-alert-banner">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Você está simulando a visão de <strong>${getRoleLabel(activeRole)}</strong>. Os cards de módulos, pilares e restrições abaixo estão se comportando exatamente como este perfil experimenta.</span>
+                        </div>
+                    ` : `
+                        <div class="dev-all-access-banner">
+                            <i class="fa-solid fa-unlock-keyhole"></i>
+                            <span>Visão Desenvolvedor: você possui <strong>Acesso Total a 100% das funcionalidades e módulos</strong>.</span>
+                        </div>
+                    `}
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+}
+
+function heroLoginWithSelect(value) {
+    if (!value) return;
     if (window.sigeDB) {
-        window.sigeDB.loginWithEmail(email);
-        renderPortalAuthBar();
+        const user = window.sigeDB.loginWithEmail(value);
+        if (user) {
+            renderPortalAuth();
+            updateActionPillars();
+            loadSystems();
+        } else {
+            alert("Não foi possível identificar o usuário selecionado.");
+        }
+    }
+}
+
+function heroLoginWithEmail() {
+    const input = document.getElementById('heroLoginEmailInput');
+    if (!input) return;
+    const email = input.value.trim();
+    if (!email) {
+        alert("Por favor, digite seu e-mail funcional ou identificador.");
+        input.focus();
+        return;
+    }
+
+    if (window.sigeDB) {
+        const user = window.sigeDB.loginWithEmail(email);
+        if (user) {
+            renderPortalAuth();
+            updateActionPillars();
+            loadSystems();
+        } else {
+            alert(`E-mail ou usuário "${email}" não localizado na equipe cadastrada.\n\nVerifique a digitação ou entre como Desenvolvedor para cadastrá-lo.`);
+        }
+    }
+}
+
+function heroLoginDev() {
+    if (window.sigeDB) {
+        window.sigeDB.loginWithEmail("elcortelini@gmail.com");
+        renderPortalAuth();
         updateActionPillars();
         loadSystems();
     }
 }
 
-function portalPromptLoginEmail() {
-    const email = prompt("Informe seu e-mail funcional/institucional para entrar:");
-    if (email && email.trim()) {
-        if (window.sigeDB) {
-            const user = window.sigeDB.loginWithEmail(email.trim());
-            if (!user) {
-                alert(`E-mail "${email}" não localizado na equipe escolar cadastrada. Se necessário, solicite inclusão ao desenvolvedor/direção.`);
-            }
-            renderPortalAuthBar();
-            updateActionPillars();
-            loadSystems();
-        }
-    }
+function switchDevView(role) {
+    if (!window.sigeDB) return;
+    window.sigeDB.setRole(role);
+    renderPortalAuth();
+    updateActionPillars();
+    loadSystems();
+}
+
+function resetDevView() {
+    switchDevView("desenvolvedor");
 }
 
 function portalLogout() {
     if (window.sigeDB) {
         window.sigeDB.logout();
-        renderPortalAuthBar();
-        updateActionPillars();
-        loadSystems();
+    }
+    renderPortalAuth();
+    updateActionPillars();
+    loadSystems();
+}
+
+function scrollToAuthCard() {
+    const card = document.getElementById('portalAuthCard');
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = document.getElementById('heroLoginEmailInput');
+        if (input) setTimeout(() => input.focus(), 400);
     }
 }
 
@@ -267,7 +505,6 @@ function updateActionPillars() {
 
     const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
-    // Configura o Pilar 1 de acordo com o módulo de maior relevância com permissão
     let p1 = {
         badge: '<i class="fa-solid fa-bolt"></i> ACESSO DIRETO',
         badgeClass: 'badge-oe',
@@ -282,7 +519,7 @@ function updateActionPillars() {
 
     if (window.sigeDB && loggedUser) {
         if (window.sigeDB.temPermissaoModulo('op')) {
-            // Permanece Orientação Educacional
+            // Mantém Orientação Educacional
         } else if (window.sigeDB.temPermissaoModulo('supervisao')) {
             p1 = {
                 badge: '<i class="fa-solid fa-book-open-reader"></i> SUPERVISÃO',
@@ -343,7 +580,23 @@ function updateActionPillars() {
                 btnText: 'Acessar Painel Dev',
                 btnClass: 'btn-op-primary'
             };
+        } else {
+            p1 = {
+                badge: '<i class="fa-solid fa-lock"></i> RESTRITO',
+                badgeClass: 'badge-oe',
+                iconBoxClass: 'icon-op',
+                icon: 'fa-solid fa-user-lock',
+                title: 'Módulos Protegidos',
+                desc: 'Seu perfil atual possui acesso de leitura ou necessita de liberação de permissões adicionais.',
+                url: 'javascript:alert("Solicite liberação deste módulo à direção ou desenvolvedor.");',
+                btnText: 'Acesso Restrito',
+                btnClass: 'btn-op-primary'
+            };
         }
+    } else if (!loggedUser) {
+        p1.badge = '<i class="fa-solid fa-lock"></i> REQUER LOGIN';
+        p1.btnText = 'Identificar-se para Acessar';
+        p1.url = 'javascript:scrollToAuthCard()';
     }
 
     pillarsGrid.innerHTML = `
@@ -388,6 +641,7 @@ function loadSystems() {
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
     const customSystems = getCustomSystems();
     const allSystems = [...defaultSystems, ...customSystems];
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
     allSystems.forEach(sys => {
         let finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);
@@ -407,13 +661,16 @@ function loadSystems() {
         let badgeHtml = '';
 
         if (sys.moduloKey) {
-            if (window.sigeDB) {
-                isAllowed = window.sigeDB.temPermissaoModulo(sys.moduloKey);
-            }
-            if (isAllowed) {
-                badgeHtml = `<span class="sys-access-badge badge-access-liberado"><i class="fa-solid fa-circle-check"></i> ACESSO LIBERADO</span>`;
+            if (!loggedUser) {
+                isAllowed = false;
+                badgeHtml = `<span class="sys-access-badge badge-access-restrito"><i class="fa-solid fa-lock"></i> REQUER LOGIN</span>`;
             } else {
-                badgeHtml = `<span class="sys-access-badge badge-access-restrito"><i class="fa-solid fa-lock"></i> ACESSO RESTRITO</span>`;
+                isAllowed = window.sigeDB ? window.sigeDB.temPermissaoModulo(sys.moduloKey) : false;
+                if (isAllowed) {
+                    badgeHtml = `<span class="sys-access-badge badge-access-liberado"><i class="fa-solid fa-circle-check"></i> ACESSO LIBERADO</span>`;
+                } else {
+                    badgeHtml = `<span class="sys-access-badge badge-access-restrito"><i class="fa-solid fa-lock"></i> ACESSO RESTRITO</span>`;
+                }
             }
         } else {
             badgeHtml = `<span class="sys-access-badge badge-access-geral"><i class="fa-solid fa-globe"></i> ${sys.badge || 'ACESSO LIVRE'}</span>`;
@@ -426,6 +683,12 @@ function loadSystems() {
 
         // Clique no card
         card.addEventListener('click', function() {
+            if (sys.moduloKey && !loggedUser) {
+                alert(`🔒 Módulo Protegido: É necessário se identificar no portal para acessar o módulo "${sys.title}".`);
+                scrollToAuthCard();
+                return;
+            }
+
             if (!isAllowed) {
                 alert(`🔒 Acesso Restrito: Seu perfil atual não possui permissão de acesso ao módulo "${sys.title}".\n\nCaso necessite de liberação, solicite ao desenvolvedor ou à direção escolar no Painel de Acessos.`);
                 return;
@@ -490,7 +753,8 @@ function closeConfigModal() {
 
 function openAddCustomSystemModal() {
     const modal = document.getElementById('modalAddCustomSystem');
-    if (modal) modal.style.display = 'flex';
+    if (!modal) return;
+    modal.style.display = 'flex';
 }
 
 function closeAddCustomSystemModal() {
@@ -563,10 +827,16 @@ function openAgendamentoLabDirect(e) {
     }
 }
 
+window.renderPortalAuth = renderPortalAuth;
 window.renderPortalAuthBar = renderPortalAuthBar;
-window.portalLoginWithSelect = portalLoginWithSelect;
-window.portalPromptLoginEmail = portalPromptLoginEmail;
+window.renderPortalAuthHeroCard = renderPortalAuthHeroCard;
+window.heroLoginWithSelect = heroLoginWithSelect;
+window.heroLoginWithEmail = heroLoginWithEmail;
+window.heroLoginDev = heroLoginDev;
+window.switchDevView = switchDevView;
+window.resetDevView = resetDevView;
 window.portalLogout = portalLogout;
+window.scrollToAuthCard = scrollToAuthCard;
 window.updateActionPillars = updateActionPillars;
 window.loadSystems = loadSystems;
 window.openConfigModal = openConfigModal;

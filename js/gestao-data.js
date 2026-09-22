@@ -1251,11 +1251,14 @@ class SigeDatabase {
         if (!loggedEmail) return null;
         const cleanEmail = loggedEmail.toLowerCase().trim();
         const users = this.getUsuarios();
-        let found = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
+        let found = users.find(u => (u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail));
 
         // Se estiver na equipe escolar, garante que as permissões mais recentes da equipe prevalecem
         if (this.data && Array.isArray(this.data.equipeEscola)) {
-            const prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === cleanEmail);
+            const prof = this.data.equipeEscola.find(p => 
+                (p.email && p.email.toLowerCase().trim() === cleanEmail) || 
+                (p.id && p.id.toLowerCase().trim() === cleanEmail)
+            );
             if (prof) {
                 if (!found) {
                     let roleKey = prof.setor || "docentes";
@@ -1263,7 +1266,8 @@ class SigeDatabase {
                         roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
                     }
                     found = {
-                        email: prof.email.toLowerCase().trim(),
+                        id: prof.id,
+                        email: prof.email ? prof.email.toLowerCase().trim() : cleanEmail,
                         nome: prof.nome,
                         role: roleKey,
                         cargo: prof.cargoFuncao || prof.setor,
@@ -1276,28 +1280,42 @@ class SigeDatabase {
         }
 
         if (found) return found;
-        if (cleanEmail === "elcortelini@gmail.com") {
-            return { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } };
+        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin") {
+            return { 
+                email: "elcortelini@gmail.com", 
+                nome: "Elevi Cortelini (Desenvolvedor)", 
+                role: "desenvolvedor", 
+                cargo: "Desenvolvedor do Sistema", 
+                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } 
+            };
         }
         return null;
     }
 
-    loginWithEmail(email) {
-        if (!email) return null;
-        const cleanEmail = email.toLowerCase().trim();
+    loginWithEmail(emailOrId) {
+        if (!emailOrId) return null;
+        let cleanInput = emailOrId.toLowerCase().trim();
+        if (cleanInput === "dev" || cleanInput === "admin" || cleanInput === "desenvolvedor") {
+            cleanInput = "elcortelini@gmail.com";
+        }
+
         const users = this.getUsuarios();
-        let user = users.find(u => u.email.toLowerCase().trim() === cleanEmail);
+        let user = users.find(u => (u.email && u.email.toLowerCase().trim() === cleanInput) || (u.id && u.id.toLowerCase().trim() === cleanInput));
 
         // Se não encontrado em usuariosCadastrados, busca na equipe escolar
         if (!user && this.data && Array.isArray(this.data.equipeEscola)) {
-            const prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === cleanEmail);
+            const prof = this.data.equipeEscola.find(p => 
+                (p.email && p.email.toLowerCase().trim() === cleanInput) || 
+                (p.id && p.id.toLowerCase().trim() === cleanInput)
+            );
             if (prof) {
                 let roleKey = prof.setor || "docentes";
                 if (prof.setor === "orientacao") {
                     roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
                 }
                 user = { 
-                    email: prof.email.toLowerCase().trim(), 
+                    id: prof.id,
+                    email: prof.email ? prof.email.toLowerCase().trim() : `${prof.id}@escola.internal`, 
                     nome: prof.nome, 
                     role: roleKey, 
                     cargo: prof.cargoFuncao || prof.setor,
@@ -1308,23 +1326,25 @@ class SigeDatabase {
         }
 
         if (!user) {
-            if (cleanEmail === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanEmail === "daiane@escola.gov.br") {
+            if (cleanInput === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanInput === "daiane@escola.gov.br") {
                 user = { 
-                    email: cleanEmail, 
+                    email: cleanInput, 
                     nome: "Daiane Caetano Costa de Aquino", 
                     role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais" 
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 };
                 this.addUsuario(user);
-            } else if (cleanEmail === "clarinda@escola.gov.br" || cleanEmail.includes("clarinda.pereira")) {
+            } else if (cleanInput === "clarinda@escola.gov.br" || cleanInput.includes("clarinda.pereira")) {
                 user = { 
-                    email: cleanEmail, 
+                    email: cleanInput, 
                     nome: "Clarinda Rosa Pereira", 
                     role: "orientadora_clarinda", 
-                    cargo: "Orientadora Educacional — Séries Iniciais" 
+                    cargo: "Orientadora Educacional — Séries Iniciais",
+                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
                 };
                 this.addUsuario(user);
-            } else if (cleanEmail === "elcortelini@gmail.com") {
+            } else if (cleanInput === "elcortelini@gmail.com") {
                 user = { 
                     email: "elcortelini@gmail.com", 
                     nome: "Elevi Cortelini (Desenvolvedor)", 
@@ -1338,7 +1358,11 @@ class SigeDatabase {
 
         if (user) {
             localStorage.setItem("sige_logged_email", user.email);
-            this.setRole(user.role);
+            if (user.role === 'desenvolvedor') {
+                this.setRole("desenvolvedor");
+            } else {
+                this.setRole(user.role);
+            }
             return user;
         }
         return null;
@@ -1346,6 +1370,10 @@ class SigeDatabase {
 
     logout() {
         localStorage.removeItem("sige_logged_email");
+        if (this.data) {
+            this.data.currentRole = "desenvolvedor";
+            this.saveData(this.data);
+        }
     }
 
     // Gerenciador de Alunos e Turmas Importados via PDF
@@ -1461,10 +1489,16 @@ class SigeDatabase {
 
     // Role Manager
     getRole() {
-        return this.data.currentRole || "direcao";
+        const user = this.getLoggedUser();
+        if (!user) return "visitante";
+        if (user.role === "desenvolvedor") {
+            return (this.data && this.data.currentRole) ? this.data.currentRole : "desenvolvedor";
+        }
+        return user.role;
     }
 
     setRole(role) {
+        if (!this.data) this.data = {};
         this.data.currentRole = role;
         this.saveData(this.data);
     }
@@ -2886,25 +2920,32 @@ class SigeDatabase {
     }
 
     temPermissaoModulo(moduloId) {
-        const activeRole = this.getRole();
         const user = this.getLoggedUser();
+        if (!user) return false;
 
-        // Se o papel ativo for desenvolvedor, tem acesso total
-        if (activeRole === 'desenvolvedor') return true;
+        // Se o usuário autenticado for o Desenvolvedor do Sistema
+        if (user.role === 'desenvolvedor') {
+            const activeRole = this.getRole();
+            // Na visão de Desenvolvedor: acesso irrestrito a TODAS as funcionalidades
+            if (activeRole === 'desenvolvedor') return true;
 
-        // Se o desenvolvedor está simulando outro perfil pelo seletor
-        if (user && user.role === 'desenvolvedor' && activeRole && activeRole !== 'desenvolvedor') {
+            // Se o desenvolvedor escolheu simular outra visão específica:
             const users = this.getUsuarios();
             const simulatedUser = users.find(u => u.role === activeRole);
             if (simulatedUser && simulatedUser.permissoes) {
                 return !!simulatedUser.permissoes[moduloId];
             }
+            if (this.data && Array.isArray(this.data.equipeEscola)) {
+                const simulatedProf = this.data.equipeEscola.find(p => p.setor === activeRole || p.id === activeRole);
+                if (simulatedProf && simulatedProf.permissoes) {
+                    return !!simulatedProf.permissoes[moduloId];
+                }
+            }
             const defaults = this.getDefaultPermissoesByRole(activeRole);
             return !!defaults[moduloId];
         }
 
-        if (!user) return false;
-        if (user.role === 'desenvolvedor') return true;
+        // Usuário normal autenticado
         if (!user.permissoes) {
             user.permissoes = this.getDefaultPermissoesByRole(user.role);
         }
