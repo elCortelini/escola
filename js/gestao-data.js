@@ -189,7 +189,7 @@ if (typeof window !== "undefined") {
 const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", cpf: "000.000.000-00", dataNascimento: "01/01/1980", senha: "01011980", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senha: "15051985", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
@@ -622,6 +622,32 @@ class SigeDatabase {
                 cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com'),
                 permissoes: u.permissoes || this.getDefaultPermissoesByRole(u.role)
             }));
+
+            // Garante que o Desenvolvedor Master possua o CPF e Data de Nascimento oficiais
+            let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
+            if (devUser) {
+                devUser.cpf = "806.037.420-68";
+                devUser.dataNascimento = "30/12/1981";
+                devUser.senha = "30121981";
+                devUser.nome = "Elevi Cortelini (Desenvolvedor)";
+                devUser.role = "desenvolvedor";
+                devUser.status = "aprovado";
+                devUser.cadastroCompleto = true;
+                devUser.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
+            } else {
+                merged.usuariosCadastrados.unshift({
+                    email: "elcortelini@gmail.com",
+                    cpf: "806.037.420-68",
+                    dataNascimento: "30/12/1981",
+                    senha: "30121981",
+                    nome: "Elevi Cortelini (Desenvolvedor)",
+                    role: "desenvolvedor",
+                    cargo: "Desenvolvedor do Sistema",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                });
+            }
 
             return merged;
         } catch (e) {
@@ -1058,11 +1084,12 @@ class SigeDatabase {
         }
 
         if (found) return found;
-        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin" || (cleanCpfDigits && cleanCpfDigits === "00000000000")) {
+        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin" || (cleanCpfDigits && (cleanCpfDigits === "80603742068" || cleanCpfDigits === "00000000000"))) {
             return { 
                 email: "elcortelini@gmail.com", 
-                cpf: "000.000.000-00",
-                dataNascimento: "01/01/1980",
+                cpf: "806.037.420-68",
+                dataNascimento: "30/12/1981",
+                senha: "30121981",
                 nome: "Elevi Cortelini (Desenvolvedor)", 
                 role: "desenvolvedor", 
                 cargo: "Desenvolvedor do Sistema", 
@@ -1082,16 +1109,32 @@ class SigeDatabase {
         const cleanNumbers = cleanCpf(rawCpf);
         const cleanDateInput = cleanDataNascimento(dataNascimentoInput);
 
-        // Atalhos especiais para Desenvolvedor
-        const isDev = (rawCpf.toLowerCase() === "dev" || rawCpf.toLowerCase() === "admin" || rawCpf.toLowerCase() === "desenvolvedor" || cleanNumbers === "00000000000" || rawCpf.toLowerCase() === "elcortelini@gmail.com");
+        // Atalhos especiais para Desenvolvedor (CPF oficial 806.037.420-68 ou atalhos dev/admin)
+        const isDev = (
+            rawCpf.toLowerCase() === "dev" || 
+            rawCpf.toLowerCase() === "admin" || 
+            rawCpf.toLowerCase() === "desenvolvedor" || 
+            cleanNumbers === "80603742068" || 
+            cleanNumbers === "00000000000" || 
+            rawCpf.toLowerCase() === "elcortelini@gmail.com"
+        );
         if (isDev) {
-            let devUser = this.getUsuarios().find(u => u.role === "desenvolvedor");
+            // Se digitou o CPF oficial do desenvolvedor com senha diferente da sua data de nascimento
+            if (cleanNumbers === "80603742068" && cleanDateInput && cleanDateInput !== "30121981" && rawCpf.toLowerCase() !== "dev" && rawCpf.toLowerCase() !== "admin") {
+                return {
+                    success: false,
+                    code: 'INVALID_PASSWORD',
+                    message: 'Data de nascimento incorreta para o Desenvolvedor. Digite 30/12/1981.'
+                };
+            }
+
+            let devUser = this.getUsuarios().find(u => u.role === "desenvolvedor" || (u.cpf && cleanCpf(u.cpf) === "80603742068"));
             if (!devUser) {
                 devUser = { 
                     email: "elcortelini@gmail.com", 
-                    cpf: "000.000.000-00",
-                    dataNascimento: "01/01/1980",
-                    senha: "01011980",
+                    cpf: "806.037.420-68",
+                    dataNascimento: "30/12/1981",
+                    senha: "30121981",
                     nome: "Elevi Cortelini (Desenvolvedor)", 
                     role: "desenvolvedor", 
                     cargo: "Desenvolvedor do Sistema", 
@@ -1100,14 +1143,20 @@ class SigeDatabase {
                     permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
                 };
                 this.addUsuario(devUser);
+            } else {
+                devUser.cpf = "806.037.420-68";
+                devUser.dataNascimento = "30/12/1981";
+                devUser.senha = "30121981";
+                devUser.status = "aprovado";
+                this.saveData(this.data);
             }
-            localStorage.setItem("sige_logged_cpf", "000.000.000-00");
+            localStorage.setItem("sige_logged_cpf", "806.037.420-68");
             localStorage.setItem("sige_logged_email", devUser.email || "elcortelini@gmail.com");
             this.setRole("desenvolvedor");
             return {
                 success: true,
                 code: 'SUCCESS',
-                message: 'Acesso como Desenvolvedor concedido com sucesso!',
+                message: 'Acesso como Desenvolvedor Master concedido com sucesso! Bem-vindo, Elevi!',
                 user: devUser
             };
         }
@@ -1223,6 +1272,44 @@ class SigeDatabase {
         }
 
         const users = this.getUsuarios();
+
+        // Tratamento especial para o Desenvolvedor do Sistema
+        if (cleanNumbers === "80603742068") {
+            let devUser = users.find(u => u.role === "desenvolvedor" || (u.cpf && cleanCpf(u.cpf) === "80603742068"));
+            if (!devUser) {
+                devUser = {
+                    id: "dev-master",
+                    cpf: "806.037.420-68",
+                    dataNascimento: "30/12/1981",
+                    senha: "30121981",
+                    nome: "Elevi Cortelini (Desenvolvedor)",
+                    email: dados.email || "elcortelini@gmail.com",
+                    cargo: "Desenvolvedor do Sistema",
+                    turno: dados.turno || "Integral / Ambos",
+                    whatsapp: cleanPhone || "48996692174",
+                    autorizaMensagensWhatsApp: true,
+                    role: "desenvolvedor",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                };
+                this.addUsuario(devUser);
+            } else {
+                devUser.cpf = "806.037.420-68";
+                devUser.dataNascimento = "30/12/1981";
+                devUser.senha = "30121981";
+                devUser.status = "aprovado";
+                devUser.cadastroCompleto = true;
+                devUser.role = "desenvolvedor";
+                this.saveData(this.data);
+            }
+            return {
+                success: true,
+                message: '👑 Seu CPF foi reconhecido e cadastrado com sucesso como Desenvolvedor Master do Sistema!\n\nVocê já pode fazer login utilizando o seu CPF (806.037.420-68) e sua data de nascimento (30/12/1981).',
+                user: devUser
+            };
+        }
+
         const existing = users.find(u => cleanCpf(u.cpf || '') === cleanNumbers);
         if (existing) {
             if (existing.status === 'aprovado') {
@@ -1752,21 +1839,35 @@ class SigeDatabase {
         }
 
         // Garante que o Desenvolvedor Master conste na equipe escolar
-        const hasDev = this.data.equipeEscola.some(p => p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com");
-        if (!hasDev) {
+        const devProf = this.data.equipeEscola.find(p => (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com") || (p.cpf && cleanCpf(p.cpf) === "80603742068") || p.setor === "desenvolvedor");
+        if (!devProf) {
             this.data.equipeEscola.unshift({
                 id: "dev-master",
                 nome: "Elevi Cortelini (Desenvolvedor)",
+                cpf: "806.037.420-68",
+                dataNascimento: "30/12/1981",
+                senha: "30121981",
                 setor: "desenvolvedor",
                 cargoFuncao: "Desenvolvedor & Administrador Master do Sistema",
                 disciplina: "TI & Engenharia de Sistemas",
-                telefone: "47999990000",
+                telefone: "48996692174",
+                whatsapp: "48996692174",
                 email: "elcortelini@gmail.com",
                 turnos: "integral",
                 turmasOuSalas: "Gabinete & Servidor",
                 permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
             });
             saveNeeded = true;
+        } else {
+            if (devProf.cpf !== "806.037.420-68") {
+                devProf.cpf = "806.037.420-68";
+                saveNeeded = true;
+            }
+            if (devProf.dataNascimento !== "30/12/1981") {
+                devProf.dataNascimento = "30/12/1981";
+                devProf.senha = "30121981";
+                saveNeeded = true;
+            }
         }
 
         // Garante identificador id e objeto de permissoes em cada membro da equipe

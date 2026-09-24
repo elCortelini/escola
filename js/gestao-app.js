@@ -303,7 +303,7 @@ function renderDevUsersList() {
     `;
 
     users.forEach(u => {
-        const isDevDefault = u.email.toLowerCase().trim() === "elcortelini@gmail.com";
+        const isDevDefault = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com") || (u.cpf && cleanCpf(u.cpf) === "80603742068") || u.role === "desenvolvedor";
         const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
         html += `
             <tr style="border-bottom:1px solid #e2e8f0;">
@@ -448,7 +448,7 @@ function renderAdminPermissoesUsuarios() {
     ];
 
     tbody.innerHTML = filtered.map(u => {
-        const isMasterDev = u.email.toLowerCase().trim() === "elcortelini@gmail.com";
+        const isMasterDev = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com") || (u.cpf && cleanCpf(u.cpf) === "80603742068") || u.role === "desenvolvedor";
         const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
         const iniciais = u.nome ? u.nome.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : 'U';
 
@@ -8380,7 +8380,7 @@ function renderAdminPendingUsers() {
     if (!card || !tbody) return;
 
     const logged = sigeDB.getLoggedUser();
-    const isDev = logged && (logged.role === 'desenvolvedor' || logged.email.toLowerCase().trim() === 'elcortelini@gmail.com');
+    const isDev = logged && (logged.role === 'desenvolvedor' || (logged.email && logged.email.toLowerCase().trim() === 'elcortelini@gmail.com') || (logged.cpf && cleanCpf(logged.cpf) === '80603742068'));
     if (!isDev) {
         card.style.display = 'none';
         return;
