@@ -231,8 +231,7 @@ function renderPortalAuthBar() {
                         </label>
                         <select id="topDevViewSelector" onchange="switchDevView(this.value)" style="background:#1e293b; color:#f8fafc; border:1px solid #475569; border-radius:6px; padding:3px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; outline:none;">
                             <option value="desenvolvedor" ${activeRole === 'desenvolvedor' ? 'selected' : ''}>👑 Desenvolvedor (Total)</option>
-                            <option value="orientadora_daiane" ${activeRole === 'orientadora_daiane' ? 'selected' : ''}>💜 OE — Daiane (Finais)</option>
-                            <option value="orientadora_clarinda" ${activeRole === 'orientadora_clarinda' ? 'selected' : ''}>💜 OE — Clarinda (Iniciais)</option>
+                            <option value="orientacao" ${activeRole === 'orientacao' || activeRole.startsWith('orientadora_') ? 'selected' : ''}>💜 Orientação Educacional</option>
                             <option value="supervisao" ${activeRole === 'supervisao' ? 'selected' : ''}>📚 Supervisão Escolar</option>
                             <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Direção Escolar</option>
                             <option value="uniformes" ${activeRole === 'uniformes' ? 'selected' : ''}>👕 Uniformes</option>

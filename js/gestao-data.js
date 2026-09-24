@@ -190,7 +190,6 @@ const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
         { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senha: "15051985", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senha: "05081978", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
@@ -649,6 +648,22 @@ class SigeDatabase {
                 });
             }
 
+            // Purga automática de registros excluídos de Daiane que possam ter ficado em cache
+            const equipeNomes = (merged.equipeEscola || []).map(p => (p.nome || '').toLowerCase().trim());
+            const temDaianeNaEquipe = equipeNomes.some(n => n.includes('daiane'));
+            if (!temDaianeNaEquipe) {
+                if (Array.isArray(merged.orientadoras)) {
+                    merged.orientadoras = merged.orientadoras.filter(o => !o.nome || !o.nome.toLowerCase().includes('daiane'));
+                }
+                if (Array.isArray(merged.usuariosCadastrados)) {
+                    merged.usuariosCadastrados = merged.usuariosCadastrados.filter(u => {
+                        const n = (u.nome || '').toLowerCase();
+                        const e = (u.email || '').toLowerCase();
+                        return !(n.includes('daiane') || e.includes('daiane'));
+                    });
+                }
+            }
+
             return merged;
         } catch (e) {
             console.error("Erro ao carregar banco de dados local do SIGE:", e);
@@ -834,8 +849,8 @@ class SigeDatabase {
                 const jaExiste = users.some(u => u.email.toLowerCase().trim() === p.email.toLowerCase().trim());
                 if (!jaExiste) {
                     let suggestedRole = "comunidade";
-                    if (p.setor === "orientacao") suggestedRole = p.nome.toLowerCase().includes("clarinda") ? "orientadora_clarinda" : "orientadora_daiane";
-                    else if (p.setor === "supervisao") suggestedRole = "supervisao";
+                    if (p.setor === "orientacao") suggestedRole = "orientadora_" + p.id;
+                    else if (p.setor === "supervisao") suggestedRole = "supervisora_" + p.id;
                     else if (p.setor === "direcao") suggestedRole = "direcao";
                     else if (p.setor === "secretaria") suggestedRole = "secretaria";
                     else if (p.setor === "docentes") suggestedRole = "docentes";
@@ -1063,7 +1078,9 @@ class SigeDatabase {
                 if (!found) {
                     let roleKey = prof.setor || "docentes";
                     if (prof.setor === "orientacao") {
-                        roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                        roleKey = "orientadora_" + prof.id;
+                    } else if (prof.setor === "supervisao") {
+                        roleKey = "supervisora_" + prof.id;
                     }
                     found = {
                         id: prof.id,
@@ -1176,7 +1193,9 @@ class SigeDatabase {
             if (prof) {
                 let roleKey = prof.setor || "docentes";
                 if (prof.setor === "orientacao") {
-                    roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                    roleKey = "orientadora_" + prof.id;
+                } else if (prof.setor === "supervisao") {
+                    roleKey = "supervisora_" + prof.id;
                 }
                 user = { 
                     id: prof.id, 
@@ -1413,7 +1432,9 @@ class SigeDatabase {
             if (prof) {
                 let roleKey = prof.setor || "docentes";
                 if (prof.setor === "orientacao") {
-                    roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                    roleKey = "orientadora_" + prof.id;
+                } else if (prof.setor === "supervisao") {
+                    roleKey = "supervisora_" + prof.id;
                 }
                 user = { 
                     id: prof.id,
@@ -1431,18 +1452,7 @@ class SigeDatabase {
 
         // Casos de Orientadoras Oficiais
         if (!user) {
-            if (cleanInput === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanInput === "daiane@escola.gov.br") {
-                user = { 
-                    email: cleanInput, 
-                    nome: "Daiane Caetano Costa de Aquino", 
-                    role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
-                };
-                this.addUsuario(user);
-            } else if (cleanInput === "clarinda@escola.gov.br" || cleanInput.includes("clarinda.pereira")) {
+            if (cleanInput === "clarinda@escola.gov.br" || cleanInput.includes("clarinda.pereira")) {
                 user = { 
                     email: cleanInput, 
                     nome: "Clarinda Rosa Pereira", 
@@ -1672,12 +1682,32 @@ class SigeDatabase {
     getAgendamentosOP() {
         const all = (this.data && this.data.agendamentosOP) ? this.data.agendamentosOP : [];
         const role = this.getRole();
-        if (role === 'orientadora_clarinda') {
-            return all.filter(a => !a.orientadora || a.orientadora.toLowerCase().includes('clarinda'));
+        const user = this.getLoggedUser();
+        
+        // Se o usuário autenticado for Desenvolvedor Master ou Direção, possui visão global
+        const isMaster = (user && (user.role === 'desenvolvedor' || user.role === 'direcao' || (user.permissoes && user.permissoes.direcao))) || role === 'desenvolvedor' || role === 'direcao';
+        
+        // Se for uma orientadora específica (e não estiver em modo Diretor/Master)
+        let activeOri = null;
+        if (typeof getOrientadoraByRole === 'function') {
+            activeOri = getOrientadoraByRole(role);
+        } else if (typeof window !== 'undefined' && typeof window.getOrientadoraByRole === 'function') {
+            activeOri = window.getOrientadoraByRole(role);
         }
-        if (role === 'orientadora_daiane') {
-            return all.filter(a => !a.orientadora || a.orientadora.toLowerCase().includes('daiane') || a.orientadora.toLowerCase().includes('aquino'));
+        if (!activeOri && user && (user.role.startsWith("orientadora_") || user.setor === "orientacao")) {
+            const oris = this.getOrientadoras();
+            activeOri = oris.find(o => o.id === user.id || (o.nome && user.nome && o.nome.toLowerCase().trim() === user.nome.toLowerCase().trim())) || (user.nome ? { id: user.id, nome: user.nome } : null);
         }
+        if (activeOri && !isMaster) {
+            const oriNome = (activeOri.nome || "").toLowerCase().trim();
+            const oriId = activeOri.id;
+            return all.filter(a => {
+                if (!a.orientadora) return false;
+                const aOri = a.orientadora.toLowerCase().trim();
+                return aOri.includes(oriNome) || oriNome.includes(aOri) || a.orientadoraId === oriId;
+            });
+        }
+        
         return all;
     }
 
@@ -1723,29 +1753,28 @@ class SigeDatabase {
 
     getOrientadoras() {
         const equipe = this.getEquipeEscolar();
-        const deEquipe = equipe.filter(p => p.setor === "orientacao");
+        const deEquipe = equipe.filter(p => p.setor === "orientacao" || (p.permissoes && p.permissoes.op && p.setor !== "direcao" && p.setor !== "administracao" && p.setor !== "supervisao" && p.email !== "elcortelini@gmail.com"));
         
         // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar
         const orientadorasValidas = deEquipe.map(p => {
-            const existente = (this.data.orientadoras || []).find(o => 
+            const existente = (this.data && Array.isArray(this.data.orientadoras)) ? this.data.orientadoras.find(o => 
                 o.id === p.id || 
-                o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim() ||
-                (p.nome.toLowerCase().includes("clarinda") && (o.id === "orient-1" || (o.nome && (o.nome.includes("Carmen") || o.nome.includes("1"))))) ||
-                (p.nome.toLowerCase().includes("daiane") && (o.id === "orient-2" || (o.nome && (o.nome.includes("Luciana") || o.nome.includes("2")))))
-            );
+                (o.nome && p.nome && o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim())
+            ) : null;
             return {
                 id: p.id,
                 nome: p.nome,
                 telefone: p.telefone || (existente ? existente.telefone : ""),
-                email: p.email || (existente ? existente.email : "")
+                email: p.email || (existente ? existente.email : ""),
+                turnos: p.turnos || "matutino",
+                turmasOuSalas: p.turmasOuSalas || p.cargoFuncao || "Orientação Educacional",
+                cargoFuncao: p.cargoFuncao || "Orientadora Educacional"
             };
         });
 
-        if (orientadorasValidas.length > 0) {
-            this.data.orientadoras = orientadorasValidas;
-            this.saveData(this.data);
-        }
-        return this.data.orientadoras || [];
+        if (!this.data) this.data = {};
+        this.data.orientadoras = orientadorasValidas;
+        return this.data.orientadoras;
     }
 
     saveOrientadora(id, nome, telefone, email) {
@@ -1762,19 +1791,23 @@ class SigeDatabase {
     }
 
     getSupervisoras() {
-        if (!this.data.supervisoras || !Array.isArray(this.data.supervisoras)) {
-            this.data.supervisoras = defaultSigeData.supervisoras || [];
-        }
         const equipe = this.getEquipeEscolar();
         const deEquipe = equipe.filter(p => p.setor === "supervisao");
-        deEquipe.forEach(p => {
-            const idx = this.data.supervisoras.findIndex(s => s.id === p.id || s.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
-            if (idx >= 0) {
-                this.data.supervisoras[idx] = { ...this.data.supervisoras[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.supervisoras[idx].telefone, email: p.email || this.data.supervisoras[idx].email };
-            } else {
-                this.data.supervisoras.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "" });
-            }
+        const supervisorasValidas = deEquipe.map(p => {
+            const existente = (this.data && Array.isArray(this.data.supervisoras)) ? this.data.supervisoras.find(s => 
+                s.id === p.id || 
+                (s.nome && p.nome && s.nome.toLowerCase().trim() === p.nome.toLowerCase().trim())
+            ) : null;
+            return {
+                id: p.id,
+                nome: p.nome,
+                telefone: p.telefone || (existente ? existente.telefone : ""),
+                email: p.email || (existente ? existente.email : ""),
+                cargoFuncao: p.cargoFuncao || "Supervisora Pedagógica"
+            };
         });
+        if (!this.data) this.data = {};
+        this.data.supervisoras = supervisorasValidas;
         return this.data.supervisoras;
     }
 
@@ -1792,19 +1825,24 @@ class SigeDatabase {
     }
 
     getProfessores() {
-        if (!this.data.professores || !Array.isArray(this.data.professores)) {
-            this.data.professores = defaultSigeData.professores || [];
-        }
         const equipe = this.getEquipeEscolar();
         const deEquipe = equipe.filter(p => p.setor === "docentes");
-        deEquipe.forEach(p => {
-            const idx = this.data.professores.findIndex(prof => prof.id === p.id || prof.nome.toLowerCase().trim() === p.nome.toLowerCase().trim());
-            if (idx >= 0) {
-                this.data.professores[idx] = { ...this.data.professores[idx], id: p.id, nome: p.nome, telefone: p.telefone || this.data.professores[idx].telefone, email: p.email || this.data.professores[idx].email, disciplina: p.disciplina || this.data.professores[idx].disciplina };
-            } else {
-                this.data.professores.push({ id: p.id, nome: p.nome, telefone: p.telefone || "", email: p.email || "", disciplina: p.disciplina || "" });
-            }
+        const professoresValidos = deEquipe.map(p => {
+            const existente = (this.data && Array.isArray(this.data.professores)) ? this.data.professores.find(prof => 
+                prof.id === p.id || 
+                (prof.nome && p.nome && prof.nome.toLowerCase().trim() === p.nome.toLowerCase().trim())
+            ) : null;
+            return {
+                id: p.id,
+                nome: p.nome,
+                telefone: p.telefone || (existente ? existente.telefone : ""),
+                email: p.email || (existente ? existente.email : ""),
+                disciplina: p.disciplina || (existente ? existente.disciplina : ""),
+                cargoFuncao: p.cargoFuncao || "Professor"
+            };
         });
+        if (!this.data) this.data = {};
+        this.data.professores = professoresValidos;
         return this.data.professores;
     }
 
@@ -1923,20 +1961,47 @@ class SigeDatabase {
 
         this.data.equipeEscola = list;
 
-        // Se tiver e-mail cadastrado, sincroniza imediatamente com usuariosCadastrados
-        if (savedItem.email && savedItem.email.includes("@")) {
-            let roleKey = savedItem.setor;
-            if (savedItem.setor === "orientacao") {
-                roleKey = (savedItem.nome && savedItem.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
-            }
-            this.addUsuario({
-                email: savedItem.email.toLowerCase().trim(),
-                nome: savedItem.nome,
-                role: roleKey,
-                cargo: savedItem.cargoFuncao || savedItem.setor,
-                permissoes: savedItem.permissoes
-            });
+        // Determina o perfil / roleKey dinâmico baseado no setor e identificador
+        let roleKey = savedItem.setor || "docentes";
+        if (savedItem.setor === "orientacao") {
+            roleKey = "orientadora_" + savedItem.id;
+        } else if (savedItem.setor === "supervisao") {
+            roleKey = "supervisora_" + savedItem.id;
         }
+
+        // Sincroniza imediatamente com usuariosCadastrados (login por CPF ou e-mail)
+        const cleanProfCpf = cleanCpf(savedItem.cpf || "");
+        const cleanProfEmail = (savedItem.email || "").toLowerCase().trim();
+        const rawDtNasc = savedItem.dataNascimento || "";
+        const cleanDtNasc = cleanDataNascimento(rawDtNasc);
+
+        let userList = this.getUsuarios();
+        let existingUserIdx = userList.findIndex(u => 
+            (u.id && u.id === savedItem.id) ||
+            (cleanProfCpf && cleanCpf(u.cpf || "") === cleanProfCpf) ||
+            (cleanProfEmail && u.email && u.email.toLowerCase().trim() === cleanProfEmail)
+        );
+
+        const userData = {
+            id: savedItem.id,
+            nome: savedItem.nome,
+            cpf: savedItem.cpf ? formatCpf(savedItem.cpf) : (existingUserIdx >= 0 ? userList[existingUserIdx].cpf : ""),
+            dataNascimento: rawDtNasc || (existingUserIdx >= 0 ? userList[existingUserIdx].dataNascimento : ""),
+            senha: cleanDtNasc || (existingUserIdx >= 0 ? userList[existingUserIdx].senha : ""),
+            email: cleanProfEmail || (existingUserIdx >= 0 ? userList[existingUserIdx].email : ""),
+            role: roleKey,
+            cargo: savedItem.cargoFuncao || savedItem.setor,
+            status: "aprovado",
+            cadastroCompleto: true,
+            permissoes: savedItem.permissoes
+        };
+
+        if (existingUserIdx >= 0) {
+            userList[existingUserIdx] = { ...userList[existingUserIdx], ...userData };
+        } else if (savedItem.cpf || savedItem.email) {
+            userList.push(userData);
+        }
+        this.data.usuariosCadastrados = userList;
 
         if (savedItem.setor === "docentes") {
             this.saveProfessor(savedItem);
@@ -1961,14 +2026,53 @@ class SigeDatabase {
             return false;
         }
 
+        // 1. Remove da Equipe Escolar
         this.data.equipeEscola = list.filter(p => p.id !== id);
 
-        // Remove correspondente de usuariosCadastrados se tiver e-mail
-        if (prof.email) {
-            this.removeUsuario(prof.email);
+        // 2. Remove de usuariosCadastrados por ID, E-mail, CPF ou Nome
+        const profEmail = (prof.email || "").toLowerCase().trim();
+        const profCpf = cleanCpf(prof.cpf || "");
+        const profNome = (prof.nome || "").toLowerCase().trim();
+
+        if (Array.isArray(this.data.usuariosCadastrados)) {
+            this.data.usuariosCadastrados = this.data.usuariosCadastrados.filter(u => {
+                if (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com") return true;
+                if (u.id && u.id === id) return false;
+                if (profEmail && u.email && u.email.toLowerCase().trim() === profEmail) return false;
+                if (profCpf && u.cpf && cleanCpf(u.cpf) === profCpf) return false;
+                if (profNome && u.nome && u.nome.toLowerCase().trim() === profNome) return false;
+                return true;
+            });
         }
 
-        this.deleteProfessor(id);
+        // 3. Remove de orientadoras, supervisoras e professores
+        if (Array.isArray(this.data.orientadoras)) {
+            this.data.orientadoras = this.data.orientadoras.filter(o => 
+                o.id !== id && 
+                (!profNome || (o.nome && o.nome.toLowerCase().trim() !== profNome))
+            );
+        }
+        if (Array.isArray(this.data.supervisoras)) {
+            this.data.supervisoras = this.data.supervisoras.filter(s => 
+                s.id !== id && 
+                (!profNome || (s.nome && s.nome.toLowerCase().trim() !== profNome))
+            );
+        }
+        if (Array.isArray(this.data.professores)) {
+            this.data.professores = this.data.professores.filter(p => 
+                p.id !== id && 
+                (!profNome || (p.nome && p.nome.toLowerCase().trim() !== profNome))
+            );
+        }
+
+        // 4. Se for o usuário atualmente logado no navegador, encerra a sessão
+        const loggedCpf = cleanCpf(localStorage.getItem("sige_logged_cpf") || "");
+        const loggedEmail = (localStorage.getItem("sige_logged_email") || "").toLowerCase().trim();
+        if ((profCpf && loggedCpf === profCpf) || (profEmail && loggedEmail === profEmail)) {
+            localStorage.removeItem("sige_logged_cpf");
+            localStorage.removeItem("sige_logged_email");
+        }
+
         this.saveData(this.data);
         this.logAuditEvent("Equipe Escolar", `Removido colaborador ${prof.nome}`, "Administração");
         return true;
@@ -3285,20 +3389,29 @@ class SigeDatabase {
     salvarPermissoesUsuario(emailOuId, permissoesMap) {
         if (!emailOuId) return false;
         const key = String(emailOuId).toLowerCase().trim();
+        const cleanKeyCpf = cleanCpf(key);
         let updated = false;
 
-        // Atualiza na equipe escolar (busca por id ou por email)
+        // Atualiza na equipe escolar (busca por id, email ou cpf)
         if (this.data && Array.isArray(this.data.equipeEscola)) {
-            const prof = this.data.equipeEscola.find(p => (p.id && p.id.toLowerCase() === key) || (p.email && p.email.toLowerCase().trim() === key));
+            const prof = this.data.equipeEscola.find(p => 
+                (p.id && p.id.toLowerCase() === key) || 
+                (p.email && p.email.toLowerCase().trim() === key) ||
+                (cleanKeyCpf && cleanCpf(p.cpf || '') === cleanKeyCpf)
+            );
             if (prof) {
                 prof.permissoes = { ...prof.permissoes, ...permissoesMap };
                 updated = true;
             }
         }
 
-        // Atualiza em usuariosCadastrados (busca por email)
+        // Atualiza em usuariosCadastrados (busca por id, email ou cpf)
         if (this.data && Array.isArray(this.data.usuariosCadastrados)) {
-            const u = this.data.usuariosCadastrados.find(user => user.email && user.email.toLowerCase().trim() === key);
+            const u = this.data.usuariosCadastrados.find(user => 
+                (user.id && user.id.toLowerCase() === key) ||
+                (user.email && user.email.toLowerCase().trim() === key) ||
+                (cleanKeyCpf && cleanCpf(user.cpf || '') === cleanKeyCpf)
+            );
             if (u) {
                 u.permissoes = { ...u.permissoes, ...permissoesMap };
                 updated = true;
@@ -3377,8 +3490,6 @@ function getRoleLabel(role) {
             const ori = getOrientadoraByRole(role);
             if (ori) return `Orientadora ${ori.nome}`;
         }
-        if (role === "orientadora_clarinda") return "Orientadora Educacional — Séries Iniciais";
-        if (role === "orientadora_daiane") return "Orientadora Educacional — Séries Finais";
         return "Orientadora Educacional";
     }
     if (typeof role === 'string' && role.startsWith("supervisora_")) {
@@ -3393,8 +3504,6 @@ function getRoleLabel(role) {
         admin: "Administrador do Sistema",
         direcao: "Direção Escolar & Gestão",
         supervisao: "Supervisão Escolar & Diário",
-        orientadora_daiane: "Orientadora Educacional — Séries Finais",
-        orientadora_clarinda: "Orientadora Educacional — Séries Iniciais",
         orientacao: "Orientador Educacional (OE)",
         secretaria: "Secretaria Escolar & Recepção",
         uniformes: "Controle de Uniformes & Logística",
@@ -3416,8 +3525,6 @@ function getRoleIcon(role) {
         admin: "fa-solid fa-user-shield",
         direcao: "fa-solid fa-crown",
         supervisao: "fa-solid fa-clipboard-check",
-        orientadora_daiane: "fa-solid fa-heart-pulse",
-        orientadora_clarinda: "fa-solid fa-heart-pulse",
         orientacao: "fa-solid fa-heart-pulse",
         secretaria: "fa-solid fa-id-card",
         uniformes: "fa-solid fa-shirt",

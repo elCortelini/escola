@@ -37,8 +37,7 @@
                 <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
                 <select id="activeRoleSelect">
                     <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
-                    <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
-                    <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
+                    <option value="orientacao">💛 Orientação Educacional</option>
                     <option value="secretaria">📝 Secretaria Escolar</option>
                     <option value="direcao">👑 Gestor / Direção Escolar</option>
                     <option value="supervisao">📋 Supervisor Pedagógico</option>
@@ -178,9 +177,7 @@
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                     <!-- Seletor da Orientadora (Consolidada vs Individual) -->
                     <select id="opFilterOrientadora" onchange="renderModuleOrientacaoPedagogica()" class="search-input" style="font-weight:700; color:#1e3a8a; border-color:#93c5fd; padding:6px 12px;">
-                        <option value="todas">🌐 Visão Consolidada (Orientação Educacional)</option>
-                        <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Séries Iniciais — Matutino/Vespertino)</option>
-                        <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Séries Finais — Matutino)</option>
+                        <option value="todas">👥 Todas as Orientadoras (Geral)</option>
                     </select>
 
                     <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.82rem; padding:6px 12px;" title="Configurar Telefones de WhatsApp das Orientadoras">
@@ -1010,8 +1007,6 @@
 
                             <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:160px; width:auto;">
                                 <option value="">💛 Todas as Orientadoras</option>
-                                <option value="Clarinda">Clarinda (Anos Iniciais)</option>
-                                <option value="Daiane">Daiane (Anos Finais)</option>
                             </select>
 
                             <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:150px; width:auto;">
@@ -1089,9 +1084,7 @@
                             <div>
                                 <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Orientadora:</label>
                                 <select id="dirRelOrientadoraSelect" class="dir-select">
-                                    <option value="">Todas</option>
-                                    <option value="Clarinda">Clarinda (Iniciais)</option>
-                                    <option value="Daiane">Daiane (Finais)</option>
+                                    <option value="">Todas as Orientadoras</option>
                                 </select>
                             </div>
 
@@ -1851,8 +1844,6 @@
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Responsável:</label>
                     <select id="opInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
-                        <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Séries Iniciais — Matutino/Vespertino)</option>
-                        <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Séries Finais — Matutino)</option>
                     </select>
                 </div>
 
@@ -2015,8 +2006,6 @@
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Educacional:</label>
                         <select id="editInputOrientadora" class="search-input" style="width:100%;">
-                            <option value="Clarinda Rosa Pereira (Séries Iniciais)">Clarinda Rosa Pereira (Séries Iniciais)</option>
-                            <option value="Daiane Caetano Costa de Aquino (Séries Finais)">Daiane Caetano Costa de Aquino (Séries Finais)</option>
                         </select>
                     </div>
                     <div>
@@ -2072,8 +2061,6 @@
                     <label style="font-weight:800; font-size:0.8rem; color:#0f172a;">Orientadora:</label>
                     <select id="relatorioFilterOrientadora" class="search-input" style="width:100%;">
                         <option value="todas">Todas as Orientadoras (Consolidado)</option>
-                        <option value="Clarinda">Clarinda Rosa Pereira (Séries Iniciais)</option>
-                        <option value="Daiane">Daiane Caetano Costa de Aquino (Séries Finais)</option>
                     </select>
                 </div>
                 <div style="display:flex; gap:6px;">
@@ -2285,38 +2272,8 @@
             </p>
 
             <form onsubmit="salvarTelefonesOrientadoras(event)">
-                <div style="display:flex; flex-direction:column; gap:1.2rem; margin-bottom:1.5rem;">
-                    <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0;">
-                        <label style="font-weight:800; font-size:0.88rem; color:#1e3a8a; display:block; margin-bottom:6px;">
-                            💛 Clarinda Rosa Pereira (Séries Iniciais — Matutino/Vespertino)
-                        </label>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.78rem; font-weight:700; color:#475569;">WhatsApp (DDD + Número):</label>
-                                <input type="tel" id="orientadora1Phone" placeholder="47999112233" class="search-input" style="width:100%; margin-top:3px;" required>
-                            </div>
-                            <div>
-                                <label style="font-size:0.78rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
-                                <input type="email" id="orientadora1Email" placeholder="clarinda@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0;">
-                        <label style="font-weight:800; font-size:0.88rem; color:#1e3a8a; display:block; margin-bottom:6px;">
-                            💛 Daiane Caetano Costa de Aquino (Séries Finais — Matutino)
-                        </label>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.78rem; font-weight:700; color:#475569;">WhatsApp (DDD + Número):</label>
-                                <input type="tel" id="orientadora2Phone" placeholder="47999445566" class="search-input" style="width:100%; margin-top:3px;" required>
-                            </div>
-                            <div>
-                                <label style="font-size:0.78rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
-                                <input type="email" id="orientadora2Email" placeholder="daiane@escola.gov.br" class="search-input" style="width:100%; margin-top:3px;">
-                            </div>
-                        </div>
-                    </div>
+                <div id="modalOrientadorasListContainer" style="display:flex; flex-direction:column; gap:1.2rem; margin-bottom:1.5rem;">
+                    <!-- Renderizado dinamicamente via openModalOrientadoras() -->
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
@@ -2878,6 +2835,17 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">CPF (Login no Sistema):</label>
+                        <input type="text" id="proInputCpf" oninput="mascaraCpfInput(this)" placeholder="000.000.000-00" class="search-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Nascimento (Senha):</label>
+                        <input type="text" id="proInputDataNasc" oninput="mascaraDataInput(this)" placeholder="DD/MM/AAAA" class="search-input" style="width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno de Atuação:</label>
                         <select id="proInputTurno" class="search-input" style="width:100%;">
                             <option value="matutino">Matutino</option>
@@ -3123,8 +3091,6 @@
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Líder:</label>
                         <select id="projOpInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
-                            <option value="Clarinda Rosa Pereira">💛 Clarinda Rosa Pereira (Séries Iniciais)</option>
-                            <option value="Daiane Caetano Costa de Aquino">💛 Daiane Caetano Costa de Aquino (Séries Finais)</option>
                             <option value="Equipe Orientação Educacional">Equipe Orientação Educacional</option>
                         </select>
                     </div>
@@ -3397,10 +3363,11 @@
                     <div>
                         <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nível de Acesso (Perfil):</label>
                         <select id="devUserRole" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
-                            <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
-                            <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
+                            <option value="orientacao">💛 Orientador(a) Educacional</option>
+                            <option value="supervisao">📋 Supervisão Pedagógica</option>
                             <option value="secretaria">📝 Secretaria Escolar</option>
                             <option value="direcao">👑 Gestor / Direção Escolar</option>
+                            <option value="docentes">👨‍🏫 Professor / Docente</option>
                             <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
                         </select>
                     </div>
@@ -3489,8 +3456,7 @@
                     <div>
                         <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Perfil Base do Sistema *</label>
                         <select id="rbacInputRole" onchange="autoSelectRbacRoleDefaults(this.value)" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem; font-weight:700;">
-                            <option value="orientadora_clarinda">💛 Orientadora Clarinda (Séries Iniciais)</option>
-                            <option value="orientadora_daiane">💛 Orientadora Daiane (Séries Finais)</option>
+                            <option value="orientacao">💛 Orientador(a) Educacional</option>
                             <option value="supervisao">📋 Supervisora Pedagógica</option>
                             <option value="secretaria">📝 Secretaria Escolar</option>
                             <option value="direcao">👑 Direção Escolar</option>
@@ -4081,7 +4047,7 @@
 
                 <div>
                     <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Participantes Presentes *</label>
-                    <input type="text" id="ataInputParticipantes" required placeholder="Ex: Direção, Mãe do Aluno (Sra. Maria), Orientadora Daiane" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <input type="text" id="ataInputParticipantes" required placeholder="Ex: Direção, Mãe do Aluno (Sra. Maria), Orientadora Responsável" class="search-input" style="width:100%; box-sizing:border-box;">
                 </div>
 
                 <div>

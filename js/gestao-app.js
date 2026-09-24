@@ -96,13 +96,12 @@ function checkSigeAuth() {
         }
     }
 
-    // Trava de Orientadoras: Orientadora Clarinda / Daiane vêm bloqueadas para a sua própria visão
+    // Trava de Orientadoras: Orientadora logada acessa estritamente seu próprio painel e agenda
     if (opFilter) {
-        if (user.role === "orientadora_clarinda") {
-            opFilter.value = "Clarinda Rosa Pereira";
-            opFilter.disabled = true;
-        } else if (user.role === "orientadora_daiane") {
-            opFilter.value = "Daiane Caetano Costa de Aquino";
+        const isMaster = user.role === "desenvolvedor" || user.role === "direcao" || (user.permissoes && user.permissoes.direcao);
+        const activeOri = (typeof getOrientadoraByRole === 'function') ? getOrientadoraByRole(user.role) : null;
+        if (activeOri && !isMaster) {
+            opFilter.value = activeOri.nome;
             opFilter.disabled = true;
         } else {
             opFilter.disabled = false;
@@ -622,7 +621,7 @@ function openModalNovoUsuarioRBAC(emailParaEditar) {
                 inputEmail.disabled = (u.email.toLowerCase().trim() === "elcortelini@gmail.com");
             }
             if (inputNome) inputNome.value = u.nome;
-            if (selectRole) selectRole.value = u.role || 'orientadora_clarinda';
+            if (selectRole) selectRole.value = u.role || 'orientacao';
             if (inputCargo) inputCargo.value = u.cargo || '';
 
             const perms = u.permissoes || sigeDB.getDefaultPermissoesByRole(u.role);
@@ -638,9 +637,9 @@ function openModalNovoUsuarioRBAC(emailParaEditar) {
             inputEmail.disabled = false;
         }
         if (inputNome) inputNome.value = '';
-        if (selectRole) selectRole.value = 'orientadora_clarinda';
+        if (selectRole) selectRole.value = 'orientacao';
         if (inputCargo) inputCargo.value = 'Orientadora Educacional';
-        autoSelectRbacRoleDefaults('orientadora_clarinda');
+        autoSelectRbacRoleDefaults('orientacao');
     }
 
     modal.style.display = "flex";
@@ -795,59 +794,100 @@ function marcarPresencaConfirmadaWhatsApp(id) {
 }
 window.marcarPresencaConfirmadaWhatsApp = marcarPresencaConfirmadaWhatsApp;
 
-function isClarinda(a) {
-    if (!a) return false;
-    if (!a.orientadora) return true;
-    const ori = a.orientadora.toLowerCase();
-    return ori.includes("clarinda") || ori.includes("1") || ori.includes("carmen") || ori.includes("iniciais");
-}
+const ORIENTADORA_PALETTE = [
+    { bg: "#fef2f2", border: "#fecaca", borderLeft: "#dc2626", text: "#b91c1c", badgeBg: "#fee2e2" },
+    { bg: "#f0f9ff", border: "#bae6fd", borderLeft: "#0284c7", text: "#0369a1", badgeBg: "#e0f2fe" },
+    { bg: "#ecfdf5", border: "#a7f3d0", borderLeft: "#059669", text: "#047857", badgeBg: "#d1fae5" },
+    { bg: "#fffbeb", border: "#fde68a", borderLeft: "#d97706", text: "#b45309", badgeBg: "#fef3c7" },
+    { bg: "#faf5ff", border: "#e9d5ff", borderLeft: "#9333ea", text: "#7e22ce", badgeBg: "#f3e8ff" },
+    { bg: "#f0fdfa", border: "#99f6e4", borderLeft: "#0d9488", text: "#0f766e", badgeBg: "#ccfbf1" }
+];
+window.ORIENTADORA_PALETTE = ORIENTADORA_PALETTE;
 
-function isDaiane(a) {
-    if (!a || !a.orientadora) return false;
-    const ori = a.orientadora.toLowerCase();
-    return ori.includes("daiane") || ori.includes("2") || ori.includes("luciana") || ori.includes("finais");
+function getOrientadoraColorTheme(orientadoraNameOrId) {
+    const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+    if (!orientadoras || orientadoras.length === 0) {
+        return ORIENTADORA_PALETTE[0];
+    }
+    if (!orientadoraNameOrId) return ORIENTADORA_PALETTE[0];
+    const target = orientadoraNameOrId.toLowerCase().trim();
+    const idx = orientadoras.findIndex(o => 
+        (o.nome && o.nome.toLowerCase().includes(target)) ||
+        (o.nome && target.includes(o.nome.toLowerCase())) ||
+        (o.id && o.id.toLowerCase() === target)
+    );
+    if (idx >= 0) {
+        return ORIENTADORA_PALETTE[idx % ORIENTADORA_PALETTE.length];
+    }
+    return ORIENTADORA_PALETTE[0];
 }
+window.getOrientadoraColorTheme = getOrientadoraColorTheme;
 
 function matchOrientadora(a, filterVal) {
-    if (!filterVal || filterVal === "todas") return true;
-    if (filterVal === "orientadora_clarinda" || filterVal.toLowerCase().includes("clarinda")) {
-        return isClarinda(a);
+    if (!filterVal || filterVal === "todas" || filterVal === "") return true;
+    if (!a) return false;
+    const itemOri = (typeof a === 'string') ? a : (a.orientadora || "");
+    const oriLower = itemOri.toLowerCase().trim();
+    const filterLower = filterVal.toLowerCase().trim();
+
+    if (!oriLower) return true;
+    if (oriLower === filterLower || oriLower.includes(filterLower) || filterLower.includes(oriLower)) {
+        return true;
     }
-    if (filterVal === "orientadora_daiane" || filterVal.toLowerCase().includes("daiane")) {
-        return isDaiane(a);
+
+    if (filterLower.startsWith("orientadora_")) {
+        const idOrName = filterLower.replace("orientadora_", "");
+        const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+        const o = orientadoras.find(item => item.id.toLowerCase() === idOrName || item.nome.toLowerCase().includes(idOrName));
+        if (o) {
+            const oNameLower = o.nome.toLowerCase().trim();
+            return oriLower.includes(oNameLower) || oNameLower.includes(oriLower);
+        }
     }
-    if (!a.orientadora) return true;
-    return a.orientadora === filterVal || a.orientadora.includes(filterVal);
+    return false;
 }
+window.matchOrientadora = matchOrientadora;
 
 // ==========================================
 // PERFIL E NÍVEIS DE ACESSO (RBAC)
 // ==========================================
 function getOrientadoraByRole(role) {
-    const orientadoras = sigeDB.getOrientadoras();
     if (!role) return null;
-    if (role === "orientadora_clarinda") {
-        return orientadoras.find(o => o.nome.toLowerCase().includes("clarinda") || o.id === "orient-1") || orientadoras[0] || null;
+    const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+    
+    // 1. Se estiver logado e for orientadora
+    const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+    if (logged && (logged.role.startsWith("orientadora_") || logged.setor === "orientacao" || (logged.permissoes && logged.permissoes.op && !logged.permissoes.direcao && !logged.permissoes.admin))) {
+        const found = orientadoras.find(o => o.id === logged.id || (o.nome && logged.nome && o.nome.toLowerCase().trim() === logged.nome.toLowerCase().trim()));
+        if (found) return found;
+        if (logged.nome) return { id: logged.id || "logged-ori", nome: logged.nome, cargoFuncao: logged.cargo || "Orientadora Educacional" };
     }
-    if (role === "orientadora_daiane") {
-        return orientadoras.find(o => o.nome.toLowerCase().includes("daiane") || o.id === "orient-2") || orientadoras[1] || null;
-    }
+
+    // 2. Busca por ID da role
     if (role.startsWith("orientadora_")) {
-        const idOrName = role.replace("orientadora_", "");
-        return orientadoras.find(o => o.id === idOrName || o.nome === idOrName) || null;
+        const idOrName = role.replace("orientadora_", "").toLowerCase();
+        return orientadoras.find(o => o.id.toLowerCase() === idOrName || o.nome.toLowerCase().includes(idOrName)) || null;
+    }
+    if (role === "orientacao" && orientadoras.length > 0) {
+        return orientadoras[0];
     }
     return null;
 }
+window.getOrientadoraByRole = getOrientadoraByRole;
 
 function getSupervisoraByRole(role) {
-    const supervisoras = sigeDB.getSupervisoras();
+    const supervisoras = (typeof sigeDB !== 'undefined' && sigeDB.getSupervisoras) ? sigeDB.getSupervisoras() : [];
     if (!role) return null;
     if (role.startsWith("supervisora_")) {
-        const idOrName = role.replace("supervisora_", "");
-        return supervisoras.find(s => s.id === idOrName || s.nome === idOrName) || null;
+        const idOrName = role.replace("supervisora_", "").toLowerCase();
+        return supervisoras.find(s => s.id.toLowerCase() === idOrName || s.nome.toLowerCase().includes(idOrName)) || null;
+    }
+    if (role === "supervisao" && supervisoras.length > 0) {
+        return supervisoras[0];
     }
     return null;
 }
+window.getSupervisoraByRole = getSupervisoraByRole;
 
 function populateActiveRoleSelectOptions(roleSelect) {
     if (!roleSelect) return;
@@ -860,10 +900,7 @@ function populateActiveRoleSelectOptions(roleSelect) {
     `;
 
     orientadoras.forEach(o => {
-        let valueKey = "orientadora_" + o.id;
-        if (o.nome.toLowerCase().includes("clarinda") || o.id === "orient-1") valueKey = "orientadora_clarinda";
-        if (o.nome.toLowerCase().includes("daiane") || o.id === "orient-2") valueKey = "orientadora_daiane";
-        
+        const valueKey = "orientadora_" + o.id;
         const sub = o.turmasOuSalas || o.cargoFuncao || "OE";
         html += `<option value="${escapeHtml(valueKey)}">💛 Orientadora ${escapeHtml(o.nome)} (${escapeHtml(sub)})</option>`;
     });
@@ -886,11 +923,13 @@ function populateActiveRoleSelectOptions(roleSelect) {
 
 function syncRoleFilters() {
     const role = sigeDB.getRole();
+    const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
     const opFilter = document.getElementById("opFilterOrientadora");
-    const activeOri = getOrientadoraByRole(role);
+    const isMaster = (logged && (logged.role === 'desenvolvedor' || logged.role === 'direcao' || (logged.permissoes && logged.permissoes.direcao))) || role === 'desenvolvedor' || role === 'direcao';
+    const activeOri = (typeof getOrientadoraByRole === 'function') ? getOrientadoraByRole(role) : null;
 
     if (opFilter) {
-        if (activeOri) {
+        if (activeOri && !isMaster) {
             opFilter.value = activeOri.nome;
             opFilter.disabled = true;
         } else {
@@ -1324,33 +1363,6 @@ function updateModalWhatsAppPreview() {
     }
 }
 
-function matchOrientadora(a, filterVal) {
-    if (!filterVal || filterVal === "todas") return true;
-    if (!a) return false;
-    
-    if (!a.orientadora) {
-        const t = (a.turma || "").toLowerCase();
-        if (t.includes("1º") || t.includes("2º") || t.includes("3º") || t.includes("4º") || t.includes("5º") || t.includes("matutino")) {
-            return filterVal.toLowerCase().includes("clarinda") || filterVal.toLowerCase().includes("carmen") || filterVal.includes("1");
-        }
-        if (t.includes("6º") || t.includes("7º") || t.includes("8º") || t.includes("9º") || t.includes("vespertino")) {
-            return filterVal.toLowerCase().includes("daiane") || filterVal.toLowerCase().includes("luciana") || filterVal.includes("2");
-        }
-        return filterVal.toLowerCase().includes("clarinda");
-    }
-    
-    const oriLower = a.orientadora.toLowerCase();
-    const filterLower = filterVal.toLowerCase();
-    
-    if (filterLower.includes("clarinda")) {
-        return oriLower.includes("clarinda") || oriLower.includes("carmen") || oriLower.includes("1");
-    }
-    if (filterLower.includes("daiane")) {
-        return oriLower.includes("daiane") || oriLower.includes("luciana") || oriLower.includes("2");
-    }
-    return oriLower.includes(filterLower) || filterLower.includes(oriLower);
-}
-window.matchOrientadora = matchOrientadora;
 
 function renderModuleOrientacaoPedagogica() {
     syncRoleFilters();
@@ -1361,21 +1373,6 @@ function renderModuleOrientacaoPedagogica() {
         return matchOrientadora(a, filterOrientadora);
     });
 
-    const cardClarinda = document.querySelector(".turno-card.matutino");
-    const cardDaiane = document.querySelector(".turno-card.vespertino");
-
-    if (cardClarinda && cardDaiane) {
-        if (filterOrientadora.includes("Clarinda")) {
-            cardClarinda.style.display = "flex";
-            cardDaiane.style.display = "none";
-        } else if (filterOrientadora.includes("Daiane")) {
-            cardClarinda.style.display = "none";
-            cardDaiane.style.display = "flex";
-        } else {
-            cardClarinda.style.display = "flex";
-            cardDaiane.style.display = "flex";
-        }
-    }
 
     const weekDays = getWeekDays(currentWeekRefDate);
 
@@ -1417,9 +1414,6 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
 
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterOrientadora = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
-
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
 
     if (agendaLayoutMode === "timeline") {
         // MODO 1: LINHAS POR DIA (VISUAL CRONOLÓGICO RESPONSIVO)
@@ -1523,10 +1517,10 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                     activeAppointments.forEach(item => {
                         const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                         const isProf = item.publico === "professor";
-                        const isClar = isClarinda(item);
+                        const theme = getOrientadoraColorTheme(item.orientadora);
 
                         html += `
-                            <div class="timeline-item-card ${isClar ? 'clarinda-card' : 'daiane-card'} ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes">
+                            <div class="timeline-item-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer; background:${theme.bg} !important; border:1px solid ${theme.border} !important; border-left:5px solid ${theme.borderLeft} !important;" title="Clique para ver os detalhes">
                                 <div>
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                                         <span class="timeline-item-time"><i class="fa-regular fa-clock"></i> ${item.horario} (${item.turno ? item.turno.toUpperCase() : ''})</span>
@@ -1543,8 +1537,8 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                                         <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
                                             <i class="fa-regular fa-user"></i> ${item.responsavel || '-'}
                                         </div>
-                                        <div style="font-size:0.73rem; color:${isClar ? '#b91c1c' : '#0369a1'}; font-weight:800; margin-top:3px;">
-                                            <i class="fa-solid fa-user-gear"></i> ${item.orientadora || (isClar ? 'Clarinda (Séries Iniciais)' : 'Daiane (Séries Finais)')}
+                                        <div style="font-size:0.73rem; color:${theme.text}; font-weight:800; margin-top:3px;">
+                                            <i class="fa-solid fa-user-gear"></i> ${item.orientadora || 'Orientação Educacional'}
                                         </div>
                                     </div>
 
@@ -1593,10 +1587,10 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
 
                     pastAppointments.forEach(item => {
                         const isProf = item.publico === "professor";
-                        const isClar = isClarinda(item);
+                        const theme = getOrientadoraColorTheme(item.orientadora);
 
                         html += `
-                            <div class="timeline-item-card ultra-compact-past-card ${isClar ? 'clarinda-card' : 'daiane-card'}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos de ${item.aluno}">
+                            <div class="timeline-item-card ultra-compact-past-card" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer; background:${theme.bg} !important; border:1px solid ${theme.border} !important; border-left:5px solid ${theme.borderLeft} !important;" title="Clique para ver os detalhes completos de ${item.aluno}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
                                     <span style="font-size:0.78rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                         ${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}
@@ -1627,46 +1621,56 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         html += `</div>`;
         container.innerHTML = html;
     } else {
-        // MODO 2: GRADE DE VAGAS (ESTRUTURA DE MATUTINO 3+1 E VESPERTINO 3+1)
-        const slotsConfig = [
-            { isHeader: true, header: "☀️ TURNO MATUTINO (MANHÃ)", turno: "matutino" },
-            
-            { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
-            { label: "1ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
-            
-            { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#f1f5f9" },
-            { label: "2ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#f1f5f9" },
-            
-            { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
-            { label: "3ª Vaga", turno: "matutino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
-            
-            { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" },
-            { label: "🚨 Emergencial", turno: "matutino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#fef2f2" },
+        // MODO 2: GRADE DE VAGAS DINÂMICA
+        const orientadorasList = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+        const slotsConfig = [];
 
-            { isHeader: true, header: "⛅ TURNO VESPERTINO (TARDE)", turno: "vespertino" },
+        ['matutino', 'vespertino'].forEach(turno => {
+            slotsConfig.push({
+                isHeader: true,
+                header: turno === 'matutino' ? "☀️ TURNO MATUTINO (MANHÃ)" : "⛅ TURNO VESPERTINO (TARDE)",
+                turno: turno
+            });
 
-            { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
-            { label: "1ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 0, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
+            const targets = orientadorasList.length > 0 ? orientadorasList : [
+                { id: "geral", nome: "Orientação Educacional", cargoFuncao: "Geral" }
+            ];
 
-            { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#f1f5f9" },
-            { label: "2ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 1, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#f1f5f9" },
+            [0, 1, 2].forEach(slotIdx => {
+                const bg = slotIdx % 2 === 1 ? "#f1f5f9" : "#ffffff";
+                targets.forEach(ori => {
+                    slotsConfig.push({
+                        label: `${slotIdx + 1}ª Vaga`,
+                        turno: turno,
+                        tipo: "agendado",
+                        slotIndex: slotIdx,
+                        orientadoraId: ori.id,
+                        orientadoraNome: ori.nome,
+                        orientadoraTag: ori.turmasOuSalas || ori.cargoFuncao || "Orientadora",
+                        bgColor: bg
+                    });
+                });
+            });
 
-            { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#ffffff" },
-            { label: "3ª Vaga", turno: "vespertino", tipo: "agendado", slotIndex: 2, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#ffffff" },
-
-            { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "clarinda", orientadoraNome: "Clarinda Rosa Pereira", orientadoraTag: "Séries Iniciais", bgColor: "#fef2f2" },
-            { label: "🚨 Emergencial", turno: "vespertino", tipo: "emergencial", slotIndex: 0, isEmergencial: true, orientadoraKey: "daiane", orientadoraNome: "Daiane Caetano Costa de Aquino", orientadoraTag: "Séries Finais", bgColor: "#fef2f2" }
-        ];
+            targets.forEach(ori => {
+                slotsConfig.push({
+                    label: "🚨 Emergencial",
+                    turno: turno,
+                    tipo: "emergencial",
+                    slotIndex: 0,
+                    isEmergencial: true,
+                    orientadoraId: ori.id,
+                    orientadoraNome: ori.nome,
+                    orientadoraTag: ori.turmasOuSalas || ori.cargoFuncao || "Orientadora",
+                    bgColor: "#fef2f2"
+                });
+            });
+        });
 
         let activeSlots = slotsConfig.filter(s => {
-            if (filterOrientadora === "todas") return true;
-            if (filterOrientadora.includes("Clarinda")) {
-                return s.isHeader || s.orientadoraKey === "clarinda";
-            }
-            if (filterOrientadora.includes("Daiane")) {
-                return s.isHeader || s.orientadoraKey === "daiane";
-            }
-            return true;
+            if (s.isHeader) return true;
+            if (!filterOrientadora || filterOrientadora === "todas") return true;
+            return matchOrientadora({ orientadora: s.orientadoraNome }, filterOrientadora);
         });
 
         let tableHtml = `
@@ -1699,12 +1703,13 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
             }
 
             const rowBg = s.bgColor || "#ffffff";
+            const theme = getOrientadoraColorTheme(s.orientadoraNome);
 
             return `
                 <tr style="background-color: ${rowBg};">
                     <td class="slot-time-cell ${s.isEmergencial ? 'emergencial-slot' : ''}" style="background-color: ${rowBg}; padding:6px 6px; width:110px;">
                         <span class="vaga-num" style="font-weight:800; font-size:0.78rem;">${s.label}</span>
-                        <span style="font-size:0.72rem; color:${s.orientadoraKey === 'clarinda' ? '#b45309' : '#0369a1'}; font-weight:800; display:block; margin-top:1px;">
+                        <span style="font-size:0.72rem; color:${theme.text}; font-weight:800; display:block; margin-top:1px;">
                             <i class="fa-solid fa-user-gear"></i> ${s.orientadoraNome.split(" ")[0]}
                         </span>
                         <span style="font-size:0.65rem; color:#64748b; font-weight:700; display:block; white-space:nowrap;">
@@ -1712,13 +1717,12 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                         </span>
                     </td>
                     ${weekDays.map(d => {
-                        const matcher = s.orientadoraKey === "clarinda" ? isClarinda : isDaiane;
                         const dateAppointments = todosAtendimentos.filter(a => 
                             a.data === d.dateIso && 
                             a.turno === s.turno &&
                             a.tipo === s.tipo && 
                             a.statusSecretaria !== 'cancelado' &&
-                            matcher(a)
+                            (s.orientadoraId === 'geral' || matchOrientadora(a, s.orientadoraNome))
                         );
 
                         const item = dateAppointments[s.slotIndex];
@@ -1726,14 +1730,15 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
                         if (item) {
                             const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
                             const isProf = item.publico === "professor";
+                            const itemTheme = getOrientadoraColorTheme(item.orientadora || s.orientadoraNome);
                             return `
                                 <td class="${d.isToday ? 'today-column-cell' : ''}" style="background-color: ${d.isToday ? '#fffbeb' : rowBg};">
-                                    <div class="weekly-slot-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer;" title="Clique para ver os detalhes completos">
+                                    <div class="weekly-slot-card ${item.tipo}" onclick="openDetalhesModal('${item.id}')" style="cursor:pointer; background:${itemTheme.bg} !important; border:1px solid ${itemTheme.border} !important; border-left:5px solid ${itemTheme.borderLeft} !important;" title="Clique para ver os detalhes completos">
                                         <div class="weekly-slot-header">
                                             <span class="weekly-student-name">${isProf ? '👨‍🏫 ' + item.aluno : item.aluno}</span>
                                             <span class="weekly-class-badge" style="${isProf ? 'background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;' : ''}">${item.turma}</span>
                                         </div>
-                                        <div style="font-size:0.73rem; color:#1e3a8a; font-weight:700;">
+                                        <div style="font-size:0.73rem; color:${itemTheme.text}; font-weight:700;">
                                             <i class="fa-solid fa-user-gear"></i> ${item.orientadora || s.orientadoraNome}
                                         </div>
                                         <div class="weekly-motive" title="${item.motivo}">
@@ -1787,6 +1792,7 @@ function renderWeeklyAgenda(weekDays, todosAtendimentos) {
         `;
         container.innerHTML = tableHtml;
     }
+
 }
 
 function renderCardsView(todosAtendimentos) {
@@ -1914,23 +1920,30 @@ function updateOrientadorasCounters(weekDays) {
     // Filtra orientadoras exibidas no resumo com base no filtro ativo
     const orientadorasParaExibir = orientadoras.filter(o => {
         if (filterOrientadora === "todas") return true;
-        return filterOrientadora.toLowerCase().includes(o.nome.toLowerCase()) || o.nome.toLowerCase().includes(filterOrientadora.toLowerCase());
+        return matchOrientadora({ orientadora: o.nome }, filterOrientadora);
     });
+
+    if (orientadorasParaExibir.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; padding: 14px 18px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center; color: #64748b; font-size: 0.88rem; width: 100%;">
+                <i class="fa-solid fa-user-slash" style="margin-right: 6px; color: #94a3b8;"></i> Nenhuma orientadora cadastrada ou encontrada para o filtro selecionado.
+            </div>
+        `;
+        return;
+    }
 
     const colors = [
         { border: "#2563eb", bgIcon: "#eff6ff", textIcon: "#2563eb", title: "#1e3a8a" },
         { border: "#d97706", bgIcon: "#fff7ed", textIcon: "#d97706", title: "#9a3412" },
         { border: "#10b981", bgIcon: "#f0fdf4", textIcon: "#10b981", title: "#065f46" },
-        { border: "#7c3aed", bgIcon: "#f5f3ff", textIcon: "#7c3aed", title: "#5b21b6" }
+        { border: "#7c3aed", bgIcon: "#f5f3ff", textIcon: "#7c3aed", title: "#5b21b6" },
+        { border: "#0d9488", bgIcon: "#f0fdfa", textIcon: "#0d9488", title: "#115e59" },
+        { border: "#e11d48", bgIcon: "#fff1f2", textIcon: "#e11d48", title: "#9f1239" }
     ];
 
     container.innerHTML = orientadorasParaExibir.map((o, idx) => {
         const c = colors[idx % colors.length];
-        const isThisOri = (a) => a.orientadora && (
-            a.orientadora.toLowerCase().includes(o.nome.toLowerCase()) || 
-            (o.nome.toLowerCase().includes("clarinda") && (a.orientadora.includes("1") || a.orientadora.includes("Carmen"))) || 
-            (o.nome.toLowerCase().includes("daiane") && (a.orientadora.includes("2") || a.orientadora.includes("Luciana")))
-        );
+        const isThisOri = (a) => matchOrientadora(a, o.nome);
 
         const semList = todosAgendamentos.filter(a => isThisOri(a) && a.data >= weekStart && a.data <= weekEnd);
         const mesList = todosAgendamentos.filter(a => isThisOri(a) && a.data && a.data.startsWith(currentMonthPrefix));
@@ -2034,13 +2047,7 @@ function renderOpProjetosList() {
     if (filterOrientadora !== "todas") {
         projetos = projetos.filter(p => {
             if (!p.orientadoraLider || p.orientadoraLider.toLowerCase().includes("equipe")) return true;
-            if (filterOrientadora.includes("Clarinda")) {
-                return p.orientadoraLider.includes("Clarinda") || p.orientadoraLider.includes("1") || p.orientadoraLider.includes("Carmen");
-            }
-            if (filterOrientadora.includes("Daiane")) {
-                return p.orientadoraLider.includes("Daiane") || p.orientadoraLider.includes("2") || p.orientadoraLider.includes("Luciana");
-            }
-            return p.orientadoraLider.includes(filterOrientadora);
+            return matchOrientadora({ orientadora: p.orientadoraLider }, filterOrientadora);
         });
     }
 
@@ -2506,9 +2513,9 @@ function gerarDeclaracaoComparecimento(id) {
     const horInicio = ag.horario || "08:00";
     const horFim = addOneHour(horInicio);
 
-    const isClar = !ag.orientadora || ag.orientadora.includes("Clarinda") || ag.orientadora.includes("1") || ag.orientadora.includes("Carmen");
-    const orientadoraNome = isClar ? "Clarinda Rosa Pereira" : "Daiane Caetano Costa de Aquino";
-    const orientadoraCargo = isClar ? "Orientadora Educacional — Séries Iniciais" : "Orientadora Educacional — Séries Finais";
+    const oriInfo = getOrientadoraInfoForRecord(ag);
+    const orientadoraNome = oriInfo.nome;
+    const orientadoraCargo = oriInfo.cargo;
 
     const isProf = ag.publico === "professor";
     const corpoTexto = isProf ? 
@@ -2566,8 +2573,8 @@ function gerarDeclaracaoComparecimento(id) {
 
                     <div class="footer-sign">
                         <div class="sign-line">
-                            <strong>${orientadoraNome}</strong><br>
-                            ${orientadoraCargo}
+                            <strong>${escapeHtml(orientadoraNome)}</strong><br>
+                            ${escapeHtml(orientadoraCargo)}
                         </div>
                     </div>
                 </div>
@@ -2588,12 +2595,20 @@ function abrirProntuarioDoAlunoAtual() {
 }
 
 function getOrientadoraInfoForRecord(ag) {
-    const isClar = !ag || !ag.orientadora || ag.orientadora.includes("Clarinda") || ag.orientadora.includes("1") || ag.orientadora.includes("Carmen");
+    const orientadorasList = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+    let found = null;
+    if (ag && ag.orientadora) {
+        found = orientadorasList.find(o => matchOrientadora(ag, o.nome) || matchOrientadora(ag, o.id));
+    }
+    if (!found && orientadorasList.length > 0) {
+        found = orientadorasList[0];
+    }
+    const nome = found ? found.nome : (ag?.orientadora || "Orientação Educacional");
+    const cargo = found ? (found.turmasOuSalas || found.cargoFuncao || "Orientadora Educacional") : "Orientadora Educacional";
     return {
-        nome: isClar ? "Clarinda Rosa Pereira" : "Daiane Caetano Costa de Aquino",
-        cargo: isClar ? "Orientadora Educacional — Séries Iniciais" : "Orientadora Educacional — Séries Finais",
-        short: isClar ? "Clarinda Rosa Pereira (Séries Iniciais)" : "Daiane Caetano Costa de Aquino (Séries Finais)",
-        isClar: isClar
+        nome: nome,
+        cargo: cargo,
+        short: `${nome} (${cargo})`
     };
 }
 
@@ -3181,6 +3196,17 @@ function excluirAgendamentoDirect(id) {
     const item = ags.find(a => a.id === targetId);
     const nomeAluno = item ? item.aluno : 'este agendamento';
 
+    // Verificação de isolamento por função/orientadora
+    const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+    if (logged && !sigeDB.isDev() && !sigeDB.isDiretor() && !logged.isAdmin && !logged.isSuperAdmin) {
+        if (logged.role.startsWith("orientadora_") || logged.setor === "orientacao") {
+            if (item && !matchOrientadora(item, logged.nome) && !matchOrientadora(item, logged.id)) {
+                alert("⚠️ Acesso restrito: Você só tem permissão para excluir os agendamentos da sua própria pauta.");
+                return;
+            }
+        }
+    }
+
     if (confirm(`Tem certeza que deseja EXCLUIR permanentemente o agendamento de "${nomeAluno}"?`)) {
         const deleted = sigeDB.deleteAgendamentoOP(targetId);
         if (deleted) {
@@ -3213,45 +3239,37 @@ function imprimirAtendimentosDoDia(dateIso) {
     const filterOrientadoraSelect = document.getElementById("opFilterOrientadora");
     const filterVal = filterOrientadoraSelect ? filterOrientadoraSelect.value : "todas";
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-
     const todosAtendimentos = sigeDB.getAgendamentosOP() || [];
     let dateAppointments = todosAtendimentos.filter(a => 
         a.data === dateIso && a.statusSecretaria !== 'cancelado'
     );
 
+    const orientadorasList = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     let subTitleText = "Orientação Educacional (OE) — Relatório Diário de Atendimentos";
-    let signaturesHtml = `
-        <div class="sig-box">
-            Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
-        </div>
-        <div class="sig-box">
-            Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
-        </div>
-    `;
+    let signaturesHtml = "";
 
     if (filterVal !== "todas") {
         dateAppointments = dateAppointments.filter(a => matchOrientadora(a, filterVal));
-        if (filterVal.includes("Clarinda")) {
-            subTitleText = "Orientação Educacional (OE) — Relatório Diário (Clarinda - Séries Iniciais)";
-            signaturesHtml = `
-                <div class="sig-box" style="margin:0 auto; max-width:350px;">
-                    Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais
+        const matchingOri = orientadorasList.find(o => matchOrientadora({ orientadora: o.nome }, filterVal));
+        const displayOriName = matchingOri ? matchingOri.nome : filterVal;
+        const displayOriCargo = (matchingOri && (matchingOri.turmasOuSalas || matchingOri.cargoFuncao)) ? (matchingOri.turmasOuSalas || matchingOri.cargoFuncao) : "Orientadora Educacional";
+        subTitleText = `Orientação Educacional (OE) — Relatório Diário (${displayOriName})`;
+        signaturesHtml = `
+            <div class="sig-box" style="margin:0 auto; max-width:350px;">
+                ${escapeHtml(displayOriName)}<br>${escapeHtml(displayOriCargo)}
+            </div>
+        `;
+    } else {
+        if (orientadorasList.length > 0) {
+            signaturesHtml = orientadorasList.map(o => `
+                <div class="sig-box">
+                    ${escapeHtml(o.nome)}<br>${escapeHtml(o.turmasOuSalas || o.cargoFuncao || "Orientadora Educacional")}
                 </div>
-            `;
-        } else if (filterVal.includes("Daiane")) {
-            subTitleText = "Orientação Educacional (OE) — Relatório Diário (Daiane - Séries Finais)";
-            signaturesHtml = `
-                <div class="sig-box" style="margin:0 auto; max-width:350px;">
-                    Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais
-                </div>
-            `;
+            `).join("");
         } else {
-            subTitleText = `Orientação Educacional (OE) — Relatório Diário (${filterVal})`;
             signaturesHtml = `
                 <div class="sig-box" style="margin:0 auto; max-width:350px;">
-                    ${filterVal}<br>Orientadora Educacional
+                    Orientação Educacional<br>Equipe Pedagógica
                 </div>
             `;
         }
@@ -3357,8 +3375,6 @@ function imprimirAtendimentosDoDia(dateIso) {
                     font-weight: 800;
                     font-size: 10px;
                 }
-                .tag-clarinda { color: #b45309; }
-                .tag-daiane { color: #0369a1; }
                 
                 .motive-box {
                     font-style: italic;
@@ -3423,8 +3439,8 @@ function imprimirAtendimentosDoDia(dateIso) {
                     </thead>
                     <tbody>
                         ${dateAppointments.map(item => {
-                            const isClar = isClarinda(item);
-                            const oriNome = item.orientadora || (isClar ? 'Clarinda (Séries Iniciais)' : 'Daiane (Séries Finais)');
+                            const oriNome = item.orientadora || 'Orientação Educacional';
+                            const theme = getOrientadoraColorTheme(item.orientadora);
                             const isProf = item.publico === "professor";
                             
                             return `
@@ -3439,8 +3455,8 @@ function imprimirAtendimentosDoDia(dateIso) {
                                         ${item.responsavel || '-'}<br>
                                         <span style="color:#64748b; font-size:10px;">📞 ${item.telefone || '-'}</span>
                                     </td>
-                                    <td class="orientadora-tag ${isClar ? 'tag-clarinda' : 'tag-daiane'}">
-                                        ${oriNome}
+                                    <td class="orientadora-tag" style="color: ${theme.text}; font-weight: 800;">
+                                        ${escapeHtml(oriNome)}
                                     </td>
                                     <td class="motive-box">
                                         "${item.motivo || 'Sem motivo registrado'}"
@@ -3554,20 +3570,20 @@ function abrirVisaoDetalhadaDoDia(dateIso) {
         dateAppointments.forEach((item) => {
             const waUrl = getWhatsAppUrl(item.telefone, item.aluno, item.responsavel, item.data, item.horario);
             const isProf = item.publico === "professor";
-            const isClar = isClarinda(item);
-            const oriNome = item.orientadora || (isClar ? 'Clarinda Rosa Pereira (Séries Iniciais)' : 'Daiane Caetano Costa de Aquino (Séries Finais)');
+            const theme = getOrientadoraColorTheme(item.orientadora);
+            const oriNome = item.orientadora || 'Orientação Educacional';
 
             html += `
-                <div style="background:white; border:2px solid ${isClar ? '#f59e0b' : '#0284c7'}; border-radius:14px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.05); position:relative;">
+                <div style="background:white; border:2px solid ${theme.borderLeft}; border-radius:14px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.05); position:relative;">
                     
                     <!-- Header do Card Individual -->
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <span style="background:${isClar ? '#fffbeb' : '#f0f9ff'}; color:${isClar ? '#b45309' : '#0369a1'}; border:1px solid ${isClar ? '#fde68a' : '#bae6fd'}; font-weight:900; font-size:0.95rem; padding:4px 10px; border-radius:8px;">
+                            <span style="background:${theme.bg}; color:${theme.text}; border:1px solid ${theme.border}; font-weight:900; font-size:0.95rem; padding:4px 10px; border-radius:8px;">
                                 <i class="fa-regular fa-clock"></i> ${item.horario || 'Horário a definir'} (${item.turno ? item.turno.toUpperCase() : 'MANHÃ'})
                             </span>
-                            <span style="font-size:0.8rem; font-weight:800; color:${isClar ? '#d97706' : '#0284c7'}; background:#f8fafc; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0;">
-                                <i class="fa-solid fa-user-gear"></i> ${oriNome}
+                            <span style="font-size:0.8rem; font-weight:800; color:${theme.text}; background:#f8fafc; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0;">
+                                <i class="fa-solid fa-user-gear"></i> ${escapeHtml(oriNome)}
                             </span>
                         </div>
                         <div>
@@ -3976,8 +3992,15 @@ function openEditarModal(id) {
     if (elSts) elSts.value = item.statusSecretaria || "pendente";
 
     if (elOri) {
-        const isClar = !item.orientadora || item.orientadora.includes("Clarinda") || item.orientadora.includes("1");
-        elOri.value = isClar ? "Clarinda Rosa Pereira (Séries Iniciais)" : "Daiane Caetano Costa de Aquino (Séries Finais)";
+        let matchedVal = "";
+        for (let i = 0; i < elOri.options.length; i++) {
+            const optVal = elOri.options[i].value;
+            if (optVal && item.orientadora && (optVal.toLowerCase().includes(item.orientadora.toLowerCase()) || item.orientadora.toLowerCase().includes(optVal.toLowerCase()))) {
+                matchedVal = optVal;
+                break;
+            }
+        }
+        elOri.value = matchedVal || item.orientadora || (elOri.options[0] ? elOri.options[0].value : "");
     }
 
     const modal = document.getElementById("modalEditarOP");
@@ -3996,6 +4019,18 @@ function submitEditarAgendamentoOP(e) {
     const ags = sigeDB.getAgendamentosOP() || [];
     const itemIndex = ags.findIndex(a => a.id === currentEditingAppointmentId);
     if (itemIndex === -1) return false;
+
+    // Verificação de isolamento por função/orientadora
+    const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+    const existing = ags[itemIndex];
+    if (logged && !sigeDB.isDev() && !sigeDB.isDiretor() && !logged.isAdmin && !logged.isSuperAdmin) {
+        if (logged.role.startsWith("orientadora_") || logged.setor === "orientacao") {
+            if (existing && !matchOrientadora(existing, logged.nome) && !matchOrientadora(existing, logged.id)) {
+                alert("⚠️ Acesso restrito: Você só tem permissão para editar os agendamentos da sua própria pauta.");
+                return false;
+            }
+        }
+    }
 
     const elPub = document.getElementById("editInputPublico");
     const elAluno = document.getElementById("editInputAluno");
@@ -4082,18 +4117,8 @@ function getFiltradosRelatorio() {
     if (dataIni) ags = ags.filter(a => a.data >= dataIni);
     if (dataFim) ags = ags.filter(a => a.data <= dataFim);
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen") || a.orientadora.toLowerCase().includes("iniciais");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana") || a.orientadora.toLowerCase().includes("finais"));
-
     if (oriFiltro && oriFiltro !== "todas") {
-        const lowerFiltro = oriFiltro.toLowerCase();
-        if (lowerFiltro.includes("clarinda") || lowerFiltro.includes("iniciais")) {
-            ags = ags.filter(isClarinda);
-        } else if (lowerFiltro.includes("daiane") || lowerFiltro.includes("finais")) {
-            ags = ags.filter(isDaiane);
-        } else {
-            ags = ags.filter(a => (a.orientadora || "").toLowerCase().includes(lowerFiltro));
-        }
+        ags = ags.filter(a => matchOrientadora(a, oriFiltro));
     }
 
     ags.sort((a, b) => (a.data + (a.horario || "")).localeCompare(b.data + (b.horario || "")));
@@ -4106,32 +4131,33 @@ function gerarVisualizacaoRelatorioOP() {
 
     const { ags, dataIni, dataFim, oriFiltro } = getFiltradosRelatorio();
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-
+    const orientadorasList = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     const total = ags.length;
-    const countClarinda = ags.filter(isClarinda).length;
-    const countDaiane = ags.filter(isDaiane).length;
 
     const countRealizados = ags.filter(a => a.statusSecretaria === 'realizado').length;
     const countAgendados = ags.filter(a => a.statusSecretaria === 'agendado').length;
     const countFaltas = ags.filter(a => a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente').length;
     const countPendentes = ags.filter(a => a.statusSecretaria === 'pendente').length;
 
+    const oriCardsHtml = orientadorasList.map((o, idx) => {
+        const count = ags.filter(a => matchOrientadora(a, o.nome)).length;
+        const theme = ORIENTADORA_PALETTE[idx % ORIENTADORA_PALETTE.length];
+        const shortName = o.nome.split(" ")[0];
+        return `
+            <div style="background:${theme.bg}; border:1px solid ${theme.border}; padding:12px; border-radius:12px; text-align:center;">
+                <div style="font-size:0.75rem; font-weight:800; color:${theme.text}; text-transform:uppercase;">${escapeHtml(shortName)}</div>
+                <div style="font-size:1.8rem; font-weight:900; color:${theme.borderLeft}; margin-top:2px;">${count}</div>
+            </div>
+        `;
+    }).join("");
+
     let html = `
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px;">
             <div style="background:#f0f9ff; border:1px solid #bae6fd; padding:12px; border-radius:12px; text-align:center;">
                 <div style="font-size:0.75rem; font-weight:800; color:#0369a1; text-transform:uppercase;">TOTAL</div>
                 <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:2px;">${total}</div>
             </div>
-            <div style="background:#fffbeb; border:1px solid #fde68a; padding:12px; border-radius:12px; text-align:center;">
-                <div style="font-size:0.75rem; font-weight:800; color:#b45309; text-transform:uppercase;">CLARINDA (INICIAIS)</div>
-                <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:2px;">${countClarinda}</div>
-            </div>
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; text-align:center;">
-                <div style="font-size:0.75rem; font-weight:800; color:#15803d; text-transform:uppercase;">DAIANE (FINAIS)</div>
-                <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:2px;">${countDaiane}</div>
-            </div>
+            ${oriCardsHtml}
             <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; text-align:center;">
                 <div style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase;">POR STATUS</div>
                 <div style="font-size:0.78rem; font-weight:700; color:#1e293b; margin-top:4px;">
@@ -4164,8 +4190,8 @@ function gerarVisualizacaoRelatorioOP() {
                 </thead>
                 <tbody>
                     ${ags.map(a => {
-                        const isClar = isClarinda(a);
-                        const oriNome = a.orientadora || (isClar ? 'Clarinda Rosa Pereira' : 'Daiane Caetano Costa');
+                        const oriNome = a.orientadora || 'Orientação Educacional';
+                        const theme = getOrientadoraColorTheme(a.orientadora);
                         return `
                             <tr>
                                 <td style="padding:8px; border:1px solid #e2e8f0; font-weight:800;">
@@ -4180,8 +4206,8 @@ function gerarVisualizacaoRelatorioOP() {
                                     ${a.responsavel || '-'}<br>
                                     <span style="font-size:0.75rem; color:#64748b;">📞 ${a.telefone || '-'}</span>
                                 </td>
-                                <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:${isClar ? '#b45309' : '#0369a1'};">
-                                    ${oriNome}
+                                <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:${theme.text};">
+                                    ${escapeHtml(oriNome)}
                                 </td>
                                 <td style="padding:8px; border:1px solid #e2e8f0; font-style:italic;">
                                     "${a.motivo || 'Não informado'}"
@@ -4205,12 +4231,8 @@ function gerarVisualizacaoRelatorioOP() {
 function imprimirRelatorioAtendimentosOP() {
     const { ags, dataIni, dataFim, oriFiltro } = getFiltradosRelatorio();
 
-    const isClarinda = (a) => !a.orientadora || a.orientadora.includes("Clarinda") || a.orientadora.includes("1") || a.orientadora.includes("Carmen");
-    const isDaiane = (a) => a.orientadora && (a.orientadora.includes("Daiane") || a.orientadora.includes("2") || a.orientadora.includes("Luciana"));
-
+    const orientadorasList = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     const total = ags.length;
-    const countClarinda = ags.filter(isClarinda).length;
-    const countDaiane = ags.filter(isDaiane).length;
     const countRealizados = ags.filter(a => a.statusSecretaria === 'realizado').length;
     const countAgendados = ags.filter(a => a.statusSecretaria === 'agendado').length;
     const countFaltas = ags.filter(a => a.statusSecretaria === 'faltou' || a.statusSecretaria === 'ausente').length;
@@ -4218,6 +4240,27 @@ function imprimirRelatorioAtendimentosOP() {
 
     const dataIniFormat = dataIni ? formatDateBR(dataIni) : 'Início';
     const dataFimFormat = dataFim ? formatDateBR(dataFim) : 'Atual';
+
+    const oriStatsBoxes = orientadorasList.map((o, idx) => {
+        const count = ags.filter(a => matchOrientadora(a, o.nome)).length;
+        const theme = ORIENTADORA_PALETTE[idx % ORIENTADORA_PALETTE.length];
+        const shortName = o.nome.split(" ")[0];
+        return `
+            <div class="stat-box">
+                <div class="stat-num" style="color:${theme.text};">${count}</div>
+                <div class="stat-label">${escapeHtml(shortName)}</div>
+            </div>
+        `;
+    }).join("");
+
+    let signaturesHtml = "";
+    if (orientadorasList.length > 0) {
+        signaturesHtml = orientadorasList.map(o => `
+            <div class="sig-box">${escapeHtml(o.nome)}<br>${escapeHtml(o.turmasOuSalas || o.cargoFuncao || "Orientadora Educacional")}</div>
+        `).join("");
+    } else {
+        signaturesHtml = `<div class="sig-box">Orientação Educacional<br>Equipe Pedagógica</div>`;
+    }
 
     let printHtml = `
         <!DOCTYPE html>
@@ -4270,14 +4313,7 @@ function imprimirRelatorioAtendimentosOP() {
                     <div class="stat-num">${total}</div>
                     <div class="stat-label">Total Agendamentos</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-num" style="color:#d97706;">${countClarinda}</div>
-                    <div class="stat-label">Clarinda (Iniciais)</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-num" style="color:#16a34a;">${countDaiane}</div>
-                    <div class="stat-label">Daiane (Finais)</div>
-                </div>
+                ${oriStatsBoxes}
                 <div class="stat-box">
                     <div class="stat-num" style="color:#166534;">${countRealizados}</div>
                     <div class="stat-label">Realizados</div>
@@ -4301,14 +4337,14 @@ function imprimirRelatorioAtendimentosOP() {
                 </thead>
                 <tbody>
                     ${ags.map(a => {
-                        const isClar = isClarinda(a);
-                        const oriNome = a.orientadora || (isClar ? 'Clarinda Rosa Pereira' : 'Daiane Caetano');
+                        const oriNome = a.orientadora || 'Orientação Educacional';
+                        const theme = getOrientadoraColorTheme(a.orientadora);
                         return `
                             <tr>
                                 <td><strong>${formatDateBR(a.data)}</strong><br>${a.horario || '-'}</td>
                                 <td><strong>${a.aluno}</strong><br><span style="color:#64748b; font-size:9.5px;">Turma: ${a.turma || '-'}</span></td>
                                 <td>${a.responsavel || '-'}<br><span style="color:#64748b; font-size:9.5px;">📞 ${a.telefone || '-'}</span></td>
-                                <td style="font-weight:700; color:${isClar ? '#b45309' : '#0369a1'};">${oriNome}</td>
+                                <td style="font-weight:700; color:${theme.text};">${escapeHtml(oriNome)}</td>
                                 <td style="font-style:italic;">"${a.motivo || '-'}"</td>
                                 <td><span class="badge-status status-${a.statusSecretaria}">${getSecretariaBadgeText(a.statusSecretaria)}</span></td>
                             </tr>
@@ -4318,8 +4354,7 @@ function imprimirRelatorioAtendimentosOP() {
             </table>
 
             <div class="footer-signatures">
-                <div class="sig-box">Clarinda Rosa Pereira<br>Orientadora Educacional — Séries Iniciais</div>
-                <div class="sig-box">Daiane Caetano Costa de Aquino<br>Orientadora Educacional — Séries Finais</div>
+                ${signaturesHtml}
             </div>
 
             <script>
@@ -5455,15 +5490,42 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 }
 
 function openModalOrientadoras() {
-    const list = sigeDB.getOrientadoras();
-    const o1 = list.find(o => o.nome.includes("Clarinda") || o.nome.includes("1")) || list[0];
-    const o2 = list.find(o => o.nome.includes("Daiane") || o.nome.includes("2")) || list[1];
+    const list = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+    const container = document.getElementById("modalOrientadorasListContainer");
 
-    if (o1 && document.getElementById("orientadora1Phone")) document.getElementById("orientadora1Phone").value = o1.telefone || "";
-    if (o1 && document.getElementById("orientadora1Email")) document.getElementById("orientadora1Email").value = o1.email || "";
-
-    if (o2 && document.getElementById("orientadora2Phone")) document.getElementById("orientadora2Phone").value = o2.telefone || "";
-    if (o2 && document.getElementById("orientadora2Email")) document.getElementById("orientadora2Email").value = o2.email || "";
+    if (container) {
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div style="padding: 1.5rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center; color: #64748b;">
+                    <i class="fa-solid fa-user-xmark" style="font-size: 2rem; color: #94a3b8; margin-bottom: 8px;"></i>
+                    <p style="margin: 0; font-weight: 700;">Nenhuma orientadora cadastrada na Equipe Escolar.</p>
+                    <p style="margin: 4px 0 0 0; font-size: 0.8rem;">Cadastre orientadoras no módulo Equipe Escolar primeiro para configurar seus contatos de WhatsApp.</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = list.map((o, idx) => {
+                const theme = ORIENTADORA_PALETTE[idx % ORIENTADORA_PALETTE.length];
+                return `
+                    <div style="background: ${theme.bg}; border: 1px solid ${theme.border}; border-left: 5px solid ${theme.borderLeft}; padding: 1rem; border-radius: 12px;">
+                        <div style="font-weight: 900; color: ${theme.text}; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-user-gear"></i> ${escapeHtml(o.nome)}</span>
+                            <span style="font-size: 0.75rem; background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid ${theme.border}; font-weight: 800;">${escapeHtml(o.turmasOuSalas || o.cargoFuncao || "Orientadora")}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                            <div>
+                                <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">WhatsApp (com DDD):</label>
+                                <input type="text" data-ori-id="${escapeHtml(o.id)}" data-ori-nome="${escapeHtml(o.nome)}" class="search-input dynamic-ori-phone" value="${escapeHtml(o.telefone || '')}" placeholder="(47) 99999-9999" style="width: 100%; font-size: 0.85rem;" oninput="mascaraTelefoneInput(this)">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">E-mail Institucional:</label>
+                                <input type="email" data-ori-id="${escapeHtml(o.id)}" class="search-input dynamic-ori-email" value="${escapeHtml(o.email || '')}" placeholder="orientadora@escola.gov.br" style="width: 100%; font-size: 0.85rem;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
 
     const modal = document.getElementById("modalCadastroOrientadoras");
     if (modal) modal.style.display = "flex";
@@ -5475,17 +5537,21 @@ function closeModalOrientadoras() {
 }
 
 function salvarTelefonesOrientadoras(e) {
-    e.preventDefault();
-    const p1 = document.getElementById("orientadora1Phone").value;
-    const e1 = document.getElementById("orientadora1Email").value;
-    const p2 = document.getElementById("orientadora2Phone").value;
-    const e2 = document.getElementById("orientadora2Email").value;
+    if (e && e.preventDefault) e.preventDefault();
+    const phoneInputs = document.querySelectorAll(".dynamic-ori-phone");
 
-    sigeDB.saveOrientadora("orient-1", "Clarinda Rosa Pereira", p1, e1);
-    sigeDB.saveOrientadora("orient-2", "Daiane Caetano Costa de Aquino", p2, e2);
+    phoneInputs.forEach(input => {
+        const id = input.getAttribute("data-ori-id");
+        const nome = input.getAttribute("data-ori-nome");
+        const tel = input.value.trim();
+        const emailInput = document.querySelector(`.dynamic-ori-email[data-ori-id="${id}"]`);
+        const email = emailInput ? emailInput.value.trim() : "";
+        sigeDB.saveOrientadora(id, nome, tel, email);
+    });
 
     closeModalOrientadoras();
-    showToast("💾 Telefones de WhatsApp das Orientadoras salvos com sucesso!");
+    showToast("💾 Telefones e dados das Orientadoras salvos com sucesso!", "success");
+    if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
 }
 
 function renderWhatsappDispatchHistory(ag) {
@@ -8856,6 +8922,30 @@ function updateAllDynamicSelects() {
         }
     }
 
+    // Selects de Orientadoras no Módulo da Direção
+    const selectDirAtendOri = document.getElementById("dirAtendFilterOrientadora");
+    const selectDirRelOri = document.getElementById("dirRelOrientadoraSelect");
+
+    if (selectDirAtendOri) {
+        const curVal = selectDirAtendOri.value;
+        let html = `<option value="todas">👥 Todas as Orientadoras (Geral)</option>`;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)}</option>`;
+        });
+        selectDirAtendOri.innerHTML = html;
+        if (curVal) selectDirAtendOri.value = curVal;
+    }
+
+    if (selectDirRelOri) {
+        const curVal = selectDirRelOri.value;
+        let html = `<option value="todas">Todas as Orientadoras</option>`;
+        orientadoras.forEach(o => {
+            html += `<option value="${escapeHtml(o.nome)}">${escapeHtml(o.nome)}</option>`;
+        });
+        selectDirRelOri.innerHTML = html;
+        if (curVal) selectDirRelOri.value = curVal;
+    }
+
     // Supervisoras Dropdowns
     const supervisoras = sigeDB.getSupervisoras();
     const selectSupFilter = document.getElementById("supFilterSupervisora");
@@ -8943,6 +9033,8 @@ function openCadastroProfissionalModal(id = null) {
     const inputEmail = document.getElementById("proInputEmail");
     const inputTurno = document.getElementById("proInputTurno");
     const inputTurmas = document.getElementById("proInputTurmas");
+    const inputCpf = document.getElementById("proInputCpf");
+    const inputDataNasc = document.getElementById("proInputDataNasc");
 
     const allKeys = ["op", "mural", "supervisao", "admin", "direcao", "uniformes", "ext_recursos", "ext_dashboard", "ext_contabil", "ext_biblioteca", "ext_patrimonio"];
 
@@ -8962,6 +9054,8 @@ function openCadastroProfissionalModal(id = null) {
             if (inputEmail) inputEmail.value = prof.email || "";
             if (inputTurno) inputTurno.value = prof.turnos || "matutino";
             if (inputTurmas) inputTurmas.value = prof.turmasOuSalas || "";
+            if (inputCpf) inputCpf.value = prof.cpf || "";
+            if (inputDataNasc) inputDataNasc.value = prof.dataNascimento || "";
 
             const perms = prof.permissoes || sigeDB.getDefaultPermissoesByRole(prof.setor);
             allKeys.forEach(k => {
@@ -8980,6 +9074,8 @@ function openCadastroProfissionalModal(id = null) {
         if (inputEmail) inputEmail.value = "";
         if (inputTurno) inputTurno.value = "matutino";
         if (inputTurmas) inputTurmas.value = "";
+        if (inputCpf) inputCpf.value = "";
+        if (inputDataNasc) inputDataNasc.value = "";
 
         autoSuggestModulosPorSetor("docentes");
     }
@@ -9003,6 +9099,8 @@ function submitCadastroProfissional(e) {
     const email = document.getElementById("proInputEmail")?.value.trim();
     const turnos = document.getElementById("proInputTurno")?.value;
     const turmasOuSalas = document.getElementById("proInputTurmas")?.value.trim();
+    const cpf = document.getElementById("proInputCpf")?.value.trim() || "";
+    const dataNascimento = document.getElementById("proInputDataNasc")?.value.trim() || "";
 
     if (!nome || !setor) {
         showToast("⚠️ Preencha pelo menos o Nome e Setor do colaborador!");
@@ -9034,11 +9132,21 @@ function submitCadastroProfissional(e) {
             email: email || "",
             turnos,
             turmasOuSalas,
+            cpf,
+            dataNascimento,
             permissoes
         });
 
         closeCadastroProfissionalModal();
         updateAllDynamicSelects();
+        if (typeof populateActiveRoleSelectOptions === "function") {
+            populateActiveRoleSelectOptions(document.getElementById("activeRoleSelect"));
+        }
+        if (typeof renderAllModules === "function") {
+            renderAllModules();
+        } else if (typeof renderModuleOrientacaoPedagogica === "function") {
+            renderModuleOrientacaoPedagogica();
+        }
         renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
         showToast(id ? "✅ Cadastro e permissões do colaborador atualizados!" : "✅ Novo colaborador e credenciais registrados com sucesso!");
     } catch (err) {
@@ -9065,6 +9173,14 @@ function excluirProfissional(id) {
     if (confirm(`Tem certeza que deseja remover o cadastro de ${prof.nome} (${prof.cargoFuncao || prof.setor}) e revogar seus acessos ao sistema?`)) {
         sigeDB.deleteProfissional(id);
         updateAllDynamicSelects();
+        if (typeof populateActiveRoleSelectOptions === "function") {
+            populateActiveRoleSelectOptions(document.getElementById("activeRoleSelect"));
+        }
+        if (typeof renderAllModules === "function") {
+            renderAllModules();
+        } else if (typeof renderModuleOrientacaoPedagogica === "function") {
+            renderModuleOrientacaoPedagogica();
+        }
         renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
         showToast("🗑️ Colaborador e acessos removidos com sucesso.");
     }
