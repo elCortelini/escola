@@ -382,13 +382,25 @@ class SigeDatabase {
                         } else if (typeof renderModuleAdministracao === "function") {
                             renderModuleAdministracao();
                         }
+                        if (typeof renderPortalAuth === "function") {
+                            renderPortalAuth();
+                        }
+                        if (typeof updateActionPillars === "function") {
+                            updateActionPillars();
+                        }
+                        if (typeof loadSystems === "function") {
+                            loadSystems();
+                        }
                     }
                 } else {
                     this.hasLoadedRemote = true;
                     this.syncToFirebase();
                 }
             }, (error) => {
-                console.warn("Aviso Firebase Firestore Sync:", error.message);
+                console.warn("⚠️ Aviso Firebase Firestore Sync:", error.message);
+                if (error.code === 'permission-denied') {
+                    console.error("🔴 Firestore: Permissão negada pelas Security Rules. Atualize firestore.rules no Console do Firebase (sas-cepr) para permitir sincronização global.");
+                }
                 this.updateCloudSyncBadge(false);
             });
 

@@ -2,9 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // BANCO PRINCIPAL - apenas usuarios autenticados
-    match /sige_pedro_rizzi/database {
-      allow read, write: if request.auth != null;
+    // BANCO PRINCIPAL SIGE - Acesso central da escola
+    match /sige_pedro_rizzi/{document=**} {
+      allow read, write: if true;
     }
 
     // TOKENS DE CONFIRMACAO - acesso publico controlado via WhatsApp
