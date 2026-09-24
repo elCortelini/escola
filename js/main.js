@@ -165,37 +165,6 @@ function getCustomSystems() {
     }
 }
 
-function getRoleLabel(role) {
-    const map = {
-        desenvolvedor: "Desenvolvedor do Sistema",
-        direcao: "Direção Escolar & Gestão",
-        supervisao: "Supervisão Escolar & Diário",
-        orientadora_daiane: "Orientadora Educacional — Séries Finais",
-        orientadora_clarinda: "Orientadora Educacional — Séries Iniciais",
-        secretaria: "Secretaria Escolar & Recepção",
-        uniformes: "Controle de Uniformes & Logística",
-        docentes: "Corpo Docente / Professores",
-        comunidade: "Comunidade / Alunos / Pais",
-        visitante: "Visitante / Não Autenticado"
-    };
-    return map[role] || (role ? role.toUpperCase() : "Membro da Equipe");
-}
-
-function getRoleIcon(role) {
-    const map = {
-        desenvolvedor: "fa-solid fa-shield-halved",
-        direcao: "fa-solid fa-crown",
-        supervisao: "fa-solid fa-book-open-reader",
-        orientadora_daiane: "fa-solid fa-heart-pulse",
-        orientadora_clarinda: "fa-solid fa-heart-pulse",
-        secretaria: "fa-solid fa-clipboard-check",
-        uniformes: "fa-solid fa-shirt",
-        docentes: "fa-solid fa-chalkboard-user",
-        visitante: "fa-solid fa-user-lock"
-    };
-    return map[role] || "fa-solid fa-user";
-}
-
 // Renderiza a autenticação tanto na barra superior quanto no card central
 function renderPortalAuth() {
     renderPortalAuthBar();
@@ -306,25 +275,12 @@ function renderPortalAuthBar() {
 // ==========================================
 // GOOGLE IDENTITY SERVICES (GIS) & LOGIN HERO
 // ==========================================
-function parseJwt(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Erro ao decodificar JWT do Google:", e);
-        return null;
-    }
-}
 
 let _heroGisRetries = 0;
 function initHeroGoogleAuth() {
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
-            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "873519405621-escola-integrarizzi.apps.googleusercontent.com";
+            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "317519023474-11cvsicednofqn0m9t1at7povgfu4pgh.apps.googleusercontent.com";
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 callback: handleHeroGoogleCredentialResponse,
@@ -525,21 +481,6 @@ function abrirModalOnboardingCadastro(user) {
     }
     document.getElementById("onboardingAutorizacaoWhatsApp").checked = false;
     modal.style.display = "flex";
-}
-
-function mascaraTelefoneInput(input) {
-    if (!input) return;
-    let v = input.value.replace(/\D/g, "");
-    if (v.length > 11) v = v.substring(0, 11);
-    if (v.length > 10) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
-    } else if (v.length > 6) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
-    } else if (v.length > 2) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
-    } else if (v.length > 0) {
-        input.value = `(${v}`;
-    }
 }
 
 function submitOnboardingCadastro() {

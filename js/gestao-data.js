@@ -40,877 +40,129 @@ if (typeof window !== "undefined") {
     window.cleanStudentName = cleanStudentName;
 }
 
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Erro ao decodificar JWT:", e);
+        return null;
+    }
+}
+
+function getRoleLabel(role) {
+    const labels = {
+        desenvolvedor: "Elevi Cortelini (Desenvolvedor)",
+        direcao: "Direção Escolar",
+        orientadora_clarinda: "Orientadora Clarinda (Anos Iniciais)",
+        orientadora_daiane: "Orientadora Daiane (Anos Finais)",
+        supervisao: "Supervisão Escolar",
+        secretaria: "Secretaria Escolar",
+        docentes: "Docente / Professor(a)",
+        apoio: "Apoio Pedagógico / TI",
+        comunidade: "Comunidade Escolar",
+        admin: "Administrador Integrado"
+    };
+    return labels[role] || "Colaborador Escolar";
+}
+
+function getRoleIcon(role) {
+    const icons = {
+        desenvolvedor: "fa-solid fa-code",
+        direcao: "fa-solid fa-crown",
+        orientadora_clarinda: "fa-solid fa-heart-pulse",
+        orientadora_daiane: "fa-solid fa-compass",
+        supervisao: "fa-solid fa-book-open-reader",
+        secretaria: "fa-solid fa-id-card",
+        docentes: "fa-solid fa-chalkboard-user",
+        apoio: "fa-solid fa-screwdriver-wrench",
+        comunidade: "fa-solid fa-users",
+        admin: "fa-solid fa-user-shield"
+    };
+    return icons[role] || "fa-solid fa-user";
+}
+
+if (typeof window !== "undefined") {
+    window.parseJwt = parseJwt;
+    window.getRoleLabel = getRoleLabel;
+    window.getRoleIcon = getRoleIcon;
+}
+
 // Estrutura Padrão Inicial
 const defaultSigeData = {
-    currentRole: "desenvolvedor", // desenvolvedor, direcao, orientadora_clarinda, orientadora_daiane, supervisao, secretaria, admin
+    currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "daiane@escola.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria & Recepção", permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção & Gestão Institucional", permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
     lotesSME: [],
     estoqueUniformes: {
         masculino: {
-            "camiseta": { "8": 2, "10": 4, "12": 1, "14": 0, "16": 3, "P": 2, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "bermuda": { "8": 1, "10": 2, "12": 0, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "calca": { "8": 3, "10": 1, "12": 2, "14": 0, "16": 1, "P": 0, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "moleton": { "8": 0, "10": 2, "12": 1, "14": 0, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "jaqueta": { "8": 1, "10": 0, "12": 1, "14": 1, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+            "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
         },
         feminino: {
-            "camiseta": { "8": 1, "10": 3, "12": 2, "14": 1, "16": 1, "P": 1, "M": 1, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "bermuda": { "8": 1, "10": 1, "12": 1, "14": 0, "16": 1, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "calca": { "8": 2, "10": 2, "12": 1, "14": 1, "16": 0, "P": 1, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "moleton": { "8": 1, "10": 1, "12": 0, "14": 0, "16": 1, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
-            "jaqueta": { "8": 0, "10": 1, "12": 1, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
+            "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "bermuda": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "calca": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "moleton": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
+            "jaqueta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 }
         }
     },
     agendamentosOP: [],
-
-    demandasSupervisao: [
-        {
-            id: "sup-201",
-            titulo: "Conselho de Classe Intermediário - 7º Anos",
-            turmaOuProfessor: "Professores do 7º Ano",
-            envolvidos: "Orientação Pedagógica (OP), Direção Escolar",
-            categoria: "Conselho de Classe",
-            prioridade: "alta", // alta, media, baixa
-            turno: "matutino", // matutino, vespertino, ambos
-            dataInicio: "2026-09-08",
-            dataFim: "2026-09-10", // Multi-dias! (3 dias: Terça a Quinta)
-            status: "em_atendimento", // pendente, em_atendimento, resolvido, adiado, nao_resolvido, reformular
-            descricao: "Revisão dos critérios de avaliação e acompanhamento de alunos com dificuldades.",
-            responsavel: "Supervisora 1",
-            prazo: "2026-09-10",
-            criadoEm: "2026-09-07"
-        },
-        {
-            id: "sup-202",
-            titulo: "Observação de Sala de Aula - 6º Ano B",
-            turmaOuProfessor: "Turma 6º Ano B",
-            envolvidos: "Professores / Docentes",
-            categoria: "Observação de Sala",
-            prioridade: "media",
-            turno: "vespertino",
-            dataInicio: "2026-09-10",
-            dataFim: "2026-09-10",
-            status: "pendente",
-            descricao: "Acompanhar dinamismos e nível de engajamento durante aulas de História.",
-            responsavel: "Supervisora 2",
-            prazo: "2026-09-10",
-            criadoEm: "2026-09-09"
-        },
-        {
-            id: "sup-203",
-            titulo: "Capacitação Docente: Uso de Metodologias Ativas",
-            turmaOuProfessor: "Corpo Docente Fund. II",
-            envolvidos: "Professores / Docentes, Direção Escolar",
-            categoria: "Capacitação Docente",
-            prioridade: "alta",
-            turno: "vespertino",
-            dataInicio: "2026-09-11",
-            dataFim: "2026-09-12",
-            status: "pendente",
-            descricao: "Oficina prática sobre avaliação formativa e ensino híbrido.",
-            responsavel: "Equipe Supervisão",
-            prazo: "2026-09-12",
-            criadoEm: "2026-09-08"
-        }
-    ],
-
-    projetosSupervisao: [
-        {
-            id: "proj-101",
-            titulo: "🔬 1ª Feira de Ciências e Inovação Rizzi",
-            categoria: "Feira de Ciências",
-            descricao: "Apresentação de trabalhos científicos e experimentos práticos dos alunos do 6º ao 9º ano.",
-            dataInicio: "2026-09-01",
-            dataFim: "2026-10-15",
-            responsavelLider: "Supervisora 1",
-            professoresEnvolvidos: "Prof. Ricardo (Ciências), Profª Maria (Física), Prof. Lucas (Robótica)",
-            status: "atencao", // em_dia, atencao, atrasado, concluido
-            etapas: [
-                { id: "e-1", titulo: "Definição dos temas pelas turmas", dataLimite: "2026-09-10", responsavel: "Prof. Ricardo", concluido: true },
-                { id: "e-2", titulo: "Entrega da lista de materiais de consumo para a Secretaria", dataLimite: "2026-09-15", responsavel: "Profª Maria", concluido: false },
-                { id: "e-3", titulo: "Ensaio geral de apresentação nos estandes", dataLimite: "2026-10-08", responsavel: "Prof. Lucas", concluido: false }
-            ],
-            checklistPreEvento: [
-                { item: "Som e Microfones testados na Quadra", concluido: false },
-                { item: "Mesas e bancadas organizadas por turma", concluido: true },
-                { item: "Convite aos pais enviado no WhatsApp", concluido: true },
-                { item: "Certificados impressos para premiação", concluido: false }
-            ]
-        },
-        {
-            id: "proj-102",
-            titulo: "📖 Projeto Maratona de Leitura & Poesia",
-            categoria: "Projeto Leitura",
-            descricao: "Incentivo à leitura literária com feira do livro e récitas de poesia.",
-            dataInicio: "2026-09-05",
-            dataFim: "2026-09-30",
-            responsavelLider: "Supervisora 2",
-            professoresEnvolvidos: "Profª Carmen (Português), Profª Juliana (Artes)",
-            status: "em_dia",
-            etapas: [
-                { id: "e-21", titulo: "Seleção do acervo literário com os alunos", dataLimite: "2026-09-12", responsavel: "Profª Carmen", concluido: true },
-                { id: "e-22", titulo: "Confecção dos cenários no Ateliê de Artes", dataLimite: "2026-09-22", responsavel: "Profª Juliana", concluido: false }
-            ],
-            checklistPreEvento: [
-                { item: "Livros expostos no pátio central", concluido: true },
-                { item: "Roteiro das apresentações poéticas finalizado", concluido: false }
-            ]
-        }
-    ],
-
-    projetosOrientacao: [
-        {
-            id: "proj-op-101",
-            titulo: "🧠 Programa de Mediação de Conflitos & Cultura de Paz",
-            categoria: "Mediação de Conflitos",
-            descricao: "Oficinas de inteligência emocional, escuta ativa e resolução pacífica de atritos interpessoais entre turmas do 6º ao 9º ano.",
-            dataInicio: "2026-09-01",
-            dataFim: "2026-11-30",
-            orientadoraLider: "Clarinda Rosa Pereira",
-            envolvidos: "Professores de Educação Física, Psicopedagoga, Direção Escolar",
-            status: "em_dia",
-            etapas: [
-                { id: "e-op-1", titulo: "Rodas de conversa sobre convivência nas turmas do 7º ano", dataLimite: "2026-09-18", responsavel: "Orientadora Clarinda", concluido: true },
-                { id: "e-op-2", titulo: "Mapeamento de alunos líderes mediadores de cada turma", dataLimite: "2026-09-28", responsavel: "Orientadora Daiane", concluido: false },
-                { id: "e-op-3", titulo: "Oficina prática com os pais sobre escuta não-violenta em casa", dataLimite: "2026-10-20", responsavel: "Orientadora Clarinda", concluido: false }
-            ],
-            checklistAcompanhamento: [
-                { item: "Termos de compromisso de convivência assinados nas turmas", concluido: true },
-                { item: "Relatório de redução de ocorrências encaminhado à Direção", concluido: false },
-                { item: "Painel de sentimentos montado no corredor da Orientação", concluido: true }
-            ]
-        },
-        {
-            id: "proj-op-102",
-            titulo: "📈 Projeto Busca Ativa & Assiduidade Escolar 3º Trimestre",
-            categoria: "Assiduidade & Frequência",
-            descricao: "Acompanhamento intensivo de alunos com infrequência escolar superior a 15%, contato com famílias e rede de proteção.",
-            dataInicio: "2026-09-05",
-            dataFim: "2026-10-25",
-            orientadoraLider: "Daiane Caetano Costa de Aquino",
-            envolvidos: "Secretaria Escolar, Conselho Tutelar, Regentes de Turma",
-            status: "atencao",
-            etapas: [
-                { id: "e-op-21", titulo: "Levantamento das listas de faltas quinzenais com a Secretaria", dataLimite: "2026-09-12", responsavel: "Secretaria / Daiane", concluido: true },
-                { id: "e-op-22", titulo: "Convocação individual dos pais de 12 alunos com frequência crítica", dataLimite: "2026-09-20", responsavel: "Orientadora Daiane", concluido: false },
-                { id: "e-op-23", titulo: "Notificação oficial enviada à Rede de Proteção / Conselho", dataLimite: "2026-10-05", responsavel: "Orientadora Daiane", concluido: false }
-            ],
-            checklistAcompanhamento: [
-                { item: "Fichas FICAI preenchidas para casos acima de 25%", concluido: false },
-                { item: "Encaminhamentos ao Posto de Saúde / CRAS efetuados", concluido: true }
-            ]
-        }
-    ],
-
-    atividadesExternasSupervisao: [
-        {
-            id: "ext-301",
-            titulo: "🚌 Aula Passeio ao Museu Oceanográfico de Piçarras",
-            destino: "Museu Oceanográfico Univali - Balneário Piçarras / SC",
-            data: "2026-09-25",
-            horarioSaida: "07:30",
-            horarioRetorno: "12:00",
-            responsavel: "Supervisora 1",
-            professoresAcompanhantes: "Prof. Ricardo (Ciências), Profª Carla (Geografia)",
-            turmasEnvolvidas: "7º Ano A e 7º Ano B",
-            transporteContratado: "Viação Catarinense - 2 Ônibus Executivos",
-            autorizacoesAssinadas: 48,
-            totalAlunos: 52,
-            checklistLogistica: [
-                { item: "Contrato de Ônibus Assinado e Pago", concluido: true },
-                { item: "Autorização dos Pais Coletada (Recepção)", concluido: true },
-                { item: "Kit Primeiros Socorros Preparado", concluido: false },
-                { item: "Lanche de Campo Embalado pela Cozinha", concluido: false }
-            ]
-        }
-    ],
-
-    reunioesPedagogicasSupervisao: [
-        {
-            id: "reun-401",
-            titulo: "📌 HATP: Alinhamento de Avaliações do 3º Trimestre",
-            tipo: "HATP / Formação",
-            data: "2026-09-17",
-            horario: "18:00",
-            local: "Auditório Principal",
-            pauta: "Discutir critérios de elaboração de provas, prazos de digitação e recuperação paralela.",
-            responsavel: "Supervisora 1 & Supervisora 2",
-            participantes: "Todos os Professores do Fundamental II",
-            confirmadosCount: 14,
-            totalConvocados: 18
-        }
-    ],
-
-    demandasAdmin: [
-        {
-            id: "adm-301",
-            titulo: "Troca da Lâmpada e Projetor da Sala 12",
-            setor: "Manutenção & TI",
-            prioridade: "alta",
-            status: "em_atendimento",
-            descricao: "Projetor apresentando oscilação na imagem. Necessário reparo antes das aulas de Geografia.",
-            responsavel: "Seção de Apoio / TI",
-            prazo: "2026-09-11",
-            criadoEm: "2026-09-09"
-        },
-        {
-            id: "adm-302",
-            titulo: "Reposição de Papel A4 e Cartuchos na Sala dos Professores",
-            setor: "Suprimentos",
-            prioridade: "media",
-            status: "concluido",
-            descricao: "Solicitação atendida com 10 caixas de papel sulfite e 2 toners pretos.",
-            responsavel: "Almoxarifado",
-            prazo: "2026-09-09",
-            criadoEm: "2026-09-08"
-        }
-    ],
-
-    muralAvisos: [
-        {
-            id: "av-401",
-            titulo: "📢 Reunião Geral de Alinhamento Pedagógico",
-            conteudo: "Convocamos todos os professores da Rede Fundamental para a reunião mensal no Auditório Principal sobre o Simulado do 3º Trimestre.",
-            target: "professores", // todos, professores, alunos, orientacao_supervisao
-            urgente: true,
-            autor: "Direção Escolar",
-            data: "2026-09-10",
-            validoAte: "2026-09-15"
-        },
-        {
-            id: "av-402",
-            titulo: "🏆 Feira de Ciências e Tecnologia Rizzi 2026",
-            conteudo: "Abertas as inscrições de grupos de alunos do 6º ao 8º ano para a submissão de projetos da Feira Científica.",
-            target: "todos",
-            urgente: false,
-            autor: "Supervisão Pedagógica",
-            data: "2026-09-08",
-            validoAte: "2026-09-30"
-        },
-        {
-            id: "av-403",
-            titulo: "📝 Prazo para Lançamento das Faltas no Portal",
-            conteudo: "Lembramos aos docentes que a consolidação da frequência da primeira quinzena deve ocorrer até sexta-feira.",
-            target: "professores",
-            urgente: false,
-            autor: "Secretaria Escolar",
-            data: "2026-09-07",
-            validoAte: "2026-09-12"
-        }
-    ],
-
-    calendarioTarefas: [
-        {
-            id: "cal-501",
-            responsavel: "Prof. Carmen (Orientação)",
-            tarefa: "Consolidação dos relatórios de atendimento quinzenal para a Direção",
-            quando: "2026-09-11",
-            destinatario: "Orientação Pedagógica",
-            status: "pendente"
-        },
-        {
-            id: "cal-502",
-            responsavel: "Secretaria",
-            tarefa: "Emissão e assinatura dos comprovantes de presença dos atendimentos da OP",
-            quando: "2026-09-10",
-            destinatario: "Secretaria",
-            status: "em_andamento"
-        },
-        {
-            id: "cal-503",
-            responsavel: "Professores do 7º Ano",
-            tarefa: "Entrega do planejamento de aulas práticas para o mês de Outubro",
-            quando: "2026-09-18",
-            destinatario: "Professores",
-            status: "pendente"
-        }
-    ],
-
+    demandasSupervisao: [],
+    projetosSupervisao: [],
+    projetosOrientacao: [],
+    atividadesExternasSupervisao: [],
+    reunioesPedagogicasSupervisao: [],
+    demandasAdmin: [],
+    muralAvisos: [],
+    calendarioTarefas: [],
     notificacoesLidas: [],
-
     whatsappConfig: {
-        enabled: true,
-        provider: "simulated", // simulated, meta_cloud_api, zapi, evolution_api, custom_webhook
-        apiUrl: "",
-        apiToken: "",
-        autoSendOnCreate: true,
-        autoSendOnArrival: true,
-        autoSendReminders: true
+        autoSendStatusChange: true,
+        autoSendNewTask: false
     },
-
-    orientadoras: [
-        {
-            id: "orient-1",
-            nome: "Clarinda Rosa Pereira",
-            telefone: "47999112233",
-            email: "clarinda@escola.gov.br"
-        },
-        {
-            id: "orient-2",
-            nome: "Daiane Caetano Costa de Aquino",
-            telefone: "47999445566",
-            email: "daiane@escola.gov.br"
-        }
-    ],
-
-    supervisoras: [
-        {
-            id: "sup-user-1",
-            nome: "Supervisora 1",
-            telefone: "47999778899",
-            email: "supervisao1@escola.gov.br"
-        },
-        {
-            id: "sup-user-2",
-            nome: "Supervisora 2",
-            telefone: "47999778800",
-            email: "supervisao2@escola.gov.br"
-        }
-    ],
-
-    professores: [
-        {
-            id: "prof-1",
-            nome: "Prof. Ricardo Santos",
-            disciplina: "Ciências & Biologia",
-            telefone: "47998877665",
-            email: "ricardo.santos@escola.gov.br",
-            turnos: "matutino",
-            turmas: "6º ao 9º Ano"
-        },
-        {
-            id: "prof-2",
-            nome: "Profª Maria Oliveira",
-            disciplina: "Física & Matemática",
-            telefone: "47991234567",
-            email: "maria.oliveira@escola.gov.br",
-            turnos: "ambos",
-            turmas: "8º e 9º Anos"
-        },
-        {
-            id: "prof-3",
-            nome: "Profª Carmen Lucia",
-            disciplina: "Língua Portuguesa",
-            telefone: "47988332211",
-            email: "carmen.lucia@escola.gov.br",
-            turnos: "matutino",
-            turmas: "6º ao 8º Ano"
-        },
-        {
-            id: "prof-4",
-            nome: "Prof. Lucas Gabriel",
-            disciplina: "Robótica & TI",
-            telefone: "47997711223",
-            email: "lucas.gabriel@escola.gov.br",
-            turnos: "vespertino",
-            turmas: "Todos os Anos"
-        },
-        {
-            id: "prof-5",
-            nome: "Profª Juliana Lima",
-            disciplina: "Artes & Projetos",
-            telefone: "47996655443",
-            email: "juliana.lima@escola.gov.br",
-            turnos: "vespertino",
-            turmas: "6º ao 9º Ano"
-        }
-    ],
-
-    equipeEscola: [
-        {
-            id: "prof-1",
-            nome: "Prof. Ricardo Santos",
-            setor: "docentes",
-            cargoFuncao: "Professor de Ciências & Biologia",
-            disciplina: "Ciências & Biologia",
-            telefone: "47998877665",
-            email: "ricardo.santos@escola.gov.br",
-            turnos: "matutino",
-            turmasOuSalas: "6º ao 9º Ano"
-        },
-        {
-            id: "prof-2",
-            nome: "Profª Maria Oliveira",
-            setor: "docentes",
-            cargoFuncao: "Professora de Física & Matemática",
-            disciplina: "Física & Matemática",
-            telefone: "47991234567",
-            email: "maria.oliveira@escola.gov.br",
-            turnos: "ambos",
-            turmasOuSalas: "8º e 9º Anos"
-        },
-        {
-            id: "prof-3",
-            nome: "Profª Carmen Lucia",
-            setor: "docentes",
-            cargoFuncao: "Professora de Língua Portuguesa",
-            disciplina: "Língua Portuguesa",
-            telefone: "47988332211",
-            email: "carmen.lucia@escola.gov.br",
-            turnos: "matutino",
-            turmasOuSalas: "6º ao 8º Ano"
-        },
-        {
-            id: "prof-4",
-            nome: "Prof. Lucas Gabriel",
-            setor: "docentes",
-            cargoFuncao: "Professor de Robótica & TI",
-            disciplina: "Robótica & TI",
-            telefone: "47997711223",
-            email: "lucas.gabriel@escola.gov.br",
-            turnos: "vespertino",
-            turmasOuSalas: "Todos os Anos"
-        },
-        {
-            id: "prof-5",
-            nome: "Profª Juliana Lima",
-            setor: "docentes",
-            cargoFuncao: "Professora de Artes & Projetos",
-            disciplina: "Artes & Projetos",
-            telefone: "47996655443",
-            email: "juliana.lima@escola.gov.br",
-            turnos: "vespertino",
-            turmasOuSalas: "6º ao 9º Ano"
-        },
-        {
-            id: "orient-1",
-            nome: "Clarinda Rosa Pereira",
-            setor: "orientacao",
-            cargoFuncao: "Orientadora Educacional — Séries Iniciais",
-            disciplina: "Orientação Educacional (OE)",
-            telefone: "47999112233",
-            email: "clarinda@escola.gov.br",
-            turnos: "matutino,vespertino",
-            turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)"
-        },
-        {
-            id: "orient-2",
-            nome: "Daiane Caetano Costa de Aquino",
-            setor: "orientacao",
-            cargoFuncao: "Orientadora Educacional — Séries Finais",
-            disciplina: "Orientação Educacional (OE)",
-            telefone: "47999445566",
-            email: "daiane@escola.gov.br",
-            turnos: "matutino",
-            turmasOuSalas: "6º ao 9º Anos (Séries Finais)"
-        },
-        {
-            id: "sup-user-1",
-            nome: "Supervisora 1 (Ana Paula)",
-            setor: "supervisao",
-            cargoFuncao: "Supervisora Pedagógica Geral",
-            disciplina: "Supervisão Pedagógica",
-            telefone: "47999778899",
-            email: "supervisao1@escola.gov.br",
-            turnos: "matutino",
-            turmasOuSalas: "Toda a Unidade"
-        },
-        {
-            id: "sup-user-2",
-            nome: "Supervisora 2 (Fernanda)",
-            setor: "supervisao",
-            cargoFuncao: "Supervisora Pedagógica de Projetos",
-            disciplina: "Supervisão Pedagógica",
-            telefone: "47999778800",
-            email: "supervisao2@escola.gov.br",
-            turnos: "vespertino",
-            turmasOuSalas: "Toda a Unidade"
-        },
-        {
-            id: "dir-1",
-            nome: "Diretora Elena Cortelini",
-            setor: "direcao",
-            cargoFuncao: "Diretora Escolar Geral",
-            disciplina: "Gestão Escolar",
-            telefone: "47999881122",
-            email: "direcao@escola.gov.br",
-            turnos: "integral",
-            turmasOuSalas: "Geral"
-        },
-        {
-            id: "sec-1",
-            nome: "Patricia Duarte (Secretária)",
-            setor: "secretaria",
-            cargoFuncao: "Chefe da Secretaria Escolar",
-            disciplina: "Secretaria & Matrículas",
-            telefone: "47999223344",
-            email: "secretaria@escola.gov.br",
-            turnos: "integral",
-            turmasOuSalas: "Recepção / Secretaria"
-        },
-        {
-            id: "apoio-1",
-            nome: "Marcos Ribeiro (TI & Manutenção)",
-            setor: "apoio",
-            cargoFuncao: "Técnico em Suporte TI & Infraestrutura",
-            disciplina: "Apoio Técnico",
-            telefone: "47999334455",
-            email: "ti.manutencao@escola.gov.br",
-            turnos: "integral",
-            turmasOuSalas: "Laboratórios & Redes"
-        }
-    ],
-
+    orientadoras: [],
+    supervisoras: [],
+    professores: [],
+    equipeEscola: [],
     turmasEscola: [
-        { id: "turma-101", nome: "1º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental I", sala: "Sala 01", capacidade: 30, regente: "Profª Juliana Lima" },
-        { id: "turma-102", nome: "2º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental I", sala: "Sala 02", capacidade: 30, regente: "Profª Maria Oliveira" },
-        { id: "turma-601", nome: "6º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 10", capacidade: 35, regente: "Profª Carmen Lucia" },
-        { id: "turma-602", nome: "6º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 10", capacidade: 35, regente: "Prof. Lucas Gabriel" },
-        { id: "turma-701", nome: "7º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 12", capacidade: 35, regente: "Prof. Ricardo Santos" },
-        { id: "turma-702", nome: "7º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 12", capacidade: 35, regente: "Prof. Ricardo Santos" },
-        { id: "turma-801", nome: "8º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 14", capacidade: 35, regente: "Profª Maria Oliveira" },
-        { id: "turma-802", nome: "8º Ano B", turno: "vespertino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 14", capacidade: 35, regente: "Prof. Lucas Gabriel" },
-        { id: "turma-901", nome: "9º Ano A", turno: "matutino", anoLetivo: "2026", nivel: "Ensino Fundamental II", sala: "Sala 15", capacidade: 35, regente: "Profª Carmen Lucia" }
+        { id: "turma-1a", nome: "1º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 01", capacidade: 25 },
+        { id: "turma-1b", nome: "1º Ano B", turno: "Vespertino", segmento: "Anos Iniciais", sala: "Sala 01", capacidade: 25 },
+        { id: "turma-2a", nome: "2º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 02", capacidade: 26 },
+        { id: "turma-3a", nome: "3º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 03", capacidade: 28 },
+        { id: "turma-4a", nome: "4º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 04", capacidade: 28 },
+        { id: "turma-5a", nome: "5º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 05", capacidade: 30 },
+        { id: "turma-6a", nome: "6º Ano A", turno: "Matutino", segmento: "Anos Finais", sala: "Sala 06", capacidade: 32 },
+        { id: "turma-7a", nome: "7º Ano A", turno: "Matutino", segmento: "Anos Finais", sala: "Sala 07", capacidade: 32 },
+        { id: "turma-8a", nome: "8º Ano A", turno: "Matutino", segmento: "Anos Finais", sala: "Sala 08", capacidade: 32 },
+        { id: "turma-9a", nome: "9º Ano A", turno: "Matutino", segmento: "Anos Finais", sala: "Sala 09", capacidade: 32 }
     ],
-
     configEscola: {
-        nomeEscola: "Centro Educacional Pedro Rizzi",
-        cidadeUf: "Itajaí / SC",
-        anoLetivo: "2026",
-        periodoAtual: "3º Trimestre",
-        horarioMatutino: "07:30 - 11:45",
-        horarioVespertino: "13:15 - 17:30",
-        telefoneContato: "(47) 3348-0000",
-        emailContato: "contato@pedrorizzi.sc.gov.br"
+        nome: "Centro Educacional Pedro Rizzi",
+        inep: "42012345",
+        anoLetivo: 2026,
+        turnos: ["Matutino", "Vespertino", "Integral", "Noturno"]
     },
-
     atasGabineteDirecao: [],
-
-    eventosCalendarioEscolar: (typeof window !== 'undefined' && Array.isArray(window.CALENDARIO_OFICIAL_CEPR_2026)) ? window.CALENDARIO_OFICIAL_CEPR_2026 : [],
-
-    contatosWhatsAppDirecao: [
-        {
-            id: "w-cont-plan-1",
-            nome: "Jackson Silvano",
-            telefone: "47984862755",
-            tags: ["Equipe Escolar","Direção Escolar"],
-            tag: "Equipe Escolar, Direção Escolar",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Direção Escolar | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-2",
-            nome: "Giovana Schizzi Zanin",
-            telefone: "47996257868",
-            tags: ["Equipe Escolar","Geral"],
-            tag: "Equipe Escolar, Geral",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-3",
-            nome: "Lívia Rodrigues",
-            telefone: "47996247185",
-            tags: ["Equipe Escolar","2° ano 203","Vespertino"],
-            tag: "Equipe Escolar, 2° ano 203, Vespertino",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 2° ano 203 | Obs: 5° feira hora atividade | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-4",
-            nome: "Cristiane Diel",
-            telefone: "47999606060",
-            tags: ["Equipe Escolar","Geral"],
-            tag: "Equipe Escolar, Geral",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Obs: 4ª feira hora atividade e 5ª e 6ª feiras, aulas presenciais. | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-5",
-            nome: "Danielle Lima de Aguiar",
-            telefone: "47996693910",
-            tags: ["Equipe Escolar","EVA","Matutino"],
-            tag: "Equipe Escolar, EVA, Matutino",
-            turno: "Matutino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: EVA | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-6",
-            nome: "Natana Souza da Rosa",
-            telefone: "48996532118",
-            tags: ["Equipe Escolar","801","802","803"],
-            tag: "Equipe Escolar, 801, 802, 803",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 801,802,803 | Obs: Terça feira vespertino hora atividade | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-7",
-            nome: "Luã de Souza Cardoso",
-            telefone: "47984760514",
-            tags: ["Equipe Escolar","3","4","6","7 e 8 anos"],
-            tag: "Equipe Escolar, 3, 4, 6, 7 e 8 anos",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 3, 4, 6, 7 e 8 anos | Obs: H.Atividade nas sextas. | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-8",
-            nome: "Debora Felix",
-            telefone: "47984015052",
-            tags: ["Equipe Escolar","4 ° ano 402","Matutino"],
-            tag: "Equipe Escolar, 4 ° ano 402, Matutino",
-            turno: "Matutino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 4 ° ano 402 | Obs: Hora atividade - Terça-feira | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-9",
-            nome: "Ester Roberta Pereira de Souza",
-            telefone: "47996984977",
-            tags: ["Equipe Escolar","2º","3º","4º","5º","6º anos"],
-            tag: "Equipe Escolar, 2º, 3º, 4º, 5º, 6º anos",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 2º, 3º, 4º, 5º, 6º anos | Obs: H A  Segunda feira | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-10",
-            nome: "Roberta Silva dos Santos",
-            telefone: "82999549677",
-            tags: ["Equipe Escolar","501","Matutino"],
-            tag: "Equipe Escolar, 501, Matutino",
-            turno: "Matutino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 501 | Obs: H A  Segunda feira | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-11",
-            nome: "Patricia Valente Tinoco",
-            telefone: "47996207082",
-            tags: ["Equipe Escolar","202","306"],
-            tag: "Equipe Escolar, 202, 306",
-            turno: "Ambos",
-            autorizaWhatsApp: false,
-            notas: "Turmas/Atuação: 202/306 | Autorizou WhatsApp: Não"
-        },
-        {
-            id: "w-cont-plan-12",
-            nome: "Angela Maria dos Santos",
-            telefone: "47992166619",
-            tags: ["Equipe Escolar","504","Vespertino"],
-            tag: "Equipe Escolar, 504, Vespertino",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 504 | Obs: H.A. nas sextas feiras. | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-13",
-            nome: "Aline Santos",
-            telefone: "47984779459",
-            tags: ["Equipe Escolar","2°","4° e 5°"],
-            tag: "Equipe Escolar, 2°, 4° e 5°",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 2°,4° e 5° | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-14",
-            nome: "Josiane Campos",
-            telefone: "47996562003",
-            tags: ["Equipe Escolar","1° ao 5°"],
-            tag: "Equipe Escolar, 1° ao 5°",
-            turno: "Ambos",
-            autorizaWhatsApp: false,
-            notas: "Turmas/Atuação: 1° ao 5° | Autorizou WhatsApp: Não"
-        },
-        {
-            id: "w-cont-plan-15",
-            nome: "Alessandra da Silva Azevedo de Pontes",
-            telefone: "47996419389",
-            tags: ["Equipe Escolar","Todas turmas","Vespertino"],
-            tag: "Equipe Escolar, Todas turmas, Vespertino",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Todas turmas | Obs: AAEE | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-16",
-            nome: "Esther Cristina dos Santos Neves",
-            telefone: "47984483243",
-            tags: ["Equipe Escolar","Psicologa","Matutino"],
-            tag: "Equipe Escolar, Psicologa, Matutino",
-            turno: "Matutino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Psicologa | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-17",
-            nome: "Josiane da Silva",
-            telefone: "47996189352",
-            tags: ["Equipe Escolar","1°ano e E.V.A"],
-            tag: "Equipe Escolar, 1°ano e E.V.A",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 1°ano e E.V.A | Obs: H.A  nas sextas feiras | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-18",
-            nome: "Marilene Anderle Schaefer",
-            telefone: "479989067766",
-            tags: ["Equipe Escolar","Sala - AEE"],
-            tag: "Equipe Escolar, Sala - AEE",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Sala - AEE | Obs: H.A. nas sextas-feiras | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-19",
-            nome: "Joselina Evaristo Hernandes",
-            telefone: "479984289307",
-            tags: ["Equipe Escolar","504 - AAEE","Vespertino"],
-            tag: "Equipe Escolar, 504 - AAEE, Vespertino",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: 504 - AAEE | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-20",
-            nome: "Márcia Regina Cabral de Souza",
-            telefone: "47999156461",
-            tags: ["Equipe Escolar","EVA","Vespertino"],
-            tag: "Equipe Escolar, EVA, Vespertino",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: EVA | Obs: H.A nas sextas-feiras | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-21",
-            nome: "SIMONNE ALVES DOS SANTOS KLOCZAK",
-            telefone: "43998048585",
-            tags: ["Equipe Escolar","MATEMÁTICA"],
-            tag: "Equipe Escolar, MATEMÁTICA",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: MATEMÁTICA | Obs: H.A. TERÇA-FEIRA | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-22",
-            nome: "Maristela Aparecida Vieira",
-            telefone: "47996769161",
-            tags: ["Equipe Escolar","Supervisora Escolar"],
-            tag: "Equipe Escolar, Supervisora Escolar",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Supervisora Escolar | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-23",
-            nome: "Michele Aranha Siqueira",
-            telefone: "47988200196",
-            tags: ["Equipe Escolar","Inglês"],
-            tag: "Equipe Escolar, Inglês",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Inglês | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-24",
-            nome: "Nathalia Cristina Nerino dos Santos",
-            telefone: "47991590214",
-            tags: ["Equipe Escolar","Arte"],
-            tag: "Equipe Escolar, Arte",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Turmas/Atuação: Arte | Obs: H.A nas quartas-feiras | Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-plan-25",
-            nome: "Sueyzi da Silva Vilhena",
-            telefone: "96984326893",
-            tags: ["Equipe Escolar","Geral"],
-            tag: "Equipe Escolar, Geral",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Autorizou WhatsApp: Sim"
-        },
-        {
-            id: "w-cont-1",
-            nome: "Sra. Mariana (Mãe Lucas Gabriel)",
-            telefone: "47999881122",
-            tags: ["Pais / Responsáveis","3º Ano A","Conselho de Classe"],
-            tag: "Pais / Responsáveis, 3º Ano A",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Responsável comparece às convocações, prefere contato à tarde."
-        },
-        {
-            id: "w-cont-2",
-            nome: "Conselho Tutelar Polo Fazenda",
-            telefone: "4733445566",
-            tags: ["Conselho Tutelar / SME","Órgãos Externos"],
-            tag: "Conselho Tutelar / SME",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Plantão do Conselho Tutelar para encaminhamentos APOIA."
-        },
-        {
-            id: "w-cont-3",
-            nome: "Presidência da APMF - Pedro Rizzi",
-            telefone: "47991223344",
-            tags: ["Conselho Escolar / APMF","Financeiro"],
-            tag: "Conselho Escolar / APMF",
-            turno: "Ambos",
-            autorizaWhatsApp: true,
-            notas: "Contato oficial da diretoria da Associação de Pais e Mestres."
-        },
-        {
-            id: "w-cont-5",
-            nome: "Sr. Carlos (Pai de Isabella Rocha)",
-            telefone: "47988776655",
-            tags: ["Pais / Responsáveis","4º Ano B"],
-            tag: "Pais / Responsáveis, 4º Ano B",
-            turno: "Vespertino",
-            autorizaWhatsApp: true,
-            notas: "Pai da aluna Isabella Rocha."
-        },
-        {
-            id: "w-cont-6",
-            nome: "Sra. Juliana (Mãe de Enzo Gabriel)",
-            telefone: "47992334455",
-            tags: ["Pais / Responsáveis","1º Ano A","Alunos Novos"],
-            tag: "Pais / Responsáveis, 1º Ano A",
-            turno: "Matutino",
-            autorizaWhatsApp: true,
-            notas: "Mãe do aluno novo matriculado recentemente."
-        }
-    ],
-
-    mensagensWhatsAppLog: [
-        {
-            id: "w-log-1",
-            contatoNome: "Sra. Mariana (Mãe Lucas Gabriel)",
-            telefone: "47999881122",
-            tag: "Pais / Responsáveis",
-            mensagem: "Olá, aqui é da Direção do C.E. Pedro Rizzi. Confirmamos a reunião de acompanhamento agendada.",
-            enviadoEm: "2026-09-18T09:00:00",
-            status: "confirmado"
-        }
-    ],
-
-    auditLogs: [
-        { id: "log-1", data: "2026-09-10T14:30:00", usuario: "Administração", acao: "Cadastro de Nova Turma (7º Ano B)", setor: "Admin" },
-        { id: "log-2", data: "2026-09-10T15:10:00", usuario: "Supervisão", acao: "Disparo de Cobrança WhatsApp (Prof. Ricardo)", setor: "Supervisão" },
-        { id: "log-3", data: "2026-09-10T16:20:00", usuario: "Secretaria", acao: "Agendamento OP Registrado (Lucas Gabriel)", setor: "Orientação" }
-    ],
-
+    eventosCalendarioEscolar: [],
+    contatosWhatsAppDirecao: [],
+    mensagensWhatsAppLog: [],
+    auditLogs: [],
     deletedContatosWpIds: [],
     deletedEventoCalendarioIds: [],
-    contatosWhatsAppDirecaoSeeded: true,
-
     firebaseConfig: {
         enabled: true,
         apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
@@ -1233,106 +485,43 @@ class SigeDatabase {
         }
     }
 
-    loadLocalOnly() {
+        loadLocalOnly() {
         const stored = localStorage.getItem(SIGE_STORAGE_KEY);
         if (!stored) {
-            return defaultSigeData;
+            return JSON.parse(JSON.stringify(defaultSigeData));
         }
         try {
             const parsed = JSON.parse(stored);
             const merged = {
                 ...defaultSigeData,
-                ...parsed,
-                atasGabineteDirecao: parsed.atasGabineteDirecao || defaultSigeData.atasGabineteDirecao,
-                eventosCalendarioEscolar: parsed.eventosCalendarioEscolar || defaultSigeData.eventosCalendarioEscolar,
-                contatosWhatsAppDirecao: parsed.contatosWhatsAppDirecao || defaultSigeData.contatosWhatsAppDirecao,
-                mensagensWhatsAppLog: parsed.mensagensWhatsAppLog || defaultSigeData.mensagensWhatsAppLog,
-                deletedContatosWpIds: parsed.deletedContatosWpIds || [],
-                deletedEventoCalendarioIds: parsed.deletedEventoCalendarioIds || []
+                ...parsed
             };
 
-            const delWpSet = new Set(merged.deletedContatosWpIds || []);
-            const delCalSet = new Set(merged.deletedEventoCalendarioIds || []);
-
-            // Filtra e preserva as edições e exclusões locais de contatos do WhatsApp
-            if (!Array.isArray(parsed.contatosWhatsAppDirecao)) {
-                // Primeira inicialização: usa os contatos padrão excluindo os deletados
-                merged.contatosWhatsAppDirecao = (defaultSigeData.contatosWhatsAppDirecao || []).filter(c => !delWpSet.has(c.id));
-                merged.contatosWhatsAppDirecaoSeeded = true;
-            } else {
-                // Mantém integralmente os contatos salvos localmente pelo usuário, garantindo remoção de excluídos
-                merged.contatosWhatsAppDirecao = parsed.contatosWhatsAppDirecao.filter(c => !delWpSet.has(c.id));
-            }
-
-            // Filtra e preserva as exclusões do Calendário Escolar
-            if (Array.isArray(merged.eventosCalendarioEscolar)) {
-                merged.eventosCalendarioEscolar = merged.eventosCalendarioEscolar.filter(e => !delCalSet.has(e.id));
-            }
-
-            if (Array.isArray(merged.usuariosCadastrados)) {
-                merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
-                    const defaultUser = defaultSigeData.usuariosCadastrados.find(du => du.email === u.email);
-                    return {
-                        ...u,
-                        status: u.status || 'aprovado',
-                        cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || !!(u.telefone && u.telefone.length >= 10)),
-                        permissoes: u.permissoes || (defaultUser ? defaultUser.permissoes : { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false })
-                    };
-                });
-
-                const emailsExemplosRemover = [
-                    "marcos.silva789@edu.itajai.sc.gov.br",
-                    "juliana.pedagoga@edu.itajai.sc.gov.br",
-                    "rodrigo.ti@edu.itajai.sc.gov.br",
-                    "beatriz.oe@edu.itajai.sc.gov.br",
-                    "lucas.sec@edu.itajai.sc.gov.br"
-                ];
-                merged.usuariosCadastrados = merged.usuariosCadastrados.filter(u => {
-                    const mail = (u.email || '').toLowerCase().trim();
-                    return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
-                });
-            }
-
-            // Limpeza dos pedidos de exemplo e lotes de uniformes
-            const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
-            if (Array.isArray(merged.pedidosUniformes)) {
-                merged.pedidosUniformes = merged.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
-            } else {
-                merged.pedidosUniformes = [];
-            }
-            if (Array.isArray(merged.lotesSME)) {
-                merged.lotesSME = merged.lotesSME.filter(l => l.id !== "lote-sme-01");
-            } else {
-                merged.lotesSME = [];
-            }
-
-            if (!parsed.limpezaExemplosUniformes_v1) {
-                merged.pedidosUniformes = (merged.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
-                merged.lotesSME = (merged.lotesSME || []).filter(l => l.id !== "lote-sme-01");
-                merged.limpezaExemplosUniformes_v1 = true;
-                try {
-                    localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(merged));
-                } catch(e) {}
-            }
-
-            // Migração v28: Limpeza de dados de teste (Atendimentos OP, Atas) e Carga do Calendário Oficial 2026
-            if (!parsed.limpezaExemplos_2026_v28) {
-                merged.agendamentosOP = [];
-                merged.atasGabineteDirecao = [];
-                if (typeof window !== 'undefined' && Array.isArray(window.CALENDARIO_OFICIAL_CEPR_2026)) {
-                    merged.eventosCalendarioEscolar = window.CALENDARIO_OFICIAL_CEPR_2026;
-                } else {
-                    merged.eventosCalendarioEscolar = defaultSigeData.eventosCalendarioEscolar;
+            // Garantia de integridade das coleções essenciais
+            const arrayKeys = [
+                'usuariosCadastrados', 'pedidosUniformes', 'lotesSME', 'agendamentosOP',
+                'demandasSupervisao', 'demandasAdmin', 'equipeEscola', 'turmasEscola',
+                'contatosWhatsAppDirecao', 'eventosCalendarioEscolar', 'atasGabineteDirecao',
+                'mensagensWhatsAppLog', 'auditLogs', 'notificacoesLidas'
+            ];
+            arrayKeys.forEach(k => {
+                if (!Array.isArray(merged[k])) {
+                    merged[k] = Array.isArray(defaultSigeData[k]) ? [...defaultSigeData[k]] : [];
                 }
-                merged.limpezaExemplos_2026_v28 = true;
-                try {
-                    localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(merged));
-                } catch(e) {}
-            }
+            });
+
+            // Normalização estrita de usuários cadastrados
+            merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => ({
+                ...u,
+                status: u.status || 'aprovado',
+                cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com'),
+                permissoes: u.permissoes || this.getDefaultPermissoesByRole(u.role)
+            }));
+
             return merged;
         } catch (e) {
             console.error("Erro ao carregar banco de dados local do SIGE:", e);
-            return defaultSigeData;
+            return JSON.parse(JSON.stringify(defaultSigeData));
         }
     }
 
@@ -1408,136 +597,9 @@ class SigeDatabase {
         return base;
     }
 
-    getUsuarios() {
-        let saveNeeded = false;
-        if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados) || this.data.usuariosCadastrados.length === 0) {
-            this.data.usuariosCadastrados = [
-                { 
-                    email: "elcortelini@gmail.com", 
-                    nome: "Elevi Cortelini (Desenvolvedor)", 
-                    role: "desenvolvedor", 
-                    cargo: "Desenvolvedor do Sistema",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
-                },
-                { 
-                    email: "daiane.aquino04548@edu.itajai.sc.gov.br", 
-                    nome: "Daiane Caetano Costa de Aquino", 
-                    role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-                },
-                { 
-                    email: "daiane@escola.gov.br", 
-                    nome: "Daiane Caetano Costa de Aquino", 
-                    role: "orientadora_daiane", 
-                    cargo: "Orientadora Educacional — Séries Finais",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-                },
-                { 
-                    email: "clarinda@escola.gov.br", 
-                    nome: "Clarinda Rosa Pereira", 
-                    role: "orientadora_clarinda", 
-                    cargo: "Orientadora Educacional — Séries Iniciais",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
-                },
-                { 
-                    email: "secretaria@escola.gov.br", 
-                    nome: "Secretaria Escolar", 
-                    role: "secretaria", 
-                    cargo: "Secretaria & Recepção",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
-                },
-                { 
-                    email: "direcao@escola.gov.br", 
-                    nome: "Direção Escolar", 
-                    role: "direcao", 
-                    cargo: "Direção & Gestão Institucional",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
-                }
-            ];
-            saveNeeded = true;
-        }
-
-        // Limpeza dos 5 exemplos de usuários pendentes de teste para que não reapareçam no refresh
-        const emailsExemplosRemover = [
-            "marcos.silva789@edu.itajai.sc.gov.br",
-            "juliana.pedagoga@edu.itajai.sc.gov.br",
-            "rodrigo.ti@edu.itajai.sc.gov.br",
-            "beatriz.oe@edu.itajai.sc.gov.br",
-            "lucas.sec@edu.itajai.sc.gov.br"
-        ];
-        if (Array.isArray(this.data.usuariosCadastrados)) {
-            const antesLen = this.data.usuariosCadastrados.length;
-            this.data.usuariosCadastrados = this.data.usuariosCadastrados.filter(u => {
-                const mail = (u.email || '').toLowerCase().trim();
-                return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
-            });
-            if (this.data.usuariosCadastrados.length !== antesLen) {
-                saveNeeded = true;
-            }
-        }
-
-        // Limpeza dos dados de exemplo do controle de pedidos e entrega de uniformes
-        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
-        if (Array.isArray(this.data.pedidosUniformes)) {
-            const antesLenPedidos = this.data.pedidosUniformes.length;
-            this.data.pedidosUniformes = this.data.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
-            if (this.data.pedidosUniformes.length !== antesLenPedidos) {
-                saveNeeded = true;
-            }
-        }
-        if (Array.isArray(this.data.lotesSME)) {
-            const antesLenLotes = this.data.lotesSME.length;
-            this.data.lotesSME = this.data.lotesSME.filter(l => l.id !== "lote-sme-01");
-            if (this.data.lotesSME.length !== antesLenLotes) {
-                saveNeeded = true;
-            }
-        }
-
-        // Garante objeto de permissões completo e status em todos os usuários existentes
-        const permKeys = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes', 'ext_recursos', 'ext_dashboard', 'ext_contabil', 'ext_biblioteca', 'ext_patrimonio'];
-        this.data.usuariosCadastrados.forEach(u => {
-            if (!u.status) {
-                u.status = 'aprovado';
-                saveNeeded = true;
-            }
-            if (u.cadastroCompleto === undefined) {
-                u.cadastroCompleto = (u.email.toLowerCase().trim() === 'elcortelini@gmail.com' || (u.telefone && u.telefone.length >= 10));
-                saveNeeded = true;
-            }
-            if (!u.permissoes || typeof u.permissoes !== 'object') {
-                u.permissoes = this.getDefaultPermissoesByRole(u.role);
-                saveNeeded = true;
-            } else {
-                const defaults = this.getDefaultPermissoesByRole(u.role);
-                permKeys.forEach(k => {
-                    if (u.permissoes[k] === undefined) {
-                        u.permissoes[k] = !!defaults[k];
-                        saveNeeded = true;
-                    }
-                });
-            }
-            // O desenvolvedor master sempre tem todos os acessos
-            if (u.email.toLowerCase().trim() === "elcortelini@gmail.com") {
-                permKeys.forEach(k => { u.permissoes[k] = true; });
-                u.status = 'aprovado';
-                u.cadastroCompleto = true;
-            }
-        });
-
-        if (saveNeeded) {
+        getUsuarios() {
+        if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados)) {
+            this.data.usuariosCadastrados = JSON.parse(JSON.stringify(defaultSigeData.usuariosCadastrados));
             this.saveData(this.data);
         }
         return this.data.usuariosCadastrados;
@@ -3847,3 +2909,100 @@ class SigeDatabase {
 const sigeDB = new SigeDatabase();
 window.sigeDB = sigeDB;
 window.SigeDatabase = SigeDatabase;
+
+// ==========================================
+// FUNÇÕES UTILITÁRIAS GLOBAIS DE AUTENTICAÇÃO E PERFIS
+// ==========================================
+function parseJwt(token) {
+    try {
+        if (!token) return null;
+        const base64Url = token.split('.')[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Erro ao decodificar JWT do Google:", e);
+        return null;
+    }
+}
+
+function getRoleLabel(role) {
+    if (!role) return "Membro da Equipe";
+    if (typeof role === 'string' && role.startsWith("orientadora_")) {
+        if (typeof getOrientadoraByRole === 'function') {
+            const ori = getOrientadoraByRole(role);
+            if (ori) return `Orientadora ${ori.nome}`;
+        }
+        if (role === "orientadora_clarinda") return "Orientadora Educacional — Séries Iniciais";
+        if (role === "orientadora_daiane") return "Orientadora Educacional — Séries Finais";
+        return "Orientadora Educacional";
+    }
+    if (typeof role === 'string' && role.startsWith("supervisora_")) {
+        if (typeof getSupervisoraByRole === 'function') {
+            const sup = getSupervisoraByRole(role);
+            if (sup) return `Supervisora ${sup.nome}`;
+        }
+        return "Supervisão Escolar";
+    }
+    const map = {
+        desenvolvedor: "Desenvolvedor do Sistema",
+        admin: "Administrador do Sistema",
+        direcao: "Direção Escolar & Gestão",
+        supervisao: "Supervisão Escolar & Diário",
+        orientadora_daiane: "Orientadora Educacional — Séries Finais",
+        orientadora_clarinda: "Orientadora Educacional — Séries Iniciais",
+        orientacao: "Orientador Educacional (OE)",
+        secretaria: "Secretaria Escolar & Recepção",
+        uniformes: "Controle de Uniformes & Logística",
+        docentes: "Corpo Docente / Professores",
+        comunidade: "Comunidade / Alunos / Pais",
+        visitante: "Visitante / Não Autenticado"
+    };
+    return map[role] || (typeof role === 'string' ? role.toUpperCase() : "Membro da Equipe");
+}
+
+function getRoleIcon(role) {
+    if (!role) return "fa-solid fa-user";
+    if (typeof role === 'string') {
+        if (role.startsWith("orientadora_") || role === "orientacao") return "fa-solid fa-heart-pulse";
+        if (role.startsWith("supervisora_") || role === "supervisao") return "fa-solid fa-clipboard-check";
+    }
+    const map = {
+        desenvolvedor: "fa-solid fa-shield-halved",
+        admin: "fa-solid fa-user-shield",
+        direcao: "fa-solid fa-crown",
+        supervisao: "fa-solid fa-clipboard-check",
+        orientadora_daiane: "fa-solid fa-heart-pulse",
+        orientadora_clarinda: "fa-solid fa-heart-pulse",
+        orientacao: "fa-solid fa-heart-pulse",
+        secretaria: "fa-solid fa-id-card",
+        uniformes: "fa-solid fa-shirt",
+        docentes: "fa-solid fa-chalkboard-user",
+        comunidade: "fa-solid fa-users",
+        visitante: "fa-solid fa-user-lock"
+    };
+    return map[role] || "fa-solid fa-user";
+}
+
+function mascaraTelefoneInput(input) {
+    if (!input) return;
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length > 10) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
+    } else if (v.length > 6) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
+    } else if (v.length > 2) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
+    } else if (v.length > 0) {
+        input.value = `(${v}`;
+    }
+}
+
+window.parseJwt = parseJwt;
+window.getRoleLabel = getRoleLabel;
+window.getRoleIcon = getRoleIcon;
+window.mascaraTelefoneInput = mascaraTelefoneInput;

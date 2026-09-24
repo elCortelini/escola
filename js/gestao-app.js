@@ -176,21 +176,6 @@ function abrirModalOnboardingCadastro(user) {
     modal.style.display = "flex";
 }
 
-function mascaraTelefoneInput(input) {
-    if (!input) return;
-    let v = input.value.replace(/\D/g, "");
-    if (v.length > 11) v = v.substring(0, 11);
-    if (v.length > 10) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
-    } else if (v.length > 6) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
-    } else if (v.length > 2) {
-        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
-    } else if (v.length > 0) {
-        input.value = `(${v}`;
-    }
-}
-
 function submitOnboardingCadastro() {
     const email = document.getElementById("onboardingEmail").value.trim();
     const nome = document.getElementById("onboardingNome").value.trim();
@@ -932,62 +917,9 @@ function updateRoleBadgePill(role, badgeElem) {
     badgeElem.innerHTML = `<i class="${getRoleIcon(role)}"></i> ${getRoleLabel(role)}`;
 }
 
-function getRoleLabel(role) {
-    if (role.startsWith("orientadora_")) {
-        const ori = getOrientadoraByRole(role);
-        if (ori) return `Orientadora ${ori.nome}`;
-    }
-    if (role.startsWith("supervisora_")) {
-        const sup = getSupervisoraByRole(role);
-        if (sup) return `Supervisora ${sup.nome}`;
-    }
-    const labels = {
-        desenvolvedor: "🛠️ Desenvolvedor do Sistema",
-        admin: "Administrador do Sistema",
-        direcao: "Gestor / Direção Escolar",
-        orientadora_clarinda: "Orientadora Clarinda (Iniciais)",
-        orientadora_daiane: "Orientadora Daiane (Finais)",
-        orientacao: "Orientador Educacional (OE)",
-        supervisao: "Supervisor Pedagógico",
-        secretaria: "Secretaria Escolar",
-        comunidade: "Professor / Aluno / Comunidade"
-    };
-    return labels[role] || role;
-}
-
-function getRoleIcon(role) {
-    if (role.startsWith("orientadora_")) return "fa-solid fa-heart-pulse";
-    if (role.startsWith("supervisora_")) return "fa-solid fa-clipboard-check";
-    const icons = {
-        desenvolvedor: "fa-solid fa-code",
-        admin: "fa-solid fa-user-shield",
-        direcao: "fa-solid fa-crown",
-        orientadora_clarinda: "fa-solid fa-heart-pulse",
-        orientadora_daiane: "fa-solid fa-heart-pulse",
-        orientacao: "fa-solid fa-heart-pulse",
-        supervisao: "fa-solid fa-clipboard-check",
-        secretaria: "fa-solid fa-id-card",
-        comunidade: "fa-solid fa-users"
-    };
-    return icons[role] || "fa-solid fa-user";
-}
-
 // ==========================================
 // GOOGLE IDENTITY SERVICES (GIS) & AUTENTICAÇÃO
 // ==========================================
-function parseJwt(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Erro ao decodificar JWT do Google:", e);
-        return null;
-    }
-}
 
 async function handleGoogleCredentialResponse(response) {
     if (!response || !response.credential) return;
@@ -1073,7 +1005,7 @@ function loginWithGooglePrompt() {
 function initGoogleAuth() {
     if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
-            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "873519405621-escola-integrarizzi.apps.googleusercontent.com";
+            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "317519023474-11cvsicednofqn0m9t1at7povgfu4pgh.apps.googleusercontent.com";
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 callback: handleGoogleCredentialResponse,
