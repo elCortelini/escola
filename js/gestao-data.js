@@ -21,6 +21,14 @@ if (typeof window !== 'undefined') {
 
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
+// Garantia de que navegadores não fiquem presos no Client ID antigo de teste
+if (typeof localStorage !== 'undefined') {
+    const cachedClientId = localStorage.getItem('pedro_rizzi_google_client_id');
+    if (cachedClientId && cachedClientId.includes('873519405621')) {
+        localStorage.removeItem('pedro_rizzi_google_client_id');
+    }
+}
+
 /**
  * Higieniza o nome do aluno removendo número sequencial de lista (ex: "4 ") 
  * e número de matrícula (ex: "20261000214") do início ou meio do nome.
