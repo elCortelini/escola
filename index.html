@@ -18,8 +18,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-    <!-- Google Identity Services (GIS) -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 </head>
 <body>
@@ -120,10 +118,6 @@
                     <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-solid fa-boxes-stacked" style="color:#e11d48;"></i> Sistema de Patrimônio:</label>
                     <input type="text" id="url_patrimonio" placeholder="https://..." class="sync-input" style="width:100%; margin-top:5px;">
                 </div>
-                <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:var(--primary-dark);"><i class="fa-brands fa-google" style="color:#ea4335;"></i> Google OAuth Client ID (Identity Services):</label>
-                    <input type="text" id="google_client_id" placeholder="Ex: 317519023474-xxx.apps.googleusercontent.com" class="sync-input" style="width:100%; margin-top:5px;">
-                </div>
                 
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:1.2rem;">
                     <button type="button" onclick="closeConfigModal()" class="btn btn-secondary" style="width:auto;"><i class="fa-solid fa-xmark"></i> Cancelar</button>
@@ -183,6 +177,90 @@
                     <button type="button" onclick="closeAddCustomSystemModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="width:auto; background:#10b981; border-color:#10b981;">
                         <i class="fa-solid fa-floppy-disk"></i> Salvar Sistema
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Solicitação de Primeiro Acesso (Cadastro Inicial via CPF) -->
+    <div id="modalPrimeiroAcesso" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:1rem; overflow-y:auto;">
+        <div style="background:white; padding:2rem; border-radius:24px; max-width:580px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.4); border:2px solid #10b981; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #059669, #10b981); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.3rem; font-weight:900; color:#0f172a; margin:0;">Primeiro Acesso — Criar Cadastro</h3>
+                        <p style="font-size:0.84rem; color:#64748b; margin:3px 0 0 0;">Preencha seus dados. Sua Data de Nascimento será sua senha permanente!</p>
+                    </div>
+                </div>
+                <button type="button" onclick="fecharModalPrimeiroAcesso()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b; line-height:1;" title="Fechar">&times;</button>
+            </div>
+
+            <form id="formPrimeiroAcesso" onsubmit="submitPrimeiroAcesso(event)" style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF: <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoCpf" required placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-calendar-day" style="color:#10b981;"></i> Data de Nascimento (Sua Senha): <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoDataNascimento" required placeholder="DD/MM/AAAA" maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo: <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="primeiroAcessoNome" required placeholder="Digite seu nome completo" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:600;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoCargo" required placeholder="Ex: Docente / Especialista / Apoio" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
+                        <select id="primeiroAcessoTurno" required style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem; font-weight:700; background:white;">
+                            <option value="Matutino">Matutino</option>
+                            <option value="Vespertino">Vespertino</option>
+                            <option value="Noturno">Noturno</option>
+                            <option value="Integral / Ambos">Integral / Ambos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                            <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> WhatsApp (com DDD): <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="tel" id="primeiroAcessoWhatsapp" required placeholder="(47) 99999-9999" maxlength="15" oninput="mascaraTelefoneInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                            <i class="fa-solid fa-envelope" style="color:#64748b;"></i> E-mail (Opcional):
+                        </label>
+                        <input type="email" id="primeiroAcessoEmail" placeholder="seu-email@escola.gov.br" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
+                    </div>
+                </div>
+
+                <!-- Confirmação Obrigatória de WhatsApp -->
+                <div style="background:#eff6ff; border:2px solid #93c5fd; border-radius:14px; padding:12px; margin-top:4px;">
+                    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-size:0.84rem; color:#1e3a8a; font-weight:700; line-height:1.45;">
+                        <input type="checkbox" id="primeiroAcessoAutorizacaoWhatsApp" required style="width:20px; height:20px; margin-top:2px; accent-color:#2563eb; cursor:pointer; flex-shrink:0;">
+                        <span>Declaro que as informações prestadas são verdadeiras e <u>AUTORIZO</u> expressamente o recebimento de comunicados escolares oficiais via WhatsApp.</span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <button type="button" onclick="fecharModalPrimeiroAcesso()" style="background:none; border:none; color:#64748b; font-size:0.85rem; cursor:pointer; font-weight:700;">
+                        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+                    </button>
+                    <button type="submit" style="padding:12px 24px; font-size:0.95rem; font-weight:800; border-radius:12px; background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Solicitação de Cadastro
                     </button>
                 </div>
             </form>

@@ -21,12 +21,9 @@ if (typeof window !== 'undefined') {
 
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
 
-// Garantia de que navegadores não fiquem presos no Client ID antigo de teste
+// Limpeza de resíduos de autenticação legada do Google
 if (typeof localStorage !== 'undefined') {
-    const cachedClientId = localStorage.getItem('pedro_rizzi_google_client_id');
-    if (cachedClientId && cachedClientId.includes('873519405621')) {
-        localStorage.removeItem('pedro_rizzi_google_client_id');
-    }
+    localStorage.removeItem('pedro_rizzi_google_client_id');
 }
 
 /**
@@ -94,21 +91,109 @@ function getRoleIcon(role) {
     return icons[role] || "fa-solid fa-user";
 }
 
+// ==========================================
+// MÁSCARAS E VALIDADORES: CPF E DATA DE NASCIMENTO
+// ==========================================
+function cleanCpf(cpf) {
+    if (!cpf) return '';
+    return String(cpf).replace(/\D/g, '');
+}
+
+function formatCpf(cpf) {
+    const v = cleanCpf(cpf);
+    if (!v) return '';
+    if (v.length <= 3) return v;
+    if (v.length <= 6) return `${v.slice(0, 3)}.${v.slice(3)}`;
+    if (v.length <= 9) return `${v.slice(0, 3)}.${v.slice(3, 6)}.${v.slice(6)}`;
+    return `${v.slice(0, 3)}.${v.slice(3, 6)}.${v.slice(6, 9)}-${v.slice(9, 11)}`;
+}
+
+function validarCpf(cpf) {
+    const s = cleanCpf(cpf);
+    if (s.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(s)) return false;
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(s.charAt(i)) * (10 - i);
+    let resto = 11 - (soma % 11);
+    let digito1 = (resto === 10 || resto === 11) ? 0 : resto;
+    if (digito1 !== parseInt(s.charAt(9))) return false;
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(s.charAt(i)) * (11 - i);
+    resto = 11 - (soma % 11);
+    let digito2 = (resto === 10 || resto === 11) ? 0 : resto;
+    return digito2 === parseInt(s.charAt(10));
+}
+
+function cleanDataNascimento(data) {
+    if (!data) return '';
+    const s = String(data).trim();
+    if (s.includes('-')) {
+        const parts = s.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            return `${parts[2]}${parts[1]}${parts[0]}`;
+        }
+    }
+    return s.replace(/\D/g, '');
+}
+
+function formatDataNascimento(data) {
+    const d = cleanDataNascimento(data);
+    if (d.length === 8) {
+        return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4, 8)}`;
+    }
+    return data || '';
+}
+
+function mascaraCpfInput(input) {
+    if (!input) return;
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length > 9) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3, 6)}.${v.substring(6, 9)}-${v.substring(9)}`;
+    } else if (v.length > 6) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3, 6)}.${v.substring(6)}`;
+    } else if (v.length > 3) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3)}`;
+    } else {
+        input.value = v;
+    }
+}
+
+function mascaraDataInput(input) {
+    if (!input) return;
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 8) v = v.substring(0, 8);
+    if (v.length > 4) {
+        input.value = `${v.substring(0, 2)}/${v.substring(2, 4)}/${v.substring(4)}`;
+    } else if (v.length > 2) {
+        input.value = `${v.substring(0, 2)}/${v.substring(2)}`;
+    } else {
+        input.value = v;
+    }
+}
+
 if (typeof window !== "undefined") {
     window.parseJwt = parseJwt;
     window.getRoleLabel = getRoleLabel;
     window.getRoleIcon = getRoleIcon;
+    window.cleanCpf = cleanCpf;
+    window.formatCpf = formatCpf;
+    window.validarCpf = validarCpf;
+    window.cleanDataNascimento = cleanDataNascimento;
+    window.formatDataNascimento = formatDataNascimento;
+    window.mascaraCpfInput = mascaraCpfInput;
+    window.mascaraDataInput = mascaraDataInput;
 }
 
 // Estrutura Padrão Inicial
 const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "clarinda@escola.gov.br", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "secretaria@escola.gov.br", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "elcortelini@gmail.com", cpf: "000.000.000-00", dataNascimento: "01/01/1980", senha: "01011980", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senha: "15051985", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senha: "05081978", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
     lotesSME: [],
@@ -756,14 +841,20 @@ class SigeDatabase {
 
     getUsuariosPendentes() {
         const list = this.getUsuarios();
-        return list.filter(u => u.status === 'pendente');
+        return list.filter(u => u && (u.status === 'pendente' || u.status === 'aguardando_aprovacao'));
     }
 
-    aprovarUsuarioPendente(email, role = 'docentes', permissoes = null, cargo = '') {
-        if (!email) return false;
-        const clean = email.toLowerCase().trim();
+    aprovarUsuarioPendente(identifier, role = 'docentes', permissoes = null, cargo = '') {
+        if (!identifier) return false;
+        const clean = String(identifier).toLowerCase().trim();
+        const cleanCpfDigits = cleanCpf(clean);
         const list = this.getUsuarios();
-        const user = list.find(u => u.email.toLowerCase().trim() === clean);
+        const user = list.find(u => {
+            if (u.id && u.id.toLowerCase().trim() === clean) return true;
+            if (u.email && u.email.toLowerCase().trim() === clean) return true;
+            if (cleanCpfDigits && cleanCpf(u.cpf || '') === cleanCpfDigits) return true;
+            return false;
+        });
         if (!user) return false;
 
         user.status = 'aprovado';
@@ -774,44 +865,64 @@ class SigeDatabase {
 
         // Sincroniza com equipe escolar
         if (this.data && Array.isArray(this.data.equipeEscola)) {
-            let prof = this.data.equipeEscola.find(p => p.email && p.email.toLowerCase().trim() === clean);
+            let prof = this.data.equipeEscola.find(p => {
+                if (p.id && p.id === user.id) return true;
+                if (p.email && user.email && p.email.toLowerCase().trim() === user.email.toLowerCase().trim()) return true;
+                if (user.cpf && cleanCpf(p.cpf || '') === cleanCpf(user.cpf)) return true;
+                return false;
+            });
             if (prof) {
                 prof.status = 'aprovado';
                 prof.permissoes = user.permissoes;
                 prof.setor = role;
+                if (user.cpf) prof.cpf = user.cpf;
+                if (user.dataNascimento) prof.dataNascimento = user.dataNascimento;
                 if (cargo) prof.cargoFuncao = cargo;
             } else {
                 this.data.equipeEscola.push({
-                    id: user.id || ('eq_' + Date.now()),
+                    id: user.id || generateSecureId('eq'),
                     nome: user.nome,
-                    email: user.email,
+                    cpf: user.cpf || '',
+                    dataNascimento: user.dataNascimento || '',
+                    senha: user.senha || user.dataNascimento || '',
+                    email: user.email || '',
                     telefone: user.telefone || user.whatsapp || '',
+                    whatsapp: user.whatsapp || '',
                     setor: role,
                     cargoFuncao: user.cargo || 'Colaborador Escolar',
                     status: 'aprovado',
                     permissoes: user.permissoes,
                     turmasOuSalas: '',
-                    turno: 'Matutino'
+                    turno: user.turno || 'Matutino'
                 });
             }
         }
 
-        this.addAuditLog(`Aprovação de Acesso (${user.nome} - ${user.email} - Perfil: ${role})`, 'Desenvolvedor');
+        this.addAuditLog(`Aprovação de Acesso (${user.nome} - CPF: ${user.cpf || user.email || 'N/A'} - Perfil: ${role})`, 'Desenvolvedor');
         this.saveData(this.data);
         this.syncToFirebase();
         return user;
     }
 
-    recusarUsuarioPendente(email) {
-        if (!email) return false;
-        const clean = email.toLowerCase().trim();
-        let list = this.getUsuarios();
-        list = list.filter(u => u.email.toLowerCase().trim() !== clean);
-        this.data.usuariosCadastrados = list;
-        this.addAuditLog(`Recusa/Exclusão de Solicitação de Acesso (${clean})`, 'Desenvolvedor');
-        this.saveData(this.data);
-        this.syncToFirebase();
-        return true;
+    recusarUsuarioPendente(identifier) {
+        if (!identifier) return false;
+        const clean = String(identifier).toLowerCase().trim();
+        const cleanCpfDigits = cleanCpf(clean);
+        const list = this.getUsuarios();
+        const idx = list.findIndex(u => {
+            if (u.id && u.id.toLowerCase().trim() === clean) return true;
+            if (u.email && u.email.toLowerCase().trim() === clean) return true;
+            if (cleanCpfDigits && cleanCpf(u.cpf || '') === cleanCpfDigits) return true;
+            return false;
+        });
+        if (idx !== -1) {
+            const removed = list.splice(idx, 1)[0];
+            this.addAuditLog(`Recusa de Solicitação de Acesso (${removed.nome} - CPF: ${removed.cpf || removed.email || 'N/A'})`, 'Desenvolvedor');
+            this.saveData(this.data);
+            this.syncToFirebase();
+            return true;
+        }
+        return false;
     }
 
     concluirCadastroUsuario(email, dados) {
@@ -896,13 +1007,22 @@ class SigeDatabase {
     }
 
     getLoggedUser() {
+        const loggedCpf = localStorage.getItem("sige_logged_cpf");
         const loggedEmail = localStorage.getItem("sige_logged_email");
-        if (!loggedEmail) return null;
-        const cleanEmail = loggedEmail.toLowerCase().trim();
-        const users = this.getUsuarios();
-        let found = users.find(u => (u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail));
+        if (!loggedCpf && !loggedEmail) return null;
 
-        if (found && found.status === 'pendente') {
+        const cleanCpfDigits = cleanCpf(loggedCpf);
+        const cleanEmail = loggedEmail ? loggedEmail.toLowerCase().trim() : "";
+        const users = this.getUsuarios();
+
+        let found = users.find(u => {
+            if (cleanCpfDigits && cleanCpf(u.cpf || '') === cleanCpfDigits) return true;
+            if (cleanEmail && ((u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail))) return true;
+            return false;
+        });
+
+        if (found && (found.status === 'pendente' || found.status === 'aguardando_aprovacao')) {
+            localStorage.removeItem("sige_logged_cpf");
             localStorage.removeItem("sige_logged_email");
             return null;
         }
@@ -910,8 +1030,8 @@ class SigeDatabase {
         // Se estiver na equipe escolar, garante que as permissões mais recentes da equipe prevalecem
         if (this.data && Array.isArray(this.data.equipeEscola)) {
             const prof = this.data.equipeEscola.find(p => 
-                (p.email && p.email.toLowerCase().trim() === cleanEmail) || 
-                (p.id && p.id.toLowerCase().trim() === cleanEmail)
+                (cleanCpfDigits && cleanCpf(p.cpf || '') === cleanCpfDigits) ||
+                (cleanEmail && ((p.email && p.email.toLowerCase().trim() === cleanEmail) || (p.id && p.id.toLowerCase().trim() === cleanEmail)))
             );
             if (prof) {
                 if (!found) {
@@ -921,12 +1041,14 @@ class SigeDatabase {
                     }
                     found = {
                         id: prof.id,
+                        cpf: prof.cpf || (cleanCpfDigits ? formatCpf(cleanCpfDigits) : ""),
+                        dataNascimento: prof.dataNascimento || "",
                         email: prof.email ? prof.email.toLowerCase().trim() : cleanEmail, 
                         nome: prof.nome, 
                         role: roleKey, 
                         cargo: prof.cargoFuncao || prof.setor,
                         status: prof.status || "aprovado",
-                        cadastroCompleto: !!(prof.telefone && prof.telefone.length >= 10),
+                        cadastroCompleto: true,
                         permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
                     };
                 } else if (prof.permissoes) {
@@ -936,18 +1058,215 @@ class SigeDatabase {
         }
 
         if (found) return found;
-        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin") {
+        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin" || (cleanCpfDigits && cleanCpfDigits === "00000000000")) {
             return { 
                 email: "elcortelini@gmail.com", 
+                cpf: "000.000.000-00",
+                dataNascimento: "01/01/1980",
                 nome: "Elevi Cortelini (Desenvolvedor)", 
                 role: "desenvolvedor", 
                 cargo: "Desenvolvedor do Sistema", 
-                status: "aprovado",
-                cadastroCompleto: true,
-                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true } 
+                status: "aprovado", 
+                cadastroCompleto: true, 
+                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
             };
         }
         return null;
+    }
+
+    loginWithCpf(cpfInput, dataNascimentoInput) {
+        if (!cpfInput) return { success: false, code: 'EMPTY_CPF', message: 'Por favor, informe seu número de CPF.' };
+        if (!dataNascimentoInput) return { success: false, code: 'EMPTY_PASSWORD', message: 'Por favor, informe sua Data de Nascimento (sua senha de acesso).' };
+
+        const rawCpf = String(cpfInput).trim();
+        const cleanNumbers = cleanCpf(rawCpf);
+        const cleanDateInput = cleanDataNascimento(dataNascimentoInput);
+
+        // Atalhos especiais para Desenvolvedor
+        const isDev = (rawCpf.toLowerCase() === "dev" || rawCpf.toLowerCase() === "admin" || rawCpf.toLowerCase() === "desenvolvedor" || cleanNumbers === "00000000000" || rawCpf.toLowerCase() === "elcortelini@gmail.com");
+        if (isDev) {
+            let devUser = this.getUsuarios().find(u => u.role === "desenvolvedor");
+            if (!devUser) {
+                devUser = { 
+                    email: "elcortelini@gmail.com", 
+                    cpf: "000.000.000-00",
+                    dataNascimento: "01/01/1980",
+                    senha: "01011980",
+                    nome: "Elevi Cortelini (Desenvolvedor)", 
+                    role: "desenvolvedor", 
+                    cargo: "Desenvolvedor do Sistema", 
+                    status: "aprovado", 
+                    cadastroCompleto: true, 
+                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
+                };
+                this.addUsuario(devUser);
+            }
+            localStorage.setItem("sige_logged_cpf", "000.000.000-00");
+            localStorage.setItem("sige_logged_email", devUser.email || "elcortelini@gmail.com");
+            this.setRole("desenvolvedor");
+            return {
+                success: true,
+                code: 'SUCCESS',
+                message: 'Acesso como Desenvolvedor concedido com sucesso!',
+                user: devUser
+            };
+        }
+
+        const users = this.getUsuarios();
+        let user = users.find(u => {
+            const uCpf = cleanCpf(u.cpf || '');
+            return cleanNumbers && uCpf && uCpf === cleanNumbers;
+        });
+
+        // Se não encontrado em usuariosCadastrados, busca na equipe escolar
+        if (!user && this.data && Array.isArray(this.data.equipeEscola)) {
+            const prof = this.data.equipeEscola.find(p => {
+                const pCpf = cleanCpf(p.cpf || '');
+                return cleanNumbers && pCpf && pCpf === cleanNumbers;
+            });
+            if (prof) {
+                let roleKey = prof.setor || "docentes";
+                if (prof.setor === "orientacao") {
+                    roleKey = (prof.nome && prof.nome.toLowerCase().includes("clarinda")) ? "orientadora_clarinda" : "orientadora_daiane";
+                }
+                user = { 
+                    id: prof.id, 
+                    cpf: prof.cpf || formatCpf(cleanNumbers),
+                    dataNascimento: prof.dataNascimento || "",
+                    senha: cleanDataNascimento(prof.dataNascimento || prof.senha || ""),
+                    email: prof.email || "",
+                    nome: prof.nome, 
+                    role: roleKey, 
+                    cargo: prof.cargoFuncao || prof.setor,
+                    status: prof.status || "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
+                };
+                this.addUsuario(user);
+            }
+        }
+
+        // Se o usuário não existir
+        if (!user) {
+            return {
+                success: false,
+                code: 'NOT_FOUND',
+                message: 'CPF não cadastrado no sistema. Se este é o seu primeiro acesso, clique no botão "Primeiro Acesso / Criar Cadastro" para preencher seus dados.'
+            };
+        }
+
+        // Se o usuário estiver aguardando aprovação
+        if (user.status === 'aguardando_aprovacao' || user.status === 'pendente') {
+            return {
+                success: false,
+                code: 'PENDING_APPROVAL',
+                message: '⏳ Seu cadastro foi recebido com sucesso e está aguardando liberação do Desenvolvedor / Direção Escolar.\n\nAssim que o seu acesso for aprovado no painel, você poderá entrar normalmente informando seu CPF e sua data de nascimento.'
+            };
+        }
+
+        if (user.status === 'recusado' || user.status === 'bloqueado') {
+            return {
+                success: false,
+                code: 'BLOCKED',
+                message: '🚫 Acesso desativado ou bloqueado. Por favor, entre em contato com a Direção da Escola.'
+            };
+        }
+
+        // Validação da Senha (Data de Nascimento)
+        const userDate = cleanDataNascimento(user.dataNascimento || user.senha || "");
+        if (userDate && cleanDateInput) {
+            if (userDate !== cleanDateInput) {
+                return {
+                    success: false,
+                    code: 'INVALID_PASSWORD',
+                    message: 'Data de nascimento incorreta. Digite sua data no formato DD/MM/AAAA (ex: 15/05/1985).'
+                };
+            }
+        }
+
+        // Login autorizado com sucesso!
+        localStorage.setItem("sige_logged_cpf", user.cpf || formatCpf(cleanNumbers));
+        if (user.email) localStorage.setItem("sige_logged_email", user.email);
+        this.setRole(user.role || 'docentes');
+        this.addAuditLog(`Login Efetuado via CPF (${user.nome} - CPF: ${user.cpf || formatCpf(cleanNumbers)})`, 'Usuário');
+
+        return {
+            success: true,
+            code: 'SUCCESS',
+            message: `Bem-vindo(a), ${user.nome}!`,
+            user: user
+        };
+    }
+
+    cadastrarPrimeiroAcesso(dados) {
+        if (!dados || !dados.cpf) return { success: false, message: 'CPF é obrigatório.' };
+        const cleanNumbers = cleanCpf(dados.cpf);
+        if (!validarCpf(cleanNumbers)) {
+            return { success: false, message: 'O número de CPF informado é inválido. Por favor, confira os números digitados.' };
+        }
+        const cleanDate = cleanDataNascimento(dados.dataNascimento);
+        if (cleanDate.length !== 8) {
+            return { success: false, message: 'Data de nascimento inválida. Digite no formato DD/MM/AAAA (8 dígitos).' };
+        }
+        if (!dados.nome || dados.nome.trim().length < 3) {
+            return { success: false, message: 'Por favor, informe seu nome completo.' };
+        }
+        if (!dados.cargo || dados.cargo.trim().length < 2) {
+            return { success: false, message: 'Por favor, informe seu cargo ou função na escola.' };
+        }
+        const cleanPhone = (dados.whatsapp || '').replace(/\D/g, '');
+        if (cleanPhone.length < 10) {
+            return { success: false, message: 'Por favor, informe um WhatsApp válido com DDD (mínimo 10 dígitos).' };
+        }
+        if (!dados.autorizaWhatsApp) {
+            return { success: false, message: 'É obrigatório autorizar o recebimento de mensagens e comunicados oficiais no seu WhatsApp.' };
+        }
+
+        const users = this.getUsuarios();
+        const existing = users.find(u => cleanCpf(u.cpf || '') === cleanNumbers);
+        if (existing) {
+            if (existing.status === 'aprovado') {
+                return { success: false, message: 'Este CPF já está cadastrado e aprovado no sistema! Você já pode realizar o login com seu CPF e data de nascimento.' };
+            } else {
+                return { success: false, message: 'Este CPF já possui uma solicitação enviada que está aguardando liberação do Desenvolvedor.' };
+            }
+        }
+
+        const fmtCpf = formatCpf(cleanNumbers);
+        const fmtData = formatDataNascimento(cleanDate);
+
+        const novoUser = {
+            id: generateSecureId('user'),
+            cpf: fmtCpf,
+            dataNascimento: fmtData,
+            senha: cleanDate,
+            nome: dados.nome.trim(),
+            email: dados.email ? dados.email.toLowerCase().trim() : '',
+            cargo: dados.cargo.trim(),
+            turno: dados.turno || 'Matutino',
+            whatsapp: cleanPhone,
+            autorizaMensagensWhatsApp: true,
+            role: 'docentes',
+            status: 'aguardando_aprovacao',
+            cadastroCompleto: true,
+            permissoes: this.getDefaultPermissoesByRole('docentes'),
+            criadoEm: new Date().toISOString(),
+            solicitadoEm: new Date().toLocaleString('pt-BR')
+        };
+
+        if (!Array.isArray(this.data.usuariosCadastrados)) {
+            this.data.usuariosCadastrados = [];
+        }
+        this.data.usuariosCadastrados.push(novoUser);
+        this.addAuditLog(`Solicitação de Primeiro Acesso via CPF (${novoUser.nome} - CPF: ${fmtCpf})`, 'Sistema');
+        this.saveData(this.data);
+        this.syncToFirebase();
+
+        return {
+            success: true,
+            message: '🎉 Solicitação de cadastro enviada com sucesso!\n\nSeu acesso foi registrado e agora aguarda autorização do Desenvolvedor do Sistema / Direção Escolar. Assim que for liberado, você entrará direto com seu CPF e Data de Nascimento.',
+            user: novoUser
+        };
     }
 
     loginWithEmail(emailOrId) {
@@ -1128,8 +1447,9 @@ class SigeDatabase {
 
     logout() {
         localStorage.removeItem("sige_logged_email");
+        localStorage.removeItem("sige_logged_cpf");
         if (this.data) {
-            this.data.currentRole = "desenvolvedor";
+            this.data.currentRole = "docentes";
             this.saveData(this.data);
         }
     }

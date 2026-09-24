@@ -21,8 +21,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     
-    <!-- Google Identity Services (GIS) API -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- PDF.js API para Importação de Relatórios em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -3180,7 +3178,7 @@
         </div>
     </div>
 
-    <!-- Modal de Login por E-mail Institucional & Google Auth -->
+    <!-- Modal de Login por CPF & Senha (Data de Nascimento) -->
     <div id="modalSigeLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
         <div style="background:white; border-radius:20px; max-width:460px; width:92%; padding:2.2rem; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1; text-align:center;">
             <div class="modal-header" style="display:flex; justify-content:flex-end; align-items:center; margin-top:-0.5rem; margin-bottom:0.5rem;">
@@ -3189,32 +3187,117 @@
             <img src="img/logo-pedro-rizzi.png" alt="Logo C.E. Pedro Rizzi" class="global-school-logo-img" style="max-height:75px; margin-bottom:1rem; background:white; padding:6px 12px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
             
             <h3 style="color:#0f172a; font-size:1.4rem; font-weight:900; margin-bottom:4px;">Acesso ao IntegraRizzi</h3>
-            <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.4rem;">Autentique-se com sua Conta do Google ou E-mail Autorizado para acessar seu perfil.</p>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.4rem;">Identifique-se com seu CPF e sua Data de Nascimento (senha de acesso).</p>
 
-            <!-- Container Oficial do Google Identity Services (GIS) -->
-            <div id="g_id_signin_container" style="margin-bottom:10px; display:flex; justify-content:center;"></div>
+            <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF do Usuário:</label>
+                    <input type="text" id="loginCpfInput" placeholder="000.000.000-00" required maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
+                </div>
 
-            <!-- Botão com Estilo Oficial do Google (Acesso Direto) -->
-            <button type="button" onclick="loginWithGooglePrompt()" class="btn" style="width:100%; padding:11px; font-size:0.92rem; font-weight:800; background:#ffffff; color:#374151; border:1px solid #d1d5db; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; margin-bottom:12px; transition:all 0.2s;">
-                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
-                <span>Fazer Login com a Conta do Google</span>
-            </button>
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-lock" style="color:#2563eb;"></i> Senha (Data de Nascimento):</label>
+                    <input type="password" id="loginSenhaInput" placeholder="DD/MM/AAAA" required maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
+                    <span style="font-size:0.75rem; color:#64748b; display:block; margin-top:3px;">Sua senha inicial é sua data de nascimento (ex: 15/05/1985).</span>
+                </div>
 
-            <div style="display:flex; align-items:center; margin:12px 0; color:#94a3b8; font-size:0.75rem; font-weight:700;">
+                <button type="submit" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.95rem; font-weight:800; background:linear-gradient(135deg, #1e3a8a, #2563eb); border:none; margin-top:6px; border-radius:10px; box-shadow:0 4px 14px rgba(37,99,235,0.35); cursor:pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Entrar no Sistema
+                </button>
+            </form>
+
+            <div style="display:flex; align-items:center; margin:16px 0 12px 0; color:#94a3b8; font-size:0.75rem; font-weight:700;">
                 <div style="flex:1; height:1px; background:#e2e8f0;"></div>
-                <span style="padding:0 8px; text-transform:uppercase;">ou digite seu e-mail</span>
+                <span style="padding:0 8px; text-transform:uppercase;">primeiro acesso?</span>
                 <div style="flex:1; height:1px; background:#e2e8f0;"></div>
             </div>
 
-            <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-                <div>
-                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-envelope" style="color:#2563eb;"></i> E-mail Profissional / Institucional:</label>
-                    <input type="email" id="loginEmailInput" placeholder="seu-email@escola.gov.br ou elcortelini@gmail.com" required style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem; font-weight:600; outline:none;">
+            <button type="button" onclick="abrirModalPrimeiroAcesso()" style="width:100%; padding:10px; font-size:0.88rem; font-weight:800; background:#f0fdf4; color:#166534; border:1.5px solid #86efac; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-user-plus"></i> Primeiro Acesso? Solicitar Cadastro
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Solicitação de Primeiro Acesso (Cadastro Inicial via CPF) -->
+    <div id="modalPrimeiroAcesso" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:1rem; overflow-y:auto;">
+        <div style="background:white; padding:2rem; border-radius:24px; max-width:580px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.4); border:2px solid #10b981; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #059669, #10b981); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.3rem; font-weight:900; color:#0f172a; margin:0;">Primeiro Acesso — Criar Cadastro</h3>
+                        <p style="font-size:0.84rem; color:#64748b; margin:3px 0 0 0;">Preencha seus dados. Sua Data de Nascimento será sua senha permanente!</p>
+                    </div>
+                </div>
+                <button type="button" onclick="fecharModalPrimeiroAcesso()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b; line-height:1;" title="Fechar">&times;</button>
+            </div>
+
+            <form id="formPrimeiroAcesso" onsubmit="submitPrimeiroAcesso(event)" style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF: <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoCpf" required placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-calendar-day" style="color:#10b981;"></i> Data de Nascimento (Sua Senha): <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoDataNascimento" required placeholder="DD/MM/AAAA" maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:0.95rem; font-weight:800; background:linear-gradient(135deg, #1e3a8a, #2563eb); border:none; margin-top:4px; border-radius:10px; box-shadow:0 4px 14px rgba(37,99,235,0.35);">
-                    <i class="fa-solid fa-right-from-bracket"></i> Entrar com E-mail
-                </button>
+                <div>
+                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo: <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="primeiroAcessoNome" required placeholder="Digite seu nome completo" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:600;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="primeiroAcessoCargo" required placeholder="Ex: Docente / Especialista / Apoio" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
+                        <select id="primeiroAcessoTurno" required style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem; font-weight:700; background:white;">
+                            <option value="Matutino">Matutino</option>
+                            <option value="Vespertino">Vespertino</option>
+                            <option value="Noturno">Noturno</option>
+                            <option value="Integral / Ambos">Integral / Ambos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                            <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> WhatsApp (com DDD): <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="tel" id="primeiroAcessoWhatsapp" required placeholder="(47) 99999-9999" maxlength="15" oninput="mascaraTelefoneInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                            <i class="fa-solid fa-envelope" style="color:#64748b;"></i> E-mail (Opcional):
+                        </label>
+                        <input type="email" id="primeiroAcessoEmail" placeholder="seu-email@escola.gov.br" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
+                    </div>
+                </div>
+
+                <!-- Confirmação Obrigatória de WhatsApp -->
+                <div style="background:#eff6ff; border:2px solid #93c5fd; border-radius:14px; padding:12px; margin-top:4px;">
+                    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-size:0.84rem; color:#1e3a8a; font-weight:700; line-height:1.45;">
+                        <input type="checkbox" id="primeiroAcessoAutorizacaoWhatsApp" required style="width:20px; height:20px; margin-top:2px; accent-color:#2563eb; cursor:pointer; flex-shrink:0;">
+                        <span>Declaro que as informações prestadas são verdadeiras e <u>AUTORIZO</u> expressamente o recebimento de comunicados escolares oficiais via WhatsApp.</span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <button type="button" onclick="fecharModalPrimeiroAcesso()" style="background:none; border:none; color:#64748b; font-size:0.85rem; cursor:pointer; font-weight:700;">
+                        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+                    </button>
+                    <button type="submit" style="padding:12px 24px; font-size:0.95rem; font-weight:800; border-radius:12px; background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Solicitação de Cadastro
+                    </button>
+                </div>
             </form>
         </div>
     </div>

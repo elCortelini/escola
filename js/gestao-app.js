@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initApp() {
     checkSigeAuth();
-    initGoogleAuth();
     updateAllSchoolLogoDisplays();
     setupRoleSelector();
     setupTabNavigation();
@@ -115,47 +114,28 @@ function checkSigeAuth() {
 
 function submitSigeLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
-    const emailInput = document.getElementById("loginEmailInput");
-    if (!emailInput) return;
-    const email = emailInput.value.trim();
-    if (!email) return;
-
-    const res = sigeDB.loginWithEmail(email);
-
-    if (res.code === 'INVALID_DOMAIN') {
-        alert(`🔒 Acesso Negado\n\n${res.message}\n\nE-mails pessoais (como @gmail.com ou @hotmail.com) não são aceitos.`);
+    const cpfInput = document.getElementById("loginCpfInput");
+    const senhaInput = document.getElementById("loginSenhaInput");
+    if (!cpfInput || !senhaInput) return;
+    const cpf = cpfInput.value.trim();
+    const senha = senhaInput.value.trim();
+    if (!cpf || !senha) {
+        alert("Por favor, informe seu CPF e sua Data de Nascimento (senha).");
         return;
     }
 
-    if (res.code === 'FIRST_ACCESS_PENDING') {
-        alert(`📝 Solicitação Registrada!\n\n${res.message}`);
-        emailInput.value = '';
+    const res = sigeDB.loginWithCpf(cpf, senha);
+
+    if (!res.success) {
+        alert(res.message);
         return;
     }
 
-    if (res.code === 'PENDING_APPROVAL') {
-        alert(`⏳ Acesso em Análise\n\n${res.message}`);
-        emailInput.value = '';
-        return;
-    }
-
-    if (res.code === 'BLOCKED') {
-        alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
-        return;
-    }
-
-    if (res.code === 'NEEDS_ONBOARDING') {
-        const loginModal = document.getElementById("modalSigeLogin");
-        if (loginModal) loginModal.style.display = "none";
-        abrirModalOnboardingCadastro(res.user);
-        return;
-    }
-
-    if (res.success && res.user) {
-        showToast(`Bem-vindo(a), ${res.user.nome}!`);
-        checkSigeAuth();
-        renderAllModules();
-    }
+    const loginModal = document.getElementById("modalSigeLogin");
+    if (loginModal) loginModal.style.display = "none";
+    showToast(`Bem-vindo(a), ${res.user.nome}!`);
+    checkSigeAuth();
+    renderAllModules();
 }
 
 function abrirModalOnboardingCadastro(user) {
@@ -229,12 +209,50 @@ function cancelarOnboardingCadastro() {
     renderAllModules();
 }
 
-function fillLoginEmail(email) {
-    const emailInput = document.getElementById("loginEmailInput");
-    if (emailInput) {
-        emailInput.value = email;
+function abrirModalPrimeiroAcesso() {
+    const modal = document.getElementById("modalPrimeiroAcesso");
+    if (!modal) return;
+    const form = document.getElementById("formPrimeiroAcesso");
+    if (form) form.reset();
+    modal.style.display = "flex";
+}
+
+function fecharModalPrimeiroAcesso() {
+    const modal = document.getElementById("modalPrimeiroAcesso");
+    if (modal) modal.style.display = "none";
+}
+
+function submitPrimeiroAcesso(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const cpf = document.getElementById("primeiroAcessoCpf")?.value.trim() || "";
+    const dataNascimento = document.getElementById("primeiroAcessoDataNascimento")?.value.trim() || "";
+    const nome = document.getElementById("primeiroAcessoNome")?.value.trim() || "";
+    const cargo = document.getElementById("primeiroAcessoCargo")?.value.trim() || "";
+    const turno = document.getElementById("primeiroAcessoTurno")?.value || "Matutino";
+    const whatsapp = document.getElementById("primeiroAcessoWhatsapp")?.value.trim() || "";
+    const email = document.getElementById("primeiroAcessoEmail")?.value.trim() || "";
+    const autorizaWhatsApp = document.getElementById("primeiroAcessoAutorizacaoWhatsApp")?.checked || false;
+
+    if (!window.sigeDB) return;
+
+    const res = window.sigeDB.cadastrarPrimeiroAcesso({
+        cpf,
+        dataNascimento,
+        nome,
+        cargo,
+        turno,
+        whatsapp,
+        email,
+        autorizaWhatsApp
+    });
+
+    if (!res.success) {
+        alert(res.message);
+        return;
     }
-    processGoogleLogin(email);
+
+    alert(res.message);
+    fecharModalPrimeiroAcesso();
 }
 
 function handleSigeLogout() {
@@ -917,127 +935,17 @@ function updateRoleBadgePill(role, badgeElem) {
     badgeElem.innerHTML = `<i class="${getRoleIcon(role)}"></i> ${getRoleLabel(role)}`;
 }
 
-// ==========================================
-// GOOGLE IDENTITY SERVICES (GIS) & AUTENTICAÇÃO
-// ==========================================
-
-async function handleGoogleCredentialResponse(response) {
-    if (!response || !response.credential) return;
-    try {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
-            const result = await firebase.auth().signInWithCredential(credential);
-            const email = (result.user && result.user.email) ? result.user.email.toLowerCase().trim() : '';
-            const nome = (result.user && result.user.displayName) ? result.user.displayName : '';
-            processGoogleLogin(email, nome);
-        } else {
-            const payload = parseJwt(response.credential);
-            if (!payload || !payload.email) {
-                alert("Não foi possível validar as credenciais da conta do Google.");
-                return;
-            }
-            const email = payload.email.toLowerCase().trim();
-            processGoogleLogin(email, payload.name);
-        }
-    } catch (err) {
-        console.error("Erro no Google Sign-In:", err);
-        // Se der erro no Firebase Auth (ex: dominios nao autorizados ou offline), faz fallback seguro
-        const payload = parseJwt(response.credential);
-        if (payload && payload.email) {
-            processGoogleLogin(payload.email.toLowerCase().trim(), payload.name);
-        } else {
-            alert("Erro ao autenticar com o Google. Tente novamente.");
-        }
-    }
-}
-
-function processGoogleLogin(email, nomeOpcional) {
-    const res = sigeDB.loginWithEmail(email);
-
-    if (res.code === 'INVALID_DOMAIN') {
-        alert(`🔒 Acesso Não Permitido\n\n${res.message}\n\nPor favor, utilize sua conta Google Institucional (@edu.itajai.sc.gov.br ou @itajai.sc.gov.br).`);
-        return;
-    }
-
-    if (res.code === 'FIRST_ACCESS_PENDING') {
-        alert(`📝 Solicitação de Primeiro Acesso Registrada!\n\n${res.message}`);
-        return;
-    }
-
-    if (res.code === 'PENDING_APPROVAL') {
-        alert(`⏳ Acesso em Análise\n\n${res.message}`);
-        return;
-    }
-
-    if (res.code === 'BLOCKED') {
-        alert(`🚫 Acesso Bloqueado\n\n${res.message}`);
-        return;
-    }
-
-    if (res.code === 'NEEDS_ONBOARDING') {
-        const loginModal = document.getElementById("modalSigeLogin");
-        if (loginModal) loginModal.style.display = "none";
-        abrirModalOnboardingCadastro(res.user);
-        return;
-    }
-
-    if (res.success && res.user) {
-        showToast(`Google Auth: Bem-vindo(a), ${res.user.nome}!`);
-        checkSigeAuth();
-        renderAllModules();
-    }
-}
-
-function loginWithGooglePrompt() {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-        try {
-            window.google.accounts.id.prompt((notification) => {
-                if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment())) {
-                    console.log("GIS prompt not displayed:", notification.getNotDisplayedReason ? notification.getNotDisplayedReason() : notification);
-                }
-            });
-        } catch (e) {
-            console.log("GIS prompt error:", e);
-        }
-    }
-}
-
-function initGoogleAuth() {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-        try {
-            const googleClientId = localStorage.getItem('pedro_rizzi_google_client_id') || "317519023474-11cvsicednofqn0m9t1at7povgfu4pgh.apps.googleusercontent.com";
-            window.google.accounts.id.initialize({
-                client_id: googleClientId,
-                callback: handleGoogleCredentialResponse,
-                auto_select: false
-            });
-            const container = document.getElementById("g_id_signin_container");
-            if (container) {
-                window.google.accounts.id.renderButton(container, {
-                    theme: "outline",
-                    size: "large",
-                    width: 380,
-                    text: "continue_with"
-                });
-            }
-        } catch (err) {
-            console.log("Inicialização do Google GIS:", err);
-        }
-    }
-}
-
 window.checkSigeAuth = checkSigeAuth;
 window.submitSigeLogin = submitSigeLogin;
-window.fillLoginEmail = fillLoginEmail;
+window.abrirModalPrimeiroAcesso = abrirModalPrimeiroAcesso;
+window.fecharModalPrimeiroAcesso = fecharModalPrimeiroAcesso;
+window.submitPrimeiroAcesso = submitPrimeiroAcesso;
 window.handleSigeLogout = handleSigeLogout;
 window.openDevUserModal = openDevUserModal;
 window.closeDevUserModal = closeDevUserModal;
 window.submitAddDevUser = submitAddDevUser;
 window.deleteDevUser = deleteDevUser;
 window.marcarAguardandoSecretaria = marcarAguardandoSecretaria;
-window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
-window.loginWithGooglePrompt = loginWithGooglePrompt;
-window.processGoogleLogin = processGoogleLogin;
 window.abrirModalOnboardingCadastro = abrirModalOnboardingCadastro;
 window.submitOnboardingCadastro = submitOnboardingCadastro;
 window.cancelarOnboardingCadastro = cancelarOnboardingCadastro;
@@ -8524,13 +8432,17 @@ function renderAdminPendingUsers() {
         const userRole = u.role || 'docentes';
         const defaults = sigeDB.getDefaultPermissoesByRole(userRole);
         const perms = u.permissoes || defaults;
+        const idToAct = u.cpf || u.email || u.id;
 
         return `
             <tr style="border-bottom: 1px solid #fed7aa;">
                 <td style="padding:10px 12px;">
-                    <strong style="color:#0f172a; display:block; font-size:0.9rem;">${escapeHtml(u.nome)}</strong>
-                    <span style="color:#64748b; font-size:0.78rem;"><i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}</span>
-                    ${u.telefone ? `<span style="color:#0284c7; font-size:0.75rem; display:block;"><i class="fa-brands fa-whatsapp"></i> ${escapeHtml(u.telefone)}</span>` : ''}
+                    <strong style="color:#0f172a; display:block; font-size:0.92rem;">${escapeHtml(u.nome)}</strong>
+                    ${u.cpf ? `<span style="color:#1e3a8a; font-size:0.82rem; font-weight:800; display:block;"><i class="fa-solid fa-address-card"></i> CPF: ${escapeHtml(u.cpf)}</span>` : ''}
+                    ${u.dataNascimento ? `<span style="color:#059669; font-size:0.78rem; font-weight:700; display:block;"><i class="fa-solid fa-cake-candles"></i> Nasc (Senha): ${escapeHtml(u.dataNascimento)}</span>` : ''}
+                    ${u.cargo ? `<span style="color:#64748b; font-size:0.76rem; display:block;"><i class="fa-solid fa-briefcase"></i> ${escapeHtml(u.cargo)} (${escapeHtml(u.turno || 'Matutino')})</span>` : ''}
+                    ${u.email ? `<span style="color:#64748b; font-size:0.75rem;"><i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}</span>` : ''}
+                    ${(u.whatsapp || u.telefone) ? `<span style="color:#0284c7; font-size:0.75rem; display:block;"><i class="fa-brands fa-whatsapp"></i> ${escapeHtml(u.whatsapp || u.telefone)}</span>` : ''}
                 </td>
                 <td style="padding:10px 12px; color:#64748b; font-size:0.8rem;">
                     <i class="fa-regular fa-clock"></i> ${escapeHtml(dataFormatada)}
@@ -8565,10 +8477,10 @@ function renderAdminPendingUsers() {
                 </td>
                 <td style="padding:10px 12px; text-align:right;">
                     <div style="display:inline-flex; gap:6px;">
-                        <button type="button" onclick="execAprovarPendente('${escapeHtml(u.email)}', ${idx})" class="btn" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 6px rgba(22,163,74,0.3);">
+                        <button type="button" onclick="execAprovarPendente('${escapeHtml(idToAct)}', ${idx})" class="btn" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 6px rgba(22,163,74,0.3);">
                             <i class="fa-solid fa-check"></i> Aprovar
                         </button>
-                        <button type="button" onclick="execRecusarPendente('${escapeHtml(u.email)}')" class="btn" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:6px 8px; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Recusar solicitação">
+                        <button type="button" onclick="execRecusarPendente('${escapeHtml(idToAct)}')" class="btn" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:6px 8px; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Recusar solicitação">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -8589,7 +8501,7 @@ function ajustarModulosDefaultPendente(idx) {
     });
 }
 
-function execAprovarPendente(email, idx) {
+function execAprovarPendente(identifier, idx) {
     const roleSelect = document.getElementById(`pending_role_${idx}`);
     const role = roleSelect ? roleSelect.value : 'docentes';
     const perms = {
@@ -8606,7 +8518,7 @@ function execAprovarPendente(email, idx) {
         ext_patrimonio: !!document.getElementById(`pending_mod_${idx}_ext_patrimonio`)?.checked
     };
 
-    const user = sigeDB.aprovarUsuarioPendente(email, role, perms);
+    const user = sigeDB.aprovarUsuarioPendente(identifier, role, perms);
     if (user) {
         showToast(`✅ Acesso de ${user.nome} autorizado com sucesso!`);
         renderAdminPendingUsers();
@@ -8615,10 +8527,10 @@ function execAprovarPendente(email, idx) {
     }
 }
 
-function execRecusarPendente(email) {
-    if (!confirm(`Deseja realmente recusar e remover a solicitação de acesso para ${email}?`)) return;
-    if (sigeDB.recusarUsuarioPendente(email)) {
-        showToast(`Solicitação de ${email} removida.`);
+function execRecusarPendente(identifier) {
+    if (!confirm(`Deseja realmente recusar e remover esta solicitação de acesso?`)) return;
+    if (sigeDB.recusarUsuarioPendente(identifier)) {
+        showToast(`Solicitação removida com sucesso.`);
         renderAdminPendingUsers();
         renderEquipeEscolarTable();
         renderAdminPermissoesUsuarios();
