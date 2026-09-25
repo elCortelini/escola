@@ -2782,6 +2782,8 @@ function closeProntuarioModal() {
     const modal = document.getElementById("modalProntuarioAluno");
     if (modal) modal.style.display = "none";
 }
+window.openProntuarioModal = openProntuarioModal;
+window.closeProntuarioModal = closeProntuarioModal;
 
 let currentReagendarId = null;
 
@@ -5985,12 +5987,12 @@ function renderDirAtendimentos() {
 
         return `
             <tr style="border-bottom:1px solid #e2e8f0; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                <td style="padding:12px 16px; font-weight:600; color:#1e293b;">
+                <td style="padding:12px 16px; font-weight:600; color:#1e293b; cursor:pointer;" onclick="openDetalhesModal('${a.id}')" title="Clique para abrir os dados deste atendimento">
                     <div>${dataFmt}</div>
                     <div style="font-size:0.75rem; color:#64748b;">${a.horario || ''} (${a.turno || ''})</div>
                 </td>
                 <td style="padding:12px 16px;">
-                    <strong style="color:#0f172a; cursor:pointer;" onclick="selecionarAlunoParaDossie('${safeAluno}')" title="Clique para abrir o Dossiê do Aluno">${a.aluno}</strong>
+                    <strong style="color:#0f172a; cursor:pointer; text-decoration:underline; text-decoration-color:#cbd5e1;" onclick="openDetalhesModal('${a.id}')" title="Clique para abrir os dados e deliberações deste atendimento">${a.aluno}</strong>
                     ${a.responsavel ? `<div style="font-size:0.75rem; color:#64748b;">Resp: ${a.responsavel}</div>` : ''}
                 </td>
                 <td style="padding:12px 16px;">
@@ -5999,7 +6001,7 @@ function renderDirAtendimentos() {
                 <td style="padding:12px 16px; font-size:0.82rem; color:#475569;">
                     ${a.orientadora || 'Orientação'}
                 </td>
-                <td style="padding:12px 16px; font-size:0.82rem; color:#334155; max-width:200px;">
+                <td style="padding:12px 16px; font-size:0.82rem; color:#334155; max-width:200px; cursor:pointer;" onclick="openDetalhesModal('${a.id}')" title="Clique para abrir os dados deste atendimento">
                     <div style="font-weight:700; color:#0f172a;">${a.motivo || 'Atendimento Geral'}</div>
                     ${a.observacoes ? `<div style="font-size:0.75rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.observacoes}</div>` : ''}
                 </td>
@@ -6007,12 +6009,15 @@ function renderDirAtendimentos() {
                     ${statusBadge}
                 </td>
                 <td style="padding:12px 16px; text-align:center;">
-                    <div style="display:inline-flex; gap:6px;">
-                        <button type="button" onclick="selecionarAlunoParaDossie('${safeAluno}')" class="btn" style="background:#eff6ff; color:#1d4ed8; padding:5px 10px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bfdbfe;" title="Ver Dossiê 360º do Estudante">
-                            <i class="fa-solid fa-id-card"></i> Dossiê
+                    <div style="display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+                        <button type="button" onclick="openDetalhesModal('${a.id}')" class="btn" style="background:#eff6ff; color:#1d4ed8; padding:5px 10px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bfdbfe; display:inline-flex; align-items:center; gap:5px; cursor:pointer;" title="Abrir Dados, Parecer e Deliberações deste Atendimento">
+                            <i class="fa-solid fa-file-lines"></i> Ver Atendimento
+                        </button>
+                        <button type="button" onclick="openProntuarioModal('${safeAluno}')" class="btn" style="background:#f5f3ff; color:#6d28d9; padding:5px 9px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #ddd6fe; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Ver Prontuário e Histórico de Todos os Atendimentos deste Aluno">
+                            <i class="fa-solid fa-folder-open"></i> Histórico
                         </button>
                         ${safeFone ? `
-                            <button type="button" onclick="prepararDisparoWhatsAppFamiliar('${safeAluno}', '${safeFone}')" class="btn" style="background:#f0fdf4; color:#166534; padding:5px 10px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bbf7d0;" title="Enviar WhatsApp Oficial">
+                            <button type="button" onclick="prepararDisparoWhatsAppFamiliar('${safeAluno}', '${safeFone}')" class="btn" style="background:#f0fdf4; color:#166534; padding:5px 9px; font-size:0.75rem; font-weight:700; border-radius:6px; border:1px solid #bbf7d0; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Enviar WhatsApp Oficial para o Responsável">
                                 <i class="fa-brands fa-whatsapp"></i>
                             </button>
                         ` : ''}
@@ -6032,10 +6037,11 @@ function resetDirAtendFiltros() {
 }
 
 function selecionarAlunoParaDossie(nomeAluno) {
-    dirAlunoDossieAtual = nomeAluno;
-    switchDirSubTab('dossie');
-    renderDirDossieAluno(nomeAluno);
+    if (typeof openProntuarioModal === 'function') {
+        openProntuarioModal(nomeAluno);
+    }
 }
+window.selecionarAlunoParaDossie = selecionarAlunoParaDossie;
 
 // ----------------------------------------------------
 // SUB-ABA 2: DOSSIÊ DO ALUNO (RAIO-X 360º)
