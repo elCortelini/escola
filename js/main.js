@@ -358,6 +358,10 @@ function renderPortalAuthHeroCard() {
 
     if (!loggedUser) {
         card.style.display = 'block';
+        // Se o formulário de login já está montado na tela, preserva para não roubar foco ou apagar o que está sendo digitado
+        if (document.getElementById('heroLoginCpfInput')) {
+            return;
+        }
         card.innerHTML = `
             <div class="portal-login-card-inner">
                 <div class="login-card-header" style="margin-bottom: 1.2rem;">
@@ -677,16 +681,30 @@ function updateActionPillars() {
     `;
 }
 
-function loadSystems() {
+let _lastRenderedUserRole = '__init__';
+let _lastRenderedUserId = '__init__';
+
+function loadSystems(force = false) {
     const grid = document.getElementById('systemsGrid');
     if (!grid) return;
+
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    const currentRole = window.sigeDB ? window.sigeDB.getRole() : 'visitante';
+    const currentUserId = loggedUser ? (loggedUser.id || loggedUser.cpf || loggedUser.email) : 'anonymous';
+
+    // Evita recriar o grid do zero repetidamente se o usuário e papel não mudaram (elimina piscar de ícones)
+    if (!force && grid.children.length > 0 && _lastRenderedUserRole === currentRole && _lastRenderedUserId === currentUserId) {
+        return;
+    }
+
+    _lastRenderedUserRole = currentRole;
+    _lastRenderedUserId = currentUserId;
 
     grid.innerHTML = '';
 
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
     const customSystems = getCustomSystems();
     const allSystems = [...defaultSystems, ...customSystems];
-    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
 
     allSystems.forEach(sys => {
         let finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);

@@ -20,6 +20,11 @@ if (typeof window !== 'undefined') {
 }
 
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
+const SIGE_SYSTEM_VERSION = "v2026.09.25_v40";
+
+if (typeof window !== 'undefined') {
+    window.SIGE_SYSTEM_VERSION = SIGE_SYSTEM_VERSION;
+}
 
 // Limpeza de resíduos de autenticação legada do Google
 if (typeof localStorage !== 'undefined') {
@@ -146,6 +151,11 @@ function formatDataNascimento(data) {
 
 function mascaraCpfInput(input) {
     if (!input) return;
+    const raw = String(input.value || "").trim().toLowerCase();
+    // Permite atalhos de login especiais (dev, admin) sem apagar as letras digitadas
+    if (raw.startsWith('d') || raw.startsWith('a') || /^[a-z]+$/i.test(raw)) {
+        return;
+    }
     let v = input.value.replace(/\D/g, "");
     if (v.length > 11) v = v.substring(0, 11);
     if (v.length > 9) {
@@ -809,22 +819,13 @@ class SigeDatabase {
         this.hasLoadedRemote = true;
         this.cloudStatus = 'connected';
 
-        // Dispara re-renderização em cascata de todas as tabelas e módulos abertos
+        // Dispara re-renderização em cascata de tabelas e módulos abertos (sem loop)
         if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
         if (typeof renderAllModules === "function") renderAllModules();
         if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
         if (typeof renderTabelaPedidosUniformes === "function") renderTabelaPedidosUniformes();
-        if (typeof renderPortalAuth === "function") renderPortalAuth();
+        if (typeof renderPortalAuthBar === "function") renderPortalAuthBar();
         if (typeof updateActionPillars === "function") updateActionPillars();
-        if (typeof loadSystems === "function") loadSystems();
-
-        // Se tínhamos itens locais que não estavam na nuvem, envie de volta à nuvem para manter tudo sincronizado
-        const remotePedidosCount = (remoteData.pedidosUniformes || []).length;
-        const remoteEquipeCount = (remoteData.equipeEscola || []).length;
-        if (mergedPedidosUniformes.length > remotePedidosCount || mergedEquipe.length > remoteEquipeCount) {
-            console.log("☁️ Mesclagem local adicionou dados ausentes na nuvem. Enviando sincronização de volta...");
-            this.syncToFirebase();
-        }
     }
 
     ensureDevUser() {
