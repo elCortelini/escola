@@ -275,7 +275,7 @@ function renderPortalAuthBar() {
 // AUTENTICAÇÃO NATIVA POR CPF + DATA DE NASCIMENTO (HERO PORTAL)
 // ==========================================
 
-function heroLoginWithCpf() {
+async function heroLoginWithCpf() {
     const cpfInput = document.getElementById('heroLoginCpfInput');
     const senhaInput = document.getElementById('heroLoginSenhaInput');
     if (!cpfInput || !senhaInput) return;
@@ -287,11 +287,15 @@ function heroLoginWithCpf() {
     }
     if (!window.sigeDB) return;
 
-    const res = window.sigeDB.loginWithCpf(cpf, senha);
+    const res = await window.sigeDB.loginWithCpf(cpf, senha);
 
     if (!res.success) {
         alert(res.message);
         return;
+    }
+
+    if (res.user && (res.user.role === 'desenvolvedor' || (res.user.cpf && res.user.cpf.includes('806.037.420')))) {
+        window.sigeDB.setRole('desenvolvedor');
     }
 
     renderPortalAuth();
@@ -546,7 +550,20 @@ function updateActionPillars() {
     };
 
     if (window.sigeDB && loggedUser) {
-        if (window.sigeDB.temPermissaoModulo('op')) {
+        const currentRole = window.sigeDB.getRole ? window.sigeDB.getRole() : loggedUser.role;
+        if (loggedUser.role === 'desenvolvedor' && currentRole === 'desenvolvedor') {
+            p1 = {
+                badge: '<i class="fa-solid fa-shield-halved"></i> DEV / ADMIN',
+                badgeClass: 'badge-oe',
+                iconBoxClass: 'icon-op',
+                icon: 'fa-solid fa-shield-halved',
+                title: 'Desenvolvedor & Acessos (RBAC)',
+                desc: 'Painel exclusivo para controle de permissões por módulo (RBAC), auditoria e gestão da equipe escolar.',
+                url: 'sistema-gestao.html?aba=admin&action=dev',
+                btnText: 'Acessar Painel Dev',
+                btnClass: 'btn-op-primary'
+            };
+        } else if (window.sigeDB.temPermissaoModulo('op')) {
             // Mantém Orientação Educacional
         } else if (window.sigeDB.temPermissaoModulo('supervisao')) {
             p1 = {
@@ -704,32 +721,34 @@ function loadSystems() {
             badgeHtml = `<span class="sys-access-badge badge-access-geral"><i class="fa-solid fa-globe"></i> ${sys.badge || 'ACESSO LIVRE'}</span>`;
         }
 
-        const card = document.createElement('div');
+        const card = document.createElement('a');
         const restrictedClass = !isAllowed ? 'card-access-restricted' : '';
         card.className = `system-card ${sys.isLive ? 'featured' : ''} ${sys.isCustom ? 'custom-system-card' : ''} ${restrictedClass}`.trim();
-        card.style.cursor = 'pointer';
+        card.href = (isAllowed && isConfigured) ? finalUrl : 'javascript:void(0);';
+        if (isExternal) {
+            card.target = '_blank';
+            card.rel = 'noopener noreferrer';
+        }
 
         // Clique no card
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function(e) {
             if (sys.moduloKey && !loggedUser) {
+                e.preventDefault();
                 alert(`🔒 Módulo Protegido: É necessário se identificar no portal para acessar o módulo "${sys.title}".`);
                 scrollToAuthCard();
                 return;
             }
 
             if (!isAllowed) {
+                e.preventDefault();
                 alert(`🔒 Acesso Restrito: Seu perfil atual não possui permissão de acesso ao módulo "${sys.title}".\n\nCaso necessite de liberação, solicite ao desenvolvedor ou à direção escolar no Painel de Acessos.`);
                 return;
             }
 
-            if (finalUrl && finalUrl !== '#') {
-                if (isExternal || (!sys.isLive && isConfigured)) {
-                    window.open(finalUrl, '_blank', 'noopener,noreferrer');
-                } else {
-                    window.location.href = finalUrl;
-                }
-            } else {
+            if (!isConfigured) {
+                e.preventDefault();
                 alert(`O link para o sistema "${sys.title}" ainda não foi configurado.`);
+                return;
             }
         });
 

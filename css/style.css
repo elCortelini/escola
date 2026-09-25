@@ -717,24 +717,34 @@ body {
     padding: 1.5rem;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
     border: 1.5px solid #e2e8f0;
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
     overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+}
+
+.system-card * {
+    pointer-events: none;
+}
+
+.system-card button {
+    pointer-events: auto;
 }
 
 .system-card:hover {
-    transform: translateY(-8px) scale(1.015);
-    box-shadow: 0 22px 45px rgba(15, 23, 42, 0.16);
-    border-color: #cbd5e1;
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
+    border-color: #94a3b8;
 }
 
 .system-card:active {
-    transform: translateY(-4px) scale(1.005);
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
-    transition: all 0.1s ease;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+    transition: transform 0.1s ease;
 }
 
 .card-top-bar {
@@ -769,22 +779,22 @@ body {
     margin-bottom: 1.1rem;
     position: relative;
     overflow: hidden;
-    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .system-card:hover .giant-icon-wrapper {
-    transform: scale(1.03);
+    transform: scale(1.02);
 }
 
 .giant-icon-wrapper i {
     font-size: 3.8rem;
     color: #ffffff;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
-    transition: transform 0.35s ease;
+    transition: transform 0.25s ease;
 }
 
 .system-card:hover .giant-icon-wrapper i {
-    transform: scale(1.15) rotate(-3deg);
+    transform: scale(1.06);
 }
 
 /* GRADIENTES E ILUMINAÇÃO POR TEMA DO SISTEMA */

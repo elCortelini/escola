@@ -77,7 +77,7 @@ function checkSigeAuth() {
     sigeDB.setRole(user.role);
 
     // O Seletor de Perfis e o botão de Gestão de Usuários são EXCLUSIVOS do Desenvolvedor Oficial
-    const isDev = user.role === "desenvolvedor" && (
+    const isDev = user.role === "desenvolvedor" || (
         (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com") || 
         (user.cpf && cleanCpf(user.cpf) === '80603742068')
     );
@@ -977,6 +977,14 @@ function setupRoleSelector() {
         updateRoleBadgePill(newRole, roleBadge);
         syncRoleFilters();
 
+        // Atualiza abas visíveis conforme o papel ativo
+        const tabBtns = document.querySelectorAll(".sige-tab-btn");
+        tabBtns.forEach(btn => {
+            const tabKey = btn.dataset.tab;
+            const hasPerm = sigeDB.temPermissaoModulo(tabKey);
+            btn.style.display = hasPerm ? "inline-flex" : "none";
+        });
+
         renderNotifications();
         renderAllModules();
         showToast(`Perfil de visualização alterado para: ${getRoleLabel(newRole)}`);
@@ -1064,20 +1072,39 @@ function setupTabNavigation() {
         });
     });
 
-    // Ativação automática via URL (?aba=op por padrão para Orientação Educacional)
+    // Ativação automática via URL (?aba=admin por padrão para Desenvolvedor, op para OE)
     const urlParams = new URLSearchParams(window.location.search);
     let abaParam = urlParams.get('aba');
     if (!abaParam && window.location.hash) {
         abaParam = window.location.hash.replace('#tab-', '').replace('#', '');
     }
-    if (!abaParam) abaParam = 'op'; // Padrão: Orientação Educacional (OE)
+    if (!abaParam) {
+        const loggedUser = sigeDB.getLoggedUser();
+        const activeRole = (typeof sigeDB.getRole === 'function') ? sigeDB.getRole() : (loggedUser ? loggedUser.role : 'comunidade');
+        if (activeRole === 'desenvolvedor' || (loggedUser && loggedUser.role === 'desenvolvedor')) {
+            abaParam = 'admin'; // Visão padrão do desenvolvedor!
+        } else if (activeRole === 'direcao') {
+            abaParam = 'direcao';
+        } else if (activeRole === 'supervisao') {
+            abaParam = 'supervisao';
+        } else if (activeRole === 'uniformes') {
+            abaParam = 'uniformes';
+        } else {
+            abaParam = 'op'; // Padrão: Orientação Educacional
+        }
+    }
 
     switchTab(abaParam);
 
-    // Oculta a barra de navegação de abas internas para manter acesso exclusivo via Portal Inicial
+    // Ajusta a exibição das abas de navegação conforme permissões do usuário
     const navTabs = document.querySelector(".sige-nav-tabs");
     if (navTabs) {
-        navTabs.style.display = "none";
+        navTabs.style.display = "flex";
+        tabBtns.forEach(btn => {
+            const tabKey = btn.dataset.tab;
+            const hasPerm = sigeDB.temPermissaoModulo(tabKey);
+            btn.style.display = hasPerm ? "inline-flex" : "none";
+        });
     }
 }
 
