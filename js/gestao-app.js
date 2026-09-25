@@ -24,7 +24,7 @@ function initApp() {
     setupTabNavigation();
     setupNotificationBell();
     updateAllDynamicSelects();
-    renderAllModules();
+    renderAllModules(null, true);
     setupOpButtons();
 }
 
@@ -76,8 +76,11 @@ function checkSigeAuth() {
     // Define papel no BD local
     sigeDB.setRole(user.role);
 
-    // O Seletor de Perfis e o botão de Gestão de Usuários são EXCLUSIVOS do Desenvolvedor
-    const isDev = user.role === "desenvolvedor";
+    // O Seletor de Perfis e o botão de Gestão de Usuários são EXCLUSIVOS do Desenvolvedor Oficial
+    const isDev = user.role === "desenvolvedor" && (
+        (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com") || 
+        (user.cpf && cleanCpf(user.cpf) === '80603742068')
+    );
     if (roleWrapper) roleWrapper.style.display = isDev ? "inline-flex" : "none";
     if (btnDev) btnDev.style.display = isDev ? "inline-flex" : "none";
 
@@ -111,7 +114,7 @@ function checkSigeAuth() {
     return true;
 }
 
-function submitSigeLogin(e) {
+async function submitSigeLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     const cpfInput = document.getElementById("loginCpfInput");
     const senhaInput = document.getElementById("loginSenhaInput");
@@ -123,7 +126,7 @@ function submitSigeLogin(e) {
         return;
     }
 
-    const res = sigeDB.loginWithCpf(cpf, senha);
+    const res = await sigeDB.loginWithCpf(cpf, senha);
 
     if (!res.success) {
         alert(res.message);
@@ -134,7 +137,7 @@ function submitSigeLogin(e) {
     if (loginModal) loginModal.style.display = "none";
     showToast(`Bem-vindo(a), ${res.user.nome}!`);
     checkSigeAuth();
-    renderAllModules();
+    renderAllModules(null, true);
 }
 
 function abrirModalOnboardingCadastro(user) {
@@ -221,7 +224,7 @@ function fecharModalPrimeiroAcesso() {
     if (modal) modal.style.display = "none";
 }
 
-function submitPrimeiroAcesso(e) {
+async function submitPrimeiroAcesso(e) {
     if (e && e.preventDefault) e.preventDefault();
     const cpf = document.getElementById("primeiroAcessoCpf")?.value.trim() || "";
     const dataNascimento = document.getElementById("primeiroAcessoDataNascimento")?.value.trim() || "";
@@ -234,7 +237,7 @@ function submitPrimeiroAcesso(e) {
 
     if (!window.sigeDB) return;
 
-    const res = window.sigeDB.cadastrarPrimeiroAcesso({
+    const res = await window.sigeDB.cadastrarPrimeiroAcesso({
         cpf,
         dataNascimento,
         nome,
@@ -258,10 +261,19 @@ function handleSigeLogout() {
     sigeDB.logout();
     showToast("Sessão encerrada.");
     checkSigeAuth();
-    renderAllModules();
+    renderAllModules(null, true);
 }
 
 function openDevUserModal() {
+    const user = sigeDB.getLoggedUser();
+    const isDev = user && user.role === "desenvolvedor" && (
+        (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com") || 
+        (user.cpf && cleanCpf(user.cpf) === '80603742068')
+    );
+    if (!isDev) {
+        showToast("⚠️ Acesso restrito exclusivo ao Desenvolvedor Master.", "warning");
+        return;
+    }
     const modal = document.getElementById("modalDevUserConfig");
     if (modal) {
         modal.style.display = "flex";
@@ -1095,7 +1107,7 @@ function switchTab(tabId) {
     if (targetSection) targetSection.classList.add("active");
     if (btn) btn.classList.add("active");
 
-    renderAllModules();
+    renderAllModules(tabId);
 
     if (tabId === 'direcao') {
         switchDirSubTab(currentDirSubTab || 'whatsapp');
@@ -1176,16 +1188,53 @@ function clickNotification(targetTab, notifId) {
 }
 
 // ==========================================
-// RENDERIZAÇÃO GERAL DOS MÓDULOS
+// RENDERIZAÇÃO INTELIGENTE (LAZY RENDERING DOS MÓDULOS)
 // ==========================================
-function renderAllModules() {
-    try { renderModuleMuralECalendario(); } catch (e) { console.error("Erro em renderModuleMuralECalendario:", e); }
-    try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
-    try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
-    try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
-    try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
-    try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+function renderAllModules(targetModule = null, forceAll = false) {
+    // 1. Sempre atualiza as contagens das badges das abas do topo de forma rápida e leve
     try { updateBadgesCounts(); } catch (e) { console.error("Erro em updateBadgesCounts:", e); }
+
+    // 2. Se forçada (boot inicial ou logout/troca de perfil), renderiza todos os módulos
+    if (forceAll) {
+        try { renderModuleMuralECalendario(); } catch (e) { console.error("Erro em renderModuleMuralECalendario:", e); }
+        try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
+        try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
+        try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
+        try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
+        try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+        return;
+    }
+
+    // 3. Lazy Rendering: detecta e renderiza estritamente o módulo ativo
+    let activeTab = targetModule;
+    if (!activeTab) {
+        const activeBtn = document.querySelector(".sige-tab-btn.active");
+        activeTab = activeBtn ? activeBtn.getAttribute("data-tab") : "op";
+    }
+
+    switch (activeTab) {
+        case 'op':
+            try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
+            break;
+        case 'mural':
+            try { renderModuleMuralECalendario(); } catch (e) { console.error("Erro em renderModuleMuralECalendario:", e); }
+            break;
+        case 'supervisao':
+            try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
+            break;
+        case 'admin':
+            try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
+            break;
+        case 'direcao':
+            try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
+            break;
+        case 'uniformes':
+            try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+            break;
+        default:
+            try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
+            break;
+    }
 }
 
 function updateBadgesCounts() {

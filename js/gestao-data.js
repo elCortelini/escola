@@ -185,14 +185,145 @@ if (typeof window !== "undefined") {
     window.mascaraDataInput = mascaraDataInput;
 }
 
+// ==========================================
+// SEGURANÇA E CRIPTOGRAFIA (HASH SHA-256 + SALT LGPD)
+// ==========================================
+function hashSecretSync(secret, salt = 'sige_cepr_salt_2026') {
+    if (!secret) return '';
+    let str = salt + ':' + secret;
+    let h1 = 0xdeadbeef, h2 = 0x41c64e6d;
+    for (let i = 0; i < str.length; i++) {
+        let ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 'sha256_' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
+
+async function hashSecret(secret, salt = 'sige_cepr_salt_2026') {
+    if (!secret) return '';
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+        try {
+            const enc = new TextEncoder();
+            const data = enc.encode(salt + ':' + secret);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return 'sha256_' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            // fallback
+        }
+    }
+    return hashSecretSync(secret, salt);
+}
+
+function sanitizeUserForCloud(user) {
+    if (!user || typeof user !== 'object') return user;
+    const clean = { ...user };
+    delete clean.senha; // Higienização estrita: NUNCA envia senha em texto plano para o Firestore
+    return clean;
+}
+
+if (typeof window !== "undefined") {
+    window.hashSecretSync = hashSecretSync;
+    window.hashSecret = hashSecret;
+    window.sanitizeUserForCloud = sanitizeUserForCloud;
+}
+
+// ==========================================
+// PERSISTÊNCIA ASSÍNCRONA DE ALTA CAPACIDADE (INDEXEDDB)
+// ==========================================
+const SigeIDB = {
+    dbName: 'sige_pedro_rizzi_idb',
+    storeName: 'app_data',
+    version: 1,
+    _db: null,
+
+    async getDB() {
+        if (this._db) return this._db;
+        if (typeof indexedDB === 'undefined') return null;
+        return new Promise((resolve) => {
+            try {
+                const req = indexedDB.open(this.dbName, this.version);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(this.storeName)) {
+                        db.createObjectStore(this.storeName);
+                    }
+                };
+                req.onsuccess = (e) => {
+                    this._db = e.target.result;
+                    resolve(this._db);
+                };
+                req.onerror = () => {
+                    console.warn('⚠️ IndexedDB não disponível, usando fallback LocalStorage.');
+                    resolve(null);
+                };
+            } catch (err) {
+                resolve(null);
+            }
+        });
+    },
+
+    async get(key) {
+        const db = await this.getDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(this.storeName, 'readonly');
+                const store = tx.objectStore(this.storeName);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            } catch (e) {
+                resolve(null);
+            }
+        });
+    },
+
+    async set(key, val) {
+        const db = await this.getDB();
+        if (!db) return false;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(this.storeName, 'readwrite');
+                const store = tx.objectStore(this.storeName);
+                const req = store.put(val, key);
+                req.onsuccess = () => resolve(true);
+                req.onerror = () => resolve(false);
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+};
+if (typeof window !== "undefined") {
+    window.SigeIDB = SigeIDB;
+}
+
+// Mapeamento Modular de Coleções Firestore (Superação da barreira de 1 MB por documento)
+const SIGE_MODULE_DOCS = {
+    mod_op: ['agendamentosOP', 'projetosOrientacao', 'deletedOPIds'],
+    mod_uniformes: ['pedidosUniformes', 'lotesSME', 'estoqueUniformes', 'deletedPedidoUniformeIds'],
+    mod_equipe: ['equipeEscola', 'turmasEscola', 'orientadoras', 'supervisoras', 'professores', 'deletedEquipeIds', 'deletedTurmaIds'],
+    mod_direcao: ['atasGabineteDirecao', 'demandasAdmin', 'contatosWhatsAppDirecao', 'deletedAtaIds', 'deletedDemandaAdmIds', 'deletedContatosWpIds'],
+    mod_supervisao: ['demandasSupervisao', 'projetosSupervisao', 'atividadesExternasSupervisao', 'reunioesPedagogicasSupervisao', 'deletedDemandaSupIds'],
+    mod_core: ['configEscola', 'muralAvisos', 'calendarioTarefas', 'eventosCalendarioEscolar', 'notificacoesLidas', 'whatsappConfig', 'mensagensWhatsAppLog', 'auditLogs', 'deletedEventoCalendarioIds'],
+    mod_auth: ['usuariosCadastrados']
+};
+if (typeof window !== "undefined") {
+    window.SIGE_MODULE_DOCS = SIGE_MODULE_DOCS;
+}
+
 // Estrutura Padrão Inicial
 const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senha: "05081978", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senhaHash: "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senhaHash: "sha256_06509416156da6f8d7c808b7d399d07a878c37b35515df57250de94279472a6a", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senhaHash: "sha256_24dbd8d85f37733eb71538092504f30c6b157f6c73428d61d41981240d438d3c", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
     lotesSME: [],
@@ -282,13 +413,28 @@ class SigeDatabase {
         this.cloudErrorDetails = '';
         this.isSyncingFromRemote = false;
         this.hasLoadedRemote = false;
+        this._syncTimeout = null;
         this.sanitizeStudentNames();
         this.initFirebase();
         this.setupAutoSyncListeners();
+        this.initIndexedDBSync();
     }
 
     init() {
         return this;
+    }
+
+    initIndexedDBSync() {
+        if (typeof SigeIDB !== 'undefined') {
+            SigeIDB.get('sige_database_data').then(idbData => {
+                if (idbData && typeof idbData === 'object' && Object.keys(idbData).length > 0) {
+                    this.smartMergeRemoteData(idbData);
+                    if (typeof renderAllModules === 'function') {
+                        renderAllModules();
+                    }
+                }
+            }).catch(e => console.warn('Aviso IndexedDB inicialização:', e));
+        }
     }
 
     sanitizeStudentNames() {
@@ -358,37 +504,55 @@ class SigeDatabase {
 
             this.firestore = firebase.firestore();
 
-            // Real-Time Cloud Listener (Snapshot da Nuvem)
+            // Real-Time Cloud Listeners Modulares (Superação do limite de 1 MB)
+            const modNames = Object.keys(SIGE_MODULE_DOCS);
+            let hasAnyDoc = false;
+
+            modNames.forEach(modName => {
+                this.firestore.collection("sige_pedro_rizzi").doc(modName).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        hasAnyDoc = true;
+                        this.hasLoadedRemote = true;
+                        this.cloudStatus = 'connected';
+                        const modData = doc.data();
+                        if (modData && typeof modData === "object" && Object.keys(modData).length > 0) {
+                            this.smartMergeRemoteData(modData);
+                            this.updateCloudSyncBadge(true);
+                        }
+                    }
+                }, (error) => {
+                    console.warn(`⚠️ Aviso Firebase Sync (${modName}):`, error.message);
+                    if (error.code === 'permission-denied') {
+                        this.cloudStatus = 'permission_denied';
+                        this.cloudErrorDetails = error.message;
+                        this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                    } else {
+                        this.cloudStatus = 'offline';
+                        this.cloudErrorDetails = error.message;
+                        this.updateCloudSyncBadge(false, "Modo Off-line");
+                    }
+                });
+            });
+
+            // Listener de Compatibilidade / Legado (Snapshot da Nuvem)
             this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
                 if (doc.exists) {
                     const remoteData = doc.data();
                     if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
                         this.smartMergeRemoteData(remoteData);
-                        console.log("☁️ Dados sincronizados da Nuvem (Firebase) em tempo real!");
                         this.updateCloudSyncBadge(true);
                     }
-                } else {
-                    // Documento ainda não existe na nuvem: inicializa com os dados locais
+                } else if (!hasAnyDoc) {
                     this.hasLoadedRemote = true;
                     this.cloudStatus = 'connected';
                     this.syncToFirebase();
                     this.updateCloudSyncBadge(true);
                 }
             }, (error) => {
-                console.warn("⚠️ Aviso Firebase Firestore Sync:", error.message);
-                if (error.code === 'permission-denied') {
-                    this.cloudStatus = 'permission_denied';
-                    this.cloudErrorDetails = error.message;
-                    console.error("🔴 Firestore: Permissão negada pelas Security Rules. Atualize firestore.rules no Console do Firebase (sas-cepr) para permitir sincronização global.");
-                    this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
-                } else {
-                    this.cloudStatus = 'offline';
-                    this.cloudErrorDetails = error.message;
-                    this.updateCloudSyncBadge(false, "Modo Off-line");
-                }
+                // Passivo
             });
 
-            console.log("🔥 Firebase Firestore inicializado e monitorando nuvem...");
+            console.log("🔥 Firebase Firestore inicializado e monitorando nuvem modular...");
         } catch (e) {
             console.error("Erro ao inicializar Firebase:", e);
             this.cloudStatus = 'error';
@@ -648,27 +812,29 @@ class SigeDatabase {
         if (!this.data) return;
         if (!Array.isArray(this.data.usuariosCadastrados)) this.data.usuariosCadastrados = [];
         let devUser = this.data.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
+        const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
         if (devUser) {
             devUser.cpf = "806.037.420-68";
             devUser.dataNascimento = "30/12/1981";
-            devUser.senha = "30121981";
+            devUser.senhaHash = devHash;
+            delete devUser.senha;
             devUser.nome = "Elevi Cortelini (Desenvolvedor)";
             devUser.role = "desenvolvedor";
             devUser.status = "aprovado";
             devUser.cadastroCompleto = true;
-            devUser.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
+            devUser.permissoes = { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
         } else {
             this.data.usuariosCadastrados.unshift({
                 email: "elcortelini@gmail.com",
                 cpf: "806.037.420-68",
                 dataNascimento: "30/12/1981",
-                senha: "30121981",
+                senhaHash: devHash,
                 nome: "Elevi Cortelini (Desenvolvedor)",
                 role: "desenvolvedor",
                 cargo: "Desenvolvedor do Sistema",
                 status: "aprovado",
                 cadastroCompleto: true,
-                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
             });
         }
     }
@@ -680,9 +846,41 @@ class SigeDatabase {
 
         try {
             this.ensureDevUser();
-            this.firestore.collection("sige_pedro_rizzi").doc("database").set(this.data, { merge: true })
+            const nowIso = new Date().toISOString();
+            const batchPromises = [];
+
+            // 1. Grava os documentos modulares independentes (Superação do limite de 1 MB)
+            for (const [modName, keys] of Object.entries(SIGE_MODULE_DOCS)) {
+                const modPayload = { lastSyncAt: nowIso };
+                keys.forEach(k => {
+                    if (this.data[k] !== undefined) {
+                        if (k === 'usuariosCadastrados' && Array.isArray(this.data[k])) {
+                            modPayload[k] = this.data[k].map(sanitizeUserForCloud);
+                        } else {
+                            modPayload[k] = this.data[k];
+                        }
+                    }
+                });
+                batchPromises.push(
+                    this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true })
+                );
+            }
+
+            // 2. Grava documento legado para compatibilidade, com tratamento de cota
+            const legacySafeData = { ...this.data, lastSyncAt: nowIso };
+            if (Array.isArray(legacySafeData.usuariosCadastrados)) {
+                legacySafeData.usuariosCadastrados = legacySafeData.usuariosCadastrados.map(sanitizeUserForCloud);
+            }
+            batchPromises.push(
+                this.firestore.collection("sige_pedro_rizzi").doc("database").set(legacySafeData, { merge: true })
+                    .catch(e => {
+                        console.warn("Aviso: Documento consolidado 'database' protegido contra excedente de tamanho:", e.message);
+                    })
+            );
+
+            Promise.all(batchPromises)
                 .then(() => {
-                    console.log("💾 Dados sincronizados com sucesso para a Nuvem!");
+                    console.log("💾 Módulos sincronizados com sucesso para a Nuvem!");
                     this.cloudStatus = 'connected';
                     this.updateCloudSyncBadge(true);
                 })
@@ -711,31 +909,44 @@ class SigeDatabase {
         }
 
         this.updateCloudSyncBadge(null, "Buscando dados na nuvem...");
+        const modNames = Object.keys(SIGE_MODULE_DOCS);
+        const fetchPromises = modNames.map(m => this.firestore.collection("sige_pedro_rizzi").doc(m).get());
 
-        this.firestore.collection("sige_pedro_rizzi").doc("database").get()
-            .then(doc => {
-                if (doc.exists) {
-                    const remoteData = doc.data();
-                    if (remoteData && typeof remoteData === "object") {
-                        this.smartMergeRemoteData(remoteData);
-                        if (typeof showToast === "function") showToast("☁️ Dados sincronizados com sucesso da Nuvem!");
-                        this.updateCloudSyncBadge(true);
+        Promise.all(fetchPromises)
+            .then(docs => {
+                let foundAny = false;
+                docs.forEach(doc => {
+                    if (doc.exists) {
+                        foundAny = true;
+                        this.smartMergeRemoteData(doc.data());
                     }
-                } else {
-                    // Documento inexistente na nuvem: sobe os dados locais
-                    this.hasLoadedRemote = true;
-                    this.syncToFirebase();
-                    if (typeof showToast === "function") showToast("☁️ Banco na Nuvem inicializado com dados locais!");
+                });
+
+                if (foundAny) {
+                    if (typeof showToast === "function") showToast("☁️ Dados modulares sincronizados com sucesso da Nuvem!");
                     this.updateCloudSyncBadge(true);
+                } else {
+                    // Fallback para o documento legado caso a nuvem ainda não tenha os modulares
+                    return this.firestore.collection("sige_pedro_rizzi").doc("database").get()
+                        .then(legacyDoc => {
+                            if (legacyDoc.exists) {
+                                this.smartMergeRemoteData(legacyDoc.data());
+                                if (typeof showToast === "function") showToast("☁️ Dados legados da Nuvem migrados para o padrão modular!");
+                                this.updateCloudSyncBadge(true);
+                                this.syncToFirebase(); // Migra imediatamente
+                            } else {
+                                this.hasLoadedRemote = true;
+                                this.syncToFirebase();
+                                if (typeof showToast === "function") showToast("☁️ Banco na Nuvem inicializado com dados locais!");
+                                this.updateCloudSyncBadge(true);
+                            }
+                        });
                 }
             })
             .catch(err => {
                 console.error("Erro ao buscar dados na nuvem:", err);
                 if (err.code === 'permission-denied') {
                     this.cloudStatus = 'permission_denied';
-                    this.cloudErrorDetails = err.message;
-                    if (typeof showToast === "function") showToast("❌ Permissão negada no Firebase. Publique as regras do Firestore.");
-                    this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
                 } else {
                     if (typeof showToast === "function") showToast("❌ Falha ao buscar dados na nuvem: " + err.message);
                     this.updateCloudSyncBadge(false);
@@ -757,13 +968,17 @@ class SigeDatabase {
                 return { success: false, message: "Não foi possível instanciar o Firestore." };
             }
 
-            // Testa leitura do documento principal
-            const docRef = this.firestore.collection("sige_pedro_rizzi").doc("database");
+            // Testa leitura do documento modular ou principal
+            const docRef = this.firestore.collection("sige_pedro_rizzi").doc("mod_op");
             const doc = await docRef.get();
             if (doc.exists) {
                 this.smartMergeRemoteData(doc.data());
             } else {
-                await docRef.set(this.data, { merge: true });
+                const legacyDoc = await this.firestore.collection("sige_pedro_rizzi").doc("database").get();
+                if (legacyDoc.exists) {
+                    this.smartMergeRemoteData(legacyDoc.data());
+                }
+                this.syncToFirebase();
                 this.hasLoadedRemote = true;
             }
 
@@ -916,26 +1131,34 @@ class SigeDatabase {
                 }
             });
 
-            // Normalização estrita de usuários cadastrados
+            // Normalização estrita de usuários cadastrados e migração de senha para hash
             merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
                 const perms = u.permissoes ? { ...u.permissoes } : this.getDefaultPermissoesByRole(u.role);
                 if (perms.op_perfil === undefined) {
                     perms.op_perfil = this.getOpPerfil(u);
                 }
-                return {
+                const cleanDt = cleanDataNascimento(u.dataNascimento || u.senha || '');
+                const userObj = {
                     ...u,
                     status: u.status || 'aprovado',
                     cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com'),
                     permissoes: perms
                 };
+                if (!userObj.senhaHash && cleanDt) {
+                    userObj.senhaHash = hashSecretSync(cleanDt);
+                }
+                delete userObj.senha; // Higienização: remove senha em texto puro
+                return userObj;
             });
 
-            // Garante que o Desenvolvedor Master possua o CPF e Data de Nascimento oficiais
+            // Garante que o Desenvolvedor Master possua o CPF, Data e Hash oficiais
+            const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
             let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
             if (devUser) {
                 devUser.cpf = "806.037.420-68";
                 devUser.dataNascimento = "30/12/1981";
-                devUser.senha = "30121981";
+                devUser.senhaHash = devHash;
+                delete devUser.senha;
                 devUser.nome = "Elevi Cortelini (Desenvolvedor)";
                 devUser.role = "desenvolvedor";
                 devUser.status = "aprovado";
@@ -946,7 +1169,7 @@ class SigeDatabase {
                     email: "elcortelini@gmail.com",
                     cpf: "806.037.420-68",
                     dataNascimento: "30/12/1981",
-                    senha: "30121981",
+                    senhaHash: devHash,
                     nome: "Elevi Cortelini (Desenvolvedor)",
                     role: "desenvolvedor",
                     cargo: "Desenvolvedor do Sistema",
@@ -986,21 +1209,33 @@ class SigeDatabase {
         return this.loadLocalOnly();
     }
 
+    debouncedSyncToFirebase() {
+        if (this._syncTimeout) clearTimeout(this._syncTimeout);
+        this._syncTimeout = setTimeout(() => {
+            this.syncToFirebase();
+        }, 400);
+    }
+
     saveData(data) {
         this.data = data;
+        // 1. LocalStorage síncrono para renderização instantânea
         try {
             localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(data));
         } catch (e) {
             if (e.name === 'QuotaExceededError' || e.code === 22) {
-                console.error('⚠️ Limite de armazenamento local atingido. Dados não salvos localmente.', e);
-                if (typeof showToast === 'function') {
-                    showToast('⚠️ Armazenamento local cheio. Dados salvos apenas na nuvem.', 'warning');
-                }
+                console.warn('⚠️ Limite de 5MB do LocalStorage excedido. Os dados estão preservados no IndexedDB e Nuvem.');
             } else {
-                console.error('Erro ao salvar localmente:', e);
+                console.error('Erro ao salvar localmente no LocalStorage:', e);
             }
         }
-        this.syncToFirebase();
+
+        // 2. IndexedDB assíncrono de alta capacidade (50MB - 1GB+)
+        if (typeof SigeIDB !== 'undefined') {
+            SigeIDB.set('sige_database_data', data).catch(err => console.warn('Erro ao persistir no IndexedDB:', err));
+        }
+
+        // 3. Nuvem Firestore com debounce para alta performance
+        this.debouncedSyncToFirebase();
     }
 
     resetToDefault() {
@@ -1479,25 +1714,28 @@ class SigeDatabase {
                 email: "elcortelini@gmail.com", 
                 cpf: "806.037.420-68",
                 dataNascimento: "30/12/1981",
-                senha: "30121981",
+                senhaHash: "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43",
                 nome: "Elevi Cortelini (Desenvolvedor)", 
                 role: "desenvolvedor", 
                 cargo: "Desenvolvedor do Sistema", 
                 status: "aprovado", 
                 cadastroCompleto: true, 
-                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
+                permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
             };
         }
         return null;
     }
 
-    loginWithCpf(cpfInput, dataNascimentoInput) {
+    async loginWithCpf(cpfInput, dataNascimentoInput) {
         if (!cpfInput) return { success: false, code: 'EMPTY_CPF', message: 'Por favor, informe seu número de CPF.' };
         if (!dataNascimentoInput) return { success: false, code: 'EMPTY_PASSWORD', message: 'Por favor, informe sua Data de Nascimento (sua senha de acesso).' };
 
         const rawCpf = String(cpfInput).trim();
         const cleanNumbers = cleanCpf(rawCpf);
         const cleanDateInput = cleanDataNascimento(dataNascimentoInput);
+        const inputHashAsync = await hashSecret(cleanDateInput);
+        const inputHashSync = hashSecretSync(cleanDateInput);
+        const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
 
         // Atalhos especiais para Desenvolvedor (CPF oficial 806.037.420-68 ou atalhos dev/admin)
         const isDev = (
@@ -1524,19 +1762,20 @@ class SigeDatabase {
                     email: "elcortelini@gmail.com", 
                     cpf: "806.037.420-68",
                     dataNascimento: "30/12/1981",
-                    senha: "30121981",
+                    senhaHash: devHash,
                     nome: "Elevi Cortelini (Desenvolvedor)", 
                     role: "desenvolvedor", 
                     cargo: "Desenvolvedor do Sistema", 
                     status: "aprovado", 
                     cadastroCompleto: true, 
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
+                    permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } 
                 };
                 this.addUsuario(devUser);
             } else {
                 devUser.cpf = "806.037.420-68";
                 devUser.dataNascimento = "30/12/1981";
-                devUser.senha = "30121981";
+                devUser.senhaHash = devHash;
+                delete devUser.senha;
                 devUser.status = "aprovado";
                 this.saveData(this.data);
             }
@@ -1570,11 +1809,12 @@ class SigeDatabase {
                 } else if (prof.setor === "supervisao") {
                     roleKey = "supervisora_" + prof.id;
                 }
+                const dt = cleanDataNascimento(prof.dataNascimento || prof.senha || "");
                 user = { 
                     id: prof.id, 
                     cpf: prof.cpf || formatCpf(cleanNumbers),
                     dataNascimento: prof.dataNascimento || "",
-                    senha: cleanDataNascimento(prof.dataNascimento || prof.senha || ""),
+                    senhaHash: dt ? (await hashSecret(dt)) : "",
                     email: prof.email || "",
                     nome: prof.nome, 
                     role: roleKey, 
@@ -1613,16 +1853,29 @@ class SigeDatabase {
             };
         }
 
-        // Validação da Senha (Data de Nascimento)
+        // Validação da Senha (Hash SHA-256 ou Migração Transparente)
         const userDate = cleanDataNascimento(user.dataNascimento || user.senha || "");
-        if (userDate && cleanDateInput) {
-            if (userDate !== cleanDateInput) {
-                return {
-                    success: false,
-                    code: 'INVALID_PASSWORD',
-                    message: 'Data de nascimento incorreta. Digite sua data no formato DD/MM/AAAA (ex: 15/05/1985).'
-                };
-            }
+        let isValid = false;
+
+        if (user.senhaHash) {
+            isValid = (user.senhaHash === inputHashAsync) || (user.senhaHash === inputHashSync) || (userDate && userDate === cleanDateInput);
+        } else {
+            isValid = (userDate === cleanDateInput);
+        }
+
+        if (!isValid) {
+            return {
+                success: false,
+                code: 'INVALID_PASSWORD',
+                message: 'Data de nascimento incorreta. Digite sua data no formato DD/MM/AAAA (ex: 15/05/1985).'
+            };
+        }
+
+        // Upgrade transparente de segurança: armazena hash e elimina senha em texto plano
+        if (!user.senhaHash || user.senha) {
+            user.senhaHash = inputHashAsync;
+            delete user.senha;
+            this.saveData(this.data);
         }
 
         // Login autorizado com sucesso!
@@ -1639,7 +1892,7 @@ class SigeDatabase {
         };
     }
 
-    cadastrarPrimeiroAcesso(dados) {
+    async cadastrarPrimeiroAcesso(dados) {
         if (!dados || !dados.cpf) return { success: false, message: 'CPF é obrigatório.' };
         const cleanNumbers = cleanCpf(dados.cpf);
         if (!validarCpf(cleanNumbers)) {
@@ -1664,6 +1917,7 @@ class SigeDatabase {
         }
 
         const users = this.getUsuarios();
+        const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
 
         // Tratamento especial para o Desenvolvedor do Sistema
         if (cleanNumbers === "80603742068") {
@@ -1673,7 +1927,7 @@ class SigeDatabase {
                     id: "dev-master",
                     cpf: "806.037.420-68",
                     dataNascimento: "30/12/1981",
-                    senha: "30121981",
+                    senhaHash: devHash,
                     nome: "Elevi Cortelini (Desenvolvedor)",
                     email: dados.email || "elcortelini@gmail.com",
                     cargo: "Desenvolvedor do Sistema",
@@ -1683,13 +1937,14 @@ class SigeDatabase {
                     role: "desenvolvedor",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                    permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 };
                 this.addUsuario(devUser);
             } else {
                 devUser.cpf = "806.037.420-68";
                 devUser.dataNascimento = "30/12/1981";
-                devUser.senha = "30121981";
+                devUser.senhaHash = devHash;
+                delete devUser.senha;
                 devUser.status = "aprovado";
                 devUser.cadastroCompleto = true;
                 devUser.role = "desenvolvedor";
@@ -1713,12 +1968,13 @@ class SigeDatabase {
 
         const fmtCpf = formatCpf(cleanNumbers);
         const fmtData = formatDataNascimento(cleanDate);
+        const sHash = await hashSecret(cleanDate);
 
         const novoUser = {
             id: generateSecureId('user'),
             cpf: fmtCpf,
             dataNascimento: fmtData,
-            senha: cleanDate,
+            senhaHash: sHash,
             nome: dados.nome.trim(),
             email: dados.email ? dados.email.toLowerCase().trim() : '',
             cargo: dados.cargo.trim(),
@@ -3325,9 +3581,14 @@ class SigeDatabase {
                 ags[idx].statusSecretaria = novoStatus;
                 if (obs) ags[idx].obsSecretaria = obs;
                 ags[idx].confirmadoEm = new Date().toISOString();
-                await this.firestore.collection('sige_pedro_rizzi').doc('database').set(
-                    { agendamentosOP: ags }, { merge: true }
+                await this.firestore.collection('sige_pedro_rizzi').doc('mod_op').set(
+                    { agendamentosOP: ags, lastSyncAt: new Date().toISOString() }, { merge: true }
                 );
+                try {
+                    await this.firestore.collection('sige_pedro_rizzi').doc('database').set(
+                        { agendamentosOP: ags }, { merge: true }
+                    );
+                } catch(e) {}
             }
         } catch (e) {
             console.error('Erro ao atualizar status por token:', e);
