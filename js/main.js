@@ -79,15 +79,15 @@ const defaultSystems = [
     },
     {
         id: "desenvolvedor",
-        moduloKey: "admin",
+        moduloKey: "dev",
         title: "Desenvolvedor & Acessos",
         iconClass: "fa-solid fa-shield-halved",
         bgClass: "theme-purple",
         tag: "RBAC & CONTROLE TOTAL",
         description: "Painel exclusivo para controle de permissões por módulo (RBAC), auditoria e gestão da equipe escolar.",
-        url: "sistema-gestao.html?aba=admin&action=dev",
+        url: "sistema-gestao.html?aba=dev",
         status: "online",
-        badge: "ADMIN / DEV",
+        badge: "DEV / TI",
         isLive: true
     },
     {
@@ -686,6 +686,8 @@ let _lastRenderedUserId = '__init__';
 
 function loadSystems(force = false) {
     const grid = document.getElementById('systemsGrid');
+    const gridRestritos = document.getElementById('systemsGridRestritos');
+    const secRestritos = document.getElementById('sectionSistemasRestritos');
     if (!grid) return;
 
     const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
@@ -701,10 +703,13 @@ function loadSystems(force = false) {
     _lastRenderedUserId = currentUserId;
 
     grid.innerHTML = '';
+    if (gridRestritos) gridRestritos.innerHTML = '';
 
     const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
     const customSystems = getCustomSystems();
     const allSystems = [...defaultSystems, ...customSystems];
+
+    let countRestritos = 0;
 
     allSystems.forEach(sys => {
         let finalUrl = sys.isCustom ? sys.url : (savedUrls[sys.id] || sys.url);
@@ -715,87 +720,120 @@ function loadSystems(force = false) {
         if (sys.id === 'direcao') {
             finalUrl = "sistema-gestao.html?aba=direcao";
         }
+        if (sys.id === 'uniformes') {
+            finalUrl = "sistema-gestao.html?aba=admin#adminSecUniformes";
+        }
+        if (sys.id === 'desenvolvedor') {
+            finalUrl = "sistema-gestao.html?aba=dev";
+        }
 
         const isConfigured = finalUrl && finalUrl !== '#';
         const isExternal = finalUrl && (finalUrl.startsWith("http://") || finalUrl.startsWith("https://"));
 
         // Verificação RBAC
         let isAllowed = true;
-        let badgeHtml = '';
-
         if (sys.moduloKey) {
             if (!loggedUser) {
                 isAllowed = false;
-                badgeHtml = `<span class="sys-access-badge badge-access-restrito"><i class="fa-solid fa-lock"></i> REQUER LOGIN</span>`;
             } else {
                 isAllowed = window.sigeDB ? window.sigeDB.temPermissaoModulo(sys.moduloKey) : false;
-                if (isAllowed) {
-                    badgeHtml = `<span class="sys-access-badge badge-access-liberado"><i class="fa-solid fa-circle-check"></i> ACESSO LIBERADO</span>`;
-                } else {
-                    badgeHtml = `<span class="sys-access-badge badge-access-restrito"><i class="fa-solid fa-lock"></i> ACESSO RESTRITO</span>`;
+            }
+        }
+
+        if (isAllowed) {
+            // ==========================================
+            // SISTEMAS LIBERADOS: GRANDES EM DESTAQUE NO TOPO
+            // ==========================================
+            const badgeHtml = sys.moduloKey
+                ? `<span class="sys-access-badge badge-access-liberado"><i class="fa-solid fa-circle-check"></i> ACESSO LIBERADO</span>`
+                : `<span class="sys-access-badge badge-access-geral"><i class="fa-solid fa-globe"></i> ${sys.badge || 'ACESSO LIVRE'}</span>`;
+
+            const card = document.createElement('a');
+            card.className = `system-card ${sys.isLive ? 'featured' : ''} ${sys.isCustom ? 'custom-system-card' : ''}`.trim();
+            card.href = isConfigured ? finalUrl : 'javascript:void(0);';
+            if (isExternal) {
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+            }
+
+            card.addEventListener('click', function(e) {
+                if (!isConfigured) {
+                    e.preventDefault();
+                    alert(`O link para o sistema "${sys.title}" ainda não foi configurado.`);
                 }
-            }
+            });
+
+            card.innerHTML = `
+                <div>
+                    <!-- ÍCONE GRANDE -->
+                    <div class="giant-icon-wrapper ${sys.bgClass || 'theme-emerald'}">
+                        <i class="${sys.iconClass || 'fa-solid fa-cubes'}"></i>
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        ${badgeHtml}
+                    </div>
+
+                    <h4 class="card-title">${sys.title}</h4>
+                    <p class="card-desc">${sys.description}</p>
+                </div>
+                ${(sys.isCustom && loggedUser && loggedUser.role === 'desenvolvedor') ? `
+                    <div style="display:flex; flex-direction:column; gap:6px; margin-top: auto;">
+                        <button onclick="event.stopPropagation(); deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
+                    </div>
+                ` : ''}
+            `;
+
+            grid.appendChild(card);
         } else {
-            badgeHtml = `<span class="sys-access-badge badge-access-geral"><i class="fa-solid fa-globe"></i> ${sys.badge || 'ACESSO LIVRE'}</span>`;
+            // ==========================================
+            // SISTEMAS RESTRITOS: PEQUENOS EM BAIXO COM ÍCONE DE RESTRIÇÃO
+            // ==========================================
+            countRestritos++;
+            if (gridRestritos) {
+                const compactCard = document.createElement('div');
+                compactCard.className = 'system-card-compact';
+                compactCard.setAttribute('role', 'button');
+                compactCard.setAttribute('tabindex', '0');
+                compactCard.title = `Acesso Restrito: ${sys.title}`;
+                compactCard.onclick = function() {
+                    if (!loggedUser) {
+                        alert(`🔒 Módulo Protegido: É necessário se identificar no portal para acessar o módulo "${sys.title}".`);
+                        scrollToAuthCard();
+                    } else {
+                        const papelTxt = typeof getRoleLabel === 'function' ? getRoleLabel(currentRole) : currentRole;
+                        alert(`🔒 Acesso Restrito: Seu perfil atual (${papelTxt}) não possui permissão de acesso ao módulo "${sys.title}".\n\nCaso necessite de liberação, solicite ao desenvolvedor ou à direção escolar no Painel de Acessos.`);
+                    }
+                };
+
+                compactCard.innerHTML = `
+                    <div class="compact-icon-box ${sys.bgClass || 'theme-blue'}">
+                        <i class="${sys.iconClass || 'fa-solid fa-cube'}"></i>
+                    </div>
+                    <div class="compact-info">
+                        <div class="compact-title">${sys.title}</div>
+                        <div class="compact-tag">${sys.tag || 'MÓDULO ESCOLAR'}</div>
+                        <div class="compact-badge"><i class="fa-solid fa-lock"></i> ACESSO RESTRITO</div>
+                    </div>
+                `;
+
+                gridRestritos.appendChild(compactCard);
+            }
         }
-
-        const card = document.createElement('a');
-        const restrictedClass = !isAllowed ? 'card-access-restricted' : '';
-        card.className = `system-card ${sys.isLive ? 'featured' : ''} ${sys.isCustom ? 'custom-system-card' : ''} ${restrictedClass}`.trim();
-        card.href = (isAllowed && isConfigured) ? finalUrl : 'javascript:void(0);';
-        if (isExternal) {
-            card.target = '_blank';
-            card.rel = 'noopener noreferrer';
-        }
-
-        // Clique no card
-        card.addEventListener('click', function(e) {
-            if (sys.moduloKey && !loggedUser) {
-                e.preventDefault();
-                alert(`🔒 Módulo Protegido: É necessário se identificar no portal para acessar o módulo "${sys.title}".`);
-                scrollToAuthCard();
-                return;
-            }
-
-            if (!isAllowed) {
-                e.preventDefault();
-                alert(`🔒 Acesso Restrito: Seu perfil atual não possui permissão de acesso ao módulo "${sys.title}".\n\nCaso necessite de liberação, solicite ao desenvolvedor ou à direção escolar no Painel de Acessos.`);
-                return;
-            }
-
-            if (!isConfigured) {
-                e.preventDefault();
-                alert(`O link para o sistema "${sys.title}" ainda não foi configurado.`);
-                return;
-            }
-        });
-
-        card.innerHTML = `
-            <div>
-                <!-- ÍCONE -->
-                <div class="giant-icon-wrapper ${sys.bgClass || 'theme-emerald'}">
-                    <i class="${sys.iconClass || 'fa-solid fa-cubes'}"></i>
-                </div>
-
-                <div style="margin-bottom: 8px;">
-                    ${badgeHtml}
-                </div>
-
-                <h4 class="card-title">${sys.title}</h4>
-                <p class="card-desc">${sys.description}</p>
-            </div>
-            ${sys.isCustom ? `
-                <div style="display:flex; flex-direction:column; gap:6px; margin-top: auto;">
-                    <button onclick="event.stopPropagation(); deleteCustomSystem('${sys.id}')" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; text-align:center; padding:4px;"><i class="fa-solid fa-trash"></i> Remover Sistema</button>
-                </div>
-            ` : ''}
-        `;
-
-        grid.appendChild(card);
     });
+
+    if (secRestritos) {
+        secRestritos.style.display = countRestritos > 0 ? 'block' : 'none';
+    }
 }
 
 function openConfigModal() {
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor do sistema pode alterar as configurações de links dos sistemas padrão.");
+        return;
+    }
+
     const modal = document.getElementById('configModal');
     if (!modal) return;
 
@@ -817,6 +855,12 @@ function closeConfigModal() {
 }
 
 function openAddCustomSystemModal() {
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor do sistema pode cadastrar novos sistemas.");
+        return;
+    }
+
     const modal = document.getElementById('modalAddCustomSystem');
     if (!modal) return;
     modal.style.display = 'flex';
@@ -830,6 +874,12 @@ function closeAddCustomSystemModal() {
 function submitAddCustomSystem(e) {
     if (e && e.preventDefault) e.preventDefault();
 
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor pode cadastrar novos sistemas.");
+        return;
+    }
+
     const title = document.getElementById('customSysTitle')?.value.trim();
     const tag = document.getElementById('customSysTag')?.value.trim().toUpperCase();
     const iconClass = document.getElementById('customSysIcon')?.value;
@@ -839,25 +889,30 @@ function submitAddCustomSystem(e) {
     if (!title || !tag || !url || !description) return;
 
     const customSystems = getCustomSystems();
+    const newId = "custom-" + Date.now();
     const newSys = {
-        id: "custom-" + Date.now(),
+        id: newId,
+        moduloKey: newId,
         title,
         iconClass,
-        bgClass: "icon-emerald",
+        bgClass: "theme-emerald",
         tag,
         description,
         url,
         status: "online",
-        badge: "CUSTOMIZADO",
-        isLive: false,
+        badge: "NOVO LINK",
+        isLive: true,
         isCustom: true
     };
 
     customSystems.push(newSys);
     localStorage.setItem('pedro_rizzi_custom_systems', JSON.stringify(customSystems));
+    if (window.sigeDB && typeof window.sigeDB.syncToFirebase === 'function') {
+        window.sigeDB.syncToFirebase();
+    }
 
     closeAddCustomSystemModal();
-    loadSystems();
+    loadSystems(true);
     alert(`Sistema "${title}" cadastrado com sucesso!`);
 
     // Reset inputs

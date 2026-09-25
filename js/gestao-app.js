@@ -1082,13 +1082,15 @@ function setupTabNavigation() {
         const loggedUser = sigeDB.getLoggedUser();
         const activeRole = (typeof sigeDB.getRole === 'function') ? sigeDB.getRole() : (loggedUser ? loggedUser.role : 'comunidade');
         if (activeRole === 'desenvolvedor' || (loggedUser && loggedUser.role === 'desenvolvedor')) {
-            abaParam = 'admin'; // Visão padrão do desenvolvedor!
+            abaParam = 'dev'; // Visão padrão do desenvolvedor!
+        } else if (activeRole === 'admin') {
+            abaParam = 'admin';
         } else if (activeRole === 'direcao') {
             abaParam = 'direcao';
         } else if (activeRole === 'supervisao') {
             abaParam = 'supervisao';
         } else if (activeRole === 'uniformes') {
-            abaParam = 'uniformes';
+            abaParam = 'admin';
         } else {
             abaParam = 'op'; // Padrão: Orientação Educacional
         }
@@ -1109,27 +1111,36 @@ function setupTabNavigation() {
 }
 
 function switchTab(tabId) {
+    if (tabId === 'uniformes') {
+        tabId = 'admin';
+        setTimeout(() => switchAdminSubTab('uniformes'), 50);
+    }
+
     const modulosLabels = {
         op: "Orientação Educacional (OE)",
         mural: "Mural & Prazos",
         supervisao: "Supervisão Pedagógica",
         admin: "Administração Integrada",
         direcao: "Direção Executiva",
+        dev: "Painel do Desenvolvedor & TI",
         uniformes: "Controle de Uniformes"
     };
 
     if (!sigeDB.temPermissaoModulo(tabId)) {
         const moduloNome = modulosLabels[tabId] || tabId;
         showToast(`⚠️ Acesso Restrito: Seu perfil de usuário não possui permissão para acessar o módulo "${moduloNome}".`, "warning");
-        const modulosOrdem = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'uniformes'];
+        const modulosOrdem = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'dev'];
         const primeiroPermitido = modulosOrdem.find(m => sigeDB.temPermissaoModulo(m)) || 'op';
         tabId = primeiroPermitido;
     }
 
     const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
     const sections = document.querySelectorAll(".tab-content-section");
+    const tabBtns = document.querySelectorAll(".sige-tab-btn");
 
     sections.forEach(s => s.classList.remove("active"));
+    tabBtns.forEach(b => b.classList.remove("active"));
+
     const targetSection = document.getElementById(`tab-${tabId}`) || document.getElementById("tab-op");
     if (targetSection) targetSection.classList.add("active");
     if (btn) btn.classList.add("active");
@@ -1138,6 +1149,10 @@ function switchTab(tabId) {
 
     if (tabId === 'direcao') {
         switchDirSubTab(currentDirSubTab || 'whatsapp');
+    } else if (tabId === 'admin') {
+        switchAdminSubTab(currentAdminSubTab || 'uniformes');
+    } else if (tabId === 'dev') {
+        switchDevSubTab(currentDevSubTab || 'rbac');
     }
 }
 
@@ -1228,7 +1243,7 @@ function renderAllModules(targetModule = null, forceAll = false) {
         try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
         try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
         try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
-        try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+        try { renderModuleDev(); } catch (e) { console.error("Erro em renderModuleDev:", e); }
         return;
     }
 
@@ -1252,11 +1267,14 @@ function renderAllModules(targetModule = null, forceAll = false) {
         case 'admin':
             try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
             break;
+        case 'dev':
+            try { renderModuleDev(); } catch (e) { console.error("Erro em renderModuleDev:", e); }
+            break;
         case 'direcao':
             try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
             break;
         case 'uniformes':
-            try { renderModuleUniformes(); } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+            try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
             break;
         default:
             try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
@@ -5418,33 +5436,351 @@ function submitNovaReuniaoPedagogica(e) {
 }
 
 // ==========================================
-// MÓDULO 4: ADMINISTRAÇÃO
+// MÓDULO 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA
 // ==========================================
-function renderModuleAdministracao() {
-    const colPendente = document.getElementById("admColPendente");
-    const colAnalise = document.getElementById("admColAnalise");
-    const colConcluido = document.getElementById("admColConcluido");
+let currentAdminSubTab = 'uniformes';
 
-    if (colPendente && colAnalise && colConcluido) {
-        const demandas = sigeDB.getDemandasAdmin();
+function switchAdminSubTab(subTab) {
+    currentAdminSubTab = subTab;
+    const contents = document.querySelectorAll(".admin-subtab-content");
+    const btns = document.querySelectorAll(".admin-subtab-btn");
 
-        const pendentes = demandas.filter(d => d.status === "pendente");
-        const analise = demandas.filter(d => d.status === "em_atendimento");
-        const concluidas = demandas.filter(d => d.status === "concluido");
+    contents.forEach(c => {
+        c.style.display = "none";
+        c.classList.remove("active");
+    });
+    btns.forEach(b => b.classList.remove("active"));
 
-        colPendente.innerHTML = renderDemandaCardsList(pendentes, "admin");
-        colAnalise.innerHTML = renderDemandaCardsList(analise, "admin");
-        colConcluido.innerHTML = renderDemandaCardsList(concluidas, "admin");
+    const targetContent = document.getElementById(`adminSubTab_${subTab}`);
+    const targetBtn = document.querySelector(`.admin-subtab-btn[data-adminsub="${subTab}"]`);
+
+    if (targetContent) {
+        targetContent.style.display = "block";
+        targetContent.classList.add("active");
+    }
+    if (targetBtn) {
+        targetBtn.classList.add("active");
     }
 
-    renderAdminPermissoesUsuarios();
-    renderWhatsappConfigPanel();
-    renderFirebaseConfigPanel();
-    renderEquipeEscolarTable(typeof currentSetorFilter !== "undefined" ? currentSetorFilter : "todos");
-    renderTurmasAdminTable();
-    renderConfigEscolaForm();
-    renderAuditLogsTable();
+    // Ações específicas ao abrir cada sub-aba da Administração
+    if (subTab === 'uniformes') {
+        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
+    } else if (subTab === 'telefones') {
+        renderAdminTelefonesTable();
+    } else if (subTab === 'turnos') {
+        if (typeof renderTurmasAdminTable === "function") renderTurmasAdminTable();
+    } else if (subTab === 'parametros') {
+        if (typeof renderConfigEscolaForm === "function") renderConfigEscolaForm();
+    }
 }
+
+function renderModuleAdministracao() {
+    try {
+        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
+    } catch (e) {
+        console.error("Erro ao renderizar uniformes na administração:", e);
+    }
+    try {
+        renderAdminTelefonesTable();
+    } catch (e) {
+        console.error("Erro ao renderizar telefones na administração:", e);
+    }
+    try {
+        renderTurmasAdminTable();
+    } catch (e) {
+        console.error("Erro ao renderizar turmas:", e);
+    }
+    try {
+        renderConfigEscolaForm();
+    } catch (e) {
+        console.error("Erro ao renderizar parâmetros da escola:", e);
+    }
+}
+
+function renderAdminTelefonesTable() {
+    const tbody = document.getElementById("adminTelefonesTableBody");
+    if (!tbody) return;
+
+    const equipe = sigeDB.getEquipeEscolar() || [];
+    const buscaInput = document.getElementById("adminTelefonesBuscaInput");
+    const buscaTexto = buscaInput ? buscaInput.value.toLowerCase().trim() : "";
+    const setorSelect = document.getElementById("adminTelefonesSetorFilter");
+    const setorFiltro = setorSelect ? setorSelect.value : "todos";
+
+    let lista = equipe;
+    if (setorFiltro && setorFiltro !== "todos") {
+        lista = lista.filter(p => p.setor === setorFiltro);
+    }
+
+    if (buscaTexto) {
+        lista = lista.filter(p => {
+            const nome = (p.nome || '').toLowerCase();
+            const email = (p.email || '').toLowerCase();
+            const cargo = (p.cargoFuncao || '').toLowerCase();
+            const tel = (p.telefone || '').replace(/\D/g, "");
+            const turmas = (p.turmasOuSalas || '').toLowerCase();
+            return nome.includes(buscaTexto) || email.includes(buscaTexto) || cargo.includes(buscaTexto) || tel.includes(buscaTexto) || turmas.includes(buscaTexto);
+        });
+    }
+
+    if (lista.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding:2.5rem 1rem; text-align:center; color:#64748b;">
+                    <i class="fa-solid fa-users-slash" style="font-size:2rem; margin-bottom:8px; opacity:0.5; display:block;"></i>
+                    Nenhum colaborador encontrado com os filtros selecionados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(p => {
+        const telefoneRaw = (p.telefone || '').replace(/\D/g, "");
+        const temTelefone = telefoneRaw.length >= 10;
+        const telefoneFormatado = p.telefone || 'Não informado';
+        const waLink = temTelefone ? `https://wa.me/55${telefoneRaw}` : null;
+
+        const setorBadgeMap = {
+            docentes: '<span style="background:#eff6ff; color:#1d4ed8; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">👨‍🏫 Docente</span>',
+            orientacao: '<span style="background:#fef3c7; color:#b45309; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">🧭 Orientação</span>',
+            supervisao: '<span style="background:#f3e8ff; color:#7e22ce; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">📋 Supervisão</span>',
+            direcao: '<span style="background:#fdf2f8; color:#be185d; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">👑 Direção</span>',
+            secretaria: '<span style="background:#ecfdf5; color:#047857; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">📑 Secretaria</span>',
+            apoio: '<span style="background:#f1f5f9; color:#475569; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">🔧 Apoio & TI</span>'
+        };
+        const badgeSetor = setorBadgeMap[p.setor] || `<span style="background:#f1f5f9; color:#475569; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.75rem;">${p.setor || 'Geral'}</span>`;
+
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:10px; font-weight:800; color:#0f172a;">
+                    ${p.nome || 'Sem Nome'}
+                    ${p.email ? `<div style="font-size:0.75rem; color:#64748b; font-weight:400;">${p.email}</div>` : ''}
+                </td>
+                <td style="padding:10px;">
+                    <div>${p.cargoFuncao || 'Colaborador'}</div>
+                    <div style="margin-top:2px;">${badgeSetor}</div>
+                </td>
+                <td style="padding:10px;">
+                    <div style="font-weight:700; color:${temTelefone ? '#0f172a' : '#94a3b8'};">
+                        <i class="fa-solid fa-phone" style="font-size:0.75rem; color:#64748b;"></i> ${telefoneFormatado}
+                    </div>
+                </td>
+                <td style="padding:10px; color:#475569; font-size:0.8rem;">
+                    ${p.turmasOuSalas || '-'}
+                </td>
+                <td style="padding:10px; text-align:center;">
+                    <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                        ${temTelefone ? `
+                            <a href="${waLink}" target="_blank" class="btn" style="background:#16a34a; color:white; padding:5px 10px; font-size:0.78rem; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="Conversar no WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                            </a>
+                        ` : ''}
+                        <button type="button" onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:5px 9px; font-size:0.78rem; border-radius:6px; cursor:pointer;" title="Enviar Recado Rápido">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <button type="button" onclick="openCadastroProfissionalModal('${p.id}')" class="btn" style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:5px 9px; font-size:0.78rem; border-radius:6px; cursor:pointer;" title="Editar Dados e Telefone">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function abrirSistemaContabil() {
+    const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    const url = savedUrls['contabil'];
+    if (url && url.trim().length > 0) {
+        window.open(url, '_blank');
+    } else {
+        showToast("⚠️ Link do Sistema Contábil (APMF) ainda não configurado pelo Desenvolvedor.", "warning");
+    }
+}
+
+function abrirSistemaPatrimonio() {
+    const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    const url = savedUrls['patrimonio'];
+    if (url && url.trim().length > 0) {
+        window.open(url, '_blank');
+    } else {
+        showToast("⚠️ Link do Sistema de Patrimônio ainda não configurado pelo Desenvolvedor.", "warning");
+    }
+}
+
+// ==========================================
+// MÓDULO 7: DESENVOLVEDOR & TI (EXCLUSIVO DEV)
+// ==========================================
+let currentDevSubTab = 'rbac';
+
+function switchDevSubTab(subTab) {
+    currentDevSubTab = subTab;
+    const contents = document.querySelectorAll(".dev-subtab-content");
+    const btns = document.querySelectorAll(".dev-subtab-btn");
+
+    contents.forEach(c => {
+        c.style.display = "none";
+        c.classList.remove("active");
+    });
+    btns.forEach(b => b.classList.remove("active"));
+
+    const targetContent = document.getElementById(`devSubTab_${subTab}`);
+    const targetBtn = document.querySelector(`.dev-subtab-btn[data-devsub="${subTab}"]`);
+
+    if (targetContent) {
+        targetContent.style.display = "block";
+        targetContent.classList.add("active");
+    }
+    if (targetBtn) {
+        targetBtn.classList.add("active");
+    }
+
+    // Ações específicas ao abrir cada sub-aba do DEV
+    if (subTab === 'rbac') {
+        if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
+        if (typeof renderAdminPermissoesUsuarios === "function") renderAdminPermissoesUsuarios();
+    } else if (subTab === 'banco') {
+        if (typeof renderFirebaseConfigPanel === "function") renderFirebaseConfigPanel();
+    } else if (subTab === 'backup') {
+        if (typeof renderAuditLogsTable === "function") renderAuditLogsTable();
+    } else if (subTab === 'whatsapp_auto') {
+        if (typeof renderWhatsappConfigPanel === "function") renderWhatsappConfigPanel();
+    }
+}
+
+function renderModuleDev() {
+    try { renderAdminPendingUsers(); } catch (e) { console.error("Erro ao renderizar pendentes:", e); }
+    try { renderEquipeEscolarTable(typeof currentSetorFilter !== "undefined" ? currentSetorFilter : "todos"); } catch (e) { console.error("Erro ao renderizar equipe:", e); }
+    try { renderAdminPermissoesUsuarios(); } catch (e) { console.error("Erro ao renderizar permissões:", e); }
+    try { renderFirebaseConfigPanel(); } catch (e) { console.error("Erro ao renderizar Firebase:", e); }
+    try { renderAuditLogsTable(); } catch (e) { console.error("Erro ao renderizar logs:", e); }
+    try { renderWhatsappConfigPanel(); } catch (e) { console.error("Erro ao renderizar WhatsApp API:", e); }
+}
+
+// Funções dos modais de configuração de links e sistemas customizados para a tela do DEV
+function openConfigModal() {
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor do sistema pode alterar as configurações de links dos sistemas padrão.");
+        return;
+    }
+
+    const modal = document.getElementById('configModal');
+    if (!modal) return;
+
+    const savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    const savedSheetUrl = localStorage.getItem('pedro_rizzi_sheet_url') || '';
+
+    if (document.getElementById('url_sheet')) document.getElementById('url_sheet').value = savedSheetUrl;
+    if (document.getElementById('url_contabil')) document.getElementById('url_contabil').value = savedUrls['contabil'] || '';
+    if (document.getElementById('url_recursos')) document.getElementById('url_recursos').value = savedUrls['recursos'] || '';
+    if (document.getElementById('url_biblioteca')) document.getElementById('url_biblioteca').value = savedUrls['biblioteca'] || '';
+    if (document.getElementById('url_patrimonio')) document.getElementById('url_patrimonio').value = savedUrls['patrimonio'] || '';
+
+    modal.style.display = 'flex';
+}
+
+function closeConfigModal() {
+    const modal = document.getElementById('configModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function salvarLinksConfig() {
+    const sheetUrl = document.getElementById('url_sheet') ? document.getElementById('url_sheet').value.trim() : '';
+    if (sheetUrl) {
+        localStorage.setItem('pedro_rizzi_sheet_url', sheetUrl);
+    }
+
+    const savedUrls = {
+        contabil: document.getElementById('url_contabil') ? document.getElementById('url_contabil').value.trim() : '',
+        recursos: document.getElementById('url_recursos') ? document.getElementById('url_recursos').value.trim() : '',
+        biblioteca: document.getElementById('url_biblioteca') ? document.getElementById('url_biblioteca').value.trim() : '',
+        patrimonio: document.getElementById('url_patrimonio') ? document.getElementById('url_patrimonio').value.trim() : ''
+    };
+    localStorage.setItem('pedro_rizzi_urls', JSON.stringify(savedUrls));
+
+    closeConfigModal();
+    showToast("✅ Links e configurações salvas com sucesso!");
+}
+
+function openAddCustomSystemModal() {
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor do sistema pode cadastrar novos sistemas.");
+        return;
+    }
+
+    const modal = document.getElementById('modalAddCustomSystem');
+    if (!modal) return;
+    modal.style.display = 'flex';
+}
+
+function closeAddCustomSystemModal() {
+    const modal = document.getElementById('modalAddCustomSystem');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitAddCustomSystem(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const loggedUser = window.sigeDB ? window.sigeDB.getLoggedUser() : null;
+    if (!loggedUser || loggedUser.role !== 'desenvolvedor') {
+        alert("🔒 Acesso Restrito: Apenas o Desenvolvedor pode cadastrar novos sistemas.");
+        return;
+    }
+
+    const title = document.getElementById('customSysTitle')?.value.trim();
+    const tag = document.getElementById('customSysTag')?.value.trim().toUpperCase();
+    const iconClass = document.getElementById('customSysIcon')?.value;
+    const url = document.getElementById('customSysUrl')?.value.trim();
+    const description = document.getElementById('customSysDesc')?.value.trim();
+
+    if (!title || !tag || !url || !description) return;
+
+    const customSystems = JSON.parse(localStorage.getItem('pedro_rizzi_custom_systems') || '[]');
+    const newId = "custom-" + Date.now();
+    const newSys = {
+        id: newId,
+        moduloKey: newId,
+        title,
+        iconClass,
+        bgClass: "theme-emerald",
+        tag,
+        description,
+        url,
+        status: "online",
+        badge: "NOVO LINK",
+        isLive: true,
+        isCustom: true
+    };
+
+    customSystems.push(newSys);
+    localStorage.setItem('pedro_rizzi_custom_systems', JSON.stringify(customSystems));
+    if (window.sigeDB && typeof window.sigeDB.syncToFirebase === 'function') {
+        window.sigeDB.syncToFirebase();
+    }
+
+    closeAddCustomSystemModal();
+    showToast(`✅ Sistema "${title}" cadastrado com sucesso!`);
+
+    if (document.getElementById('customSysTitle')) document.getElementById('customSysTitle').value = "";
+    if (document.getElementById('customSysTag')) document.getElementById('customSysTag').value = "";
+    if (document.getElementById('customSysUrl')) document.getElementById('customSysUrl').value = "";
+    if (document.getElementById('customSysDesc')) document.getElementById('customSysDesc').value = "";
+}
+
+window.switchAdminSubTab = switchAdminSubTab;
+window.switchDevSubTab = switchDevSubTab;
+window.renderAdminTelefonesTable = renderAdminTelefonesTable;
+window.abrirSistemaContabil = abrirSistemaContabil;
+window.abrirSistemaPatrimonio = abrirSistemaPatrimonio;
+window.openConfigModal = openConfigModal;
+window.closeConfigModal = closeConfigModal;
+window.salvarLinksConfig = salvarLinksConfig;
+window.openAddCustomSystemModal = openAddCustomSystemModal;
+window.closeAddCustomSystemModal = closeAddCustomSystemModal;
+window.submitAddCustomSystem = submitAddCustomSystem;
 
 function renderWhatsappConfigPanel() {
     const config = sigeDB.getWhatsappConfig();

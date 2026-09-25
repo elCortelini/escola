@@ -1266,13 +1266,19 @@ class SigeDatabase {
     // Gerenciador de Usuários e Login por E-mail (RBAC Modular)
     getDefaultPermissoesByRole(role) {
         const base = {
-            op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+            op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
             ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
         };
         if (!role) return base;
-        if (role === "desenvolvedor" || role === "direcao" || role === "admin") {
+        if (role === "desenvolvedor") {
             return {
-                op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
+                op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true,
+                ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+            };
+        }
+        if (role === "direcao" || role === "admin") {
+            return {
+                op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
@@ -4123,6 +4129,11 @@ class SigeDatabase {
     temPermissaoModulo(moduloId) {
         const user = this.getLoggedUser();
         if (!user) return false;
+
+        // O módulo 'dev' é exclusivo da conta e visão de Desenvolvedor
+        if (moduloId === 'dev') {
+            return (user.role === 'desenvolvedor' && this.getRole() === 'desenvolvedor');
+        }
 
         // Se o usuário autenticado for o Desenvolvedor do Sistema
         if (user.role === 'desenvolvedor') {

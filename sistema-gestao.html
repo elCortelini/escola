@@ -127,16 +127,16 @@
             <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Supervisão Pedagógica
             <span class="tab-badge" id="badgeTabSup">0</span>
         </button>
-        <button class="sige-tab-btn" data-tab="admin">
-            <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Administração
-            <span class="tab-badge" id="badgeTabAdm">0</span>
-        </button>
         <button class="sige-tab-btn" data-tab="direcao">
             <i class="fa-solid fa-crown" style="color:var(--direcao-color);"></i> Direção & Painel
         </button>
-        <button class="sige-tab-btn" data-tab="uniformes">
-            <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Uniformes
-            <span class="tab-badge" id="badgeTabUniformes" style="display:none;">0</span>
+        <button class="sige-tab-btn" data-tab="admin">
+            <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração
+            <span class="tab-badge" id="badgeTabAdm">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="dev" id="tabBtnDev" style="display:none;">
+            <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Desenvolvedor & TI
+            <span class="tab-badge" id="badgeTabDev" style="background:#f59e0b; display:none;">0</span>
         </button>
     </nav>
 
@@ -455,22 +455,390 @@
         </section>
 
 
+        
         <!-- ========================================== -->
-        <!-- ABA 4: ADMINISTRAÇÃO -->
+        <!-- ABA 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA -->
         <!-- ========================================== -->
         <section id="tab-admin" class="tab-content-section">
-            <div class="action-toolbar">
+            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
-                    <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
-                        <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Painel de Administração Integrada do Sistema
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração Escolar & Logística
                     </h3>
-                    <p style="font-size:0.85rem; color:#64748b;">Gestão de equipe escolar multidisciplinar, turmas, turnos, solicitações de TI/infraestrutura e configurações globais.</p>
+                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Painel de gestão da Administradora: uniformes escolares, sistemas externos, telefones da equipe, turnos e dados da unidade.</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.83rem; font-weight:800; padding:8px 14px; border-radius:10px; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 4px 10px rgba(22,163,74,0.25);">
+                        <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado à Equipe
+                    </button>
+                    <button type="button" onclick="openCadastroProfissionalModal()" class="btn" style="background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; font-size:0.83rem; font-weight:800; padding:8px 14px; border-radius:10px; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 4px 10px rgba(37,99,235,0.25);">
+                        <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador
+                    </button>
                 </div>
             </div>
 
+            <!-- CARDS DE NAVEGAÇÃO INTERNA DA ADMINISTRAÇÃO -->
+            <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
+                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="uniformes" onclick="switchAdminSubTab('uniformes')">
+                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
+                        <i class="fa-solid fa-shirt"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Uniformes</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="sistemas" onclick="switchAdminSubTab('sistemas')">
+                    <div class="dir-nav-card-icon" style="background:#eff6ff; color:#1d4ed8;">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Contábil & Patrimônio</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="telefones" onclick="switchAdminSubTab('telefones')">
+                    <div class="dir-nav-card-icon" style="background:#dcfce7; color:#16a34a;">
+                        <i class="fa-solid fa-address-book"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Telefones & Recados</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="turnos" onclick="switchAdminSubTab('turnos')">
+                    <div class="dir-nav-card-icon" style="background:#fef3c7; color:#d97706;">
+                        <i class="fa-solid fa-chalkboard"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Turnos & Turmas</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="alunos_pdf" onclick="switchAdminSubTab('alunos_pdf')">
+                    <div class="dir-nav-card-icon" style="background:#fee2e2; color:#dc2626;">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Importar Alunos</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="parametros" onclick="switchAdminSubTab('parametros')">
+                    <div class="dir-nav-card-icon" style="background:#f3e8ff; color:#9333ea;">
+                        <i class="fa-solid fa-school-flag"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Parâmetros Escola</div>
+                </button>
+            </div>
 
+            <!-- SUB-ABA 1: UNIFORMES ESCOLARES (INTEGRADO À ADMINISTRAÇÃO) -->
+            <div id="adminSubTab_uniformes" class="admin-subtab-content active">
+                <div id="adminSecUniformes">
+                    
+            <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
+                    </h3>
+                    <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Gestão de solicitações de alunos novos, trocas, remessas para a SME, estoque local e emissão de listas de entrega por turma.</p>
+                </div>
 
-            <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <button onclick="openModalNovoPedidoUniforme()" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-plus-circle"></i> Nova Solicitação de Uniforme
+                    </button>
+                    <button onclick="openModalFecharLoteSME()" class="btn btn-secondary" style="width:auto; background:#7c3aed; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-truck-ramp-box"></i> Fechar Remessa / Lote SME
+                    </button>
+                    <button onclick="openModalAjustarEstoque()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
+                    </button>
+                    <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
+                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação por Turma
+                    </button>
+                    <button onclick="imprimirRelatorioEntregasConcluidas()" class="btn btn-secondary" style="width:auto; background:#16a34a; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Relatório de Uniformes Entregues aos alunos com histórico">
+                        <i class="fa-solid fa-square-check"></i> Relatório de Entregas Realizadas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards Sintéticos de Métricas do Módulo -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #f59e0b; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando Envio à SME</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:4px;" id="statUniPendentesSme">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Pedidos aguardando lote</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #7c3aed; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Em Remessa / Lote SME</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#7c3aed; margin-top:4px;" id="statUniEnviadosSme">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Aguardando chegada da SME</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Disponível p/ Entrega</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:4px;" id="statUniDisponiveisEntrega">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Na escola pronto para o aluno</div>
+                </div>
+
+                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Entregues aos Alunos</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:4px;" id="statUniEntregues">0</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Total de entregas concluídas</div>
+                </div>
+            </div>
+
+            <!-- Filtros Principais & Tabela -->
+            <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-filter" style="color:#0284c7;"></i>
+                        <strong style="color:#0f172a; font-size:1rem;">Filtros de Pesquisa & Relatórios</strong>
+                    </div>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="limparFiltrosUniformes()" class="btn btn-secondary" style="font-size:0.78rem; padding:4px 10px;">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
+                        <input type="text" id="filterUniSearch" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
+                        <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todas">Todas as Turmas</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
+                        <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todos">Todos os Status</option>
+                            <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
+                            <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
+                            <option value="disponivel_estoque">📦 Disponível para Entrega</option>
+                            <option value="entregue">✅ Entregue ao Aluno</option>
+                            <option value="cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
+                        <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            <option value="todos">Todos os Motivos</option>
+                            <option value="aluno_novo">Aluno Novo</option>
+                            <option value="troca_tamanho">Troca de Tamanho</option>
+                            <option value="danificado">Uniforme Danificado</option>
+                            <option value="perda">Perda do Uniforme</option>
+                            <option value="outro">Outro Motivo</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
+                        <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
+                        <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <!-- Tabela de Pedidos de Uniformes -->
+                <div style="overflow-x:auto;">
+                    <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background:#f1f5f9; color:#334155;">
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;"><input type="checkbox" id="chkSelectAllUni" onchange="toggleSelectAllPedidosUni(this)"></th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Data</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Aluno & Turma</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Motivo</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Solicitação & Tamanho</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Responsável</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Remessa SME / Previsão</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Status</th>
+                                <th style="padding:10px; border-bottom:2px solid #cbd5e1; text-align:center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPedidosUniformesBody">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção Dupla: Painel de Estoque Local + Histórico de Lotes SME -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.5rem;">
+                
+                <!-- Painel de Estoque Escolar Local -->
+                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
+                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
+                        </h4>
+                        
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <div class="est-gender-tabs" style="display:inline-flex; background:#e2e8f0; border-radius:8px; padding:2px; font-size:0.75rem; font-weight:800;">
+                                <button type="button" class="btn-est-gen active" id="btnEstGenMasc" onclick="switchEstoqueGenero('masculino')" style="padding:3px 8px; border-radius:6px; border:none; background:#059669; color:white; cursor:pointer;">👨 Masc</button>
+                                <button type="button" class="btn-est-gen" id="btnEstGenFem" onclick="switchEstoqueGenero('feminino')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">👩 Fem</button>
+                                <button type="button" class="btn-est-gen" id="btnEstGenTodos" onclick="switchEstoqueGenero('todos')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">🌐 Total</button>
+                            </div>
+                            <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
+                                <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
+                            </button>
+                        </div>
+                    </div>
+                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                        Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
+                    </p>
+                    <div id="painelEstoqueUniformesContainer" style="overflow-x:auto;">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
+                <!-- Painel de Remessas / Lotes EnViados à SME -->
+                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-truck-fast" style="color:#7c3aed;"></i> Lotes & Remessas Enviadas para a SME
+                        </h4>
+                        <button onclick="openModalFecharLoteSME()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#7c3aed; border-color:#7c3aed;">
+                            <i class="fa-solid fa-plus"></i> Novo Lote SME
+                        </button>
+                    </div>
+                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                        Remessas agrupadas com data de corte, acompanhamento de entrega e registro de recebimento.
+                    </p>
+                    <div id="painelLotesSMEContainer">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
+            </div>
+        
+                </div>
+            </div>
+
+            <!-- SUB-ABA 2: SISTEMAS EXTERNOS INTEGRADOS (CONTÁBIL & PATRIMÔNIO) -->
+            <div id="adminSubTab_sistemas" class="admin-subtab-content" style="display:none;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.2rem; margin-bottom:2rem;">
+                    <!-- Card Sistema Contábil (APMF) -->
+                    <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <span style="font-size:0.75rem; font-weight:800; background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:20px; text-transform:uppercase;">
+                                    <i class="fa-solid fa-calculator"></i> Gestão Financeira
+                                </span>
+                                <span style="font-size:0.75rem; color:#16a34a; font-weight:700;"><i class="fa-solid fa-circle"></i> Disponível</span>
+                            </div>
+                            <h4 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin:0 0 6px 0;">Sistema Contábil (APMF)</h4>
+                            <p style="font-size:0.85rem; color:#64748b; margin:0 0 16px 0; line-height:1.5;">Controle de receitas, despesas, prestação de contas, fluxo de caixa e movimentações financeiras da APMF escolar.</p>
+                        </div>
+                        <div>
+                            <button type="button" onclick="abrirSistemaContabil()" class="btn btn-primary" style="width:100%; background:#2563eb; color:white; font-size:0.88rem; padding:10px 16px; font-weight:800; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar Sistema Contábil
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card Sistema de Patrimônio -->
+                    <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <span style="font-size:0.75rem; font-weight:800; background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:20px; text-transform:uppercase;">
+                                    <i class="fa-solid fa-boxes-stacked"></i> Controle Patrimonial
+                                </span>
+                                <span style="font-size:0.75rem; color:#16a34a; font-weight:700;"><i class="fa-solid fa-circle"></i> Disponível</span>
+                            </div>
+                            <h4 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin:0 0 6px 0;">Sistema de Patrimônio</h4>
+                            <p style="font-size:0.85rem; color:#64748b; margin:0 0 16px 0; line-height:1.5;">Inventário de bens móveis, tombamento de equipamentos tecnológicos, auditoria e gestão de ativos da escola.</p>
+                        </div>
+                        <div>
+                            <button type="button" onclick="abrirSistemaPatrimonio()" class="btn btn-primary" style="width:100%; background:#ea580c; color:white; font-size:0.88rem; padding:10px 16px; font-weight:800; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar Sistema de Patrimônio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-ABA 3: CADASTRO DE TELEFONES DE PROFISSIONAIS & DISPARO DE MENSAGENS -->
+            <div id="adminSubTab_telefones" class="admin-subtab-content" style="display:none;">
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                        <div>
+                            <h4 style="font-size:1.15rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:8px; margin:0;">
+                                <i class="fa-solid fa-address-book" style="color:#16a34a; font-size:1.3rem;"></i> Cadastro de Telefones & Contatos dos Profissionais
+                            </h4>
+                            <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                                Agenda institucional e telefones de professores e colaboradores para comunicação direta e envio de mensagens WhatsApp.
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.82rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer;">
+                                <i class="fa-brands fa-whatsapp"></i> Disparar Mensagem Geral
+                            </button>
+                            <button type="button" onclick="openCadastroProfissionalModal()" class="btn" style="background:#2563eb; color:white; font-size:0.82rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer;">
+                                <i class="fa-solid fa-user-plus"></i> + Novo Profissional
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Filtros e Busca de Telefones -->
+                    <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="adminTelefonesBuscaInput" oninput="renderAdminTelefonesTable()" placeholder="🔍 Buscar profissional por nome, cargo ou telefone..." class="search-input" style="flex:1; min-width:240px; font-size:0.85rem;">
+                        <select id="adminTelefonesSetorFilter" onchange="renderAdminTelefonesTable()" class="search-input" style="min-width:180px; font-size:0.85rem; font-weight:700;">
+                            <option value="todos">Todos os Setores</option>
+                            <option value="docentes">👨‍🏫 Docentes</option>
+                            <option value="orientacao">🧭 Orientação</option>
+                            <option value="supervisao">📋 Supervisão</option>
+                            <option value="direcao">👑 Direção</option>
+                            <option value="secretaria">📑 Secretaria</option>
+                            <option value="apoio">🔧 Apoio & TI</option>
+                        </select>
+                    </div>
+
+                    <!-- Tabela de Telefones e Contatos -->
+                    <div style="overflow-x:auto;">
+                        <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:#f1f5f9; color:#334155;">
+                                    <th style="padding:10px;">Colaborador</th>
+                                    <th style="padding:10px;">Cargo / Setor</th>
+                                    <th style="padding:10px;">Telefone / WhatsApp</th>
+                                    <th style="padding:10px;">Turmas / Salas</th>
+                                    <th style="padding:10px; text-align:center;">Ações de Contato</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTelefonesTableBody">
+                                <!-- Renderizado via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-ABA 4: ESTRUTURA DE TURNOS & TURMAS -->
+            <div id="adminSubTab_turnos" class="admin-subtab-content" style="display:none;">
+                <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-chalkboard" style="color:#0284c7; font-size:1.3rem;"></i> Cadastro & Estrutura de Turmas e Turnos
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Mapeamento de turmas, turnos letivos (Matutino/Vespertino/Noturno), salas de aula e tutores regentes.
+                        </p>
+                    </div>
+                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#0284c7;">
+                        <i class="fa-solid fa-plus"></i> + Nova Turma
+                    </button>
+                </div>
+
+                <div id="admTurmasIconesContainer" style="display:flex; flex-direction:column; gap:14px;">
+                    <!-- Renderizado dinamicamente em ícones compactos agrupados por turno -->
+                </div>
+            </div>
+            </div>
+
+            <!-- SUB-ABA 5: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+            <div id="adminSubTab_alunos_pdf" class="admin-subtab-content" style="display:none;">
+                <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
             <div style="background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 1rem;">
                     <div>
@@ -492,311 +860,12 @@
                     <div style="font-size: 1rem; font-weight: 800; color: #1e293b;">Clique aqui para selecionar ou arraste o arquivo PDF de Alunos</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">O sistema processará as turmas (ex: 101, 102), turnos e telefones automaticamente.</div>
                 </div>
-
-                <!-- Status e Resumo de Dados Importados -->
-                <div id="adminPdfImportMetaInfo" style="background: #f1f5f9; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <!-- Renderizado dinamicamente via updateAdminPdfImportMetaInfoDisplay() -->
-                </div>
-                
-                <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                    <button type="button" onclick="confirmarLimparAlunosImportados()" class="btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:800; font-size:0.8rem; padding:6px 12px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" title="Remover todos os alunos da base de dados">
-                        <i class="fa-solid fa-trash-can"></i> Limpar Cadastro de Alunos do Banco
-                    </button>
-                </div>
             </div>
 
-            <!-- CARD PENDENTES: SOLICITAÇÕES DE PRIMEIRO ACESSO (EXCLUSIVO DESENVOLVEDOR / ADMIN) -->
-            <div id="adminPendingUsersCard" class="rbac-card" style="display:none; padding: 1.5rem; border-radius: 18px; border: 2px solid #f59e0b; margin-bottom: 2rem; box-shadow: 0 6px 20px rgba(245,158,11,0.15); background: #fffbeb;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; border-bottom: 1px solid #fef3c7; padding-bottom: 12px;">
-                    <div>
-                        <h4 style="font-size: 1.25rem; font-weight: 900; color: #92400e; display: flex; align-items: center; gap: 10px; margin: 0;">
-                            <i class="fa-solid fa-user-clock" style="color: #f59e0b; font-size: 1.4rem;"></i> Solicitações de Primeiro Acesso Aguardando Autorização
-                        </h4>
-                        <p style="font-size: 0.84rem; color: #b45309; margin-top: 4px;">
-                            Novos colaboradores que realizaram login com e-mail institucional oficial. Selecione a função, marque os módulos que terão acesso e clique em <strong>Aprovar Acesso</strong>.
-                        </p>
-                    </div>
-                    <span id="badgePendingUsersCount" class="role-badge-pill" style="background:#f59e0b; color:#ffffff; font-weight:900; font-size:0.85rem; padding:6px 14px; border-radius:20px;">
-                        0 Pendente(s)
-                    </span>
-                </div>
-
-                <div class="rbac-table-container" style="background:white; border-radius:12px; border:1px solid #fde68a; overflow-x:auto;">
-                    <table class="rbac-table" style="width:100%;">
-                        <thead>
-                            <tr style="background:#fff7ed; border-bottom:2px solid #fed7aa; color:#9a3412;">
-                                <th style="width:24%;">E-mail Institucional / Solicitante</th>
-                                <th style="width:14%;">Data Solicitação</th>
-                                <th style="width:18%;">Função / Perfil Atribuído</th>
-                                <th style="width:30%;">Módulos a Liberar (RBAC)</th>
-                                <th style="width:14%; text-align:right;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminPendingUsersTableBody">
-                            <!-- Inserido dinamicamente via renderAdminPendingUsers() -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- CARD 1: QUADRO DA EQUIPE ESCOLAR & GESTÃO INTEGRADA DE ACESSOS AO SISTEMA (RBAC) -->
-            <div id="adminCardEquipeUnificada" class="rbac-card" style="padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.04); background: white;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
-                    <div>
-                        <h4 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0;">
-                            <i class="fa-solid fa-users-gear" style="color: #2563eb; font-size: 1.4rem;"></i> Quadro da Equipe Escolar & Gestão de Acessos ao Sistema (RBAC)
-                        </h4>
-                        <p style="font-size: 0.84rem; color: #64748b; margin-top: 4px;">
-                            Gestão unificada do corpo docente, equipe gestora, apoio e controle granular de permissões modulares de acesso ao sistema.
-                        </p>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(37,99,235,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador & Acesso
-                        </button>
-                        <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width: auto; font-size: 0.85rem; padding: 8px 14px; background: #16a34a; color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado
-                        </button>
-                    </div>
-                </div>
-
-                <!-- KPIs Rápidos da Equipe & Acessos -->
-                <div class="rbac-stats-grid" style="margin-bottom: 1.2rem;">
-                    <div class="rbac-stat-box">
-                        <div class="rbac-stat-icon" style="background:#eff6ff; color:#1d4ed8;">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div>
-                            <div class="rbac-stat-value" id="equipeKpiTotal">0</div>
-                            <div class="rbac-stat-label">Total de Colaboradores</div>
-                        </div>
-                    </div>
-
-                    <div class="rbac-stat-box">
-                        <div class="rbac-stat-icon" style="background:#dcfce7; color:#15803d;">
-                            <i class="fa-solid fa-user-check"></i>
-                        </div>
-                        <div>
-                            <div class="rbac-stat-value" id="equipeKpiAcessoLiberado">0</div>
-                            <div class="rbac-stat-label">Com Acesso ao Sistema</div>
-                        </div>
-                    </div>
-
-                    <div class="rbac-stat-box">
-                        <div class="rbac-stat-icon" style="background:#e0f2fe; color:#0369a1;">
-                            <i class="fa-solid fa-chalkboard-user"></i>
-                        </div>
-                        <div>
-                            <div class="rbac-stat-value" id="equipeKpiDocentes">0</div>
-                            <div class="rbac-stat-label">Corpo Docente</div>
-                        </div>
-                    </div>
-
-                    <div class="rbac-stat-box">
-                        <div class="rbac-stat-icon" style="background:#fef3c7; color:#b45309;">
-                            <i class="fa-solid fa-crown"></i>
-                        </div>
-                        <div>
-                            <div class="rbac-stat-value" id="equipeKpiGestao">0</div>
-                            <div class="rbac-stat-label">Equipe Gestora & Apoio</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Barra de Busca e Filtros Rápidos -->
-                <div class="rbac-filter-toolbar" style="margin-bottom: 1rem;">
-                    <div class="rbac-search-wrapper">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="equipeSearchInput" oninput="filtrarEquipeEscolarTexto()" placeholder="Buscar colaborador por nome, e-mail, cargo ou disciplina..." class="rbac-search-input">
-                    </div>
-
-                    <div class="rbac-filter-chips">
-                        <button type="button" onclick="filtrarEquipeEscolar('todos')" id="btnFilterSetor_todos" class="rbac-filter-btn active">Todos</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('docentes')" id="btnFilterSetor_docentes" class="rbac-filter-btn">👨‍🏫 Docentes</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('orientacao')" id="btnFilterSetor_orientacao" class="rbac-filter-btn">🧭 Orientação</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('supervisao')" id="btnFilterSetor_supervisao" class="rbac-filter-btn">📋 Supervisão</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('direcao')" id="btnFilterSetor_direcao" class="rbac-filter-btn">👑 Direção</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('secretaria')" id="btnFilterSetor_secretaria" class="rbac-filter-btn">📑 Secretaria</button>
-                        <button type="button" onclick="filtrarEquipeEscolar('apoio')" id="btnFilterSetor_apoio" class="rbac-filter-btn">🔧 Apoio & TI</button>
-                    </div>
-                </div>
-
-                <!-- Legenda Rápida dos Módulos & Sistemas Externos -->
-                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; font-size:0.75rem; color:#64748b;">
-                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                        <span style="font-weight:700; color:#334155;"><i class="fa-solid fa-circle-info"></i> Clique no módulo para ativar/desativar em 1 clique:</span>
-                        <span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:800;">🧭 OE</span>
-                        <span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-weight:800;">📢 Mural</span>
-                        <span style="background:#f5f3ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-weight:800;">📋 Supervisão</span>
-                        <span style="background:#eff6ff; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:800;">⚙️ ADM</span>
-                        <span style="background:#ecfdf5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:800;">👑 Direção</span>
-                        <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:800;">👕 Uniformes</span>
-                        <span style="background:#fed7aa; color:#9a3412; padding:2px 6px; border-radius:4px; font-weight:800;">💻 Lab</span>
-                        <span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800;">📊 Dash</span>
-                        <span style="background:#dbeafe; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:800;">💰 Contábil</span>
-                        <span style="background:#fce7f3; color:#be185d; padding:2px 6px; border-radius:4px; font-weight:800;">📚 Biblio</span>
-                        <span style="background:#fef9c3; color:#a16207; padding:2px 6px; border-radius:4px; font-weight:800;">📦 Patrimônio</span>
-                    </div>
-                    <div>
-                        <span style="font-size:0.74rem; color:#94a3b8;"><i class="fa-solid fa-cloud-arrow-up"></i> Alterações salvas instantaneamente</span>
-                    </div>
-                </div>
-
-                <div class="rbac-table-container">
-                    <table class="rbac-table">
-                        <thead>
-                            <tr>
-                                <th style="width:28%;">Profissional / Identificação</th>
-                                <th style="width:18%;">Setor & Cargo</th>
-                                <th style="width:14%;">WhatsApp</th>
-                                <th style="width:28%;">Módulos com Acesso Liberado</th>
-                                <th style="width:12%; text-align:right;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admEquipeTableBody">
-                            <!-- Inserido dinamicamente via renderEquipeEscolarTable() -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
-                    <div>
-                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-chalkboard" style="color:#0284c7; font-size:1.3rem;"></i> Cadastro & Estrutura de Turmas e Turnos
-                        </h4>
-                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                            Mapeamento de turmas, turnos letivos (Matutino/Vespertino/Noturno), salas de aula e tutores regentes.
-                        </p>
-                    </div>
-                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#0284c7;">
-                        <i class="fa-solid fa-plus"></i> + Nova Turma
-                    </button>
-                </div>
-
-                <div id="admTurmasIconesContainer" style="display:flex; flex-direction:column; gap:14px;">
-                    <!-- Renderizado dinamicamente em ícones compactos agrupados por turno -->
-                </div>
-            </div>
-
-
-            <!-- CARD 4: CONFIGURAÇÕES DO GATEWAY DE WHATSAPP AUTOMÁTICO -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
-                    <div>
-                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.4rem;"></i> Motor de WhatsApp Automático (Sem Clique Humano)
-                        </h4>
-                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                            Configure a API para disparar confirmações, avisos e lembretes diretamente ao celular do pai em segundo plano.
-                        </p>
-                    </div>
-                    <span class="wa-badge-auto" style="font-size:0.82rem; padding:6px 12px;"><i class="fa-solid fa-bolt"></i> Disparo em Background Ativo</span>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
-                    <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Provedor de API de WhatsApp:</label>
-                        <select id="waConfigProvider" onchange="salvarConfiguracoesWhatsapp()" class="search-input" style="width:100%; margin-top:4px; font-weight:700; color:#1e3a8a;">
-                            <option value="simulated">🤖 Modo Automático Integrado (Sem Custo / Simulação de Background)</option>
-                            <option value="meta_cloud_api">☁️ Meta WhatsApp Business Cloud API Oficial</option>
-                            <option value="zapi">⚡ Z-API (Provedor de Instâncias)</option>
-                            <option value="evolution_api">🚀 Evolution API (Self-Hosted / Open Source)</option>
-                            <option value="custom_webhook">🔗 Webhook Personalizado (POST JSON)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">URL do Endpoint / Webhook da API:</label>
-                        <input type="text" id="waConfigApiUrl" onchange="salvarConfiguracoesWhatsapp()" placeholder="https://api.z-api.io/instances/SUA_INSTANCIA/send-text" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Token / Chave de Autenticação (Bearer):</label>
-                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Sua Chave de API Token..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                    </div>
-                </div>
-
-                <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:1.2rem;">
-                    <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;"><i class="fa-solid fa-sliders"></i> Gatilhos de Disparo Automático (Dispara sem intervenção humana):</div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
-                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="waConfigAutoCreate" onchange="salvarConfiguracoesWhatsapp()" checked>
-                            <span>📅 Disparar ao criar Agendamento</span>
-                        </label>
-
-                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="waConfigAutoArrival" onchange="salvarConfiguracoesWhatsapp()" checked>
-                            <span>🔔 Notificar Orientadora ao marcar Chegou / Aguardando</span>
-                        </label>
-
-                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="waConfigAutoReminders" onchange="salvarConfiguracoesWhatsapp()" checked>
-                            <span>⏰ Disparar Lembretes 24h e no Dia</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
-                    <button onclick="testarConexaoWhatsapp()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; background:#0284c7; color:white;">
-                        <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
-                    </button>
-                </div>
-            </div>
-
-            <!-- CARD FIREBASE: CONEXÃO COM BANCO DE DADOS EM NUVEM (FIREBASE MULTI-DISPOSITIVOS) -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
-                    <div>
-                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-fire" style="color:#f97316; font-size:1.4rem;"></i> Conexão Firebase Cloud (Sincronização em Tempo Real Multi-Dispositivos)
-                        </h4>
-                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                            Conecte o seu projeto Firebase para sincronizar alterações em tempo real entre todos os computadores da escola.
-                        </p>
-                    </div>
-                    <div id="firebaseStatusBadge" style="font-size:0.82rem; padding:6px 12px; border-radius:12px; font-weight:800; background:#fef3c7; color:#92400e;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> Verificando Firebase...
-                    </div>
-                </div>
-
-                <form onsubmit="salvarConfiguracoesFirebase(event)">
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1rem;">
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">API Key (apiKey):</label>
-                            <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Project ID (projectId):</label>
-                            <input type="text" id="fbProjectId" placeholder="sige-pedro-rizzi" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Auth Domain (authDomain):</label>
-                            <input type="text" id="fbAuthDomain" placeholder="sige-pedro-rizzi.firebaseapp.com" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">App ID (appId):</label>
-                            <input type="text" id="fbAppId" placeholder="1:123456789:web:abcde..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
-                        </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                        <span style="font-size:0.8rem; color:#64748b;">
-                            <i class="fa-solid fa-shield-halved"></i> O salvamento local no navegador continua ativo mesmo sem internet (Modo Híbrido).
-                        </span>
-                        <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#ea580c;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> 🔥 Salvar Credenciais & Conectar Firebase
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- CARD 5: CONFIGURAÇÕES DA UNIDADE ESCOLAR & AUDITORIA DE LOGS / BACKUP -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
-                
-                <!-- Parâmetros da Unidade -->
+            <!-- SUB-ABA 6: PARÂMETROS DA UNIDADE ESCOLAR -->
+            <div id="adminSubTab_parametros" class="admin-subtab-content" style="display:none;">
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2rem;">
+                    <!-- Parâmetros da Unidade -->
                 <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                     <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-school-flag" style="color:#1e3a8a;"></i> Parâmetros da Unidade Escolar
@@ -858,8 +927,139 @@
                         </div>
                     </form>
                 </div>
+                </div>
+            </div>
+        </section>
 
-                <!-- Backup & Registros de Auditoria -->
+        <!-- ========================================== -->
+        <!-- ABA 7: DESENVOLVEDOR & TI (EXCLUSIVO DEV) -->
+        <!-- ========================================== -->
+        <section id="tab-dev" class="tab-content-section">
+            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; border-left:6px solid #7c3aed; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Painel do Desenvolvedor & TI (Exclusivo DEV)
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Controle de acessos modulares (RBAC), autorização de solicitações, banco de dados Firebase, backups e configurações técnicas.</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" onclick="openConfigModal()" class="btn" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.82rem; font-weight:800; padding:8px 14px; border-radius:8px; cursor:pointer;" title="Configurar URLs dos Sistemas Padrão">
+                        <i class="fa-solid fa-sliders"></i> Config Links
+                    </button>
+                    <button type="button" onclick="openAddCustomSystemModal()" class="btn" style="background:#7c3aed; color:white; border:none; font-size:0.82rem; font-weight:800; padding:8px 14px; border-radius:8px; cursor:pointer;" title="Cadastrar Novo Sistema / Link Externo">
+                        <i class="fa-solid fa-plus-circle"></i> + Novo Sistema
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARDS DE NAVEGAÇÃO INTERNA DO DEV -->
+            <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
+                <button type="button" class="dir-nav-card dev-subtab-btn active" data-devsub="rbac" onclick="switchDevSubTab('rbac')">
+                    <div class="dir-nav-card-icon" style="background:#f3e8ff; color:#7c3aed;">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Acessos & RBAC</div>
+                </button>
+                <button type="button" class="dir-nav-card dev-subtab-btn" data-devsub="banco" onclick="switchDevSubTab('banco')">
+                    <div class="dir-nav-card-icon" style="background:#ffedd5; color:#ea580c;">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Banco Firebase</div>
+                </button>
+                <button type="button" class="dir-nav-card dev-subtab-btn" data-devsub="backup" onclick="switchDevSubTab('backup')">
+                    <div class="dir-nav-card-icon" style="background:#dcfce7; color:#16a34a;">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Backup & Auditoria</div>
+                </button>
+                <button type="button" class="dir-nav-card dev-subtab-btn" data-devsub="whatsapp_auto" onclick="switchDevSubTab('whatsapp_auto')">
+                    <div class="dir-nav-card-icon" style="background:#ecfdf5; color:#059669;">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <div class="dir-nav-card-title">WhatsApp API</div>
+                </button>
+            </div>
+
+            <!-- SUB-ABA DEV 1: GESTÃO DE ACESSOS (RBAC) -->
+            <div id="devSubTab_rbac" class="dev-subtab-content active">
+                <!-- CARD PENDENTES: SOLICITAÇÕES DE PRIMEIRO ACESSO (EXCLUSIVO DESENVOLVEDOR / ADMIN) -->
+            <div id="adminPendingUsersCard" class="rbac-card" style="display:none; padding: 1.5rem; border-radius: 18px; border: 2px solid #f59e0b; margin-bottom: 2rem; box-shadow: 0 6px 20px rgba(245,158,11,0.15); background: #fffbeb;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; border-bottom: 1px solid #fef3c7; padding-bottom: 12px;">
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 900; color: #92400e; display: flex; align-items: center; gap: 10px; margin: 0;">
+                            <i class="fa-solid fa-user-clock" style="color: #f59e0b; font-size: 1.4rem;"></i> Solicitações de Primeiro Acesso Aguardando Autorização
+                        </h4>
+                        <p style="font-size: 0.84rem; color: #b45309; margin-top: 4px;">
+                            Novos colaboradores que realizaram login com e-mail institucional oficial. Selecione a função, marque os módulos que terão acesso e clique em <strong>Aprovar Acesso</strong>.
+                        </p>
+                    </div>
+                    <span id="badgePendingUsersCount" class="role-badge-pill" style="background:#f59e0b; color:#ffffff; font-weight:900; font-size:0.85rem; padding:6px 14px; border-radius:20px;">
+                        0 Pendente(s)
+                    </span>
+                </div>
+
+                <div class="rbac-table-container" style="background:white; border-radius:12px; border:1px solid #fde68a; overflow-x:auto;">
+                    <table class="rbac-table" style="width:100%;">
+                        <thead>
+                            <tr style="background:#fff7ed; border-bottom:2px solid #fed7aa; color:#9a3412;">
+                                <th style="width:24%;">E-mail Institucional / Solicitante</th>
+                                <th style="width:14%;">Data Solicitação</th>
+                                <th style="width:18%;">Função / Perfil Atribuído</th>
+                                <th style="width:30%;">Módulos a Liberar (RBAC)</th>
+                                <th style="width:14%; text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminPendingUsersTableBody">
+                            <!-- Inserido dinamicamente via renderAdminPendingUsers() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+                <!-- CARD 1: QUADRO DA EQUIPE ESCOLAR & GESTÃO INTEGRADA DE ACESSOS AO SISTEMA (RBAC) -->
+            <div id="adminCardEquipeUnificada" class="rbac-card" style="padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.04); background: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0;">
+                            <i class="fa-solid fa-users-gear" style="color: #2563eb; font-size: 1.4rem;"></i> Quadro da Equipe Escolar & Gestão de Acessos ao Sistema (RBAC)
+                        </h4>
+                        <p style="font-size: 0.84rem; color: #64748b; margin-top: 4px;">
+                            Gestão unificada do corpo docente, equipe gestora, apoio e controle granular de permissões modulares de acesso ao sistema.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(37,99,235,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador & Acesso
+                        </button>
+                        <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width: auto; font-size: 0.85rem; padding: 8px 14px; background: #16a34a; color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-ABA DEV 2: BANCO FIREBASE CLOUD -->
+            <div id="devSubTab_banco" class="dev-subtab-content" style="display:none;">
+                <!-- CARD FIREBASE: CONEXÃO COM BANCO DE DADOS EM NUVEM (FIREBASE MULTI-DISPOSITIVOS) -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-fire" style="color:#f97316; font-size:1.4rem;"></i> Conexão Firebase Cloud (Sincronização em Tempo Real Multi-Dispositivos)
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Conecte o seu projeto Firebase para sincronizar alterações em tempo real entre todos os computadores da escola.
+                        </p>
+                    </div>
+                    <div id="firebaseStatusBadge" style="font-size:0.82rem; padding:6px 12px; border-radius:12px; font-weight:800; background:#fef3c7; color:#92400e;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Verificando Firebase...
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-ABA DEV 3: BACKUP & AUDITORIA -->
+            <div id="devSubTab_backup" class="dev-subtab-content" style="display:none;">
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2rem;">
+                    <!-- Backup & Registros de Auditoria -->
                 <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
                     <div>
                         <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
@@ -894,9 +1094,50 @@
                         </div>
                     </div>
                 </div>
+                </div>
+            </div>
 
+            <!-- SUB-ABA DEV 4: WHATSAPP AUTOMÁTICO & GATEWAYS -->
+            <div id="devSubTab_whatsapp_auto" class="dev-subtab-content" style="display:none;">
+                <!-- CARD 4: CONFIGURAÇÕES DO GATEWAY DE WHATSAPP AUTOMÁTICO -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.4rem;"></i> Motor de WhatsApp Automático (Sem Clique Humano)
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Configure a API para disparar confirmações, avisos e lembretes diretamente ao celular do pai em segundo plano.
+                        </p>
+                    </div>
+                    <span class="wa-badge-auto" style="font-size:0.82rem; padding:6px 12px;"><i class="fa-solid fa-bolt"></i> Disparo em Background Ativo</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Provedor de API de WhatsApp:</label>
+                        <select id="waConfigProvider" onchange="salvarConfiguracoesWhatsapp()" class="search-input" style="width:100%; margin-top:4px; font-weight:700; color:#1e3a8a;">
+                            <option value="simulated">🤖 Modo Automático Integrado (Sem Custo / Simulação de Background)</option>
+                            <option value="meta_cloud_api">☁️ Meta WhatsApp Business Cloud API Oficial</option>
+                            <option value="zapi">⚡ Z-API (Provedor de Instâncias)</option>
+                            <option value="evolution_api">🚀 Evolution API (Self-Hosted / Open Source)</option>
+                            <option value="custom_webhook">🔗 Webhook Personalizado (POST JSON)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">URL do Endpoint / Webhook da API:</label>
+                        <input type="text" id="waConfigApiUrl" onchange="salvarConfiguracoesWhatsapp()" placeholder="https://api.z-api.io/instances/SUA_INSTANCIA/send-text" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Token / Chave de Autenticação (Bearer):</label>
+                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Sua Chave de API Token..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+                </div>
             </div>
         </section>
+
 
 
         <!-- ========================================== -->
@@ -1570,199 +1811,7 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- ABA 6: CONTROLE DE UNIFORMES ESCOLARES -->
-        <!-- ========================================== -->
-        <section id="tab-uniformes" class="tab-content-section">
-            <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
-                    </h3>
-                    <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Gestão de solicitações de alunos novos, trocas, remessas para a SME, estoque local e emissão de listas de entrega por turma.</p>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <button onclick="openModalNovoPedidoUniforme()" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-plus-circle"></i> Nova Solicitação de Uniforme
-                    </button>
-                    <button onclick="openModalFecharLoteSME()" class="btn btn-secondary" style="width:auto; background:#7c3aed; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-truck-ramp-box"></i> Fechar Remessa / Lote SME
-                    </button>
-                    <button onclick="openModalAjustarEstoque()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
-                    </button>
-                    <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
-                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação por Turma
-                    </button>
-                    <button onclick="imprimirRelatorioEntregasConcluidas()" class="btn btn-secondary" style="width:auto; background:#16a34a; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Relatório de Uniformes Entregues aos alunos com histórico">
-                        <i class="fa-solid fa-square-check"></i> Relatório de Entregas Realizadas
-                    </button>
-                </div>
-            </div>
-
-            <!-- Cards Sintéticos de Métricas do Módulo -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #f59e0b; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando Envio à SME</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:4px;" id="statUniPendentesSme">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Pedidos aguardando lote</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #7c3aed; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Em Remessa / Lote SME</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#7c3aed; margin-top:4px;" id="statUniEnviadosSme">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Aguardando chegada da SME</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Disponível p/ Entrega</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:4px;" id="statUniDisponiveisEntrega">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Na escola pronto para o aluno</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Entregues aos Alunos</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:4px;" id="statUniEntregues">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Total de entregas concluídas</div>
-                </div>
-            </div>
-
-            <!-- Filtros Principais & Tabela -->
-            <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-filter" style="color:#0284c7;"></i>
-                        <strong style="color:#0f172a; font-size:1rem;">Filtros de Pesquisa & Relatórios</strong>
-                    </div>
-
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button onclick="limparFiltrosUniformes()" class="btn btn-secondary" style="font-size:0.78rem; padding:4px 10px;">
-                            <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
-                        </button>
-                    </div>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
-                        <input type="text" id="filterUniSearch" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box;">
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
-                        <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todas">Todas as Turmas</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
-                        <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todos">Todos os Status</option>
-                            <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
-                            <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
-                            <option value="disponivel_estoque">📦 Disponível para Entrega</option>
-                            <option value="entregue">✅ Entregue ao Aluno</option>
-                            <option value="cancelado">❌ Cancelado</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
-                        <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todos">Todos os Motivos</option>
-                            <option value="aluno_novo">Aluno Novo</option>
-                            <option value="troca_tamanho">Troca de Tamanho</option>
-                            <option value="danificado">Uniforme Danificado</option>
-                            <option value="perda">Perda do Uniforme</option>
-                            <option value="outro">Outro Motivo</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
-                        <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
-                        <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                    </div>
-                </div>
-
-                <!-- Tabela de Pedidos de Uniformes -->
-                <div style="overflow-x:auto;">
-                    <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
-                        <thead>
-                            <tr style="background:#f1f5f9; color:#334155;">
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;"><input type="checkbox" id="chkSelectAllUni" onchange="toggleSelectAllPedidosUni(this)"></th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Data</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Aluno & Turma</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Motivo</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Solicitação & Tamanho</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Responsável</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Remessa SME / Previsão</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Status</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1; text-align:center;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaPedidosUniformesBody">
-                            <!-- Renderizado via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Seção Dupla: Painel de Estoque Local + Histórico de Lotes SME -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.5rem;">
-                
-                <!-- Painel de Estoque Escolar Local -->
-                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
-                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
-                        </h4>
-                        
-                        <div style="display:flex; gap:6px; align-items:center;">
-                            <div class="est-gender-tabs" style="display:inline-flex; background:#e2e8f0; border-radius:8px; padding:2px; font-size:0.75rem; font-weight:800;">
-                                <button type="button" class="btn-est-gen active" id="btnEstGenMasc" onclick="switchEstoqueGenero('masculino')" style="padding:3px 8px; border-radius:6px; border:none; background:#059669; color:white; cursor:pointer;">👨 Masc</button>
-                                <button type="button" class="btn-est-gen" id="btnEstGenFem" onclick="switchEstoqueGenero('feminino')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">👩 Fem</button>
-                                <button type="button" class="btn-est-gen" id="btnEstGenTodos" onclick="switchEstoqueGenero('todos')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">🌐 Total</button>
-                            </div>
-                            <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
-                                <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
-                            </button>
-                        </div>
-                    </div>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
-                        Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
-                    </p>
-                    <div id="painelEstoqueUniformesContainer" style="overflow-x:auto;">
-                        <!-- Renderizado via JS -->
-                    </div>
-                </div>
-
-                <!-- Painel de Remessas / Lotes EnViados à SME -->
-                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
-                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-truck-fast" style="color:#7c3aed;"></i> Lotes & Remessas Enviadas para a SME
-                        </h4>
-                        <button onclick="openModalFecharLoteSME()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#7c3aed; border-color:#7c3aed;">
-                            <i class="fa-solid fa-plus"></i> Novo Lote SME
-                        </button>
-                    </div>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
-                        Remessas agrupadas com data de corte, acompanhamento de entrega e registro de recebimento.
-                    </p>
-                    <div id="painelLotesSMEContainer">
-                        <!-- Renderizado via JS -->
-                    </div>
-                </div>
-
-            </div>
-        </section>
+        
 
     </main>
 
@@ -4707,15 +4756,111 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v41</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v42</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20260925_v41"></script>
-    <script src="js/gestao-data.js?v=20260925_v41"></script>
-    <script src="js/gestao-app.js?v=20260925_v41"></script>
-    <script src="js/pdf-importer.js?v=20260925_v41"></script>
+    <script src="js/calendario-oficial-data.js?v=20260925_v42"></script>
+    <script src="js/gestao-data.js?v=20260925_v42"></script>
+    <script src="js/gestao-app.js?v=20260925_v42"></script>
+    <script src="js/pdf-importer.js?v=20260925_v42"></script>
+
+    <!-- Config Modal para Links Padrão -->
+    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2.2rem; border-radius:18px; max-width:560px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-size:1.3rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-sliders" style="color:#2563eb;"></i> Configuração de Links dos Sistemas Padrão
+                </h3>
+                <button type="button" onclick="closeConfigModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1.5rem;">Insira os links oficiais dos sistemas padrão da escola (salvo no navegador):</p>
+            
+            <form id="configForm" onsubmit="event.preventDefault(); salvarLinksConfig();" style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-file-csv" style="color:#10b981;"></i> Planilha de Respostas (Google Sheets CSV):</label>
+                    <input type="text" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="search-input" style="width:100%; margin-top:5px;">
+                </div>
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil (APMF):</label>
+                    <input type="text" id="url_contabil" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
+                </div>
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-calendar-check" style="color:#d97706;"></i> Agendamento de Recursos / Laboratório:</label>
+                    <input type="text" id="url_recursos" placeholder="https://elcortelini.github.io/agendamento-cepr/" class="search-input" style="width:100%; margin-top:5px;">
+                </div>
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Sistema da Biblioteca:</label>
+                    <input type="text" id="url_biblioteca" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
+                </div>
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-boxes-stacked" style="color:#ea580c;"></i> Sistema de Patrimônio:</label>
+                    <input type="text" id="url_patrimonio" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:1.2rem;">
+                    <button type="button" onclick="closeConfigModal()" class="btn btn-secondary" style="width:auto;"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto;"><i class="fa-solid fa-floppy-disk"></i> Salvar Links</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Novo Sistema Customizado -->
+    <div id="modalAddCustomSystem" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:560px; width:92%; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+                <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> Cadastrar Novo Sistema / Link Externo
+                </h3>
+                <button type="button" onclick="closeAddCustomSystemModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="formAddCustomSystem" onsubmit="submitAddCustomSystem(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome do Sistema / Aplicação:</label>
+                    <input type="text" id="customSysTitle" placeholder="Ex: Sistema de Frequência Digital" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Categoria / Tag:</label>
+                        <input type="text" id="customSysTag" placeholder="Ex: GESTÃO / RH / ALUNOS" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Ícone Representativo:</label>
+                        <select id="customSysIcon" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; font-weight:700;">
+                            <option value="fa-solid fa-globe">🌐 Web / Link Externo</option>
+                            <option value="fa-solid fa-desktop">💻 Sistema Desktop / Web</option>
+                            <option value="fa-solid fa-chart-line">📊 Dashboard / Relatório</option>
+                            <option value="fa-solid fa-book-bookmark">📚 Biblioteca / Acervo</option>
+                            <option value="fa-solid fa-graduation-cap">🎓 Pedagógico / Alunos</option>
+                            <option value="fa-solid fa-calculator">💵 Financeiro / APMF</option>
+                            <option value="fa-solid fa-users-gear">👥 Gestão de Pessoas / RH</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">URL Oficial de Acesso:</label>
+                    <input type="url" id="customSysUrl" placeholder="https://exemplo.com.br" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Descrição Curta da Aplicação:</label>
+                    <textarea id="customSysDesc" rows="2" placeholder="Resuma em poucas palavras o objetivo desta aplicação para a equipe escolar..." required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; font-family:inherit;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                    <button type="button" onclick="closeAddCustomSystemModal()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#10b981; border:none;"><i class="fa-solid fa-check"></i> Salvar e Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 </body>
 </html>

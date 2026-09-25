@@ -80,8 +80,34 @@
 
     <!-- Main Container: Central de Modulos e Sistemas -->
     <main class="container" id="sistemas-hub">
-        <div class="systems-grid" id="systemsGrid">
-            <!-- Systems rendered dynamically via main.js -->
+        <!-- SEÇÃO 1: SISTEMAS COM ACESSO LIBERADO (GRANDES NO TOPO) -->
+        <div id="sectionSistemasLiberados" style="margin-bottom: 2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h2 style="font-size:1.3rem; font-weight:900; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Módulos & Sistemas com Acesso Liberado
+                    </h2>
+                    <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Plataformas disponíveis e autorizadas para o seu perfil funcional.</p>
+                </div>
+            </div>
+            <div class="systems-grid" id="systemsGrid">
+                <!-- Sistemas liberados renderizados dinamicamente via main.js com cards grandes -->
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: SISTEMAS COM ACESSO RESTRITO (PEQUENOS EM BAIXO) -->
+        <div id="sectionSistemasRestritos" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #cbd5e1; display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="font-size:1.05rem; font-weight:800; color:#64748b; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-lock" style="color:#94a3b8;"></i> Outros Sistemas da Unidade Escolar (Acesso Restrito)
+                    </h3>
+                    <p style="font-size:0.8rem; color:#94a3b8; margin:2px 0 0 0;">Módulos reservados a outros setores da escola ou que necessitam de autorização prévia.</p>
+                </div>
+            </div>
+            <div class="systems-grid-compact" id="systemsGridRestritos">
+                <!-- Sistemas restritos renderizados dinamicamente via main.js com cards compactos -->
+            </div>
         </div>
     </main>
 
@@ -343,12 +369,12 @@
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v41</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v42</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
-    <script src="js/gestao-data.js?v=20260925_v41"></script>
-    <script src="js/main.js?v=20260925_v41"></script>
+    <script src="js/gestao-data.js?v=20260925_v42"></script>
+    <script src="js/main.js?v=20260925_v42"></script>
 </body>
 </html>
