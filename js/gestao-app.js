@@ -70,7 +70,7 @@ function checkSigeAuth() {
     }
 
     if (userText) {
-        userText.innerHTML = `<i class="fa-solid fa-user-circle"></i> <strong>${user.nome}</strong> (${user.email})`;
+        userText.innerHTML = `<i class="fa-solid fa-user-circle"></i> <strong>${escapeHtml(user.nome || '')}</strong> (${escapeHtml(user.email || '')})`;
     }
 
     // Define papel no BD local
@@ -3165,7 +3165,9 @@ async function confirmarEnviarLembretesHoje() {
                     if (token) {
                         linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?token=${token}`;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.warn(`[Lembrete Auto] Aviso ao gerar token para agendamento ${ag.id}:`, e);
+                }
             }
             const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
             

@@ -2,18 +2,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // BANCO PRINCIPAL SIGE - Acesso central da escola
-    match /sige_pedro_rizzi/{document=**} {
-      allow read, write: if true;
+    // BANCO PRINCIPAL SIGE - Documentos modulares e sincronização central
+    match /sige_pedro_rizzi/{document} {
+      // Leitura permitida para funcionamento do app web
+      allow read: if true;
+      
+      // Escrita restrita a documentos modulares oficiais e base central
+      allow write: if document in [
+        'database', 'mod_op', 'mod_uniformes', 'mod_ocorrencias', 
+        'mod_patrimonio', 'mod_protocolo', 'mod_direcao', 
+        'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema'
+      ];
     }
 
-    // TOKENS DE CONFIRMACAO - acesso publico controlado via WhatsApp
+    // TOKENS DE CONFIRMAÇÃO OP - Acesso público controlado via link do WhatsApp
     match /confirmacoes_op/{tokenId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if request.resource.data.status == 'pendente' 
+                    || request.resource.data.status == 'ativo';
       allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
+      allow delete: if false; // Proíbe exclusão pública de histórico de tokens
     }
 
+    // Bloqueio default para todas as demais coleções não mapeadas
     match /{document=**} {
       allow read, write: if false;
     }

@@ -301,7 +301,9 @@
                             await db.collection('sige_pedro_rizzi').doc('mod_op').set({ agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true });
                             try {
                                 await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
-                            } catch(e) {}
+                            } catch(e) {
+                                console.debug('[Sincronização Legada Opcional]:', e);
+                            }
                         }
                     } catch (syncErr) {
                         console.warn("Atualizado no token com sucesso (sincronização central em background):", syncErr);
@@ -324,7 +326,9 @@
                     await db.collection('sige_pedro_rizzi').doc('mod_op').set({ agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true });
                     try {
                         await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
-                    } catch(e) {}
+                    } catch(e) {
+                        console.debug('[Sincronização Legada Opcional]:', e);
+                    }
                     hide('actionArea');
                     show('successState');
                 }
@@ -373,7 +377,9 @@
                             await db.collection('sige_pedro_rizzi').doc('mod_op').set({ agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true });
                             try {
                                 await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
-                            } catch(e) {}
+                            } catch(e) {
+                                console.debug('[Sincronização Legada Opcional]:', e);
+                            }
                         }
                     } catch (syncErr) {
                         console.warn("Registrado no token (sincronização central em background):", syncErr);
@@ -396,7 +402,9 @@
                     await db.collection('sige_pedro_rizzi').doc('mod_op').set({ agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true });
                     try {
                         await db.collection('sige_pedro_rizzi').doc('database').set({ agendamentosOP: ags }, { merge: true });
-                    } catch(e) {}
+                    } catch(e) {
+                        console.debug('[Sincronização Legada Opcional]:', e);
+                    }
                     hide('actionArea');
                     show('cancelledState');
                 }

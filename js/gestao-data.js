@@ -504,12 +504,20 @@ class SigeDatabase {
 
             this.firestore = firebase.firestore();
 
+            // Desinscrever listeners anteriores para prevenir memory leaks
+            if (this._firestoreUnsubs && Array.isArray(this._firestoreUnsubs)) {
+                this._firestoreUnsubs.forEach(unsub => {
+                    try { if (typeof unsub === 'function') unsub(); } catch(e) { console.debug('[Unsub Listener]:', e); }
+                });
+            }
+            this._firestoreUnsubs = [];
+
             // Real-Time Cloud Listeners Modulares (Superação do limite de 1 MB)
             const modNames = Object.keys(SIGE_MODULE_DOCS);
             let hasAnyDoc = false;
 
             modNames.forEach(modName => {
-                this.firestore.collection("sige_pedro_rizzi").doc(modName).onSnapshot((doc) => {
+                const unsub = this.firestore.collection("sige_pedro_rizzi").doc(modName).onSnapshot((doc) => {
                     if (doc.exists) {
                         hasAnyDoc = true;
                         this.hasLoadedRemote = true;
@@ -532,10 +540,11 @@ class SigeDatabase {
                         this.updateCloudSyncBadge(false, "Modo Off-line");
                     }
                 });
+                this._firestoreUnsubs.push(unsub);
             });
 
             // Listener de Compatibilidade / Legado (Snapshot da Nuvem)
-            this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
+            const unsubLegacy = this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
                 if (doc.exists) {
                     const remoteData = doc.data();
                     if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
@@ -549,8 +558,9 @@ class SigeDatabase {
                     this.updateCloudSyncBadge(true);
                 }
             }, (error) => {
-                // Passivo
+                console.debug('[Firestore Legacy Snapshot Notice]:', error?.message || error);
             });
+            this._firestoreUnsubs.push(unsubLegacy);
 
             console.log("🔥 Firebase Firestore inicializado e monitorando nuvem modular...");
         } catch (e) {
@@ -558,6 +568,15 @@ class SigeDatabase {
             this.cloudStatus = 'error';
             this.cloudErrorDetails = e.message;
             this.updateCloudSyncBadge(false, "Erro de Conexão");
+        }
+    }
+
+    detachFirestoreListeners() {
+        if (this._firestoreUnsubs && Array.isArray(this._firestoreUnsubs)) {
+            this._firestoreUnsubs.forEach(unsub => {
+                try { if (typeof unsub === 'function') unsub(); } catch(e) { console.debug('[Unsub Listener]:', e); }
+            });
+            this._firestoreUnsubs = [];
         }
     }
 
@@ -2928,7 +2947,8 @@ class SigeDatabase {
         );
 
         if (oriTurnoAppointments.length >= 4) {
-            throw new Error(`Limite atingido! A orientadora (${agendamento.orientadora || 'Orientação'}) já possui 4 atendimentos agendados no turno ${agendamento.turno.toUpperCase()} nesta data.`);
+            const turnoDisplay = (agendamento.turno || 'matutino').toUpperCase();
+            throw new Error(`Limite atingido! A orientadora (${agendamento.orientadora || 'Orientação'}) já possui 4 atendimentos agendados no turno ${turnoDisplay} nesta data.`);
         }
 
         agendamento.id = generateSecureId("op");
@@ -3588,7 +3608,9 @@ class SigeDatabase {
                     await this.firestore.collection('sige_pedro_rizzi').doc('database').set(
                         { agendamentosOP: ags }, { merge: true }
                     );
-                } catch(e) {}
+                } catch(e) {
+                    console.debug('[Sincronização Legada Central]:', e);
+                }
             }
         } catch (e) {
             console.error('Erro ao atualizar status por token:', e);
