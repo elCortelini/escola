@@ -912,6 +912,8 @@ function populateActiveRoleSelectOptions(roleSelect) {
 
     let html = `
         <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+        <option value="admin">🏫 Administrador(a) Escolar</option>
+        <option value="direcao">👑 Gestor / Direção Escolar</option>
     `;
 
     orientadoras.forEach(o => {
@@ -927,10 +929,9 @@ function populateActiveRoleSelectOptions(roleSelect) {
 
     html += `
         <option value="secretaria">📝 Secretaria Escolar</option>
-        <option value="direcao">👑 Gestor / Direção Escolar</option>
         <option value="supervisao">📋 Supervisor Pedagógico Geral</option>
-        <option value="admin">⚙️ Administrador do Sistema</option>
-        <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
+        <option value="docentes">👨‍🏫 Corpo Docente / Professores</option>
+        <option value="comunidade">👥 Professor / Aluno / Comunidade</option>
     `;
 
     roleSelect.innerHTML = html;
@@ -5469,6 +5470,8 @@ function switchAdminSubTab(subTab) {
         renderAdminTelefonesTable();
     } else if (subTab === 'turnos') {
         if (typeof renderTurmasAdminTable === "function") renderTurmasAdminTable();
+    } else if (subTab === 'alunos_pdf') {
+        if (typeof updateAdminPdfImportMetaInfoDisplay === "function") updateAdminPdfImportMetaInfoDisplay();
     } else if (subTab === 'parametros') {
         if (typeof renderConfigEscolaForm === "function") renderConfigEscolaForm();
     }
@@ -5494,6 +5497,11 @@ function renderModuleAdministracao() {
         renderConfigEscolaForm();
     } catch (e) {
         console.error("Erro ao renderizar parâmetros da escola:", e);
+    }
+    try {
+        if (typeof updateAdminPdfImportMetaInfoDisplay === "function") updateAdminPdfImportMetaInfoDisplay();
+    } catch (e) {
+        console.error("Erro ao atualizar status PDF:", e);
     }
 }
 
@@ -5638,6 +5646,7 @@ function switchDevSubTab(subTab) {
 
     // Ações específicas ao abrir cada sub-aba do DEV
     if (subTab === 'rbac') {
+        if (typeof renderAdminPendingUsers === "function") renderAdminPendingUsers();
         if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
         if (typeof renderAdminPermissoesUsuarios === "function") renderAdminPermissoesUsuarios();
     } else if (subTab === 'banco') {

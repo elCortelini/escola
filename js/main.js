@@ -65,6 +65,19 @@ const defaultSystems = [
         isLive: true
     },
     {
+        id: "admin",
+        moduloKey: "admin",
+        title: "Administração Escolar & Logística",
+        iconClass: "fa-solid fa-school",
+        bgClass: "theme-emerald",
+        tag: "ADMINISTRAÇÃO ESCOLAR",
+        description: "Painel da Administradora: uniformes, patrimônio, contábil, telefones dos professores, turmas e parâmetros da unidade.",
+        url: "sistema-gestao.html?aba=admin",
+        status: "online",
+        badge: "CORE SIGE",
+        isLive: true
+    },
+    {
         id: "uniformes",
         moduloKey: "uniformes",
         title: "Controle de Uniformes",

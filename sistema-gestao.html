@@ -456,6 +456,7 @@
 
 
         
+        
         <!-- ========================================== -->
         <!-- ABA 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA -->
         <!-- ========================================== -->
@@ -520,8 +521,7 @@
             <!-- SUB-ABA 1: UNIFORMES ESCOLARES (INTEGRADO À ADMINISTRAÇÃO) -->
             <div id="adminSubTab_uniformes" class="admin-subtab-content active">
                 <div id="adminSecUniformes">
-                    
-            <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
@@ -709,7 +709,6 @@
                 </div>
 
             </div>
-        
                 </div>
             </div>
 
@@ -814,7 +813,7 @@
 
             <!-- SUB-ABA 4: ESTRUTURA DE TURNOS & TURMAS -->
             <div id="adminSubTab_turnos" class="admin-subtab-content" style="display:none;">
-                <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
+                            <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
             <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                     <div>
@@ -838,7 +837,7 @@
 
             <!-- SUB-ABA 5: IMPORTAÇÃO DE ALUNOS VIA PDF -->
             <div id="adminSubTab_alunos_pdf" class="admin-subtab-content" style="display:none;">
-                <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+                            <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
             <div style="background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 1rem;">
                     <div>
@@ -860,12 +859,23 @@
                     <div style="font-size: 1rem; font-weight: 800; color: #1e293b;">Clique aqui para selecionar ou arraste o arquivo PDF de Alunos</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">O sistema processará as turmas (ex: 101, 102), turnos e telefones automaticamente.</div>
                 </div>
+
+                <!-- Status e Resumo de Dados Importados -->
+                <div id="adminPdfImportMetaInfo" style="background: #f1f5f9; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <!-- Renderizado dinamicamente via updateAdminPdfImportMetaInfoDisplay() -->
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                    <button type="button" onclick="confirmarLimparAlunosImportados()" class="btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:800; font-size:0.8rem; padding:6px 12px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" title="Remover todos os alunos da base de dados">
+                        <i class="fa-solid fa-trash-can"></i> Limpar Cadastro de Alunos do Banco
+                    </button>
+                </div>
+            </div>
             </div>
 
             <!-- SUB-ABA 6: PARÂMETROS DA UNIDADE ESCOLAR -->
             <div id="adminSubTab_parametros" class="admin-subtab-content" style="display:none;">
-                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2rem;">
-                    <!-- Parâmetros da Unidade -->
+                                <!-- Parâmetros da Unidade -->
                 <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                     <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-school-flag" style="color:#1e3a8a;"></i> Parâmetros da Unidade Escolar
@@ -927,9 +937,9 @@
                         </div>
                     </form>
                 </div>
-                </div>
             </div>
         </section>
+
 
         <!-- ========================================== -->
         <!-- ABA 7: DESENVOLVEDOR & TI (EXCLUSIVO DEV) -->
@@ -982,7 +992,7 @@
 
             <!-- SUB-ABA DEV 1: GESTÃO DE ACESSOS (RBAC) -->
             <div id="devSubTab_rbac" class="dev-subtab-content active">
-                <!-- CARD PENDENTES: SOLICITAÇÕES DE PRIMEIRO ACESSO (EXCLUSIVO DESENVOLVEDOR / ADMIN) -->
+                            <!-- CARD PENDENTES: SOLICITAÇÕES DE PRIMEIRO ACESSO (EXCLUSIVO DESENVOLVEDOR / ADMIN) -->
             <div id="adminPendingUsersCard" class="rbac-card" style="display:none; padding: 1.5rem; border-radius: 18px; border: 2px solid #f59e0b; margin-bottom: 2rem; box-shadow: 0 6px 20px rgba(245,158,11,0.15); background: #fffbeb;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; border-bottom: 1px solid #fef3c7; padding-bottom: 12px;">
                     <div>
@@ -1015,7 +1025,7 @@
                     </table>
                 </div>
             </div>
-                <!-- CARD 1: QUADRO DA EQUIPE ESCOLAR & GESTÃO INTEGRADA DE ACESSOS AO SISTEMA (RBAC) -->
+                            <!-- CARD 1: QUADRO DA EQUIPE ESCOLAR & GESTÃO INTEGRADA DE ACESSOS AO SISTEMA (RBAC) -->
             <div id="adminCardEquipeUnificada" class="rbac-card" style="padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.04); background: white;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
                     <div>
@@ -1035,11 +1045,111 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- KPIs Rápidos da Equipe & Acessos -->
+                <div class="rbac-stats-grid" style="margin-bottom: 1.2rem;">
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#eff6ff; color:#1d4ed8;">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="equipeKpiTotal">0</div>
+                            <div class="rbac-stat-label">Total de Colaboradores</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#dcfce7; color:#15803d;">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="equipeKpiAcessoLiberado">0</div>
+                            <div class="rbac-stat-label">Com Acesso ao Sistema</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#e0f2fe; color:#0369a1;">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="equipeKpiDocentes">0</div>
+                            <div class="rbac-stat-label">Corpo Docente</div>
+                        </div>
+                    </div>
+
+                    <div class="rbac-stat-box">
+                        <div class="rbac-stat-icon" style="background:#fef3c7; color:#b45309;">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                        <div>
+                            <div class="rbac-stat-value" id="equipeKpiGestao">0</div>
+                            <div class="rbac-stat-label">Equipe Gestora & Apoio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Busca e Filtros Rápidos -->
+                <div class="rbac-filter-toolbar" style="margin-bottom: 1rem;">
+                    <div class="rbac-search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="equipeSearchInput" oninput="filtrarEquipeEscolarTexto()" placeholder="Buscar colaborador por nome, e-mail, cargo ou disciplina..." class="rbac-search-input">
+                    </div>
+
+                    <div class="rbac-filter-chips">
+                        <button type="button" onclick="filtrarEquipeEscolar('todos')" id="btnFilterSetor_todos" class="rbac-filter-btn active">Todos</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('docentes')" id="btnFilterSetor_docentes" class="rbac-filter-btn">👨‍🏫 Docentes</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('orientacao')" id="btnFilterSetor_orientacao" class="rbac-filter-btn">🧭 Orientação</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('supervisao')" id="btnFilterSetor_supervisao" class="rbac-filter-btn">📋 Supervisão</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('direcao')" id="btnFilterSetor_direcao" class="rbac-filter-btn">👑 Direção</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('secretaria')" id="btnFilterSetor_secretaria" class="rbac-filter-btn">📑 Secretaria</button>
+                        <button type="button" onclick="filtrarEquipeEscolar('apoio')" id="btnFilterSetor_apoio" class="rbac-filter-btn">🔧 Apoio & TI</button>
+                    </div>
+                </div>
+
+                <!-- Legenda Rápida dos Módulos & Sistemas Externos -->
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; font-size:0.75rem; color:#64748b;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span style="font-weight:700; color:#334155;"><i class="fa-solid fa-circle-info"></i> Clique no módulo para ativar/desativar em 1 clique:</span>
+                        <span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:800;">🧭 OE</span>
+                        <span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-weight:800;">📢 Mural</span>
+                        <span style="background:#f5f3ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-weight:800;">📋 Supervisão</span>
+                        <span style="background:#eff6ff; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:800;">⚙️ ADM</span>
+                        <span style="background:#ecfdf5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:800;">👑 Direção</span>
+                        <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:800;">👕 Uniformes</span>
+                        <span style="background:#fed7aa; color:#9a3412; padding:2px 6px; border-radius:4px; font-weight:800;">💻 Lab</span>
+                        <span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800;">📊 Dash</span>
+                        <span style="background:#dbeafe; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:800;">💰 Contábil</span>
+                        <span style="background:#fce7f3; color:#be185d; padding:2px 6px; border-radius:4px; font-weight:800;">📚 Biblio</span>
+                        <span style="background:#fef9c3; color:#a16207; padding:2px 6px; border-radius:4px; font-weight:800;">📦 Patrimônio</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.74rem; color:#94a3b8;"><i class="fa-solid fa-cloud-arrow-up"></i> Alterações salvas instantaneamente</span>
+                    </div>
+                </div>
+
+                <div class="rbac-table-container">
+                    <table class="rbac-table">
+                        <thead>
+                            <tr>
+                                <th style="width:28%;">Profissional / Identificação</th>
+                                <th style="width:18%;">Setor & Cargo</th>
+                                <th style="width:14%;">WhatsApp</th>
+                                <th style="width:28%;">Módulos com Acesso Liberado</th>
+                                <th style="width:12%; text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admEquipeTableBody">
+                            <!-- Inserido dinamicamente via renderEquipeEscolarTable() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             </div>
 
             <!-- SUB-ABA DEV 2: BANCO FIREBASE CLOUD -->
             <div id="devSubTab_banco" class="dev-subtab-content" style="display:none;">
-                <!-- CARD FIREBASE: CONEXÃO COM BANCO DE DADOS EM NUVEM (FIREBASE MULTI-DISPOSITIVOS) -->
+                            <!-- CARD FIREBASE: CONEXÃO COM BANCO DE DADOS EM NUVEM (FIREBASE MULTI-DISPOSITIVOS) -->
             <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                     <div>
@@ -1054,12 +1164,42 @@
                         <i class="fa-solid fa-circle-notch fa-spin"></i> Verificando Firebase...
                     </div>
                 </div>
+
+                <form onsubmit="salvarConfiguracoesFirebase(event)">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">API Key (apiKey):</label>
+                            <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Project ID (projectId):</label>
+                            <input type="text" id="fbProjectId" placeholder="sige-pedro-rizzi" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Auth Domain (authDomain):</label>
+                            <input type="text" id="fbAuthDomain" placeholder="sige-pedro-rizzi.firebaseapp.com" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">App ID (appId):</label>
+                            <input type="text" id="fbAppId" placeholder="1:123456789:web:abcde..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <span style="font-size:0.8rem; color:#64748b;">
+                            <i class="fa-solid fa-shield-halved"></i> O salvamento local no navegador continua ativo mesmo sem internet (Modo Híbrido).
+                        </span>
+                        <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#ea580c;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 🔥 Salvar Credenciais & Conectar Firebase
+                        </button>
+                    </div>
+                </form>
+            </div>
             </div>
 
             <!-- SUB-ABA DEV 3: BACKUP & AUDITORIA -->
             <div id="devSubTab_backup" class="dev-subtab-content" style="display:none;">
-                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2rem;">
-                    <!-- Backup & Registros de Auditoria -->
+                                <!-- Backup & Registros de Auditoria -->
                 <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
                     <div>
                         <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
@@ -1094,12 +1234,11 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
 
             <!-- SUB-ABA DEV 4: WHATSAPP AUTOMÁTICO & GATEWAYS -->
             <div id="devSubTab_whatsapp_auto" class="dev-subtab-content" style="display:none;">
-                <!-- CARD 4: CONFIGURAÇÕES DO GATEWAY DE WHATSAPP AUTOMÁTICO -->
+                            <!-- CARD 4: CONFIGURAÇÕES DO GATEWAY DE WHATSAPP AUTOMÁTICO -->
             <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                     <div>
@@ -1135,8 +1274,36 @@
                         <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Sua Chave de API Token..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                     </div>
                 </div>
+
+                <div style="background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:1.2rem;">
+                    <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;"><i class="fa-solid fa-sliders"></i> Gatilhos de Disparo Automático (Dispara sem intervenção humana):</div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoCreate" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>📅 Disparar ao criar Agendamento</span>
+                        </label>
+
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoArrival" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>🔔 Notificar Orientadora ao marcar Chegou / Aguardando</span>
+                        </label>
+
+                        <label style="font-size:0.82rem; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="waConfigAutoReminders" onchange="salvarConfiguracoesWhatsapp()" checked>
+                            <span>⏰ Disparar Lembretes 24h e no Dia</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button onclick="testarConexaoWhatsapp()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; background:#0284c7; color:white;">
+                        <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
+                    </button>
+                </div>
+            </div>
             </div>
         </section>
+
 
 
 
@@ -2904,6 +3071,7 @@
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor da Escola:</label>
                         <select id="proInputSetor" required onchange="if(!document.getElementById('proInputId').value) autoSuggestModulosPorSetor(this.value)" class="search-input" style="width:100%; font-weight:700;">
                             <option value="docentes">👨‍🏫 Corpo Docente (Professor)</option>
+                            <option value="admin">🏫 Administração Escolar</option>
                             <option value="orientacao">🧭 Orientação Educacional (OE)</option>
                             <option value="supervisao">📋 Supervisão Pedagógica</option>
                             <option value="direcao">👑 Direção Escolar</option>
@@ -3568,10 +3736,11 @@ service cloud.firestore {
                     <div>
                         <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nível de Acesso (Perfil):</label>
                         <select id="devUserRole" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
+                            <option value="admin">🏫 Administrador(a) Escolar</option>
+                            <option value="direcao">👑 Gestor / Direção Escolar</option>
                             <option value="orientacao">💛 Orientador(a) Educacional</option>
                             <option value="supervisao">📋 Supervisão Pedagógica</option>
                             <option value="secretaria">📝 Secretaria Escolar</option>
-                            <option value="direcao">👑 Gestor / Direção Escolar</option>
                             <option value="docentes">👨‍🏫 Professor / Docente</option>
                             <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
                         </select>
@@ -3661,10 +3830,11 @@ service cloud.firestore {
                     <div>
                         <label style="font-size:0.78rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Perfil Base do Sistema *</label>
                         <select id="rbacInputRole" onchange="autoSelectRbacRoleDefaults(this.value)" class="search-input" style="width:100%; box-sizing:border-box; font-size:0.85rem; font-weight:700;">
+                            <option value="admin">🏫 Administrador(a) Escolar</option>
+                            <option value="direcao">👑 Direção Escolar</option>
                             <option value="orientacao">💛 Orientador(a) Educacional</option>
                             <option value="supervisao">📋 Supervisora Pedagógica</option>
                             <option value="secretaria">📝 Secretaria Escolar</option>
-                            <option value="direcao">👑 Direção Escolar</option>
                             <option value="docentes">👨‍🏫 Docente / Professor</option>
                             <option value="comunidade">👥 Comunidade Escolar / Apoio</option>
                             <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
@@ -4756,16 +4926,16 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v42</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v43</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20260925_v42"></script>
-    <script src="js/gestao-data.js?v=20260925_v42"></script>
-    <script src="js/gestao-app.js?v=20260925_v42"></script>
-    <script src="js/pdf-importer.js?v=20260925_v42"></script>
+    <script src="js/calendario-oficial-data.js?v=20260925_v43"></script>
+    <script src="js/gestao-data.js?v=20260925_v43"></script>
+    <script src="js/gestao-app.js?v=20260925_v43"></script>
+    <script src="js/pdf-importer.js?v=20260925_v43"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">

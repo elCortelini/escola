@@ -67,6 +67,7 @@ function parseJwt(token) {
 function getRoleLabel(role) {
     const labels = {
         desenvolvedor: "Elevi Cortelini (Desenvolvedor)",
+        admin: "Administrador(a) Escolar",
         direcao: "Direção Escolar",
         orientadora_clarinda: "Orientadora Clarinda (Anos Iniciais)",
         orientadora_daiane: "Orientadora Daiane (Anos Finais)",
@@ -74,8 +75,7 @@ function getRoleLabel(role) {
         secretaria: "Secretaria Escolar",
         docentes: "Docente / Professor(a)",
         apoio: "Apoio Pedagógico / TI",
-        comunidade: "Comunidade Escolar",
-        admin: "Administrador Integrado"
+        comunidade: "Comunidade Escolar"
     };
     return labels[role] || "Colaborador Escolar";
 }
@@ -83,6 +83,7 @@ function getRoleLabel(role) {
 function getRoleIcon(role) {
     const icons = {
         desenvolvedor: "fa-solid fa-code",
+        admin: "fa-solid fa-school",
         direcao: "fa-solid fa-crown",
         orientadora_clarinda: "fa-solid fa-heart-pulse",
         orientadora_daiane: "fa-solid fa-compass",
@@ -90,8 +91,7 @@ function getRoleIcon(role) {
         secretaria: "fa-solid fa-id-card",
         docentes: "fa-solid fa-chalkboard-user",
         apoio: "fa-solid fa-screwdriver-wrench",
-        comunidade: "fa-solid fa-users",
-        admin: "fa-solid fa-user-shield"
+        comunidade: "fa-solid fa-users"
     };
     return icons[role] || "fa-solid fa-user";
 }
@@ -4207,12 +4207,11 @@ function getRoleLabel(role) {
     }
     const map = {
         desenvolvedor: "Desenvolvedor do Sistema",
-        admin: "Administrador do Sistema",
+        admin: "Administrador(a) Escolar",
         direcao: "Direção Escolar & Gestão",
         supervisao: "Supervisão Escolar & Diário",
         orientacao: "Orientador Educacional (OE)",
         secretaria: "Secretaria Escolar & Recepção",
-        uniformes: "Controle de Uniformes & Logística",
         docentes: "Corpo Docente / Professores",
         comunidade: "Comunidade / Alunos / Pais",
         visitante: "Visitante / Não Autenticado"
@@ -4228,12 +4227,11 @@ function getRoleIcon(role) {
     }
     const map = {
         desenvolvedor: "fa-solid fa-shield-halved",
-        admin: "fa-solid fa-user-shield",
+        admin: "fa-solid fa-school",
         direcao: "fa-solid fa-crown",
         supervisao: "fa-solid fa-clipboard-check",
         orientacao: "fa-solid fa-heart-pulse",
         secretaria: "fa-solid fa-id-card",
-        uniformes: "fa-solid fa-shirt",
         docentes: "fa-solid fa-chalkboard-user",
         comunidade: "fa-solid fa-users",
         visitante: "fa-solid fa-user-lock"
