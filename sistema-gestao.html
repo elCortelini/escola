@@ -50,8 +50,8 @@
 
         <div style="display:flex; align-items:center; gap:16px;">
             <!-- Indicador & Botão de Sincronização em Tempo Real na Nuvem -->
-            <button onclick="if(sigeDB && typeof sigeDB.forceFetchRemoteData === 'function') sigeDB.forceFetchRemoteData();" style="background:#16a34a; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.15);" title="Atualizar dados instantaneamente com o Banco de Dados da Nuvem (Firebase)">
-                <i class="fa-solid fa-cloud-arrow-down"></i> <span id="cloudSyncBtnText">Nuvem Conectada (Tempo Real)</span>
+            <button id="cloudSyncBtn" onclick="openCloudSyncModal()" style="background:#16a34a; color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:all 0.2s;" title="Status e Gestão de Sincronização em Nuvem (Firebase Multi-Dispositivos)">
+                <i id="cloudSyncBtnIcon" class="fa-solid fa-cloud-arrow-down"></i> <span id="cloudSyncBtnText">Nuvem Conectada (Tempo Real)</span>
             </button>
 
             <!-- Conta de Usuário Logado -->
@@ -86,6 +86,15 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Banner de Alerta para Desconexão / Permissão Negada no Firebase -->
+    <div id="cloudSyncWarningBanner" style="display:none; background:#fef2f2; border-bottom:2px solid #ef4444; padding:8px 16px; font-size:0.83rem; color:#991b1b; text-align:center; font-weight:700;">
+        <i class="fa-solid fa-triangle-exclamation" style="margin-right:6px; color:#dc2626;"></i>
+        <span>A sincronização em nuvem entre computadores está bloqueada pelas regras de segurança do Firebase (sas-cepr).</span>
+        <button onclick="openCloudSyncModal()" style="margin-left:12px; background:#dc2626; color:white; border:none; padding:4px 12px; border-radius:6px; font-size:0.75rem; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(220,38,38,0.25);">
+            Liberar Sincronização (1 Minuto)
+        </button>
     </div>
 
     <!-- Header Navigation Principal -->
@@ -3336,6 +3345,98 @@
         </div>
     </div>
 
+    <!-- MODAL DE SINCRONIZAÇÃO EM NUVEM E FIREBASE MULTI-DISPOSITIVOS -->
+    <div id="modalCloudSync" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9950; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:2rem; border-radius:20px; max-width:760px; width:94%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:12px;">
+                <h3 style="color:#0f172a; font-size:1.3rem; font-weight:900; display:flex; align-items:center; gap:10px; margin:0;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color:#ea580c;"></i> Sincronização em Tempo Real (Multi-Dispositivos)
+                </h3>
+                <button type="button" onclick="closeCloudSyncModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Status Dinâmico -->
+            <div id="cloudSyncModalStatus" style="margin-bottom:1.5rem;"></div>
+
+            <!-- Guia de Regras do Firestore (Exibido se permissão negada ou desconectado) -->
+            <div id="cloudSyncRulesContainer" style="background:#fff7ed; border:1px solid #fdba74; border-radius:14px; padding:1.2rem; margin-bottom:1.5rem;">
+                <h4 style="color:#9a3412; font-size:0.95rem; font-weight:800; margin-top:0; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-fire" style="color:#ea580c;"></i> Como Liberar a Sincronização no Firebase Console (1 Minuto):
+                </h4>
+                <ol style="font-size:0.85rem; color:#7c2d12; margin:0 0 12px 1.2rem; padding:0; line-height:1.5;">
+                    <li>Abra o Console do Firebase no projeto <strong>sas-cepr</strong>:
+                        <a href="https://console.firebase.google.com/project/sas-cepr/firestore/rules" target="_blank" rel="noopener noreferrer" style="color:#c2410c; font-weight:800; text-decoration:underline; margin-left:4px;">
+                            Abrir Regras do Firestore <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </li>
+                    <li>Substitua o conteúdo da aba <strong>Regras (Rules)</strong> pelo código abaixo:</li>
+                </ol>
+
+                <div style="position:relative;">
+                    <pre style="background:#0f172a; color:#38bdf8; padding:12px 14px; border-radius:10px; font-size:0.78rem; overflow-x:auto; font-family:monospace; line-height:1.4; margin:0;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /sige_pedro_rizzi/{document=**} {
+      allow read, write: if true;
+    }
+    match /confirmacoes_op/{tokenId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}</pre>
+                    <button onclick="copyFirestoreRulesAction()" style="position:absolute; top:8px; right:8px; background:#ea580c; color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-copy"></i> Copiar Código
+                    </button>
+                </div>
+
+                <p style="font-size:0.83rem; color:#7c2d12; margin:10px 0 0 0; line-height:1.4;">
+                    3. Clique no botão azul <strong>Publicar (Publish)</strong> no Firebase Console.<br>
+                    4. Volte a esta janela e clique no botão abaixo para testar e conectar imediatamente!
+                </p>
+            </div>
+
+            <!-- Ações de Sincronização -->
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:1.5rem; justify-content:space-between; align-items:center;">
+                <button id="btnTestCloudConn" onclick="testFirebaseConnectionAction()" style="background:#16a34a; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:800; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
+                    <i class="fa-solid fa-rotate"></i> Testar & Sincronizar Agora
+                </button>
+
+                <button onclick="if(sigeDB) sigeDB.forceFetchRemoteData(); closeCloudSyncModal();" style="background:#0284c7; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Forçar Baixar da Nuvem
+                </button>
+
+                <button onclick="if(sigeDB) sigeDB.syncToFirebase(); closeCloudSyncModal(); showToast('☁️ Enviando dados deste computador para a nuvem...');" style="background:#ea580c; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Forçar Envio para Nuvem
+                </button>
+            </div>
+
+            <!-- Transferência Direta / Backup entre Computadores (Garantia Total) -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.2rem;">
+                <h4 style="color:#1e3a8a; font-size:0.95rem; font-weight:800; margin-top:0; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-shield-halved" style="color:#0284c7;"></i> Transferência Direta / Backup entre Computadores (Zero-Falhas)
+                </h4>
+                <p style="font-size:0.83rem; color:#64748b; margin:0 0 12px 0;">
+                    Você também pode transferir a base completa instantaneamente de um computador para outro (via arquivo JSON, pen drive ou WhatsApp), garantindo sincronização imediata mesmo sem internet:
+                </p>
+                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <button onclick="exportDatabaseAction()" style="background:#475569; color:white; border:none; padding:8px 16px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-file-export"></i> 1. Exportar Dados Deste Computador
+                    </button>
+
+                    <label style="background:#2563eb; color:white; border:none; padding:8px 16px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-file-import"></i> 2. Importar Dados de Outro Computador
+                        <input type="file" accept=".json" onchange="importDatabaseAction(event)" style="display:none;">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Gestão de Usuários (Exclusivo Desenvolvedor) -->
     <div id="modalDevUserConfig" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:680px; width:94%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:90vh; overflow-y:auto;">
@@ -4552,8 +4653,8 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
     <!-- JS Files -->
     <script src="js/calendario-oficial-data.js?v=20260921_v30"></script>
-    <script src="js/gestao-data.js?v=20260922_v36"></script>
-    <script src="js/gestao-app.js?v=20260922_v36"></script>
+    <script src="js/gestao-data.js?v=20260924_v37"></script>
+    <script src="js/gestao-app.js?v=20260924_v37"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

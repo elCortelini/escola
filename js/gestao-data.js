@@ -255,6 +255,12 @@ const defaultSigeData = {
     auditLogs: [],
     deletedContatosWpIds: [],
     deletedEventoCalendarioIds: [],
+    deletedEquipeIds: [],
+    deletedPedidoUniformeIds: [],
+    deletedDemandaSupIds: [],
+    deletedDemandaAdmIds: [],
+    deletedAtaIds: [],
+    deletedTurmaIds: [],
     firebaseConfig: {
         enabled: true,
         apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
@@ -272,6 +278,8 @@ class SigeDatabase {
         this.data = this.loadLocalOnly();
         this.fbApp = null;
         this.firestore = null;
+        this.cloudStatus = 'connecting'; // 'connecting' | 'connected' | 'permission_denied' | 'offline' | 'error'
+        this.cloudErrorDetails = '';
         this.isSyncingFromRemote = false;
         this.hasLoadedRemote = false;
         this.sanitizeStudentNames();
@@ -330,12 +338,14 @@ class SigeDatabase {
     }
 
     isFirebaseConnected() {
-        return !!(this.firestore && this.data.firebaseConfig && this.data.firebaseConfig.projectId);
+        return !!(this.firestore && this.data.firebaseConfig && this.data.firebaseConfig.projectId && this.cloudStatus === 'connected');
     }
 
     initFirebase() {
         const config = this.getFirebaseConfig();
         if (!config || !config.projectId || !config.apiKey || typeof firebase === "undefined") {
+            this.cloudStatus = 'offline';
+            this.updateCloudSyncBadge(false, "Modo Local");
             return;
         }
 
@@ -353,169 +363,338 @@ class SigeDatabase {
                 if (doc.exists) {
                     const remoteData = doc.data();
                     if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
-                        this.isSyncingFromRemote = true;
-
-                        const localDeletedOPIds = this.data?.deletedOPIds || [];
-                        const remoteDeletedOPIds = remoteData.deletedOPIds || [];
-                        const combinedDeletedIds = Array.from(new Set([...localDeletedOPIds, ...remoteDeletedOPIds]));
-
-                        const localDeletedWpIds = this.data?.deletedContatosWpIds || [];
-                        const remoteDeletedWpIds = remoteData.deletedContatosWpIds || [];
-                        const combinedDeletedWpIds = Array.from(new Set([...localDeletedWpIds, ...remoteDeletedWpIds]));
-
-                        const localDeletedCalIds = this.data?.deletedEventoCalendarioIds || [];
-                        const remoteDeletedCalIds = remoteData.deletedEventoCalendarioIds || [];
-                        const combinedDeletedCalIds = Array.from(new Set([...localDeletedCalIds, ...remoteDeletedCalIds]));
-
-                        this.data = { ...defaultSigeData, ...this.data, ...remoteData };
-                        this.data.deletedOPIds = combinedDeletedIds;
-                        this.data.deletedContatosWpIds = combinedDeletedWpIds;
-                        this.data.deletedEventoCalendarioIds = combinedDeletedCalIds;
-
-                        if (Array.isArray(this.data.agendamentosOP) && combinedDeletedIds.length > 0) {
-                            const delSet = new Set(combinedDeletedIds);
-                            this.data.agendamentosOP = this.data.agendamentosOP.filter(a => !delSet.has(a.id));
-                        }
-
-                        // Limpeza de pedidos e lotes de exemplo de uniformes
-                        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
-                        if (Array.isArray(this.data.pedidosUniformes)) {
-                            this.data.pedidosUniformes = this.data.pedidosUniformes.filter(p => !idsExemplosUniformes.includes(p.id));
-                        }
-                        if (Array.isArray(this.data.lotesSME)) {
-                            this.data.lotesSME = this.data.lotesSME.filter(l => l.id !== "lote-sme-01");
-                        }
-
-                        // Limpeza de usuários de teste pendentes
-                        const emailsExemplosRemover = [
-                            "marcos.silva789@edu.itajai.sc.gov.br",
-                            "juliana.pedagoga@edu.itajai.sc.gov.br",
-                            "rodrigo.ti@edu.itajai.sc.gov.br",
-                            "beatriz.oe@edu.itajai.sc.gov.br",
-                            "lucas.sec@edu.itajai.sc.gov.br"
-                        ];
-                        if (Array.isArray(this.data.usuariosCadastrados)) {
-                            this.data.usuariosCadastrados = this.data.usuariosCadastrados.filter(u => {
-                                const mail = (u.email || '').toLowerCase().trim();
-                                return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
-                            });
-                        }
-
-                        // Mesclagem inteligente de Contatos WhatsApp evitando ressurreição de excluídos e preservando edições locais
-                        const delWpSet = new Set(combinedDeletedWpIds);
-                        if (Array.isArray(remoteData.contatosWhatsAppDirecao)) {
-                            const contatosMap = new Map();
-                            remoteData.contatosWhatsAppDirecao.forEach(c => {
-                                if (c && c.id && !delWpSet.has(c.id)) {
-                                    contatosMap.set(c.id, c);
-                                }
-                            });
-                            (this.data.contatosWhatsAppDirecao || []).forEach(localC => {
-                                if (localC && localC.id && !delWpSet.has(localC.id)) {
-                                    const remoteC = contatosMap.get(localC.id);
-                                    if (!remoteC) {
-                                        contatosMap.set(localC.id, localC);
-                                    } else {
-                                        const localTime = new Date(localC.atualizadoEm || localC.criadoEm || 0).getTime();
-                                        const remoteTime = new Date(remoteC.atualizadoEm || remoteC.criadoEm || 0).getTime();
-                                        if (localTime >= remoteTime) {
-                                            contatosMap.set(localC.id, localC);
-                                        }
-                                    }
-                                }
-                            });
-                            this.data.contatosWhatsAppDirecao = Array.from(contatosMap.values());
-                        } else if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
-                            this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => !delWpSet.has(c.id));
-                        }
-
-                        // Mesclagem inteligente de Eventos do Calendário Escolar
-                        const delCalSet = new Set(combinedDeletedCalIds);
-                        if (Array.isArray(remoteData.eventosCalendarioEscolar)) {
-                            const calMap = new Map();
-                            remoteData.eventosCalendarioEscolar.forEach(e => {
-                                if (e && e.id && !delCalSet.has(e.id)) {
-                                    calMap.set(e.id, e);
-                                }
-                            });
-                            (this.data.eventosCalendarioEscolar || []).forEach(localE => {
-                                if (localE && localE.id && !delCalSet.has(localE.id)) {
-                                    const remoteE = calMap.get(localE.id);
-                                    if (!remoteE) {
-                                        calMap.set(localE.id, localE);
-                                    } else {
-                                        const localTime = new Date(localE.atualizadoEm || localE.criadoEm || 0).getTime();
-                                        const remoteTime = new Date(remoteE.atualizadoEm || remoteE.criadoEm || 0).getTime();
-                                        if (localTime >= remoteTime) {
-                                            calMap.set(localE.id, localE);
-                                        }
-                                    }
-                                }
-                            });
-                            this.data.eventosCalendarioEscolar = Array.from(calMap.values()).sort((a, b) => (a.data || '').localeCompare(b.data || ''));
-                        } else if (Array.isArray(this.data.eventosCalendarioEscolar)) {
-                            this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => !delCalSet.has(e.id));
-                        }
-
-                        this.sanitizeStudentNames();
-
-                        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
-                        this.isSyncingFromRemote = false;
-                        this.hasLoadedRemote = true;
-
+                        this.smartMergeRemoteData(remoteData);
                         console.log("☁️ Dados sincronizados da Nuvem (Firebase) em tempo real!");
                         this.updateCloudSyncBadge(true);
-
-                        if (typeof updateAllDynamicSelects === "function") {
-                            updateAllDynamicSelects();
-                        }
-                        if (typeof renderAllModules === "function") {
-                            renderAllModules();
-                        } else if (typeof renderModuleAdministracao === "function") {
-                            renderModuleAdministracao();
-                        }
-                        if (typeof renderPortalAuth === "function") {
-                            renderPortalAuth();
-                        }
-                        if (typeof updateActionPillars === "function") {
-                            updateActionPillars();
-                        }
-                        if (typeof loadSystems === "function") {
-                            loadSystems();
-                        }
                     }
                 } else {
+                    // Documento ainda não existe na nuvem: inicializa com os dados locais
                     this.hasLoadedRemote = true;
+                    this.cloudStatus = 'connected';
                     this.syncToFirebase();
+                    this.updateCloudSyncBadge(true);
                 }
             }, (error) => {
                 console.warn("⚠️ Aviso Firebase Firestore Sync:", error.message);
                 if (error.code === 'permission-denied') {
+                    this.cloudStatus = 'permission_denied';
+                    this.cloudErrorDetails = error.message;
                     console.error("🔴 Firestore: Permissão negada pelas Security Rules. Atualize firestore.rules no Console do Firebase (sas-cepr) para permitir sincronização global.");
+                    this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                } else {
+                    this.cloudStatus = 'offline';
+                    this.cloudErrorDetails = error.message;
+                    this.updateCloudSyncBadge(false, "Modo Off-line");
                 }
-                this.updateCloudSyncBadge(false);
             });
 
-            console.log("🔥 Firebase Firestore inicializado e sincronizando com a nuvem!");
+            console.log("🔥 Firebase Firestore inicializado e monitorando nuvem...");
         } catch (e) {
             console.error("Erro ao inicializar Firebase:", e);
+            this.cloudStatus = 'error';
+            this.cloudErrorDetails = e.message;
+            this.updateCloudSyncBadge(false, "Erro de Conexão");
+        }
+    }
+
+    smartMergeRemoteData(remoteData) {
+        if (!remoteData || typeof remoteData !== "object") return;
+        this.isSyncingFromRemote = true;
+
+        // 1. Tombstones (IDs excluídos combinados para não ressuscitar registros)
+        const mergeDeletedIds = (key) => {
+            const l = this.data[key] || [];
+            const r = remoteData[key] || [];
+            return Array.from(new Set([...l, ...r]));
+        };
+
+        const combinedDeletedOPIds = mergeDeletedIds('deletedOPIds');
+        const combinedDeletedWpIds = mergeDeletedIds('deletedContatosWpIds');
+        const combinedDeletedCalIds = mergeDeletedIds('deletedEventoCalendarioIds');
+        const combinedDeletedEquipeIds = mergeDeletedIds('deletedEquipeIds');
+        const combinedDeletedPedidosUniIds = mergeDeletedIds('deletedPedidoUniformeIds');
+        const combinedDeletedDemandasSupIds = mergeDeletedIds('deletedDemandaSupIds');
+        const combinedDeletedDemandasAdmIds = mergeDeletedIds('deletedDemandaAdmIds');
+        const combinedDeletedAtasIds = mergeDeletedIds('deletedAtaIds');
+        const combinedDeletedTurmaIds = mergeDeletedIds('deletedTurmaIds');
+
+        // Helper genérico para mesclagem inteligente de coleções de objetos com ID
+        const mergeEntityList = (localList = [], remoteList = [], keyFn, deletedIds = []) => {
+            const delSet = new Set(deletedIds);
+            const map = new Map();
+
+            // Adiciona remotos que não foram excluídos
+            (remoteList || []).forEach(r => {
+                if (!r) return;
+                const k = keyFn(r);
+                if (k && !delSet.has(k) && !(r.id && delSet.has(r.id))) {
+                    map.set(k, { ...r });
+                }
+            });
+
+            // Mescla locais que não foram excluídos (preserva adições locais e edições mais recentes)
+            (localList || []).forEach(l => {
+                if (!l) return;
+                const k = keyFn(l);
+                if (k && !delSet.has(k) && !(l.id && delSet.has(l.id))) {
+                    if (!map.has(k)) {
+                        map.set(k, { ...l });
+                    } else {
+                        const existing = map.get(k);
+                        const lTime = new Date(l.atualizadoEm || l.criadoEm || l.data || 0).getTime();
+                        const rTime = new Date(existing.atualizadoEm || existing.criadoEm || existing.data || 0).getTime();
+                        if (lTime >= rTime) {
+                            map.set(k, { ...existing, ...l });
+                        } else {
+                            map.set(k, { ...l, ...existing });
+                        }
+                    }
+                }
+            });
+
+            return Array.from(map.values());
+        };
+
+        // 2. Mesclagem de Equipe Escolar (Equipe & RBAC)
+        const mergedEquipe = mergeEntityList(
+            this.data.equipeEscola || [],
+            remoteData.equipeEscola || [],
+            p => p.id || (p.cpf ? cleanCpf(p.cpf) : null) || (p.email ? p.email.toLowerCase().trim() : null),
+            combinedDeletedEquipeIds
+        );
+
+        // 3. Mesclagem de Usuários Cadastrados (Login)
+        const emailsExemplosRemover = [
+            "marcos.silva789@edu.itajai.sc.gov.br",
+            "juliana.pedagoga@edu.itajai.sc.gov.br",
+            "rodrigo.ti@edu.itajai.sc.gov.br",
+            "beatriz.oe@edu.itajai.sc.gov.br",
+            "lucas.sec@edu.itajai.sc.gov.br"
+        ];
+        const cleanUsuarios = (list) => (list || []).filter(u => {
+            const mail = (u.email || '').toLowerCase().trim();
+            return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
+        });
+        const mergedUsuarios = mergeEntityList(
+            cleanUsuarios(this.data.usuariosCadastrados),
+            cleanUsuarios(remoteData.usuariosCadastrados),
+            u => u.id || (u.cpf ? cleanCpf(u.cpf) : null) || (u.email ? u.email.toLowerCase().trim() : null),
+            combinedDeletedEquipeIds
+        );
+
+        // 4. Mesclagem de Pedidos de Uniformes
+        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
+        const cleanLocalPedidos = (this.data.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
+        const cleanRemotePedidos = (remoteData.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
+        const mergedPedidosUniformes = mergeEntityList(
+            cleanLocalPedidos,
+            cleanRemotePedidos,
+            p => p.id,
+            combinedDeletedPedidosUniIds
+        );
+
+        // 5. Mesclagem de Lotes SME
+        const cleanLocalLotes = (this.data.lotesSME || []).filter(l => l.id !== "lote-sme-01");
+        const cleanRemoteLotes = (remoteData.lotesSME || []).filter(l => l.id !== "lote-sme-01");
+        const mergedLotesSME = mergeEntityList(
+            cleanLocalLotes,
+            cleanRemoteLotes,
+            l => l.id,
+            []
+        );
+
+        // 6. Mesclagem de Agendamentos OP
+        const mergedAgendamentosOP = mergeEntityList(
+            this.data.agendamentosOP || [],
+            remoteData.agendamentosOP || [],
+            a => a.id,
+            combinedDeletedOPIds
+        );
+
+        // 7. Mesclagem de Demandas Supervisão & Demandas Admin
+        const mergedDemandasSup = mergeEntityList(
+            this.data.demandasSupervisao || [],
+            remoteData.demandasSupervisao || [],
+            d => d.id,
+            combinedDeletedDemandasSupIds
+        );
+        const mergedDemandasAdm = mergeEntityList(
+            this.data.demandasAdmin || [],
+            remoteData.demandasAdmin || [],
+            d => d.id,
+            combinedDeletedDemandasAdmIds
+        );
+
+        // 8. Mesclagem de Contatos WhatsApp Direção
+        const mergedContatosWp = mergeEntityList(
+            this.data.contatosWhatsAppDirecao || [],
+            remoteData.contatosWhatsAppDirecao || [],
+            c => c.id,
+            combinedDeletedWpIds
+        );
+
+        // 9. Mesclagem de Eventos Calendário Escolar
+        const mergedEventosCal = mergeEntityList(
+            this.data.eventosCalendarioEscolar || [],
+            remoteData.eventosCalendarioEscolar || [],
+            e => e.id,
+            combinedDeletedCalIds
+        ).sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+
+        // 10. Mesclagem de Atas de Gabinete
+        const mergedAtas = mergeEntityList(
+            this.data.atasGabineteDirecao || [],
+            remoteData.atasGabineteDirecao || [],
+            a => a.id,
+            combinedDeletedAtasIds
+        );
+
+        // 11. Mesclagem de Turmas da Escola
+        const turmasMap = new Map();
+        [...(this.data.turmasEscola || []), ...(remoteData.turmasEscola || [])].forEach(t => {
+            const name = typeof t === "string" ? t : (t?.nome || t?.turma);
+            const id = typeof t === "object" ? t?.id : null;
+            if (name && (!id || !combinedDeletedTurmaIds.includes(id))) {
+                if (!turmasMap.has(name)) turmasMap.set(name, t);
+            }
+        });
+        const mergedTurmas = Array.from(turmasMap.values());
+
+        // 12. Alunos Importados
+        const alunosMap = new Map();
+        [...(this.data.alunosImportados || []), ...(remoteData.alunosImportados || [])].forEach(a => {
+            if (!a) return;
+            const key = a.matricula || ((a.nome || '') + '_' + (a.turma || ''));
+            if (key && !alunosMap.has(key)) alunosMap.set(key, a);
+        });
+        const mergedAlunos = Array.from(alunosMap.values());
+
+        // 13. Audit Logs (Union, máx 500)
+        const logsMap = new Map();
+        [...(this.data.auditLogs || []), ...(remoteData.auditLogs || [])].forEach(log => {
+            if (!log) return;
+            const k = log.id || (log.timestamp + '_' + log.acao);
+            if (!logsMap.has(k)) logsMap.set(k, log);
+        });
+        const mergedLogs = Array.from(logsMap.values())
+            .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+            .slice(0, 500);
+
+        // 14. Estoque de Uniformes (Mescla de objetos)
+        const mergedEstoque = {
+            ...(defaultSigeData.estoqueUniformes || {}),
+            ...(this.data.estoqueUniformes || {}),
+            ...(remoteData.estoqueUniformes || {})
+        };
+
+        // Montagem do novo estado consolidado
+        this.data = {
+            ...defaultSigeData,
+            ...this.data,
+            ...remoteData,
+            equipeEscola: mergedEquipe,
+            usuariosCadastrados: mergedUsuarios,
+            pedidosUniformes: mergedPedidosUniformes,
+            lotesSME: mergedLotesSME,
+            estoqueUniformes: mergedEstoque,
+            agendamentosOP: mergedAgendamentosOP,
+            demandasSupervisao: mergedDemandasSup,
+            demandasAdmin: mergedDemandasAdm,
+            contatosWhatsAppDirecao: mergedContatosWp,
+            eventosCalendarioEscolar: mergedEventosCal,
+            atasGabineteDirecao: mergedAtas,
+            turmasEscola: mergedTurmas.length > 0 ? mergedTurmas : defaultSigeData.turmasEscola,
+            alunosImportados: mergedAlunos,
+            auditLogs: mergedLogs,
+            deletedOPIds: combinedDeletedOPIds,
+            deletedContatosWpIds: combinedDeletedWpIds,
+            deletedEventoCalendarioIds: combinedDeletedCalIds,
+            deletedEquipeIds: combinedDeletedEquipeIds,
+            deletedPedidoUniformeIds: combinedDeletedPedidosUniIds,
+            deletedDemandaSupIds: combinedDeletedDemandasSupIds,
+            deletedDemandaAdmIds: combinedDeletedDemandasAdmIds,
+            deletedAtaIds: combinedDeletedAtasIds,
+            deletedTurmaIds: combinedDeletedTurmaIds
+        };
+
+        // Garante integridade do desenvolvedor master
+        this.ensureDevUser();
+
+        this.sanitizeStudentNames();
+        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
+        this.isSyncingFromRemote = false;
+        this.hasLoadedRemote = true;
+        this.cloudStatus = 'connected';
+
+        // Dispara re-renderização em cascata de todas as tabelas e módulos abertos
+        if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
+        if (typeof renderAllModules === "function") renderAllModules();
+        if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
+        if (typeof renderTabelaPedidosUniformes === "function") renderTabelaPedidosUniformes();
+        if (typeof renderPortalAuth === "function") renderPortalAuth();
+        if (typeof updateActionPillars === "function") updateActionPillars();
+        if (typeof loadSystems === "function") loadSystems();
+
+        // Se tínhamos itens locais que não estavam na nuvem, envie de volta à nuvem para manter tudo sincronizado
+        const remotePedidosCount = (remoteData.pedidosUniformes || []).length;
+        const remoteEquipeCount = (remoteData.equipeEscola || []).length;
+        if (mergedPedidosUniformes.length > remotePedidosCount || mergedEquipe.length > remoteEquipeCount) {
+            console.log("☁️ Mesclagem local adicionou dados ausentes na nuvem. Enviando sincronização de volta...");
+            this.syncToFirebase();
+        }
+    }
+
+    ensureDevUser() {
+        if (!this.data) return;
+        if (!Array.isArray(this.data.usuariosCadastrados)) this.data.usuariosCadastrados = [];
+        let devUser = this.data.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
+        if (devUser) {
+            devUser.cpf = "806.037.420-68";
+            devUser.dataNascimento = "30/12/1981";
+            devUser.senha = "30121981";
+            devUser.nome = "Elevi Cortelini (Desenvolvedor)";
+            devUser.role = "desenvolvedor";
+            devUser.status = "aprovado";
+            devUser.cadastroCompleto = true;
+            devUser.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
+        } else {
+            this.data.usuariosCadastrados.unshift({
+                email: "elcortelini@gmail.com",
+                cpf: "806.037.420-68",
+                dataNascimento: "30/12/1981",
+                senha: "30121981",
+                nome: "Elevi Cortelini (Desenvolvedor)",
+                role: "desenvolvedor",
+                cargo: "Desenvolvedor do Sistema",
+                status: "aprovado",
+                cadastroCompleto: true,
+                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+            });
         }
     }
 
     syncToFirebase() {
-        if (!this.hasLoadedRemote || this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
+        if (this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
             return;
         }
 
         try {
+            this.ensureDevUser();
             this.firestore.collection("sige_pedro_rizzi").doc("database").set(this.data, { merge: true })
                 .then(() => {
                     console.log("💾 Dados sincronizados com sucesso para a Nuvem!");
+                    this.cloudStatus = 'connected';
                     this.updateCloudSyncBadge(true);
                 })
                 .catch(err => {
                     console.warn("Erro ao sincronizar com Firebase:", err.message);
-                    this.updateCloudSyncBadge(false);
+                    if (err.code === 'permission-denied') {
+                        this.cloudStatus = 'permission_denied';
+                        this.cloudErrorDetails = err.message;
+                        this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                    } else {
+                        this.updateCloudSyncBadge(false);
+                    }
                 });
         } catch (e) {
             console.warn("Exceção ao enviar para Firebase:", e);
@@ -524,8 +703,11 @@ class SigeDatabase {
 
     forceFetchRemoteData() {
         if (!this.firestore) {
-            if (typeof showToast === "function") showToast("⚠️ Conexão com a Nuvem não disponível.");
-            return;
+            this.initFirebase();
+            if (!this.firestore) {
+                if (typeof showToast === "function") showToast("⚠️ Conexão com o Firebase não configurada.");
+                return;
+            }
         }
 
         this.updateCloudSyncBadge(null, "Buscando dados na nuvem...");
@@ -535,39 +717,121 @@ class SigeDatabase {
                 if (doc.exists) {
                     const remoteData = doc.data();
                     if (remoteData && typeof remoteData === "object") {
-                        this.isSyncingFromRemote = true;
-                        this.data = { ...defaultSigeData, ...this.data, ...remoteData };
-                        this.sanitizeStudentNames();
-                        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
-                        this.isSyncingFromRemote = false;
-                        this.hasLoadedRemote = true;
-
-                        if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
-                        if (typeof renderAllModules === "function") renderAllModules();
-
+                        this.smartMergeRemoteData(remoteData);
                         if (typeof showToast === "function") showToast("☁️ Dados sincronizados com sucesso da Nuvem!");
                         this.updateCloudSyncBadge(true);
                     }
+                } else {
+                    // Documento inexistente na nuvem: sobe os dados locais
+                    this.hasLoadedRemote = true;
+                    this.syncToFirebase();
+                    if (typeof showToast === "function") showToast("☁️ Banco na Nuvem inicializado com dados locais!");
+                    this.updateCloudSyncBadge(true);
                 }
             })
             .catch(err => {
                 console.error("Erro ao buscar dados na nuvem:", err);
-                if (typeof showToast === "function") showToast("❌ Falha ao buscar dados na nuvem.");
-                this.updateCloudSyncBadge(false);
+                if (err.code === 'permission-denied') {
+                    this.cloudStatus = 'permission_denied';
+                    this.cloudErrorDetails = err.message;
+                    if (typeof showToast === "function") showToast("❌ Permissão negada no Firebase. Publique as regras do Firestore.");
+                    this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                } else {
+                    if (typeof showToast === "function") showToast("❌ Falha ao buscar dados na nuvem: " + err.message);
+                    this.updateCloudSyncBadge(false);
+                }
             });
+    }
+
+    async testAndConnectFirebase() {
+        const config = this.getFirebaseConfig();
+        if (!config || !config.projectId || !config.apiKey || typeof firebase === "undefined") {
+            return { success: false, message: "Configuração do Firebase ou biblioteca SDK ausente." };
+        }
+
+        try {
+            if (!this.firestore) {
+                this.initFirebase();
+            }
+            if (!this.firestore) {
+                return { success: false, message: "Não foi possível instanciar o Firestore." };
+            }
+
+            // Testa leitura do documento principal
+            const docRef = this.firestore.collection("sige_pedro_rizzi").doc("database");
+            const doc = await docRef.get();
+            if (doc.exists) {
+                this.smartMergeRemoteData(doc.data());
+            } else {
+                await docRef.set(this.data, { merge: true });
+                this.hasLoadedRemote = true;
+            }
+
+            this.cloudStatus = 'connected';
+            this.updateCloudSyncBadge(true);
+            return { success: true, message: "Conectado e sincronizado com sucesso à Nuvem!" };
+        } catch (err) {
+            console.error("Erro no teste de conexão Firebase:", err);
+            if (err.code === 'permission-denied') {
+                this.cloudStatus = 'permission_denied';
+                this.cloudErrorDetails = err.message;
+                this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                return { 
+                    success: false, 
+                    code: 'permission-denied', 
+                    message: "Permissão Negada pelas Security Rules do Firestore no projeto 'sas-cepr'." 
+                };
+            }
+            this.cloudStatus = 'offline';
+            this.updateCloudSyncBadge(false, "Modo Off-line");
+            return { success: false, message: err.message };
+        }
+    }
+
+    exportCompleteDatabase() {
+        const jsonStr = JSON.stringify(this.data, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sige_database_backup_${getLocalDateISO()}_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    importCompleteDatabase(file, onComplete) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (!parsed || typeof parsed !== 'object') throw new Error('Arquivo JSON inválido.');
+                this.smartMergeRemoteData(parsed);
+                if (this.firestore && this.cloudStatus === 'connected') {
+                    this.syncToFirebase();
+                }
+                if (typeof onComplete === 'function') onComplete(true, "Base de dados importada e mesclada com sucesso!");
+            } catch (err) {
+                console.error(err);
+                if (typeof onComplete === 'function') onComplete(false, "Erro ao importar arquivo: " + err.message);
+            }
+        };
+        reader.readAsText(file);
     }
 
     setupAutoSyncListeners() {
         if (typeof window === "undefined") return;
 
         window.addEventListener("focus", () => {
-            if (this.firestore && this.hasLoadedRemote) {
+            if (this.firestore && this.hasLoadedRemote && this.cloudStatus === 'connected') {
                 this.forceFetchRemoteData();
             }
         });
 
         document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && this.firestore && this.hasLoadedRemote) {
+            if (!document.hidden && this.firestore && this.hasLoadedRemote && this.cloudStatus === 'connected') {
                 this.forceFetchRemoteData();
             }
         });
@@ -575,17 +839,52 @@ class SigeDatabase {
 
     updateCloudSyncBadge(isSuccess, customMessage = "") {
         const btnText = document.getElementById("cloudSyncBtnText");
-        if (!btnText) return;
+        const btn = document.getElementById("cloudSyncBtn");
+        const btnIcon = document.getElementById("cloudSyncBtnIcon") || (btn ? btn.querySelector("i") : null);
+        const warningBanner = document.getElementById("cloudSyncWarningBanner");
 
         if (customMessage) {
-            btnText.innerText = customMessage;
+            if (btnText) btnText.innerText = customMessage;
+            if (this.cloudStatus === "permission_denied") {
+                if (btn) {
+                    btn.style.background = "#dc2626";
+                    btn.style.boxShadow = "0 2px 6px rgba(220,38,38,0.4)";
+                }
+                if (btnIcon) btnIcon.className = "fa-solid fa-triangle-exclamation";
+                if (warningBanner) warningBanner.style.display = "block";
+            }
             return;
         }
 
-        if (isSuccess) {
-            btnText.innerText = "Nuvem Conectada (Tempo Real)";
+        if (isSuccess === true) {
+            this.cloudStatus = "connected";
+            if (btnText) btnText.innerText = "Nuvem Conectada (Tempo Real)";
+            if (btn) {
+                btn.style.background = "#16a34a";
+                btn.style.boxShadow = "0 2px 6px rgba(22,163,74,0.3)";
+            }
+            if (btnIcon) btnIcon.className = "fa-solid fa-cloud-check";
+            if (warningBanner) warningBanner.style.display = "none";
+        } else if (this.cloudStatus === "permission_denied") {
+            if (btnText) btnText.innerText = "Nuvem Bloqueada (Permissão Negada)";
+            if (btn) {
+                btn.style.background = "#dc2626";
+                btn.style.boxShadow = "0 2px 6px rgba(220,38,38,0.4)";
+            }
+            if (btnIcon) btnIcon.className = "fa-solid fa-triangle-exclamation";
+            if (warningBanner) warningBanner.style.display = "block";
         } else {
-            btnText.innerText = "Modo Off-line";
+            this.cloudStatus = "offline";
+            if (btnText) btnText.innerText = "Modo Off-line";
+            if (btn) {
+                btn.style.background = "#64748b";
+                btn.style.boxShadow = "0 2px 4px rgba(0,0,0,0.15)";
+            }
+            if (btnIcon) btnIcon.className = "fa-solid fa-cloud-slash";
+        }
+
+        if (typeof renderFirebaseConfigPanel === "function") {
+            renderFirebaseConfigPanel();
         }
     }
 
@@ -606,7 +905,10 @@ class SigeDatabase {
                 'usuariosCadastrados', 'pedidosUniformes', 'lotesSME', 'agendamentosOP',
                 'demandasSupervisao', 'demandasAdmin', 'equipeEscola', 'turmasEscola',
                 'contatosWhatsAppDirecao', 'eventosCalendarioEscolar', 'atasGabineteDirecao',
-                'mensagensWhatsAppLog', 'auditLogs', 'notificacoesLidas'
+                'mensagensWhatsAppLog', 'auditLogs', 'notificacoesLidas',
+                'deletedOPIds', 'deletedContatosWpIds', 'deletedEventoCalendarioIds',
+                'deletedEquipeIds', 'deletedPedidoUniformeIds', 'deletedDemandaSupIds',
+                'deletedDemandaAdmIds', 'deletedAtaIds', 'deletedTurmaIds'
             ];
             arrayKeys.forEach(k => {
                 if (!Array.isArray(merged[k])) {
@@ -2028,6 +2330,11 @@ class SigeDatabase {
 
         // 1. Remove da Equipe Escolar
         this.data.equipeEscola = list.filter(p => p.id !== id);
+        if (!Array.isArray(this.data.deletedEquipeIds)) this.data.deletedEquipeIds = [];
+        this.data.deletedEquipeIds.push(id);
+        if (prof.cpf) this.data.deletedEquipeIds.push(cleanCpf(prof.cpf));
+        if (prof.email) this.data.deletedEquipeIds.push(prof.email.toLowerCase().trim());
+        this.data.deletedEquipeIds = Array.from(new Set(this.data.deletedEquipeIds));
 
         // 2. Remove de usuariosCadastrados por ID, E-mail, CPF ou Nome
         const profEmail = (prof.email || "").toLowerCase().trim();
@@ -2109,6 +2416,9 @@ class SigeDatabase {
         let list = this.getTurmasEscola();
         const turma = list.find(t => t.id === id);
         this.data.turmasEscola = list.filter(t => t.id !== id);
+        if (!Array.isArray(this.data.deletedTurmaIds)) this.data.deletedTurmaIds = [];
+        this.data.deletedTurmaIds.push(id);
+        this.data.deletedTurmaIds = Array.from(new Set(this.data.deletedTurmaIds));
         this.saveData(this.data);
         if (turma) {
             this.logAuditEvent("Turmas & Turnos", `Removida turma ${turma.nome}`, "Administração");
@@ -2961,6 +3271,9 @@ class SigeDatabase {
     deleteAtaGabinete(id) {
         if (!this.data.atasGabineteDirecao) return;
         this.data.atasGabineteDirecao = this.data.atasGabineteDirecao.filter(a => a.id !== id);
+        if (!Array.isArray(this.data.deletedAtaIds)) this.data.deletedAtaIds = [];
+        this.data.deletedAtaIds.push(id);
+        this.data.deletedAtaIds = Array.from(new Set(this.data.deletedAtaIds));
         this.addAuditLog('Exclusão de Ata de Gabinete (ID: ' + id + ')', 'Direção');
         this.saveData(this.data);
     }

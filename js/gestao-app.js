@@ -9643,6 +9643,158 @@ function submitDisparoAvisoProfessor(e) {
 // ==========================================
 // CONFIGURAÇÃO E PAINEL DO FIREBASE CLOUD
 // ==========================================
+// MODAL DE DIAGNÓSTICO & SINCRONIZAÇÃO EM NUVEM (FIREBASE MULTI-DISPOSITIVOS)
+// ==========================================
+const FIRESTORE_OFFICIAL_RULES = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // BANCO PRINCIPAL SIGE - Acesso central da escola
+    match /sige_pedro_rizzi/{document=**} {
+      allow read, write: if true;
+    }
+
+    // TOKENS DE CONFIRMACAO - acesso publico controlado via WhatsApp
+    match /confirmacoes_op/{tokenId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}`;
+
+function openCloudSyncModal() {
+    let modal = document.getElementById("modalCloudSync");
+    if (!modal) return;
+    renderCloudSyncModalContent();
+    modal.style.display = "flex";
+}
+
+function closeCloudSyncModal() {
+    let modal = document.getElementById("modalCloudSync");
+    if (modal) modal.style.display = "none";
+}
+
+function renderCloudSyncModalContent() {
+    const statusContainer = document.getElementById("cloudSyncModalStatus");
+    const rulesContainer = document.getElementById("cloudSyncRulesContainer");
+    if (!statusContainer) return;
+
+    const status = sigeDB ? sigeDB.cloudStatus : 'offline';
+
+    if (status === 'connected') {
+        statusContainer.innerHTML = `
+            <div style="background:#dcfce7; border:1px solid #86efac; border-radius:12px; padding:1rem; display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-cloud-check" style="font-size:2rem; color:#16a34a;"></i>
+                <div>
+                    <strong style="color:#166534; font-size:1rem; display:block;">Nuvem Conectada e Sincronizada!</strong>
+                    <span style="color:#15803d; font-size:0.83rem;">Todos os computadores da escola estão recebendo e enviando dados em tempo real.</span>
+                </div>
+            </div>
+        `;
+        if (rulesContainer) rulesContainer.style.display = "none";
+    } else if (status === 'permission_denied') {
+        statusContainer.innerHTML = `
+            <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:1rem; display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#dc2626;"></i>
+                <div>
+                    <strong style="color:#991b1b; font-size:1rem; display:block;">Acesso Bloqueado pelo Firebase (Permissão Negada)</strong>
+                    <span style="color:#b91c1c; font-size:0.83rem;">O console do Firebase (projeto sas-cepr) está recusando a sincronização. Publique a regra abaixo no Console do Google para conectar imediatamente.</span>
+                </div>
+            </div>
+        `;
+        if (rulesContainer) rulesContainer.style.display = "block";
+    } else if (status === 'connecting') {
+        statusContainer.innerHTML = `
+            <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:12px; padding:1rem; display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:#d97706;"></i>
+                <div>
+                    <strong style="color:#92400e; font-size:1rem; display:block;">Conectando ao Firebase...</strong>
+                    <span style="color:#b45309; font-size:0.83rem;">Verificando conexão com a nuvem central.</span>
+                </div>
+            </div>
+        `;
+        if (rulesContainer) rulesContainer.style.display = "none";
+    } else {
+        statusContainer.innerHTML = `
+            <div style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:1rem; display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-cloud-slash" style="font-size:2rem; color:#64748b;"></i>
+                <div>
+                    <strong style="color:#334155; font-size:1rem; display:block;">Modo Off-line / Desconectado</strong>
+                    <span style="color:#64748b; font-size:0.83rem;">Os dados estão salvos localmente neste computador. Clique em Testar Conexão para tentar conectar à Nuvem.</span>
+                </div>
+            </div>
+        `;
+        if (rulesContainer) rulesContainer.style.display = "block";
+    }
+}
+
+async function testFirebaseConnectionAction() {
+    const btn = document.getElementById("btnTestCloudConn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Testando conexão...`;
+    }
+
+    const res = await sigeDB.testAndConnectFirebase();
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Testar & Sincronizar Agora`;
+    }
+
+    renderCloudSyncModalContent();
+
+    if (res.success) {
+        showToast("🎉 " + res.message);
+        setTimeout(() => closeCloudSyncModal(), 1800);
+    } else {
+        showToast("❌ " + res.message);
+    }
+}
+
+function copyFirestoreRulesAction() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(FIRESTORE_OFFICIAL_RULES).then(() => {
+            showToast("📋 Regras copiadas para a área de transferência! Cole na aba Regras do Console do Firebase.");
+        }).catch(() => {
+            prompt("Copie as regras abaixo:", FIRESTORE_OFFICIAL_RULES);
+        });
+    } else {
+        prompt("Copie as regras abaixo:", FIRESTORE_OFFICIAL_RULES);
+    }
+}
+
+function exportDatabaseAction() {
+    sigeDB.exportCompleteDatabase();
+    showToast("💾 Base completa exportada com sucesso em arquivo JSON!");
+}
+
+function importDatabaseAction(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm("Deseja importar e mesclar esta base de dados com as informações deste computador? Nenhum dado mais recente será perdido.")) {
+        event.target.value = "";
+        return;
+    }
+
+    sigeDB.importCompleteDatabase(file, (success, msg) => {
+        event.target.value = "";
+        if (success) {
+            showToast("🎉 " + msg);
+            closeCloudSyncModal();
+            renderAllModules();
+        } else {
+            showToast("❌ " + msg);
+        }
+    });
+}
+
 function renderFirebaseConfigPanel() {
     const config = sigeDB.getFirebaseConfig();
     const apiKey = document.getElementById("fbApiKey");
@@ -9657,14 +9809,18 @@ function renderFirebaseConfigPanel() {
     if (appId) appId.value = config.appId || "";
 
     if (statusBadge) {
-        if (sigeDB.isFirebaseConnected()) {
+        if (sigeDB.cloudStatus === 'connected') {
             statusBadge.style.background = "#dcfce7";
             statusBadge.style.color = "#166534";
             statusBadge.innerHTML = `<i class="fa-solid fa-cloud-check"></i> 🔥 Sincronização Cloud Ativa (Firebase Conectado)`;
+        } else if (sigeDB.cloudStatus === 'permission_denied') {
+            statusBadge.style.background = "#fee2e2";
+            statusBadge.style.color = "#991b1b";
+            statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ⚠️ Regras Bloqueadas no Console (Clique no botão da nuvem acima)`;
         } else if (config.projectId) {
             statusBadge.style.background = "#fef3c7";
             statusBadge.style.color = "#92400e";
-            statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Conectando ao Firebase...`;
+            statusBadge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando ao Firebase...`;
         } else {
             statusBadge.style.background = "#f1f5f9";
             statusBadge.style.color = "#475569";
