@@ -2163,6 +2163,47 @@
                 </div>
             </div>
 
+            <!-- Registro Pedagógico do Atendimento (Privativo das Orientadoras) -->
+            <div id="detalhesRegistroPedagogicoContainer" style="background:#f8fafc; border:1px solid #cbd5e1; padding:1.1rem; border-radius:14px; margin-bottom:1.2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-weight:800; font-size:0.88rem; color:#1e3a8a;">
+                        <i class="fa-solid fa-file-pen" style="color:#2563eb;"></i> Registro Pedagógico & Deliberações do Atendimento:
+                    </label>
+                    <span id="detalhesPedagogicoBadge" style="font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px; background:#e0f2fe; color:#0369a1;">Orientação Educacional</span>
+                </div>
+
+                <!-- Modo de Edição (Apenas Orientadoras e Gestão) -->
+                <div id="detalhesPedagogicoEditorArea">
+                    <div style="margin-bottom:8px;">
+                        <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:3px;">Encaminhamento / Providência:</label>
+                        <select id="detalhesInputEncaminhamento" class="search-input" style="width:100%; font-size:0.83rem;">
+                            <option value="Nenhum">Nenhum (Tratado e Resolvido Internamente)</option>
+                            <option value="Conselho Tutelar">Conselho Tutelar</option>
+                            <option value="CRAS / CREAS">CRAS / CREAS (Assistência Social)</option>
+                            <option value="UBS / Posto de Saúde">UBS / Posto de Saúde (Saúde da Família)</option>
+                            <option value="CAPS / Saúde Mental">CAPS / Psicologia / Saúde Mental</option>
+                            <option value="Supervisão Pedagógica">Supervisão Pedagógica</option>
+                            <option value="Direção Escolar">Direção Escolar</option>
+                            <option value="SME Itajaí">SME Itajaí</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:8px;">
+                        <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:3px;">Deliberações, Combinados e Relato do Atendimento:</label>
+                        <textarea id="detalhesInputHistoricoTratado" rows="3" class="search-input" style="width:100%; font-size:0.84rem; font-family:inherit;" placeholder="Registre os compromissos assumidos, combinados pedagógicos e orientações passadas à família..."></textarea>
+                    </div>
+
+                    <button type="button" id="btnSalvarPedagogico" onclick="salvarEncaminhamentoEDeliberacao()" class="btn-sec" style="background:#1e3a8a; color:white; font-size:0.8rem; padding:7px 14px; font-weight:800; border-radius:8px; border:none; cursor:pointer;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Registro Pedagógico
+                    </button>
+                </div>
+
+                <!-- Modo Somente Leitura (Secretaria / Recepção) -->
+                <div id="detalhesPedagogicoReadOnlyArea" style="display:none; background:white; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.83rem; color:#334155;">
+                    <div id="detalhesPedagogicoReadOnlyText"></div>
+                </div>
+            </div>
+
             <!-- Ferramentas Rápidas (Editar, Reagendar, Declaração, Prontuário) -->
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.2rem;">
                 <button onclick="openEditarModal(window.currentDetailAppointmentId)" class="btn-sec" style="background:#0284c7; color:white; font-size:0.8rem; padding:8px 14px; font-weight:800; border-radius:8px;">
@@ -2883,10 +2924,23 @@
                     </div>
 
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
-                            <input type="checkbox" id="proChk_op">
-                            <span style="font-size:0.82rem; font-weight:700; color:#92400e;"><i class="fa-solid fa-heart-pulse" style="color:#d97706;"></i> Orientação (OE)</span>
-                        </label>
+                        <div style="background:#fffbeb; padding:8px 12px; border-radius:8px; border:1px solid #fde68a; display:flex; flex-direction:column; gap:6px; grid-column:1 / -1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+                                    <input type="checkbox" id="proChk_op" onchange="const w = document.getElementById('proOpPerfilWrapper'); if(w) w.style.display = this.checked ? 'block' : 'none';">
+                                    <span style="font-size:0.84rem; font-weight:800; color:#92400e;"><i class="fa-solid fa-heart-pulse" style="color:#d97706;"></i> Orientação Educacional (OE / OP)</span>
+                                </label>
+                                <span style="font-size:0.73rem; color:#b45309; font-weight:600;">Defina o nível de atuação no módulo</span>
+                            </div>
+                            <div id="proOpPerfilWrapper" style="display:none; padding-top:6px; border-top:1px dashed #fde68a;">
+                                <label style="font-weight:700; font-size:0.75rem; color:#78350f; display:block; margin-bottom:3px;">Tipo de Acesso & Função no Módulo:</label>
+                                <select id="proSelect_op_perfil" class="search-input" style="width:100%; font-size:0.8rem; padding:5px 8px; font-weight:700; background:white; color:#0f172a;">
+                                    <option value="executora">👩‍🏫 Orientadora Titular (Atendimento, Deliberações & Métricas nos Relatórios)</option>
+                                    <option value="recepcao">📋 Recepção / Secretaria (Agendamentos & Pai Presente na Recepção - Sem Métricas)</option>
+                                    <option value="gerencial">👁️ Direção / Gestão (Supervisão Institucional & Consulta Consolidada)</option>
+                                </select>
+                            </div>
+                        </div>
 
                         <label style="display:flex; align-items:center; gap:8px; background:white; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;">
                             <input type="checkbox" id="proChk_mural" checked>
@@ -4653,8 +4707,8 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
     <!-- JS Files -->
     <script src="js/calendario-oficial-data.js?v=20260921_v30"></script>
-    <script src="js/gestao-data.js?v=20260924_v37"></script>
-    <script src="js/gestao-app.js?v=20260924_v37"></script>
+    <script src="js/gestao-data.js?v=20260925_v38"></script>
+    <script src="js/gestao-app.js?v=20260925_v38"></script>
     <script src="js/pdf-importer.js?v=20260915_v19"></script>
 </body>
 </html>

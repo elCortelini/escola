@@ -189,10 +189,10 @@ if (typeof window !== "undefined") {
 const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senha: "05081978", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senha: "05081978", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
     lotesSME: [],
@@ -917,12 +917,18 @@ class SigeDatabase {
             });
 
             // Normalização estrita de usuários cadastrados
-            merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => ({
-                ...u,
-                status: u.status || 'aprovado',
-                cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com'),
-                permissoes: u.permissoes || this.getDefaultPermissoesByRole(u.role)
-            }));
+            merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
+                const perms = u.permissoes ? { ...u.permissoes } : this.getDefaultPermissoesByRole(u.role);
+                if (perms.op_perfil === undefined) {
+                    perms.op_perfil = this.getOpPerfil(u);
+                }
+                return {
+                    ...u,
+                    status: u.status || 'aprovado',
+                    cadastroCompleto: (u.cadastroCompleto !== undefined) ? u.cadastroCompleto : (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com'),
+                    permissoes: perms
+                };
+            });
 
             // Garante que o Desenvolvedor Master possua o CPF e Data de Nascimento oficiais
             let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
@@ -934,7 +940,7 @@ class SigeDatabase {
                 devUser.role = "desenvolvedor";
                 devUser.status = "aprovado";
                 devUser.cadastroCompleto = true;
-                devUser.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
+                devUser.permissoes = { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
             } else {
                 merged.usuariosCadastrados.unshift({
                     email: "elcortelini@gmail.com",
@@ -946,22 +952,25 @@ class SigeDatabase {
                     cargo: "Desenvolvedor do Sistema",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                    permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 });
             }
 
-            // Purga automática de registros excluídos de Daiane que possam ter ficado em cache
-            const equipeNomes = (merged.equipeEscola || []).map(p => (p.nome || '').toLowerCase().trim());
-            const temDaianeNaEquipe = equipeNomes.some(n => n.includes('daiane'));
-            if (!temDaianeNaEquipe) {
+            // Saneamento e integridade modular: sincroniza a lista de orientadoras estritamente com os
+            // colaboradores ativos da equipe que possuam perfil executora de atendimento
+            if (Array.isArray(merged.equipeEscola)) {
+                const equipeAtivaMap = new Map();
+                merged.equipeEscola.forEach(p => {
+                    if (p.id) equipeAtivaMap.set(p.id, p);
+                    if (p.nome) equipeAtivaMap.set(p.nome.toLowerCase().trim(), p);
+                });
+
                 if (Array.isArray(merged.orientadoras)) {
-                    merged.orientadoras = merged.orientadoras.filter(o => !o.nome || !o.nome.toLowerCase().includes('daiane'));
-                }
-                if (Array.isArray(merged.usuariosCadastrados)) {
-                    merged.usuariosCadastrados = merged.usuariosCadastrados.filter(u => {
-                        const n = (u.nome || '').toLowerCase();
-                        const e = (u.email || '').toLowerCase();
-                        return !(n.includes('daiane') || e.includes('daiane'));
+                    merged.orientadoras = merged.orientadoras.filter(o => {
+                        const prof = (o.id && equipeAtivaMap.get(o.id)) || (o.nome && equipeAtivaMap.get(o.nome.toLowerCase().trim()));
+                        if (!prof) return false;
+                        const perfil = this.getOpPerfil(prof);
+                        return perfil === "executora";
                     });
                 }
             }
@@ -1002,47 +1011,109 @@ class SigeDatabase {
     // Gerenciador de Usuários e Login por E-mail (RBAC Modular)
     getDefaultPermissoesByRole(role) {
         const base = {
-            op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+            op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
             ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
         };
         if (!role) return base;
         if (role === "desenvolvedor" || role === "direcao" || role === "admin") {
             return {
-                op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
+                op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role.startsWith("orientadora") || role === "orientacao") {
             return {
-                op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role.startsWith("supervisora") || role === "supervisao") {
             return {
-                op: false, mural: true, supervisao: true, admin: false, direcao: false, uniformes: false,
+                op: false, op_perfil: 'none', mural: true, supervisao: true, admin: false, direcao: false, uniformes: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role === "secretaria") {
             return {
-                op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: true,
+                op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: false, direcao: false, uniformes: true,
                 ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role === "docentes" || role === "comunidade") {
             return {
-                op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role === "apoio") {
             return {
-                op: false, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
                 ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true
             };
         }
         return base;
+    }
+
+    getOpPerfil(item) {
+        if (!item) return "none";
+        const perms = item.permissoes || {};
+        if (perms.op === false) return "none";
+        if (perms.op_perfil && ["executora", "recepcao", "gerencial", "none"].includes(perms.op_perfil)) {
+            return perms.op_perfil;
+        }
+
+        // Inferência inteligente sem gambiarras para compatibilidade com dados existentes
+        const setor = ((item.setor || item.role || "") + "").toLowerCase().trim();
+        const cargo = ((item.cargoFuncao || item.cargo || "") + "").toLowerCase().trim();
+        const email = ((item.email || "") + "").toLowerCase().trim();
+
+        if (email === "elcortelini@gmail.com" || setor === "desenvolvedor" || setor === "direcao" || setor === "admin") {
+            return "gerencial";
+        }
+        if (setor === "secretaria" || cargo.includes("secretar") || cargo.includes("recepc")) {
+            return "recepcao";
+        }
+        if (setor === "orientacao" || setor.startsWith("orientadora") || cargo.includes("orientad")) {
+            return "executora";
+        }
+        if (setor === "supervisao" || setor.startsWith("supervisora") || cargo.includes("supervis")) {
+            return "gerencial";
+        }
+
+        return perms.op ? "recepcao" : "none";
+    }
+
+    getCurrentOpPerfil() {
+        const user = this.getLoggedUser();
+        const activeRole = this.getRole();
+
+        // Se o usuário logado for Desenvolvedor Master
+        if (user && user.role === 'desenvolvedor') {
+            // Se estiver simulando uma visão específica pelo seletor de perfil da barra superior
+            if (activeRole && activeRole !== 'desenvolvedor') {
+                if (activeRole.startsWith('orientadora_') || activeRole === 'orientacao') {
+                    return 'executora';
+                }
+                if (activeRole === 'secretaria') {
+                    return 'recepcao';
+                }
+                if (activeRole === 'direcao' || activeRole === 'admin' || activeRole === 'supervisao') {
+                    return 'gerencial';
+                }
+                const simulatedUser = (this.getUsuarios() || []).find(u => u.role === activeRole);
+                if (simulatedUser) return this.getOpPerfil(simulatedUser);
+                const simulatedProf = (this.data?.equipeEscola || []).find(p => p.setor === activeRole || p.id === activeRole);
+                if (simulatedProf) return this.getOpPerfil(simulatedProf);
+                const defaults = this.getDefaultPermissoesByRole(activeRole);
+                return defaults.op_perfil || 'none';
+            }
+            return 'gerencial';
+        }
+
+        if (user) {
+            return this.getOpPerfil(user);
+        }
+        return this.getOpPerfil({ role: activeRole });
     }
 
         getUsuarios() {
@@ -2055,9 +2126,9 @@ class SigeDatabase {
 
     getOrientadoras() {
         const equipe = this.getEquipeEscolar();
-        const deEquipe = equipe.filter(p => p.setor === "orientacao" || (p.permissoes && p.permissoes.op && p.setor !== "direcao" && p.setor !== "administracao" && p.setor !== "supervisao" && p.email !== "elcortelini@gmail.com"));
+        const deEquipe = equipe.filter(p => this.getOpPerfil(p) === "executora");
         
-        // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar
+        // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar com perfil executora
         const orientadorasValidas = deEquipe.map(p => {
             const existente = (this.data && Array.isArray(this.data.orientadoras)) ? this.data.orientadoras.find(o => 
                 o.id === p.id || 
@@ -2070,7 +2141,8 @@ class SigeDatabase {
                 email: p.email || (existente ? existente.email : ""),
                 turnos: p.turnos || "matutino",
                 turmasOuSalas: p.turmasOuSalas || p.cargoFuncao || "Orientação Educacional",
-                cargoFuncao: p.cargoFuncao || "Orientadora Educacional"
+                cargoFuncao: p.cargoFuncao || "Orientadora Educacional",
+                op_perfil: "executora"
             };
         });
 
@@ -2195,7 +2267,7 @@ class SigeDatabase {
                 email: "elcortelini@gmail.com",
                 turnos: "integral",
                 turmasOuSalas: "Gabinete & Servidor",
-                permissoes: { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
+                permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true }
             });
             saveNeeded = true;
         } else {
@@ -2206,6 +2278,10 @@ class SigeDatabase {
             if (devProf.dataNascimento !== "30/12/1981") {
                 devProf.dataNascimento = "30/12/1981";
                 devProf.senha = "30121981";
+                saveNeeded = true;
+            }
+            if (!devProf.permissoes || devProf.permissoes.op_perfil !== 'gerencial') {
+                devProf.permissoes = { ...(devProf.permissoes || {}), op: true, op_perfil: 'gerencial' };
                 saveNeeded = true;
             }
         }
@@ -2227,9 +2303,13 @@ class SigeDatabase {
                         saveNeeded = true;
                     }
                 });
+                if (p.permissoes.op_perfil === undefined) {
+                    p.permissoes.op_perfil = this.getOpPerfil(p);
+                    saveNeeded = true;
+                }
             }
             if (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com") {
-                p.permissoes = { op: true, mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
+                p.permissoes = { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true };
             }
         });
 
@@ -2243,6 +2323,8 @@ class SigeDatabase {
         let list = this.getEquipeEscolar();
         if (!profData.permissoes) {
             profData.permissoes = this.getDefaultPermissoesByRole(profData.setor);
+        } else if (profData.permissoes.op_perfil === undefined) {
+            profData.permissoes.op_perfil = this.getOpPerfil(profData);
         }
 
         let savedItem = null;
@@ -2305,10 +2387,21 @@ class SigeDatabase {
         }
         this.data.usuariosCadastrados = userList;
 
+        const opPerfil = this.getOpPerfil(savedItem);
+        if (opPerfil === "executora") {
+            this.saveOrientadora(savedItem.id, savedItem.nome, savedItem.telefone, savedItem.email);
+        } else {
+            // Se NÃO é executora de atendimento, remove qualquer registro antigo de orientadora
+            if (Array.isArray(this.data.orientadoras)) {
+                this.data.orientadoras = this.data.orientadoras.filter(o => 
+                    o.id !== savedItem.id && 
+                    (!savedItem.nome || (o.nome && o.nome.toLowerCase().trim() !== savedItem.nome.toLowerCase().trim()))
+                );
+            }
+        }
+
         if (savedItem.setor === "docentes") {
             this.saveProfessor(savedItem);
-        } else if (savedItem.setor === "orientacao") {
-            this.saveOrientadora(savedItem.id, savedItem.nome, savedItem.telefone, savedItem.email);
         } else if (savedItem.setor === "supervisao") {
             this.saveSupervisora(savedItem.id, savedItem.nome, savedItem.telefone, savedItem.email);
         }
@@ -2566,11 +2659,16 @@ class SigeDatabase {
         }
 
         // Validação estrita de limite por Orientadora (máximo 4 atendimentos por turno por orientadora)
+        const targetOri = (agendamento.orientadora || "").toLowerCase().trim();
         const oriTurnoAppointments = this.data.agendamentosOP.filter(
-            a => a.data === agendamento.data && 
-                 a.turno === agendamento.turno && 
-                 a.statusSecretaria !== "cancelado" &&
-                 (a.orientadora === agendamento.orientadora || (!a.orientadora && agendamento.orientadora.includes("Clarinda")))
+            a => {
+                if (a.data !== agendamento.data || a.turno !== agendamento.turno || a.statusSecretaria === "cancelado") {
+                    return false;
+                }
+                const aOri = (a.orientadora || "").toLowerCase().trim();
+                if (!targetOri && !aOri) return true;
+                return aOri === targetOri || (targetOri && aOri.includes(targetOri)) || (aOri && targetOri.includes(aOri));
+            }
         );
 
         if (oriTurnoAppointments.length >= 4) {

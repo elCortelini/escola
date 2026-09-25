@@ -855,18 +855,21 @@ function getOrientadoraByRole(role) {
     if (!role) return null;
     const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     
-    // 1. Se estiver logado e for orientadora
+    // 1. Se estiver logado e for estritamente do perfil executora de atendimento
     const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
-    if (logged && (logged.role.startsWith("orientadora_") || logged.setor === "orientacao" || (logged.permissoes && logged.permissoes.op && !logged.permissoes.direcao && !logged.permissoes.admin))) {
-        const found = orientadoras.find(o => o.id === logged.id || (o.nome && logged.nome && o.nome.toLowerCase().trim() === logged.nome.toLowerCase().trim()));
-        if (found) return found;
-        if (logged.nome) return { id: logged.id || "logged-ori", nome: logged.nome, cargoFuncao: logged.cargo || "Orientadora Educacional" };
+    if (logged) {
+        const perfil = (typeof sigeDB !== 'undefined' && sigeDB.getOpPerfil) ? sigeDB.getOpPerfil(logged) : 'none';
+        if (perfil === 'executora') {
+            const found = orientadoras.find(o => o.id === logged.id || (o.nome && logged.nome && o.nome.toLowerCase().trim() === logged.nome.toLowerCase().trim()));
+            if (found) return found;
+            if (logged.nome) return { id: logged.id || "logged-ori", nome: logged.nome, cargoFuncao: logged.cargo || "Orientadora Educacional" };
+        }
     }
 
-    // 2. Busca por ID da role
+    // 2. Busca por ID da role ativa
     if (role.startsWith("orientadora_")) {
         const idOrName = role.replace("orientadora_", "").toLowerCase();
-        return orientadoras.find(o => o.id.toLowerCase() === idOrName || o.nome.toLowerCase().includes(idOrName)) || null;
+        return orientadoras.find(o => (o.id && o.id.toLowerCase() === idOrName) || (o.nome && o.nome.toLowerCase().includes(idOrName))) || null;
     }
     if (role === "orientacao" && orientadoras.length > 0) {
         return orientadoras[0];
@@ -2218,7 +2221,7 @@ function submitNovoProjetoOP(e) {
         }
 
         const categoria = elCat ? elCat.value : "Mediação de Conflitos";
-        const orientadoraLider = elOri ? elOri.value : "Clarinda Rosa Pereira";
+        const orientadoraLider = elOri ? elOri.value : ((sigeDB.getOrientadoras()[0] || {}).nome || "Orientação Educacional");
         const hojeIso = new Date().toISOString().split("T")[0];
         const dataInicio = elIni && elIni.value ? elIni.value : hojeIso;
         const dataFim = elFim && elFim.value ? elFim.value : hojeIso;
@@ -2378,19 +2381,48 @@ function openDetalhesModal(id) {
         }
     }
 
-    // Visibilidade dos botões conforme o perfil (Orientadoras, Secretaria, Gestores, Admin e Dev)
-    const role = sigeDB.getRole();
-    const canChangeStatus = role.startsWith("orientadora_") || ["orientacao", "secretaria", "admin", "direcao", "desenvolvedor", "supervisao"].includes(role) || role.startsWith("supervisora_");
+    // Visibilidade dos botões e painéis conforme o perfil de atuação no módulo OP
+    const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
+    const isRecepcao = (opPerfil === "recepcao");
 
     const btnConfirmadoWa = document.getElementById("btnAcaoConfirmadoWa");
     const btnAguardando = document.getElementById("btnAcaoAguardando");
     const btnAtendido = document.getElementById("btnAcaoAtendido");
     const btnNaoVeio = document.getElementById("btnAcaoNaoVeio");
 
-    if (btnConfirmadoWa) btnConfirmadoWa.style.display = canChangeStatus ? "inline-flex" : "none";
-    if (btnAguardando) btnAguardando.style.display = canChangeStatus ? "inline-flex" : "none";
-    if (btnAtendido) btnAtendido.style.display = canChangeStatus ? "inline-flex" : "none";
-    if (btnNaoVeio) btnNaoVeio.style.display = canChangeStatus ? "inline-flex" : "none";
+    if (btnConfirmadoWa) btnConfirmadoWa.style.display = "inline-flex";
+    if (btnAguardando) btnAguardando.style.display = "inline-flex";
+    // Secretaria / Recepção NÃO conclui nem atesta atendimento pedagógico
+    if (btnAtendido) btnAtendido.style.display = isRecepcao ? "none" : "inline-flex";
+    if (btnNaoVeio) btnNaoVeio.style.display = "inline-flex";
+
+    // Configuração do Registro Pedagógico & Deliberações
+    const editorArea = document.getElementById("detalhesPedagogicoEditorArea");
+    const readOnlyArea = document.getElementById("detalhesPedagogicoReadOnlyArea");
+    const readOnlyText = document.getElementById("detalhesPedagogicoReadOnlyText");
+    const encElem = document.getElementById("detalhesInputEncaminhamento");
+    const histElem = document.getElementById("detalhesInputHistoricoTratado");
+
+    if (encElem) encElem.value = ag.encaminhamento || "Nenhum";
+    if (histElem) histElem.value = ag.historicoTratado || "";
+
+    if (isRecepcao) {
+        if (editorArea) editorArea.style.display = "none";
+        if (readOnlyArea) {
+            readOnlyArea.style.display = "block";
+            if (ag.historicoTratado || (ag.encaminhamento && ag.encaminhamento !== "Nenhum")) {
+                readOnlyText.innerHTML = `
+                    <div style="margin-bottom:6px;"><strong>Encaminhamento:</strong> ${escapeHtml(ag.encaminhamento || 'Nenhum')}</div>
+                    <div><strong>Deliberações / Combinados:</strong> ${escapeHtml(ag.historicoTratado || '-')}</div>
+                `;
+            } else {
+                readOnlyText.innerHTML = `<span style="color:#64748b; font-style:italic;"><i class="fa-solid fa-lock" style="color:#94a3b8; margin-right:4px;"></i> Registro de combinados pedagógicos privativo da Orientadora Educacional após o atendimento.</span>`;
+            }
+        }
+    } else {
+        if (editorArea) editorArea.style.display = "block";
+        if (readOnlyArea) readOnlyArea.style.display = "none";
+    }
 
     // Renderizar histórico de disparos de WhatsApp
     renderWhatsappDispatchHistory(ag);
@@ -2420,6 +2452,12 @@ window.closeDetalhesModal = closeDetalhesModal;
 function detalhesMudarStatus(newStatus, customId = null) {
     const id = customId || window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!id) return;
+
+    const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
+    if (opPerfil === "recepcao" && (newStatus === "realizado" || newStatus === "atendido")) {
+        alert("⚠️ Ação restrita: A conclusão do atendimento e seus desfechos são de competência privativa da Orientadora Educacional.");
+        return;
+    }
 
     if (document.activeElement && typeof document.activeElement.blur === "function") {
         document.activeElement.blur();
@@ -2464,6 +2502,13 @@ function detalhesMudarStatus(newStatus, customId = null) {
 function salvarEncaminhamentoEDeliberacao() {
     const targetId = window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!targetId) return;
+
+    const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
+    if (opPerfil === "recepcao") {
+        alert("⚠️ Ação restrita: Usuários da recepção/secretaria não possuem permissão para registrar conclusões pedagógicas.");
+        return;
+    }
+
     const encElem = document.getElementById("detalhesInputEncaminhamento");
     const enc = encElem ? encElem.value : "Nenhum";
     const histElem = document.getElementById("detalhesInputHistoricoTratado");
@@ -4003,6 +4048,15 @@ function openEditarModal(id) {
         elOri.value = matchedVal || item.orientadora || (elOri.options[0] ? elOri.options[0].value : "");
     }
 
+    const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
+    if (elSts) {
+        const optRealizado = elSts.querySelector('option[value="realizado"]');
+        if (optRealizado) {
+            optRealizado.disabled = (opPerfil === "recepcao");
+            optRealizado.title = (opPerfil === "recepcao") ? "Conclusão privativa da Orientadora Educacional" : "";
+        }
+    }
+
     const modal = document.getElementById("modalEditarOP");
     if (modal) modal.style.display = "flex";
 }
@@ -4042,6 +4096,12 @@ function submitEditarAgendamentoOP(e) {
     const elOri = document.getElementById("editInputOrientadora");
     const elSts = document.getElementById("editInputStatus");
     const elMot = document.getElementById("editInputMotivo");
+
+    const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
+    if (opPerfil === "recepcao" && elSts && elSts.value === "realizado") {
+        alert("⚠️ Ação restrita: Apenas a Orientadora Educacional pode concluir e registrar o atendimento como realizado.");
+        return false;
+    }
 
     let turno = ags[itemIndex].turno || "matutino";
     if (elHora && elHora.value) {
@@ -5352,7 +5412,7 @@ function testarConexaoWhatsapp() {
         turma: "7º Ano A",
         responsavel: "Direção Escolar",
         telefone: "47999887766",
-        orientadora: "Clarinda Rosa Pereira",
+        orientadora: ((sigeDB.getOrientadoras && sigeDB.getOrientadoras()[0]) ? sigeDB.getOrientadoras()[0].nome : "Orientação Educacional"),
         data: new Date().toISOString().split("T")[0],
         horario: "10:00"
     };
@@ -8724,6 +8784,16 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
             const isActive = isMasterDev ? true : !!perms[m.key];
             const activeClass = isActive ? `active ${m.colorClass}` : 'inactive';
             const iconStatus = isActive ? 'fa-check' : 'fa-xmark';
+
+            let chipLabel = m.label;
+            if (m.key === 'op' && isActive) {
+                const pPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getOpPerfil) ? sigeDB.getOpPerfil(p) : 'none';
+                const perfilMap = { executora: 'Titular', recepcao: 'Recepção', gerencial: 'Gestão' };
+                if (perfilMap[pPerfil]) {
+                    chipLabel = `${m.label} <small style="font-size:0.55rem; opacity:0.85;">(${perfilMap[pPerfil]})</small>`;
+                }
+            }
+
             const titleTooltip = isMasterDev 
                 ? `${m.fullLabel}: Acesso Master Obrigatório` 
                 : `${m.fullLabel}: Clique para ${isActive ? 'Revogar' : 'Liberar'} acesso`;
@@ -8732,7 +8802,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                 return `
                     <span class="rbac-mod-chip active ${m.colorClass} disabled" title="${escapeHtml(titleTooltip)}">
                         <i class="fa-solid ${m.icon}"></i>
-                        <span>${m.label}</span>
+                        <span>${chipLabel}</span>
                         <i class="fa-solid fa-lock" style="font-size:0.62rem; opacity:0.75;"></i>
                     </span>
                 `;
@@ -8745,7 +8815,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                     title="${escapeHtml(titleTooltip)}"
                     aria-label="${m.fullLabel} para ${escapeHtml(p.nome)}">
                     <i class="fa-solid ${m.icon}"></i>
-                    <span>${m.label}</span>
+                    <span>${chipLabel}</span>
                     <i class="fa-solid ${iconStatus}" style="font-size:0.65rem;"></i>
                 </button>
             `;
@@ -8830,10 +8900,21 @@ function toggleProfissionalModuloChip(id, moduloKey) {
     const currentState = !!prof.permissoes[moduloKey];
     prof.permissoes[moduloKey] = !currentState;
 
+    if (moduloKey === 'op') {
+        if (prof.permissoes.op) {
+            if (!prof.permissoes.op_perfil || prof.permissoes.op_perfil === 'none') {
+                prof.permissoes.op_perfil = sigeDB.getDefaultPermissoesByRole(prof.setor).op_perfil || 'recepcao';
+            }
+        } else {
+            prof.permissoes.op_perfil = 'none';
+        }
+    }
+
     sigeDB.salvarPermissoesUsuario(prof.id, prof.permissoes);
     if (prof.email) {
         sigeDB.salvarPermissoesUsuario(prof.email, prof.permissoes);
     }
+    updateAllDynamicSelects();
 
     const moduloNome = {
         op: "Orientação Educacional (OE)",
@@ -9009,6 +9090,8 @@ function setAllProfissionalModulos(checked = true) {
         const chk = document.getElementById(`proChk_${k}`);
         if (chk) chk.checked = !!checked;
     });
+    const wrapperOpPerfil = document.getElementById("proOpPerfilWrapper");
+    if (wrapperOpPerfil) wrapperOpPerfil.style.display = checked ? "block" : "none";
 }
 
 function autoSuggestModulosPorSetor(setor) {
@@ -9018,6 +9101,14 @@ function autoSuggestModulosPorSetor(setor) {
         const chk = document.getElementById(`proChk_${k}`);
         if (chk) chk.checked = !!defaults[k];
     });
+    const selOpPerfil = document.getElementById("proSelect_op_perfil");
+    const wrapperOpPerfil = document.getElementById("proOpPerfilWrapper");
+    if (selOpPerfil) {
+        selOpPerfil.value = defaults.op_perfil || (defaults.op ? "recepcao" : "executora");
+    }
+    if (wrapperOpPerfil) {
+        wrapperOpPerfil.style.display = defaults.op ? "block" : "none";
+    }
 }
 
 function openCadastroProfissionalModal(id = null) {
@@ -9062,6 +9153,15 @@ function openCadastroProfissionalModal(id = null) {
                 const chk = document.getElementById(`proChk_${k}`);
                 if (chk) chk.checked = !!perms[k];
             });
+
+            const selOpPerfil = document.getElementById("proSelect_op_perfil");
+            const wrapperOpPerfil = document.getElementById("proOpPerfilWrapper");
+            if (selOpPerfil) {
+                selOpPerfil.value = perms.op_perfil || sigeDB.getOpPerfil(prof);
+            }
+            if (wrapperOpPerfil) {
+                wrapperOpPerfil.style.display = perms.op ? "block" : "none";
+            }
         }
     } else {
         if (title) title.innerHTML = `<i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Colaborador & Acesso ao Sistema`;
@@ -9107,8 +9207,12 @@ function submitCadastroProfissional(e) {
         return false;
     }
 
+    const isOpChecked = !!document.getElementById("proChk_op")?.checked;
+    const opPerfilVal = document.getElementById("proSelect_op_perfil")?.value || "executora";
+
     const permissoes = {
-        op: !!document.getElementById("proChk_op")?.checked,
+        op: isOpChecked,
+        op_perfil: isOpChecked ? opPerfilVal : "none",
         mural: !!document.getElementById("proChk_mural")?.checked,
         supervisao: !!document.getElementById("proChk_supervisao")?.checked,
         admin: !!document.getElementById("proChk_admin")?.checked,
