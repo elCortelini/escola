@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-09-28T15:01:05.618Z",
+  "status": "APROVADO",
+  "summary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0
+  },
+  "metrics": {
+    "benchCount": 500,
+    "totalDurationMs": "3.85",
+    "avgOperationMs": "0.008"
+  },
+  "cleanedModules": [
+    "Orientação Educacional (agendamentosOP, projetosOrientacao)",
+    "Pedido de Uniformes (pedidosUniformes, lotesSME, estoqueUniformes zerado)",
+    "Gestão Escolar e Direção (demandasAdmin, mensagensWhatsAppLog, contatosWhatsAppDirecao, atasGabineteDirecao, eventosCalendarioEscolar)"
+  ],
+  "preservedStaff": [
+    {
+      "nome": "Elevi Cortelini (Desenvolvedor)",
+      "setor": "desenvolvedor",
+      "cargoFuncao": "Desenvolvedor & Administrador Master do Sistema",
+      "email": "elcortelini@gmail.com"
+    }
+  ],
+  "tests": [
+    {
+      "suite": "OP",
+      "testName": "Criação de agendamento válido (Happy Path)",
+      "status": "PASSED",
+      "durationMs": 4.1658
+    },
+    {
+      "suite": "OP",
+      "testName": "Bloqueio de data por recesso/conselho da Direção",
+      "status": "PASSED",
+      "durationMs": 0.099
+    },
+    {
+      "suite": "OP",
+      "testName": "Validação estrita de limite de 4 atendimentos por turno",
+      "status": "PASSED",
+      "durationMs": 0.4452
+    },
+    {
+      "suite": "OP",
+      "testName": "Geração de Token Seguro de Confirmação de Presença",
+      "status": "PASSED",
+      "durationMs": 0.2766
+    },
+    {
+      "suite": "OP",
+      "testName": "Confirmação de Presença via Link/Token de WhatsApp",
+      "status": "PASSED",
+      "durationMs": 1.2161
+    },
+    {
+      "suite": "OP",
+      "testName": "Edição de dados do agendamento com preservação de carimbo temporal",
+      "status": "PASSED",
+      "durationMs": 0.1859
+    },
+    {
+      "suite": "OP",
+      "testName": "Exclusão com tombstone anti-ressurreição (deletedOPIds)",
+      "status": "PASSED",
+      "durationMs": 0.471
+    },
+    {
+      "suite": "Uniformes",
+      "testName": "Criação de novo pedido de uniforme (Happy Path)",
+      "status": "PASSED",
+      "durationMs": 0.2352
+    },
+    {
+      "suite": "Uniformes",
+      "testName": "Transição de status (Pendente -> Em Lote -> Entregue)",
+      "status": "PASSED",
+      "durationMs": 0.2695
+    },
+    {
+      "suite": "Uniformes",
+      "testName": "Exclusão com tombstone (deletedPedidoUniformeIds)",
+      "status": "PASSED",
+      "durationMs": 0.1086
+    },
+    {
+      "suite": "Direção",
+      "testName": "Registro e acompanhamento de demanda da direção",
+      "status": "PASSED",
+      "durationMs": 0.141
+    },
+    {
+      "suite": "Direção",
+      "testName": "Auditoria e Log de Disparos de WhatsApp",
+      "status": "PASSED",
+      "durationMs": 0.2318
+    },
+    {
+      "suite": "Direção",
+      "testName": "Validação RBAC: Isolamento e restrição por perfis de acesso",
+      "status": "PASSED",
+      "durationMs": 0.1407
+    },
+    {
+      "suite": "Segurança",
+      "testName": "Higienização de Strings XSS em nomes de alunos",
+      "status": "PASSED",
+      "durationMs": 0.0318
+    },
+    {
+      "suite": "Segurança",
+      "testName": "Payloads gigantescos (> 5.000 caracteres)",
+      "status": "PASSED",
+      "durationMs": 0.286
+    },
+    {
+      "suite": "Segurança",
+      "testName": "Higienização de CPF e Prevenção de Injeções",
+      "status": "PASSED",
+      "durationMs": 0.0842
+    }
+  ]
+}
