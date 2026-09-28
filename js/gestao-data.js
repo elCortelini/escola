@@ -1272,43 +1272,50 @@ class SigeDatabase {
         if (!role) return base;
         if (role === "desenvolvedor") {
             return {
+                ...base,
                 op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role === "direcao" || role === "admin") {
             return {
+                ...base,
                 op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role.startsWith("orientadora") || role === "orientacao") {
             return {
-                op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ...base,
+                op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role.startsWith("supervisora") || role === "supervisao") {
             return {
-                op: false, op_perfil: 'none', mural: true, supervisao: true, admin: false, direcao: false, uniformes: false,
+                ...base,
+                op: false, op_perfil: 'none', mural: true, supervisao: true, admin: false, direcao: false, uniformes: false, dev: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role === "secretaria") {
             return {
-                op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: false, direcao: false, uniformes: true,
+                ...base,
+                op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: false, direcao: false, uniformes: true, dev: false,
                 ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role === "docentes" || role === "comunidade") {
             return {
-                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ...base,
+                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
                 ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
             };
         }
         if (role === "apoio") {
             return {
-                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false,
+                ...base,
+                op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
                 ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true
             };
         }
@@ -2963,6 +2970,7 @@ class SigeDatabase {
         if (agendamento.aluno) {
             agendamento.aluno = cleanStudentName(agendamento.aluno);
         }
+        if (!agendamento.statusSecretaria) agendamento.statusSecretaria = "pendente";
         if (!agendamento.historicoWhatsapp) agendamento.historicoWhatsapp = [];
         if (!agendamento.anexos) agendamento.anexos = [];
         
@@ -3573,8 +3581,8 @@ class SigeDatabase {
     }
 
     async criarTokenConfirmacao(agendamentoId) {
-        const ag = (this.data.agendamentosOP || []).find(a => a.id === agendamentoId);
-        if (!ag || !this.firestore) return null;
+        const ag = (this.data.agendamentosOP || []).find(a => String(a.id) === String(agendamentoId) || (a.agendamentoId && String(a.agendamentoId) === String(agendamentoId)));
+        if (!ag) return null;
         const token = generateSecureId('token');
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
@@ -3590,38 +3598,53 @@ class SigeDatabase {
             expiresAt: expiresAt.toISOString(),
             criadoEm: new Date().toISOString()
         };
-        try {
-            await this.firestore.collection('confirmacoes_op').doc(token).set(docData);
-            return token;
-        } catch (e) {
-            console.error('Erro ao criar token de confirmacao:', e);
-            return null;
+        if (this.firestore) {
+            try {
+                await this.firestore.collection('confirmacoes_op').doc(token).set(docData);
+            } catch (e) {
+                console.warn('Aviso ao sincronizar token no firestore:', e);
+            }
         }
+        if (!this.data.tokensConfirmacao) this.data.tokensConfirmacao = {};
+        this.data.tokensConfirmacao[token] = docData;
+        this.saveData(this.data);
+        return token;
     }
 
     async atualizarStatusPorToken(agendamentoId, novoStatus, obs) {
-        if (!this.firestore || !agendamentoId) return;
-        try {
-            const ags = this.data.agendamentosOP || [];
-            const idx = ags.findIndex(a => a.id === agendamentoId);
-            if (idx !== -1) {
-                ags[idx].statusSecretaria = novoStatus;
-                if (obs) ags[idx].obsSecretaria = obs;
-                ags[idx].confirmadoEm = new Date().toISOString();
-                await this.firestore.collection('sige_pedro_rizzi').doc('mod_op').set(
-                    { agendamentosOP: ags, lastSyncAt: new Date().toISOString() }, { merge: true }
-                );
+        if (!agendamentoId) return;
+        const agoraIso = new Date().toISOString();
+        const ags = this.data.agendamentosOP || [];
+        const idx = ags.findIndex(a => String(a.id) === String(agendamentoId) || (a.agendamentoId && String(a.agendamentoId) === String(agendamentoId)));
+        if (idx !== -1) {
+            ags[idx].statusSecretaria = novoStatus;
+            if (obs) ags[idx].obsSecretaria = obs;
+            ags[idx].confirmadoEm = agoraIso;
+            ags[idx].atualizadoEm = agoraIso;
+            this.saveAgendamentosOP(ags);
+            if (this.firestore) {
                 try {
-                    await this.firestore.collection('sige_pedro_rizzi').doc('database').set(
-                        { agendamentosOP: ags }, { merge: true }
+                    await this.firestore.collection('sige_pedro_rizzi').doc('mod_op').set(
+                        { agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true }
                     );
                 } catch(e) {
-                    console.debug('[Sincronização Legada Central]:', e);
+                    console.debug('[Sincronização Nuvem]:', e);
                 }
             }
-        } catch (e) {
-            console.error('Erro ao atualizar status por token:', e);
         }
+    }
+
+    async confirmarPresencaPorToken(token) {
+        if (!token) return { success: false, message: "Token inválido" };
+        let agId = null;
+        if (this.data.tokensConfirmacao && this.data.tokensConfirmacao[token]) {
+            agId = this.data.tokensConfirmacao[token].agendamentoId;
+        }
+        if (agId) {
+            await this.atualizarStatusPorToken(agId, 'confirmado_whatsapp', '🟢 Presença confirmada pelo responsável via token WhatsApp');
+            return { success: true };
+        }
+        return { success: false, message: "Agendamento não encontrado para este token" };
     }
 
     // ==========================================
