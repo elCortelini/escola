@@ -2120,8 +2120,8 @@
                 <button type="button" onclick="closeDispararLembretesHojeModal()" class="btn btn-secondary" style="width:auto;">
                     Cancelar
                 </button>
-                <button type="button" onclick="confirmarEnviarLembretesHoje()" class="btn" style="background:linear-gradient(135deg, #10b981, #059669); color:white; font-weight:900; font-size:0.9rem; padding:10px 20px; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(16,185,129,0.3); width:auto;">
-                    <i class="fa-solid fa-paper-plane"></i> Confirmar e Registrar Lembretes Selecionados
+                <button type="button" id="btnDispararLembretesHoje" onclick="confirmarEnviarLembretesHoje()" class="btn" style="background:linear-gradient(135deg, #10b981, #059669); color:white; font-weight:900; font-size:0.9rem; padding:10px 20px; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(16,185,129,0.3); width:auto;">
+                    <i class="fa-brands fa-whatsapp"></i> Enviar Lembretes
                 </button>
             </div>
         </div>
@@ -2187,7 +2187,7 @@
                 <button type="button" onclick="closeEditarModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formEditarOP" onsubmit="submitEditarAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formEditarOP" novalidate onsubmit="submitEditarAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
                 <div style="background:#eff6ff; padding:10px 14px; border-radius:12px; border:1px solid #bfdbfe;">
                     <label style="font-weight:800; font-size:0.85rem; color:#1e3a8a;"><i class="fa-solid fa-users-viewfinder"></i> Público do Atendimento:</label>
                     <select id="editInputPublico" class="search-input" style="width:100%; font-weight:700; color:#1e3a8a; margin-top:4px;">
@@ -2198,33 +2198,33 @@
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno / Atendido:</label>
-                    <input type="text" id="editInputAluno" required class="search-input" style="width:100%;">
+                    <input type="text" id="editInputAluno" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
-                        <input type="text" id="editInputTurma" required class="search-input" style="width:100%;">
+                        <input type="text" id="editInputTurma" class="search-input" style="width:100%;">
                     </div>
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
-                        <input type="text" id="editInputResponsavel" required class="search-input" style="width:100%;">
+                        <input type="text" id="editInputResponsavel" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp:</label>
-                    <input type="tel" id="editInputTelefone" required class="search-input" style="width:100%;">
+                    <input type="tel" id="editInputTelefone" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
-                        <input type="date" id="editInputData" required class="search-input" style="width:100%;">
+                        <input type="date" id="editInputData" class="search-input" style="width:100%;">
                     </div>
                     <div>
                         <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
-                        <input type="time" id="editInputHorario" required class="search-input" style="width:100%;">
+                        <input type="time" id="editInputHorario" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
@@ -2248,12 +2248,12 @@
 
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo do Atendimento:</label>
-                    <textarea id="editInputMotivo" rows="3" required class="search-input" style="width:100%; font-family:inherit;"></textarea>
+                    <textarea id="editInputMotivo" rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; border-top:1px solid #f1f5f9; padding-top:12px;">
                     <button type="button" onclick="closeEditarModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; width:auto; cursor:pointer;">
+                    <button type="button" onclick="submitEditarAgendamentoOP(event)" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; width:auto; cursor:pointer;">
                         <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
                     </button>
                 </div>

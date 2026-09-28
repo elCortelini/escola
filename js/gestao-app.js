@@ -3198,13 +3198,14 @@ async function confirmarEnviarLembretesHoje() {
         return;
     }
 
-    let count = 0;
+    const itemsParaEnviar = [];
     for (const chk of Array.from(checkboxes)) {
         const agId = chk.getAttribute("data-id");
-        const ag = todosAtendimentos.find(a => a.id === agId);
+        const ag = todosAtendimentos.find(a => String(a.id) === String(agId) || (a.agendamentoId && String(a.agendamentoId) === String(agId)));
         if (ag) {
             const selectPhone = document.getElementById(`selectPhone_${agId}`);
             const phoneNum = selectPhone ? selectPhone.value : (ag.telefone || "");
+            const cleanPhone = phoneNum.replace(/[^\d]/g, '');
             const dataFmt = formatDateBR(ag.data);
             let linkConfirm = `https://elcortelini.github.io/escola/confirmar-presenca.html?id=${ag.id}`;
             if (typeof sigeDB !== 'undefined' && sigeDB.criarTokenConfirmacao) {
@@ -3226,16 +3227,40 @@ async function confirmarEnviarLembretesHoje() {
                 status: "sucesso",
                 destinatario: phoneNum
             });
-            count++;
+
+            if (cleanPhone && cleanPhone.length >= 8) {
+                const waNum = cleanPhone.startsWith('55') ? cleanPhone : ('55' + cleanPhone);
+                const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(textAuto)}`;
+                itemsParaEnviar.push({ aluno: ag.aluno, url: waUrl });
+            }
         }
     }
 
     closeDispararLembretesHojeModal();
-    showToast(`🤖 ${count} lembrete(s) automático(s) auditado(s) e registrados com sucesso!`, "success");
+
+    if (itemsParaEnviar.length === 0) {
+        showToast("⚠️ Nenhum telefone válido encontrado nos atendimentos selecionados.", "warning");
+        return;
+    }
+
+    // Abre a conversa do WhatsApp para cada destinatário selecionado
+    window.open(itemsParaEnviar[0].url, "_blank");
+
+    if (itemsParaEnviar.length === 1) {
+        showToast(`📲 Lembrete registrado e WhatsApp aberto para ${itemsParaEnviar[0].aluno}!`, "success");
+    } else {
+        showToast(`📲 Abrindo conversas no WhatsApp para os ${itemsParaEnviar.length} selecionados...`, "info");
+        itemsParaEnviar.slice(1).forEach((item, index) => {
+            setTimeout(() => {
+                window.open(item.url, "_blank");
+            }, (index + 1) * 800);
+        });
+        showToast(`✅ ${itemsParaEnviar.length} lembretes registrados e disparados no WhatsApp!`, "success");
+    }
     
     setTimeout(() => {
         renderModuleOrientacaoPedagogica();
-    }, 50);
+    }, 100);
 }
 
 window.reagendarAluno = reagendarAluno;
@@ -4109,10 +4134,10 @@ function openEditarModal(id) {
     const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
     if (!targetId) return;
     const ags = sigeDB.getAgendamentosOP() || [];
-    const item = ags.find(a => a.id === targetId);
+    const item = ags.find(a => String(a.id) === String(targetId) || (a.agendamentoId && String(a.agendamentoId) === String(targetId)));
     if (!item) return;
 
-    currentEditingAppointmentId = targetId;
+    currentEditingAppointmentId = item.id;
 
     const elPub = document.getElementById("editInputPublico");
     const elAluno = document.getElementById("editInputAluno");
@@ -4136,6 +4161,14 @@ function openEditarModal(id) {
     if (elSts) elSts.value = item.statusSecretaria || "pendente";
 
     if (elOri) {
+        if (elOri.options.length === 0) {
+            const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
+            let html = ``;
+            orientadoras.forEach(o => {
+                html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)}</option>`;
+            });
+            elOri.innerHTML = html;
+        }
         let matchedVal = "";
         for (let i = 0; i < elOri.options.length; i++) {
             const optVal = elOri.options[i].value;
@@ -4167,17 +4200,23 @@ function closeEditarModal() {
 
 function submitEditarAgendamentoOP(e) {
     if (e && e.preventDefault) e.preventDefault();
-    if (!currentEditingAppointmentId) return false;
+    if (!currentEditingAppointmentId) {
+        showToast("⚠️ Agendamento de referência não localizado para salvar.", "warning");
+        return false;
+    }
 
     const ags = sigeDB.getAgendamentosOP() || [];
-    const itemIndex = ags.findIndex(a => a.id === currentEditingAppointmentId);
-    if (itemIndex === -1) return false;
+    const itemIndex = ags.findIndex(a => String(a.id) === String(currentEditingAppointmentId) || (a.agendamentoId && String(a.agendamentoId) === String(currentEditingAppointmentId)));
+    if (itemIndex === -1) {
+        showToast("⚠️ Agendamento não encontrado na lista atual.", "error");
+        return false;
+    }
 
     // Verificação de isolamento por função/orientadora
     const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
     const existing = ags[itemIndex];
     if (logged && !sigeDB.isDev() && !sigeDB.isDiretor() && !logged.isAdmin && !logged.isSuperAdmin) {
-        if (logged.role.startsWith("orientadora_") || logged.setor === "orientacao") {
+        if (logged.role && (logged.role.startsWith("orientadora_") || logged.setor === "orientacao")) {
             if (existing && !matchOrientadora(existing, logged.nome) && !matchOrientadora(existing, logged.id)) {
                 alert("⚠️ Acesso restrito: Você só tem permissão para editar os agendamentos da sua própria pauta.");
                 return false;
@@ -4196,6 +4235,15 @@ function submitEditarAgendamentoOP(e) {
     const elSts = document.getElementById("editInputStatus");
     const elMot = document.getElementById("editInputMotivo");
 
+    if (!elAluno || !elAluno.value.trim()) {
+        showToast("⚠️ Por favor, informe o nome do aluno/atendido.", "warning");
+        return false;
+    }
+    if (!elData || !elData.value) {
+        showToast("⚠️ Por favor, informe a data do atendimento.", "warning");
+        return false;
+    }
+
     const opPerfil = (typeof sigeDB !== 'undefined' && sigeDB.getCurrentOpPerfil) ? sigeDB.getCurrentOpPerfil() : 'none';
     if (opPerfil === "recepcao" && elSts && elSts.value === "realizado") {
         alert("⚠️ Ação restrita: Apenas a Orientadora Educacional pode concluir e registrar o atendimento como realizado.");
@@ -4208,28 +4256,42 @@ function submitEditarAgendamentoOP(e) {
         turno = h < 12 ? "matutino" : "vespertino";
     }
 
+    const agoraIso = new Date().toISOString();
     ags[itemIndex] = {
         ...ags[itemIndex],
-        publico: elPub ? elPub.value : ags[itemIndex].publico,
+        publico: elPub ? elPub.value : (ags[itemIndex].publico || "aluno"),
         aluno: elAluno ? (typeof cleanStudentName === 'function' ? cleanStudentName(elAluno.value) : elAluno.value.trim()) : ags[itemIndex].aluno,
-        turma: elTurma ? elTurma.value.trim() : ags[itemIndex].turma,
-        responsavel: elResp ? elResp.value.trim() : ags[itemIndex].responsavel,
-        telefone: elTel ? elTel.value.trim() : ags[itemIndex].telefone,
+        turma: elTurma ? elTurma.value.trim() : (ags[itemIndex].turma || ""),
+        responsavel: elResp ? elResp.value.trim() : (ags[itemIndex].responsavel || ""),
+        telefone: elTel ? elTel.value.trim() : (ags[itemIndex].telefone || ""),
         data: elData ? elData.value : ags[itemIndex].data,
         horario: elHora ? elHora.value : ags[itemIndex].horario,
         orientadora: elOri ? elOri.value : ags[itemIndex].orientadora,
         statusSecretaria: elSts ? elSts.value : ags[itemIndex].statusSecretaria,
-        motivo: elMot ? elMot.value.trim() : ags[itemIndex].motivo,
-        turno
+        motivo: elMot ? elMot.value.trim() : (ags[itemIndex].motivo || ""),
+        turno,
+        atualizadoEm: agoraIso
     };
 
     if (document.activeElement && typeof document.activeElement.blur === "function") {
         document.activeElement.blur();
     }
     sigeDB.saveAgendamentosOP(ags);
+
+    // Persistência direta em tempo real no Firestore mod_op
+    if (sigeDB.firestore) {
+        try {
+            sigeDB.firestore.collection('sige_pedro_rizzi').doc('mod_op').set(
+                { agendamentosOP: ags, lastSyncAt: agoraIso }, { merge: true }
+            ).catch(err => console.warn("Aviso Firebase mod_op edit:", err));
+        } catch(err) {
+            console.warn("Aviso ao sincronizar edição no Firebase:", err);
+        }
+    }
+
     closeEditarModal();
     closeDetalhesModal();
-    showToast("✅ Dados do agendamento editados e salvos!");
+    showToast("✅ Dados do agendamento editados e salvos com sucesso!", "success");
     setTimeout(() => {
         renderModuleOrientacaoPedagogica();
     }, 50);
