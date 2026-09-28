@@ -6036,6 +6036,50 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
     return success;
 }
 
+function zerarTodosAtendimentosOPConfirm() {
+    const total = (typeof sigeDB !== 'undefined' && sigeDB.getAgendamentosOP) ? sigeDB.getAgendamentosOP().length : 0;
+    const confirmMsg = `ATENÇÃO: Deseja realmente zerar e excluir TODOS os atendimentos da Orientação Educacional?\n\n` +
+        `• Quantidade de atendimentos atuais: ${total}\n` +
+        `• A ação é irreversível e limpará tanto a nuvem (Firebase) quanto os navegadores conectados.\n` +
+        `• Os profissionais cadastrados (orientadoras e equipe) permanecerão preservados.\n\n` +
+        `Digite 'ZERAR' para confirmar:`;
+
+    const resposta = prompt(confirmMsg);
+    if (resposta !== 'ZERAR') {
+        if (resposta !== null) {
+            alert('Ação cancelada: confirmação não digitada corretamente.');
+        }
+        return;
+    }
+
+    try {
+        if (typeof sigeDB !== 'undefined' && sigeDB.zerarAtendimentosOP) {
+            sigeDB.zerarAtendimentosOP();
+            if (typeof renderModuleOrientacaoPedagogica === 'function') {
+                renderModuleOrientacaoPedagogica();
+            }
+            if (typeof renderWeeklyCalendar === 'function') {
+                renderWeeklyCalendar();
+            }
+            if (typeof renderResumoOrientadorasCards === 'function') {
+                renderResumoOrientadorasCards();
+            }
+            if (typeof renderDashboardOPStats === 'function') {
+                renderDashboardOPStats();
+            }
+            if (typeof showToast === 'function') {
+                showToast("Todos os atendimentos da Orientação foram zerados com sucesso!", "success");
+            } else {
+                alert("Todos os atendimentos da Orientação foram zerados com sucesso!");
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao zerar atendimentos:", err);
+        alert("Ocorreu um erro ao zerar os atendimentos: " + err.message);
+    }
+}
+window.zerarTodosAtendimentosOPConfirm = zerarTodosAtendimentosOPConfirm;
+
 function openModalOrientadoras() {
     const list = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     const container = document.getElementById("modalOrientadorasListContainer");

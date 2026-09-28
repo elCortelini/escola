@@ -1151,6 +1151,15 @@ class SigeDatabase {
                 }
             });
 
+            // Limpeza mandatória: Zerar todos os atendimentos da OP (solicitação 28/09/2026)
+            if (!merged.limpezaOP_zerada_20260928) {
+                const oldIds = Array.isArray(merged.agendamentosOP) ? merged.agendamentosOP.map(a => a.id).filter(Boolean) : [];
+                merged.deletedOPIds = Array.from(new Set([...(merged.deletedOPIds || []), ...oldIds]));
+                merged.agendamentosOP = [];
+                merged.projetosOrientacao = [];
+                merged.limpezaOP_zerada_20260928 = true;
+            }
+
             // Normalização estrita de usuários cadastrados e migração de senha para hash
             merged.usuariosCadastrados = merged.usuariosCadastrados.map(u => {
                 const perms = u.permissoes ? { ...u.permissoes } : this.getDefaultPermissoesByRole(u.role);
@@ -2391,6 +2400,44 @@ class SigeDatabase {
 
     deleteAgendamento(id) {
         return this.deleteAgendamentoOP(id);
+    }
+
+    zerarAtendimentosOP() {
+        if (!this.data) this.data = {};
+        const oldAgs = this.data.agendamentosOP || [];
+        const oldIds = oldAgs.map(a => a.id).filter(Boolean);
+        if (!Array.isArray(this.data.deletedOPIds)) this.data.deletedOPIds = [];
+        this.data.deletedOPIds = Array.from(new Set([...this.data.deletedOPIds, ...oldIds]));
+        this.data.agendamentosOP = [];
+        this.data.projetosOrientacao = [];
+        this.data.tokensConfirmacao = {};
+        this.data.limpezaOP_zerada_20260928 = true;
+        const agoraIso = new Date().toISOString();
+        this.data.lastSyncAt = agoraIso;
+        this.saveData(this.data);
+
+        // Sincronização direta na nuvem Firestore
+        if (this.firestore) {
+            try {
+                this.firestore.collection('sige_pedro_rizzi').doc('mod_op').set({
+                    agendamentosOP: [],
+                    projetosOrientacao: [],
+                    deletedOPIds: this.data.deletedOPIds,
+                    lastSyncAt: agoraIso
+                }, { merge: true }).catch(e => console.warn('Aviso Firebase mod_op wipe:', e));
+
+                this.firestore.collection('sige_pedro_rizzi').doc('database').set({
+                    agendamentosOP: [],
+                    projetosOrientacao: [],
+                    deletedOPIds: this.data.deletedOPIds,
+                    lastSyncAt: agoraIso
+                }, { merge: true }).catch(e => console.warn('Aviso Firebase database wipe:', e));
+            } catch(e) {
+                console.warn('Erro ao sincronizar zeramento no Firestore:', e);
+            }
+        }
+        this.logAuditEvent("Orientação", "Zerar todos os atendimentos da Orientação Educacional", "Orientação");
+        return true;
     }
 
     // Bloqueio de Dias / Feriados
