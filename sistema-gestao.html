@@ -1685,22 +1685,16 @@
                         </div>
                     </div>
 
-                    <!-- Seletor de Remetente do WhatsApp (Evolution API) -->
+                    <!-- Status do WhatsApp da Escola (Unificado Direção) -->
                     <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--dir-border-subtle); padding:10px 14px; border-radius:12px; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <label for="dirWpRemetenteSelect" style="font-size:0.75rem; font-weight:800; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px;">
-                                <i class="fa-solid fa-mobile-screen" style="color:var(--dir-accent-primary);"></i> Enviar através de:
-                            </label>
-                            <select id="dirWpRemetenteSelect" onchange="atualizarStatusRemetenteDirecao(this.value)" class="dir-select" style="min-height:34px; padding:4px 10px; font-weight:700; width:auto;">
-                                <option value="sige_direcao">🏛️ WhatsApp do Gabinete da Direção</option>
-                                <option value="sige_orientacao">💛 WhatsApp da Orientação Educacional</option>
-                                <option value="sige_secretaria">📋 WhatsApp da Secretaria Escolar</option>
-                                <option value="sige_avulso">📱 Outro Número / Celular Avulso</option>
-                            </select>
+                            <span style="font-size:0.82rem; font-weight:800; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px;">
+                                <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.15rem;"></i> Conexão WhatsApp:
+                            </span>
+                            <span id="dirWpStatusBadge" style="font-size:0.75rem; padding:4px 10px; border-radius:12px; background:#f1f5f9; color:#475569; font-weight:800;">⏳ Verificando...</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span id="dirWpStatusBadge" style="font-size:0.75rem; padding:4px 10px; border-radius:12px; background:#fee2e2; color:#991b1b; font-weight:800;">🔴 Desconectado</span>
-                            <button type="button" onclick="openModalQrCodeWhatsApp(document.getElementById('dirWpRemetenteSelect')?.value || 'sige_direcao')" class="dir-btn dir-btn-secondary" style="min-height:32px; padding:4px 10px; font-size:0.75rem;" title="Conectar ou escanear QR Code deste número">
+                            <button type="button" id="btnDirWpQrCode" onclick="openModalQrCodeWhatsApp()" class="dir-btn dir-btn-secondary" style="min-height:32px; padding:4px 12px; font-size:0.75rem;" title="Conectar ou escanear QR Code do WhatsApp da escola">
                                 <i class="fa-solid fa-qrcode"></i> Conectar / QR Code
                             </button>
                         </div>
@@ -2149,20 +2143,16 @@
                 <button type="button" onclick="closeDispararLembretesHojeModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;" title="Fechar modal"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Seletor de Remetente do WhatsApp -->
-            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 12px; border-radius:10px; margin-bottom:10px; flex-shrink:0; flex-wrap:wrap; gap:8px;">
+            <!-- Status do WhatsApp da Escola (Unificado) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:12px; margin-bottom:12px; flex-shrink:0; flex-wrap:wrap; gap:8px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.78rem; font-weight:800; color:#334155;"><i class="fa-solid fa-paper-plane" style="color:#2563eb;"></i> Enviar através de:</span>
-                    <select id="opLembreteRemetenteSelect" onchange="atualizarStatusRemetenteLembrete(this.value)" style="font-size:0.8rem; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:white; color:#0f172a; cursor:pointer;">
-                        <option value="sige_orientacao">💛 WhatsApp da Orientação Educacional</option>
-                        <option value="sige_direcao">🏛️ WhatsApp do Gabinete da Direção</option>
-                        <option value="sige_secretaria">📋 WhatsApp da Secretaria Escolar</option>
-                        <option value="sige_avulso">📱 Outro Número / Celular Avulso</option>
-                    </select>
+                    <span style="font-size:0.82rem; font-weight:800; color:#1e293b;">
+                        <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.2rem;"></i> WhatsApp da Escola:
+                    </span>
+                    <span id="opLembreteStatusBadge" style="font-size:0.75rem; padding:4px 10px; border-radius:12px; background:#f1f5f9; color:#475569; font-weight:800;">⏳ Verificando...</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span id="opLembreteStatusBadge" style="font-size:0.75rem; padding:3px 8px; border-radius:10px; background:#fee2e2; color:#991b1b; font-weight:800;">🔴 Desconectado</span>
-                    <button type="button" onclick="openModalQrCodeWhatsApp(document.getElementById('opLembreteRemetenteSelect')?.value || 'sige_orientacao')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 8px; width:auto;" title="Conectar ou escanear QR Code deste número">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" id="btnOpLembreteQrCode" onclick="openModalQrCodeWhatsApp()" class="btn btn-secondary" style="font-size:0.75rem; padding:5px 12px; width:auto;" title="Conectar ou escanear QR Code do WhatsApp da escola">
                         <i class="fa-solid fa-qrcode"></i> Conectar / QR Code
                     </button>
                 </div>
@@ -4974,10 +4964,10 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
             <!-- Botões de Ação do Modal -->
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
                 <div style="display:flex; gap:8px;">
-                    <button type="button" onclick="refreshQrCodeModal()" class="dir-btn dir-btn-secondary" style="font-size:0.8rem; padding:8px 12px;" title="Atualiza o código QR exibido">
+                    <button type="button" id="btnRefreshQrCodeModal" onclick="refreshQrCodeModal()" class="dir-btn dir-btn-secondary" style="font-size:0.8rem; padding:8px 12px;" title="Atualiza o código QR exibido">
                         <i class="fa-solid fa-arrows-rotate"></i> Atualizar QR
                     </button>
-                    <button type="button" onclick="reiniciarConexaoQrCodeModal()" class="dir-btn" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.8rem; padding:8px 12px; font-weight:700;" title="Limpa qualquer conexão travada e gera um QR Code 100% novo">
+                    <button type="button" id="btnResetQrCodeModal" onclick="reiniciarConexaoQrCodeModal()" class="dir-btn" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.8rem; padding:8px 12px; font-weight:700;" title="Limpa qualquer conexão travada e gera um QR Code 100% novo">
                         <i class="fa-solid fa-rotate"></i> Gerar Novo QR
                     </button>
                 </div>

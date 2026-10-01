@@ -30,10 +30,7 @@ function initApp() {
     try {
         renderWhatsappConfigPanel();
         if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
-            const instLembrete = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
-            const instDirecao = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
-            atualizarStatusRemetenteLembrete(instLembrete);
-            atualizarStatusRemetenteDirecao(instDirecao);
+            atualizarStatusWhatsAppUnificado();
         }
     } catch (e) {
         console.warn("Aviso ao inicializar status do WhatsApp:", e);
@@ -3030,6 +3027,9 @@ function dispararLembretesDoDiaAutomated() {
 
     const modal = document.getElementById("modalDispararLembretesHoje");
     if (modal) modal.style.display = "flex";
+    if (typeof atualizarStatusWhatsAppUnificado === 'function') {
+        atualizarStatusWhatsAppUnificado();
+    }
 }
 
 function renderListLembretesHoje(atendimentosHoje, filterVal = "todas", filterText = "") {
@@ -3186,14 +3186,14 @@ async function enviarLembreteIndividualHoje(agId) {
     }
     const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
 
-    const remetenteInst = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
+    const remetenteInst = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
 
     // 1. Se a Evolution API estiver configurada, envia silenciosamente em 1 clique
     if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
         const check = await evolutionClient.checkConnectionState(remetenteInst);
         if (!check.connected) {
             openModalQrCodeWhatsApp(remetenteInst);
-            showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de disparar.`, "warning");
+            showToast(`📱 Conecte o WhatsApp da escola antes de disparar.`, "warning");
             return;
         }
 
@@ -3245,7 +3245,7 @@ async function confirmarEnviarLembretesHoje() {
         return;
     }
 
-    const remetenteInst = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
+    const remetenteInst = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
 
     // Se estiver usando Evolution API, valida a conexão antes de iniciar
     const usandoEvolution = typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured();
@@ -3253,7 +3253,7 @@ async function confirmarEnviarLembretesHoje() {
         const check = await evolutionClient.checkConnectionState(remetenteInst);
         if (!check.connected) {
             openModalQrCodeWhatsApp(remetenteInst);
-            showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de iniciar a fila.`, "warning");
+            showToast(`📱 Conecte o WhatsApp da escola antes de iniciar a fila.`, "warning");
             return;
         }
     }
@@ -6014,14 +6014,20 @@ function renderWhatsappConfigPanel() {
 
 function salvarConfiguracoesWhatsapp() {
     const provider = document.getElementById("waConfigProvider")?.value || "evolution_api";
-    const apiUrl = (document.getElementById("waConfigApiUrl")?.value || "").trim().replace(/\/+$/, '');
-    const apiToken = (document.getElementById("waConfigApiToken")?.value || "").trim();
-    const activeInstance = document.getElementById("waConfigActiveInstance")?.value || "sige_orientacao";
-    const antiBanDelayMin = parseInt(document.getElementById("waConfigDelayMin")?.value, 10) || 5;
-    const antiBanDelayMax = parseInt(document.getElementById("waConfigDelayMax")?.value, 10) || 12;
-    const autoSendOnCreate = document.getElementById("waConfigAutoCreate")?.checked !== false;
-    const autoSendOnArrival = document.getElementById("waConfigAutoArrival")?.checked !== false;
-    const autoSendReminders = document.getElementById("waConfigAutoReminders")?.checked !== false;
+    const existing = (typeof sigeDB !== 'undefined' && sigeDB.getWhatsappConfig()) || {};
+
+    const inputUrl = document.getElementById("waConfigApiUrl");
+    const inputToken = document.getElementById("waConfigApiToken");
+
+    // Só atualiza com o valor digitado se o campo existir e não estiver vazio
+    const apiUrl = (inputUrl && inputUrl.value.trim()) ? inputUrl.value.trim().replace(/\/+$/, '') : (existing.evolutionApiUrl || existing.apiUrl || "https://pc28.taild665db.ts.net:8443");
+    const apiToken = (inputToken && inputToken.value.trim()) ? inputToken.value.trim() : (existing.evolutionApiKey || existing.apiToken || "B6D711FCDE4D4FD5936544120E713976");
+    const activeInstance = "sige_orientacao";
+    const antiBanDelayMin = parseInt(document.getElementById("waConfigDelayMin")?.value, 10) || existing.antiBanDelayMin || 5;
+    const antiBanDelayMax = parseInt(document.getElementById("waConfigDelayMax")?.value, 10) || existing.antiBanDelayMax || 12;
+    const autoSendOnCreate = document.getElementById("waConfigAutoCreate") ? document.getElementById("waConfigAutoCreate").checked : (existing.autoSendOnCreate !== false);
+    const autoSendOnArrival = document.getElementById("waConfigAutoArrival") ? document.getElementById("waConfigAutoArrival").checked : (existing.autoSendOnArrival !== false);
+    const autoSendReminders = document.getElementById("waConfigAutoReminders") ? document.getElementById("waConfigAutoReminders").checked : (existing.autoSendReminders !== false);
 
     sigeDB.saveWhatsappConfig({
         enabled: true,
@@ -6039,6 +6045,9 @@ function salvarConfiguracoesWhatsapp() {
     });
 
     showToast("💾 Configurações do WhatsApp salvas com sucesso!");
+    if (typeof atualizarStatusWhatsAppUnificado === 'function') {
+        atualizarStatusWhatsAppUnificado();
+    }
 }
 
 async function testarConexaoWhatsapp() {
@@ -6048,35 +6057,30 @@ async function testarConexaoWhatsapp() {
         return;
     }
 
-    const inst = document.getElementById("waConfigActiveInstance")?.value || sigeDB.getActiveWhatsappInstance();
-    showToast(`🔍 Testando conexão com a instância '${inst}'...`, "info");
+    const inst = "sige_orientacao";
+    showToast(`🔍 Testando conexão com o WhatsApp da escola...`, "info");
 
     const res = await evolutionClient.checkConnectionState(inst);
     if (res.connected) {
-        showToast(`🟢 Instância '${inst}' CONECTADA e pronta para envios!`, "success");
+        showToast(`🟢 WhatsApp CONECTADO e pronto para envios!`, "success");
     } else if (res.state === 'not_found') {
-        showToast(`ℹ️ Instância '${inst}' ainda não criada. Clique em 'Conectar / Ver QR Code'.`, "info");
+        showToast(`ℹ️ WhatsApp ainda não inicializado. Clique em 'Conectar / Ver QR Code'.`, "info");
     } else {
-        showToast(`🔴 Instância '${inst}' está desconectada. Clique em 'Conectar / Ver QR Code'.`, "warning");
+        showToast(`🔴 WhatsApp desconectado. Clique em 'Conectar / Ver QR Code'.`, "warning");
+    }
+    if (typeof atualizarStatusWhatsAppUnificado === 'function') {
+        atualizarStatusWhatsAppUnificado();
     }
 }
 
 // ==========================================
-// MODAL DE CONEXÃO WHATSAPP / QR CODE
+// MODAL DE CONEXÃO WHATSAPP / QR CODE (UNIFICADO)
 // ==========================================
 let qrCodePollingInterval = null;
 let currentQrInstanceName = "sige_orientacao";
 
 async function openModalQrCodeWhatsApp(instanceName) {
-    salvarConfiguracoesWhatsapp();
-    if (typeof evolutionClient === 'undefined' || !evolutionClient.isConfigured()) {
-        showToast("⚠️ Configure primeiro a URL e a Chave da Evolution API nas Configurações.", "warning");
-        const tabBtn = document.getElementById("tabBtnAdmin") || document.querySelector('[data-tab="admin"]');
-        if (tabBtn) tabBtn.click();
-        return;
-    }
-
-    currentQrInstanceName = instanceName || sigeDB.getActiveWhatsappInstance() || "sige_orientacao";
+    currentQrInstanceName = instanceName || (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
 
     const modal = document.getElementById("modalQrCodeWhatsApp");
     const instLabel = document.getElementById("modalQrCodeInstanceLabel");
@@ -6084,34 +6088,51 @@ async function openModalQrCodeWhatsApp(instanceName) {
     const loadingBox = document.getElementById("modalQrCodeLoading");
     const qrImg = document.getElementById("modalQrCodeImg");
     const successBox = document.getElementById("modalQrCodeSuccessBox");
+    const instructionsBox = document.getElementById("modalQrCodeInstructions");
+    const btnRefreshQr = document.getElementById("btnRefreshQrCodeModal");
+    const btnResetQr = document.getElementById("btnResetQrCodeModal");
 
-    if (instLabel) instLabel.innerText = currentQrInstanceName;
+    if (instLabel) instLabel.innerText = "WhatsApp da Escola";
+    if (modal) modal.style.display = "flex";
+    if (loadingBox) {
+        loadingBox.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem; color:#3b82f6;"></i>
+            <span style="font-size:0.85rem; font-weight:700; color:#475569;">Verificando conexão com o WhatsApp...</span>
+        `;
+        loadingBox.style.display = "flex";
+    }
+    if (qrImg) qrImg.style.display = "none";
+    if (successBox) successBox.style.display = "none";
     if (statusBadge) {
         statusBadge.innerText = "🔍 Verificando...";
         statusBadge.style.background = "#e0f2fe";
         statusBadge.style.color = "#0369a1";
     }
 
-    if (modal) modal.style.display = "flex";
-    if (loadingBox) loadingBox.style.display = "flex";
-    if (qrImg) qrImg.style.display = "none";
-    if (successBox) successBox.style.display = "none";
-
-    // 1. Verifica se já está conectado
+    // 1. Verifica se já está conectado no servidor
     const check = await evolutionClient.checkConnectionState(currentQrInstanceName);
     if (check.connected) {
         if (loadingBox) loadingBox.style.display = "none";
+        if (qrImg) qrImg.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "none";
         if (successBox) successBox.style.display = "flex";
         if (statusBadge) {
             statusBadge.innerText = "🟢 Conectado";
             statusBadge.style.background = "#dcfce7";
             statusBadge.style.color = "#15803d";
         }
-        showToast(`🟢 WhatsApp '${currentQrInstanceName}' já está conectado!`, "success");
+        if (btnRefreshQr) btnRefreshQr.style.display = "none";
+        if (btnResetQr) btnResetQr.style.display = "none";
+
+        atualizarStatusWhatsAppUnificado();
         return;
     }
 
-    // 2. Se não estiver conectado, busca o QR Code
+    // 2. Se desconectado, exibe instruções e busca o QR Code
+    if (instructionsBox) instructionsBox.style.display = "block";
+    if (btnRefreshQr) btnRefreshQr.style.display = "inline-flex";
+    if (btnResetQr) btnResetQr.style.display = "inline-flex";
+
     await refreshQrCodeModal();
 
     // 3. Inicia polling de conexão
@@ -6123,12 +6144,38 @@ async function refreshQrCodeModal() {
     const qrImg = document.getElementById("modalQrCodeImg");
     const successBox = document.getElementById("modalQrCodeSuccessBox");
     const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+    const instructionsBox = document.getElementById("modalQrCodeInstructions");
+    const btnRefreshQr = document.getElementById("btnRefreshQrCodeModal");
+    const btnResetQr = document.getElementById("btnResetQrCodeModal");
 
-    if (loadingBox) loadingBox.style.display = "flex";
+    if (loadingBox) {
+        loadingBox.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem; color:#3b82f6;"></i>
+            <span style="font-size:0.85rem; font-weight:700; color:#475569;">Carregando QR Code...</span>
+        `;
+        loadingBox.style.display = "flex";
+    }
     if (qrImg) qrImg.style.display = "none";
     if (successBox) successBox.style.display = "none";
 
     const qrData = await evolutionClient.getQrCode(currentQrInstanceName);
+
+    // Se já estava conectado
+    if (qrData.alreadyConnected || qrData.state === "open") {
+        if (loadingBox) loadingBox.style.display = "none";
+        if (qrImg) qrImg.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "none";
+        if (successBox) successBox.style.display = "flex";
+        if (statusBadge) {
+            statusBadge.innerText = "🟢 Conectado";
+            statusBadge.style.background = "#dcfce7";
+            statusBadge.style.color = "#15803d";
+        }
+        if (btnRefreshQr) btnRefreshQr.style.display = "none";
+        if (btnResetQr) btnResetQr.style.display = "none";
+        atualizarStatusWhatsAppUnificado();
+        return;
+    }
 
     if (qrData.success && qrData.base64) {
         const src = qrData.base64.startsWith("data:") ? qrData.base64 : `data:image/png;base64,${qrData.base64}`;
@@ -6137,6 +6184,7 @@ async function refreshQrCodeModal() {
             qrImg.style.display = "block";
         }
         if (loadingBox) loadingBox.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "block";
         if (statusBadge) {
             statusBadge.innerText = "📱 Aguardando Leitura";
             statusBadge.style.background = "#fef3c7";
@@ -6148,7 +6196,7 @@ async function refreshQrCodeModal() {
                 <div style="color:#b91c1c; font-weight:800; text-align:center;">
                     <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:8px;"></i>
                     <p style="margin:0;">Não foi possível obter o QR Code.</p>
-                    <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Verifique se a Evolution API está rodando.'}</p>
+                    <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Clique em "Gerar Novo QR" para reiniciar.'}</p>
                 </div>
             `;
         }
@@ -6168,10 +6216,17 @@ function iniciarPollingConexaoQrCode(instanceName) {
             const loadingBox = document.getElementById("modalQrCodeLoading");
             const successBox = document.getElementById("modalQrCodeSuccessBox");
             const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+            const instructionsBox = document.getElementById("modalQrCodeInstructions");
+            const btnRefreshQr = document.getElementById("btnRefreshQrCodeModal");
+            const btnResetQr = document.getElementById("btnResetQrCodeModal");
 
             if (qrImg) qrImg.style.display = "none";
             if (loadingBox) loadingBox.style.display = "none";
+            if (instructionsBox) instructionsBox.style.display = "none";
             if (successBox) successBox.style.display = "flex";
+
+            if (btnRefreshQr) btnRefreshQr.style.display = "none";
+            if (btnResetQr) btnResetQr.style.display = "none";
 
             if (statusBadge) {
                 statusBadge.innerText = "🟢 Conectado";
@@ -6179,15 +6234,8 @@ function iniciarPollingConexaoQrCode(instanceName) {
                 statusBadge.style.color = "#15803d";
             }
 
-            atualizarStatusRemetenteDirecao(instanceName);
-            atualizarStatusRemetenteLembrete(instanceName);
-
-            showToast(`🎉 WhatsApp conectado com sucesso na instância '${instanceName}'!`, "success");
-
-            // Fecha o modal automaticamente após 2 segundos
-            setTimeout(() => {
-                closeModalQrCodeWhatsApp();
-            }, 2000);
+            atualizarStatusWhatsAppUnificado();
+            showToast(`🎉 WhatsApp conectado com sucesso!`, "success");
         }
     }, 2500);
 }
@@ -6199,21 +6247,20 @@ function closeModalQrCodeWhatsApp() {
     }
     const modal = document.getElementById("modalQrCodeWhatsApp");
     if (modal) modal.style.display = "none";
+    atualizarStatusWhatsAppUnificado();
 }
 
 async function desconectarWhatsAppInstanciaModal() {
-    if (!confirm(`Deseja realmente desconectar a sessão do WhatsApp da instância '${currentQrInstanceName}'?\nVocê poderá reconectar com qualquer outro número escaneando um novo QR Code.`)) {
+    if (!confirm(`Deseja realmente desconectar a sessão do WhatsApp da escola?\nVocê poderá reconectar com qualquer número escaneando um novo QR Code.`)) {
         return;
     }
 
-    showToast(`Desconectando instância '${currentQrInstanceName}'...`, "info");
+    showToast(`Desconectando WhatsApp...`, "info");
     await evolutionClient.logoutInstance(currentQrInstanceName);
     await evolutionClient.deleteInstance(currentQrInstanceName);
-    showToast(`Sessão limpa. Gerando novo QR Code...`, "info");
+    showToast(`Sessão desconectada. Gerando novo QR Code...`, "info");
 
-    atualizarStatusRemetenteDirecao(currentQrInstanceName);
-    atualizarStatusRemetenteLembrete(currentQrInstanceName);
-
+    atualizarStatusWhatsAppUnificado();
     await reiniciarConexaoQrCodeModal();
 }
 
@@ -6222,6 +6269,9 @@ async function reiniciarConexaoQrCodeModal() {
     const qrImg = document.getElementById("modalQrCodeImg");
     const successBox = document.getElementById("modalQrCodeSuccessBox");
     const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+    const instructionsBox = document.getElementById("modalQrCodeInstructions");
+    const btnRefreshQr = document.getElementById("btnRefreshQrCodeModal");
+    const btnResetQr = document.getElementById("btnResetQrCodeModal");
 
     if (loadingBox) {
         loadingBox.innerHTML = `
@@ -6247,6 +6297,9 @@ async function reiniciarConexaoQrCodeModal() {
             qrImg.style.display = "block";
         }
         if (loadingBox) loadingBox.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "block";
+        if (btnRefreshQr) btnRefreshQr.style.display = "inline-flex";
+        if (btnResetQr) btnResetQr.style.display = "inline-flex";
         if (statusBadge) {
             statusBadge.innerText = "📱 Aguardando Leitura";
             statusBadge.style.background = "#fef3c7";
@@ -6267,44 +6320,65 @@ async function reiniciarConexaoQrCodeModal() {
     iniciarPollingConexaoQrCode(currentQrInstanceName);
 }
 
-async function atualizarStatusRemetenteDirecao(instanceName) {
-    const badge = document.getElementById("dirWpStatusBadge");
-    if (!badge || typeof evolutionClient === 'undefined') return;
+// Atualiza o status do WhatsApp em todos os crachás/botões do sistema de forma unificada
+async function atualizarStatusWhatsAppUnificado() {
+    const badgeOp = document.getElementById("opLembreteStatusBadge");
+    const badgeDir = document.getElementById("dirWpStatusBadge");
+    const badgeModal = document.getElementById("modalQrCodeStatusBadge");
 
-    badge.innerText = "⏳ Verificando...";
-    badge.style.background = "#f1f5f9";
-    badge.style.color = "#475569";
+    const badges = [badgeOp, badgeDir, badgeModal].filter(Boolean);
+    if (badges.length === 0 || typeof evolutionClient === 'undefined') return;
 
-    const check = await evolutionClient.checkConnectionState(instanceName);
-    if (check.connected) {
-        badge.innerText = "🟢 Conectado";
-        badge.style.background = "#dcfce7";
-        badge.style.color = "#15803d";
-    } else {
-        badge.innerText = "🔴 Desconectado";
-        badge.style.background = "#fee2e2";
-        badge.style.color = "#991b1b";
+    const inst = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
+
+    const check = await evolutionClient.checkConnectionState(inst);
+
+    badges.forEach(badge => {
+        if (check.connected) {
+            badge.innerText = "🟢 Conectado";
+            badge.style.background = "#dcfce7";
+            badge.style.color = "#15803d";
+            badge.title = "WhatsApp da escola está conectado e pronto para envios!";
+        } else {
+            badge.innerText = "🔴 Desconectado";
+            badge.style.background = "#fee2e2";
+            badge.style.color = "#991b1b";
+            badge.title = "WhatsApp desconectado. Clique em 'Conectar / QR Code' para parear.";
+        }
+    });
+
+    const btnLembrete = document.getElementById("btnOpLembreteQrCode");
+    if (btnLembrete) {
+        if (check.connected) {
+            btnLembrete.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Conectado`;
+            btnLembrete.title = "WhatsApp já conectado e pronto para envios. Clique para ver detalhes ou trocar.";
+        } else {
+            btnLembrete.innerHTML = `<i class="fa-solid fa-qrcode"></i> Conectar / QR Code`;
+            btnLembrete.title = "Clique para escanear o QR Code no seu celular.";
+        }
     }
+
+    const btnDir = document.getElementById("btnDirWpQrCode");
+    if (btnDir) {
+        if (check.connected) {
+            btnDir.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Conectado`;
+            btnDir.title = "WhatsApp já conectado e pronto para envios. Clique para ver detalhes ou trocar.";
+        } else {
+            btnDir.innerHTML = `<i class="fa-solid fa-qrcode"></i> Conectar / QR Code`;
+            btnDir.title = "Clique para escanear o QR Code no seu celular.";
+        }
+    }
+
+    return check;
 }
 
-async function atualizarStatusRemetenteLembrete(instanceName) {
-    const badge = document.getElementById("opLembreteStatusBadge");
-    if (!badge || typeof evolutionClient === 'undefined') return;
+// Aliases para compatibilidade
+async function atualizarStatusRemetenteDirecao() {
+    return await atualizarStatusWhatsAppUnificado();
+}
 
-    badge.innerText = "⏳ Verificando...";
-    badge.style.background = "#f1f5f9";
-    badge.style.color = "#475569";
-
-    const check = await evolutionClient.checkConnectionState(instanceName);
-    if (check.connected) {
-        badge.innerText = "🟢 Conectado";
-        badge.style.background = "#dcfce7";
-        badge.style.color = "#15803d";
-    } else {
-        badge.innerText = "🔴 Desconectado";
-        badge.style.background = "#fee2e2";
-        badge.style.color = "#991b1b";
-    }
+async function atualizarStatusRemetenteLembrete() {
+    return await atualizarStatusWhatsAppUnificado();
 }
 
 // ==========================================
@@ -7446,7 +7520,7 @@ function executarAcaoDisparoWhatsApp() {
         return;
     }
 
-    const remetenteInst = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
+    const remetenteInst = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
 
     if (dirWpModoEnvio === 'individual') {
         const nome = document.getElementById("dirWpInputNome")?.value.trim();
@@ -7469,7 +7543,7 @@ function executarAcaoDisparoWhatsApp() {
                 const check = await evolutionClient.checkConnectionState(remetenteInst);
                 if (!check.connected) {
                     openModalQrCodeWhatsApp(remetenteInst);
-                    showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de enviar.`, "warning");
+                    showToast(`📱 Conecte o WhatsApp da escola antes de enviar.`, "warning");
                     return;
                 }
 
@@ -7534,7 +7608,7 @@ async function iniciarDisparoFilaAutomatico() {
         return;
     }
 
-    const remetenteInst = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
+    const remetenteInst = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance()) || "sige_orientacao";
 
     if (typeof evolutionClient === 'undefined' || !evolutionClient.isConfigured()) {
         showToast("⚠️ Configure a Evolution API antes de usar o disparo automático.", "warning");
@@ -7544,7 +7618,7 @@ async function iniciarDisparoFilaAutomatico() {
     const check = await evolutionClient.checkConnectionState(remetenteInst);
     if (!check.connected) {
         openModalQrCodeWhatsApp(remetenteInst);
-        showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de iniciar a fila.`, "warning");
+        showToast(`📱 Conecte o WhatsApp da escola antes de iniciar a fila.`, "warning");
         return;
     }
 

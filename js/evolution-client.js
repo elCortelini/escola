@@ -20,24 +20,17 @@
 
         // Obtém a configuração global ativa da API
         getConfig() {
+            let cfg = {};
             if (typeof window.sigeDB !== 'undefined' && window.sigeDB.getWhatsappConfig) {
-                const cfg = window.sigeDB.getWhatsappConfig();
-                return {
-                    apiUrl: (cfg.evolutionApiUrl || cfg.apiUrl || '').trim().replace(/\/+$/, ''),
-                    apiKey: (cfg.evolutionApiKey || cfg.apiToken || '').trim(),
-                    provider: cfg.provider || 'evolution_api',
-                    activeInstance: cfg.activeInstance || 'sige_orientacao',
-                    antiBanDelayMin: cfg.antiBanDelayMin || 5, // segundos
-                    antiBanDelayMax: cfg.antiBanDelayMax || 12  // segundos
-                };
+                cfg = window.sigeDB.getWhatsappConfig() || {};
             }
             return {
-                apiUrl: '',
-                apiKey: '',
-                provider: 'evolution_api',
-                activeInstance: 'sige_orientacao',
-                antiBanDelayMin: 5,
-                antiBanDelayMax: 12
+                apiUrl: (cfg.evolutionApiUrl || cfg.apiUrl || 'https://pc28.taild665db.ts.net:8443').trim().replace(/\/+$/, ''),
+                apiKey: (cfg.evolutionApiKey || cfg.apiToken || 'B6D711FCDE4D4FD5936544120E713976').trim(),
+                provider: cfg.provider || 'evolution_api',
+                activeInstance: cfg.activeInstance || 'sige_orientacao',
+                antiBanDelayMin: cfg.antiBanDelayMin || 5, // segundos
+                antiBanDelayMax: cfg.antiBanDelayMax || 12  // segundos
             };
         }
 
@@ -141,7 +134,20 @@
             const cfg = this.getConfig();
             const inst = instanceName || cfg.activeInstance;
 
-            // Tenta obter o QR code diretamente
+            // 1. Se já está conectado, retorna de imediato sem recriar ou gerar erro
+            try {
+                const check = await this.checkConnectionState(inst);
+                if (check.connected) {
+                    return {
+                        success: true,
+                        alreadyConnected: true,
+                        base64: null,
+                        state: 'open'
+                    };
+                }
+            } catch (_) {}
+
+            // 2. Tenta obter o QR code diretamente
             try {
                 let response = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
                     method: 'GET',
@@ -151,8 +157,7 @@
                 // Se a instância não existe ainda, tenta criar automaticamente
                 if (response.status === 404) {
                     await this.createInstance(inst);
-                    // Aguarda 1s para o container inicializar
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 800));
                     response = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
                         method: 'GET',
                         headers: this._getHeaders()
@@ -164,16 +169,28 @@
                 }
 
                 const data = await response.json();
+
+                // Se a API informou que a instância já está aberta/conectada
+                if (data?.instance?.state === 'open' || data?.state === 'open') {
+                    return {
+                        success: true,
+                        alreadyConnected: true,
+                        base64: null,
+                        state: 'open'
+                    };
+                }
+
                 const base64 = data?.base64 || data?.qrcode?.base64 || data?.code;
 
-                // Se o count atingiu o limite de tentativas (30) ou o socket está morto, reinicia a sessão limpa
-                if (!base64 || (data?.count && data.count >= 30)) {
+                // Se o count atingiu o limite de tentativas (30) e não está conectado, reinicia a sessão limpa
+                if (!base64 && data?.count && data.count >= 30) {
                     console.warn(`[EvolutionClient] QR Code expirado ou limite atingido para '${inst}'. Reiniciando sessão...`);
                     return await this.resetInstance(inst);
                 }
 
                 return {
                     success: Boolean(base64),
+                    alreadyConnected: false,
                     base64: base64,
                     pairingCode: data?.pairingCode || null,
                     count: data?.count || 0
