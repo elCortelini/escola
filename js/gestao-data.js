@@ -2918,9 +2918,9 @@ class SigeDatabase {
                 enabled: true,
                 provider: "evolution_api",
                 apiUrl: "",
-                apiToken: "",
+                apiToken: "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI",
                 evolutionApiUrl: "",
-                evolutionApiKey: "",
+                evolutionApiKey: "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI",
                 activeInstance: "sige_orientacao",
                 antiBanDelayMin: 5,
                 antiBanDelayMax: 12,
@@ -2931,6 +2931,10 @@ class SigeDatabase {
             this.saveData(this.data);
         } else {
             // Garante que campos novos da Evolution API existam
+            if (!this.data.whatsappConfig.evolutionApiKey) {
+                this.data.whatsappConfig.evolutionApiKey = "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI";
+                this.data.whatsappConfig.apiToken = "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI";
+            }
             if (!this.data.whatsappConfig.activeInstance) {
                 this.data.whatsappConfig.activeInstance = "sige_orientacao";
             }

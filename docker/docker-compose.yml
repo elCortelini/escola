@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ─── 1. Banco de Dados Exclusivo do SIGE ─────────────────────
+  postgres_sige:
+    image: postgres:15-alpine
+    container_name: postgres_sige
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sige_evo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sige_postgres_secret_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-sige_evolution_db}
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./data/postgres_sige_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U sige_evo_user -d sige_evolution_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - sige_network
+
+  # ─── 2. Evolution API Dedicada ao SIGE ──────────────────────
+  evolution_api_sige:
+    image: evoapicloud/evolution-api:latest
+    container_name: evolution_api_sige
+    restart: always
+    ports:
+      # Mapeamento para a porta 8086 (evita conflito com a 8085 existente no servidor)
+      - "8086:8080"
+    environment:
+      - SERVER_TYPE=http
+      - SERVER_PORT=8080
+      # CORS habilitado para chamadas do frontend do SIGE via navegador
+      - CORS_ORIGIN=*
+      - CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - CORS_CREDENTIALS=true
+      - LOG_LEVEL=INFO
+      - LOG_BAILEYS=error
+      - DEL_INSTANCE=false
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+      - QRCODE_LIMIT=30
+      - CONFIG_SESSION_PHONE_CLIENT=SIGE Escola Pedro Rizzi
+      - CONFIG_SESSION_PHONE_NAME=Chrome (SIGE)
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER:-sige_evo_user}:${POSTGRES_PASSWORD:-sige_postgres_secret_2026}@postgres_sige:5432/${POSTGRES_DB:-sige_evolution_db}
+      - DATABASE_CONNECTION_CLIENT_NAME=sige_evolution_db
+      - CACHE_REDIS_ENABLED=false
+      - CACHE_LOCAL_ENABLED=true
+      - TZ=America/Sao_Paulo
+    volumes:
+      - ./data/evolution_instances:/evolution/instances
+    depends_on:
+      postgres_sige:
+        condition: service_healthy
+    networks:
+      - sige_network
+
+networks:
+  sige_network:
+    name: sige_network
+    driver: bridge
