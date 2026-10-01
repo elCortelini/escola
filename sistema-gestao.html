@@ -1257,24 +1257,44 @@
 
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
                     <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Provedor de API de WhatsApp:</label>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Provedor de WhatsApp:</label>
                         <select id="waConfigProvider" onchange="salvarConfiguracoesWhatsapp()" class="search-input" style="width:100%; margin-top:4px; font-weight:700; color:#1e3a8a;">
-                            <option value="simulated">🤖 Modo Automático Integrado (Sem Custo / Simulação de Background)</option>
-                            <option value="meta_cloud_api">☁️ Meta WhatsApp Business Cloud API Oficial</option>
-                            <option value="zapi">⚡ Z-API (Provedor de Instâncias)</option>
-                            <option value="evolution_api">🚀 Evolution API (Self-Hosted / Open Source)</option>
+                            <option value="evolution_api">🚀 Evolution API (Docker Oficial / Self-Hosted)</option>
+                            <option value="simulated">🤖 Modo Simulado / Teste Interno</option>
+                            <option value="meta_cloud_api">☁️ Meta WhatsApp Cloud API</option>
+                            <option value="zapi">⚡ Z-API</option>
                             <option value="custom_webhook">🔗 Webhook Personalizado (POST JSON)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">URL do Endpoint / Webhook da API:</label>
-                        <input type="text" id="waConfigApiUrl" onchange="salvarConfiguracoesWhatsapp()" placeholder="https://api.z-api.io/instances/SUA_INSTANCIA/send-text" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">URL Base da Evolution API (com HTTPS):</label>
+                        <input type="text" id="waConfigApiUrl" onchange="salvarConfiguracoesWhatsapp()" placeholder="https://api-whatsapp.sige.seudominio.com.br" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                     </div>
 
                     <div>
-                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Token / Chave de Autenticação (Bearer):</label>
-                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Sua Chave de API Token..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Chave de Autenticação (Global API Key):</label>
+                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" placeholder="Chave de API configurada no .env..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.2rem; background:#f8fafc; padding:1rem; border-radius:12px; border:1px solid #e2e8f0;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Instância Ativa do WhatsApp:</label>
+                        <select id="waConfigActiveInstance" onchange="salvarConfiguracoesWhatsapp()" class="search-input" style="width:100%; margin-top:4px; font-weight:700; color:#1e3a8a;">
+                            <option value="sige_orientacao">💛 sige_orientacao (Orientação Educacional)</option>
+                            <option value="sige_direcao">🏛️ sige_direcao (Gabinete da Direção)</option>
+                            <option value="sige_secretaria">📋 sige_secretaria (Secretaria Escolar)</option>
+                            <option value="sige_avulso">📱 sige_avulso (Outro Número / Celular Avulso)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Intervalo Anti-Ban Mínimo (segundos):</label>
+                        <input type="number" id="waConfigDelayMin" onchange="salvarConfiguracoesWhatsapp()" value="5" min="2" max="60" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#334155;">Intervalo Anti-Ban Máximo (segundos):</label>
+                        <input type="number" id="waConfigDelayMax" onchange="salvarConfiguracoesWhatsapp()" value="12" min="3" max="120" class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                     </div>
                 </div>
 
@@ -1298,9 +1318,12 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
-                    <button onclick="testarConexaoWhatsapp()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; background:#0284c7; color:white;">
-                        <i class="fa-solid fa-paper-plane"></i> Testar Conexão de Disparo Automático
+                <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                    <button type="button" onclick="openModalQrCodeWhatsApp(document.getElementById('waConfigActiveInstance')?.value || 'sige_orientacao')" class="btn" style="width:auto; font-size:0.85rem; background:#16a34a; color:white; border:none; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-qrcode"></i> Conectar / Ver QR Code na Tela
+                    </button>
+                    <button type="button" onclick="testarConexaoWhatsapp()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; background:#0284c7; color:white; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-paper-plane"></i> Testar Conexão
                     </button>
                 </div>
             </div>
@@ -1658,6 +1681,27 @@
                             </button>
                             <button type="button" id="btnDirWpModoIndividual" onclick="setDirWpModoEnvio('individual')" class="dir-segment-btn" title="Envio avulso para um destinatário específico">
                                 <i class="fa-solid fa-user"></i> Contato Avulso
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seletor de Remetente do WhatsApp (Evolution API) -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--dir-border-subtle); padding:10px 14px; border-radius:12px; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label for="dirWpRemetenteSelect" style="font-size:0.75rem; font-weight:800; color:var(--dir-text-secondary); text-transform:uppercase; letter-spacing:0.5px;">
+                                <i class="fa-solid fa-mobile-screen" style="color:var(--dir-accent-primary);"></i> Enviar através de:
+                            </label>
+                            <select id="dirWpRemetenteSelect" onchange="atualizarStatusRemetenteDirecao(this.value)" class="dir-select" style="min-height:34px; padding:4px 10px; font-weight:700; width:auto;">
+                                <option value="sige_direcao">🏛️ WhatsApp do Gabinete da Direção</option>
+                                <option value="sige_orientacao">💛 WhatsApp da Orientação Educacional</option>
+                                <option value="sige_secretaria">📋 WhatsApp da Secretaria Escolar</option>
+                                <option value="sige_avulso">📱 Outro Número / Celular Avulso</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="dirWpStatusBadge" style="font-size:0.75rem; padding:4px 10px; border-radius:12px; background:#fee2e2; color:#991b1b; font-weight:800;">🔴 Desconectado</span>
+                            <button type="button" onclick="openModalQrCodeWhatsApp(document.getElementById('dirWpRemetenteSelect')?.value || 'sige_direcao')" class="dir-btn dir-btn-secondary" style="min-height:32px; padding:4px 10px; font-size:0.75rem;" title="Conectar ou escanear QR Code deste número">
+                                <i class="fa-solid fa-qrcode"></i> Conectar / QR Code
                             </button>
                         </div>
                     </div>
@@ -2103,6 +2147,25 @@
                     <p id="modalDispararLembretesSubTitle" style="margin:2px 0 0 0; font-size:0.8rem; color:#64748b; font-weight:600;">Selecione quais atendimentos devem receber o lembrete e escolha o telefone preferencial de cada aluno.</p>
                 </div>
                 <button type="button" onclick="closeDispararLembretesHojeModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;" title="Fechar modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Seletor de Remetente do WhatsApp -->
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 12px; border-radius:10px; margin-bottom:10px; flex-shrink:0; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.78rem; font-weight:800; color:#334155;"><i class="fa-solid fa-paper-plane" style="color:#2563eb;"></i> Enviar através de:</span>
+                    <select id="opLembreteRemetenteSelect" onchange="atualizarStatusRemetenteLembrete(this.value)" style="font-size:0.8rem; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:white; color:#0f172a; cursor:pointer;">
+                        <option value="sige_orientacao">💛 WhatsApp da Orientação Educacional</option>
+                        <option value="sige_direcao">🏛️ WhatsApp do Gabinete da Direção</option>
+                        <option value="sige_secretaria">📋 WhatsApp da Secretaria Escolar</option>
+                        <option value="sige_avulso">📱 Outro Número / Celular Avulso</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span id="opLembreteStatusBadge" style="font-size:0.75rem; padding:3px 8px; border-radius:10px; background:#fee2e2; color:#991b1b; font-weight:800;">🔴 Desconectado</span>
+                    <button type="button" onclick="openModalQrCodeWhatsApp(document.getElementById('opLembreteRemetenteSelect')?.value || 'sige_orientacao')" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 8px; width:auto;" title="Conectar ou escanear QR Code deste número">
+                        <i class="fa-solid fa-qrcode"></i> Conectar / QR Code
+                    </button>
+                </div>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; border:1px solid #bbf7d0; padding:10px 14px; border-radius:10px; margin-bottom:12px; flex-shrink:0;">
@@ -4839,12 +4902,19 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
             <!-- Controles e Botões da Fila (Fitts Ergonomics) -->
             <div style="display:flex; flex-direction:column; gap:12px;">
-                <button type="button" onclick="dispararContatoAtualFilaWhatsApp()" class="dir-btn dir-btn-whatsapp" style="padding:14px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35);">
-                    <i class="fa-brands fa-whatsapp" style="font-size:1.35rem;"></i> 
-                    <span>Abrir no WhatsApp & Registrar Log</span>
+                <button type="button" id="btnIniciarDisparoAutomatedFila" onclick="iniciarDisparoFilaAutomatico()" class="dir-btn dir-btn-whatsapp" style="padding:14px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35); background:linear-gradient(135deg, #16a34a, #15803d);">
+                    <i class="fa-solid fa-bolt" style="font-size:1.2rem;"></i> 
+                    <span id="btnIniciarDisparoAutomatedFilaText">⚡ Iniciar Disparo 100% Automático (Sem Abrir Abas)</span>
                 </button>
 
+                <div id="statusFilaAutomatedBox" style="display:none; text-align:center; font-size:0.85rem; font-weight:800; color:#15803d; background:#dcfce7; padding:10px 14px; border-radius:8px; border:1px solid #86efac;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> <span id="statusFilaAutomatedText">Enviando automaticamente em background...</span>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <button type="button" onclick="dispararContatoAtualFilaWhatsApp()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem;" title="Abre manualmente o WhatsApp Web para este contato">
+                        <i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp Manual
+                    </button>
                     <button type="button" onclick="pularContatoAtualFilaWhatsApp()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem;">
                         <i class="fa-solid fa-forward-step"></i> Pular Contato
                     </button>
@@ -4852,6 +4922,110 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                         <i class="fa-solid fa-circle-stop"></i> Encerrar Fila
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3C. MODAL: CONEXÃO WHATSAPP / QR CODE EM TEMPO REAL (EVOLUTION API) -->
+    <div id="modalQrCodeWhatsApp" class="dir-modal-backdrop" style="display:none; z-index:3600; align-items:center; justify-content:center;">
+        <div class="dir-modal-card" style="max-width:520px; text-align:center; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="text-align:left;">
+                    <h3 style="margin:0; font-size:1.25rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-brands fa-whatsapp" style="color:#22c55e; font-size:1.6rem;"></i> Conectar WhatsApp
+                    </h3>
+                    <p style="margin:4px 0 0 0; font-size:0.82rem; color:#64748b;">
+                        Instância: <strong id="modalQrCodeInstanceLabel" style="color:#1e3a8a;">sige_orientacao</strong> 
+                        <span id="modalQrCodeStatusBadge" style="margin-left:6px; font-size:0.75rem; padding:2px 8px; border-radius:12px; background:#fee2e2; color:#991b1b; font-weight:800;">🔴 Desconectado</span>
+                    </p>
+                </div>
+                <button type="button" onclick="closeModalQrCodeWhatsApp()" class="dir-modal-close" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer;" aria-label="Fechar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Container do QR Code -->
+            <div id="modalQrCodeImageContainer" style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:16px; padding:20px; min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:16px; position:relative;">
+                <div id="modalQrCodeLoading" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem; color:#3b82f6;"></i>
+                    <span style="font-size:0.85rem; font-weight:700; color:#475569;">Conectando à Evolution API...</span>
+                </div>
+                <img id="modalQrCodeImg" src="" alt="QR Code WhatsApp" style="display:none; max-width:250px; width:100%; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                <div id="modalQrCodeSuccessBox" style="display:none; flex-direction:column; align-items:center; gap:8px;">
+                    <div style="width:64px; height:64px; border-radius:50%; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:2rem;">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h4 style="margin:4px 0 0 0; color:#14532d; font-size:1.15rem; font-weight:900;">WhatsApp Conectado!</h4>
+                    <p id="modalQrCodeConnectedPhone" style="margin:0; font-size:0.85rem; color:#166534; font-weight:700;">Pronto para envio silencioso.</p>
+                </div>
+            </div>
+
+            <!-- Instruções de Escaneamento -->
+            <div id="modalQrCodeInstructions" style="background:#f1f5f9; border-radius:10px; padding:12px; text-align:left; font-size:0.8rem; color:#334155; margin-bottom:16px;">
+                <div style="font-weight:800; color:#0f172a; margin-bottom:4px;"><i class="fa-solid fa-mobile-screen"></i> Como conectar no seu celular:</div>
+                <ol style="margin:0; padding-left:18px; line-height:1.45;">
+                    <li>Abra o WhatsApp no celular que enviará as mensagens.</li>
+                    <li>Toque em <strong>Mais opções</strong> (⋮ no Android) ou <strong>Configurações</strong> (no iPhone).</li>
+                    <li>Toque em <strong>Aparelhos conectados</strong> e depois em <strong>Conectar um aparelho</strong>.</li>
+                    <li>Aponte a câmera do celular para este QR Code na tela.</li>
+                </ol>
+            </div>
+
+            <!-- Botões de Ação do Modal -->
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button type="button" onclick="refreshQrCodeModal()" class="dir-btn dir-btn-secondary" style="font-size:0.8rem; padding:8px 12px;">
+                    <i class="fa-solid fa-arrows-rotate"></i> Atualizar QR Code
+                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="desconectarWhatsAppInstanciaModal()" class="dir-btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-size:0.8rem; padding:8px 12px; font-weight:700;" title="Desconecta este número para poder escanear outro celular">
+                        <i class="fa-solid fa-right-from-bracket"></i> Desconectar / Trocar
+                    </button>
+                    <button type="button" onclick="closeModalQrCodeWhatsApp()" class="dir-btn dir-btn-primary" style="font-size:0.8rem; padding:8px 16px;">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D. MODAL: RELATÓRIO FINAL DE DISPARO WHATSAPP (ESTATÍSTICAS & FALHAS) -->
+    <div id="modalRelatorioDisparoWhatsApp" class="dir-modal-backdrop" style="display:none; z-index:3700; align-items:center; justify-content:center;">
+        <div class="dir-modal-card" style="max-width:620px; padding:24px;">
+            <div class="dir-modal-header" style="margin-bottom:16px;">
+                <h3 class="dir-modal-title" style="display:flex; align-items:center; gap:8px; font-size:1.25rem;">
+                    <i class="fa-solid fa-square-poll-vertical" style="color:#0284c7;"></i> Relatório Final de Envio de Mensagens
+                </h3>
+                <button type="button" onclick="closeModalRelatorioDisparoWhatsApp()" class="dir-modal-close" aria-label="Fechar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:18px;">
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:16px; text-align:center;">
+                    <div style="font-size:0.8rem; font-weight:800; color:#166534; text-transform:uppercase;">Enviadas com Sucesso</div>
+                    <div id="relatorioWpSucessoCount" style="font-size:2rem; font-weight:900; color:#15803d; margin-top:4px;">0</div>
+                    <div style="font-size:0.75rem; color:#166534;">Mensagens entregues diretamente</div>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:16px; text-align:center;">
+                    <div style="font-size:0.8rem; font-weight:800; color:#991b1b; text-transform:uppercase;">Falhas / Não Entregues</div>
+                    <div id="relatorioWpFalhaCount" style="font-size:2rem; font-weight:900; color:#b91c1c; margin-top:4px;">0</div>
+                    <div style="font-size:0.75rem; color:#991b1b;">Requerem atenção / correção</div>
+                </div>
+            </div>
+
+            <div id="relatorioWpFalhasSection" style="display:none; margin-bottom:18px;">
+                <div style="font-size:0.82rem; font-weight:800; color:#991b1b; margin-bottom:6px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Detalhamento dos contatos que não receberam:
+                </div>
+                <div id="relatorioWpListaFalhasContainer" style="max-height:180px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
+                    <!-- Preenchido via JS com nome, telefone e motivo -->
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="button" onclick="closeModalRelatorioDisparoWhatsApp()" class="dir-btn dir-btn-primary" style="min-height:38px; padding:6px 20px;">
+                    Concluir & Fechar
+                </button>
             </div>
         </div>
     </div>
@@ -4936,6 +5110,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
     <!-- JS Files -->
     <script src="js/calendario-oficial-data.js?v=20260925_v43"></script>
+    <script src="js/evolution-client.js?v=20261001_v1"></script>
     <script src="js/gestao-data.js?v=20260925_v43"></script>
     <script src="js/gestao-app.js?v=20260925_v43"></script>
     <script src="js/pdf-importer.js?v=20260925_v43"></script>

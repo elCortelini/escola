@@ -2916,14 +2916,30 @@ class SigeDatabase {
         if (!this.data.whatsappConfig) {
             this.data.whatsappConfig = {
                 enabled: true,
-                provider: "simulated",
+                provider: "evolution_api",
                 apiUrl: "",
                 apiToken: "",
+                evolutionApiUrl: "",
+                evolutionApiKey: "",
+                activeInstance: "sige_orientacao",
+                antiBanDelayMin: 5,
+                antiBanDelayMax: 12,
                 autoSendOnCreate: true,
                 autoSendOnArrival: true,
                 autoSendReminders: true
             };
             this.saveData(this.data);
+        } else {
+            // Garante que campos novos da Evolution API existam
+            if (!this.data.whatsappConfig.activeInstance) {
+                this.data.whatsappConfig.activeInstance = "sige_orientacao";
+            }
+            if (this.data.whatsappConfig.antiBanDelayMin === undefined) {
+                this.data.whatsappConfig.antiBanDelayMin = 5;
+            }
+            if (this.data.whatsappConfig.antiBanDelayMax === undefined) {
+                this.data.whatsappConfig.antiBanDelayMax = 12;
+            }
         }
         return this.data.whatsappConfig;
     }
@@ -2931,6 +2947,14 @@ class SigeDatabase {
     saveWhatsappConfig(config) {
         this.data.whatsappConfig = { ...this.getWhatsappConfig(), ...config };
         this.saveData(this.data);
+    }
+
+    getActiveWhatsappInstance() {
+        return this.getWhatsappConfig().activeInstance || "sige_orientacao";
+    }
+
+    setActiveWhatsappInstance(instanceName) {
+        this.saveWhatsappConfig({ activeInstance: instanceName });
     }
 
     logWhatsappReminder(id, tipoLembrete) {

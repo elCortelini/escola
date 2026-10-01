@@ -26,6 +26,18 @@ function initApp() {
     updateAllDynamicSelects();
     renderAllModules(null, true);
     setupOpButtons();
+
+    try {
+        renderWhatsappConfigPanel();
+        if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+            const instLembrete = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
+            const instDirecao = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
+            atualizarStatusRemetenteLembrete(instLembrete);
+            atualizarStatusRemetenteDirecao(instDirecao);
+        }
+    } catch (e) {
+        console.warn("Aviso ao inicializar status do WhatsApp:", e);
+    }
 }
 
 function setupOpButtons() {
@@ -3174,6 +3186,42 @@ async function enviarLembreteIndividualHoje(agId) {
     }
     const customText = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
 
+    const remetenteInst = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
+
+    // 1. Se a Evolution API estiver configurada, envia silenciosamente em 1 clique
+    if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+        const check = await evolutionClient.checkConnectionState(remetenteInst);
+        if (!check.connected) {
+            openModalQrCodeWhatsApp(remetenteInst);
+            showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de disparar.`, "warning");
+            return;
+        }
+
+        showToast(`⏳ Enviando mensagem direta para ${ag.aluno}...`, "info");
+        const sendRes = await evolutionClient.sendText(cleanPhone, customText, { instanceName: remetenteInst });
+
+        if (sendRes.success) {
+            sigeDB.logWhatsappDispatch(ag.id, {
+                tipo: "🤖 Lembrete Automático do Dia",
+                mensagem: customText,
+                modo: "individual_silencioso",
+                status: "sucesso",
+                destinatario: phoneNum,
+                instancia: remetenteInst
+            });
+            showToast(`✅ MENSAGEM ENVIADA para ${ag.aluno}!`, "success");
+            return;
+        } else {
+            showToast(`⚠️ Falha no envio via Evolution API: ${sendRes.error}`, "error");
+            if (confirm(`Não foi possível enviar via Evolution API (${sendRes.error}). Deseja abrir a aba do WhatsApp Web tradicional como alternativa?`)) {
+                const waNum = cleanPhone.startsWith('55') ? cleanPhone : ('55' + cleanPhone);
+                window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(customText)}`, "_blank");
+            }
+            return;
+        }
+    }
+
+    // Fallback: Se não tiver Evolution API configurada, usa link web tradicional
     sigeDB.logWhatsappDispatch(ag.id, {
         tipo: "🤖 Lembrete Automático do Dia",
         mensagem: customText,
@@ -3185,7 +3233,6 @@ async function enviarLembreteIndividualHoje(agId) {
     const waNum = cleanPhone.startsWith('55') ? cleanPhone : ('55' + cleanPhone);
     const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(customText)}`;
     window.open(waUrl, "_blank");
-
     showToast(`📲 Lembrete registrado e WhatsApp aberto para ${ag.aluno}!`, "success");
 }
 
@@ -3196,6 +3243,19 @@ async function confirmarEnviarLembretesHoje() {
     if (checkboxes.length === 0) {
         showToast("Nenhum atendimento selecionado para disparo.", "warning");
         return;
+    }
+
+    const remetenteInst = document.getElementById("opLembreteRemetenteSelect")?.value || "sige_orientacao";
+
+    // Se estiver usando Evolution API, valida a conexão antes de iniciar
+    const usandoEvolution = typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured();
+    if (usandoEvolution) {
+        const check = await evolutionClient.checkConnectionState(remetenteInst);
+        if (!check.connected) {
+            openModalQrCodeWhatsApp(remetenteInst);
+            showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de iniciar a fila.`, "warning");
+            return;
+        }
     }
 
     const itemsParaEnviar = [];
@@ -3219,32 +3279,96 @@ async function confirmarEnviarLembretesHoje() {
                 }
             }
             const textAuto = `🤖 [Lembrete Automático HOJE] Olá ${ag.responsavel || 'Família'}! Lembramos do atendimento do estudante ${ag.aluno} (${ag.turma || ''}) agendado para HOJE, ${dataFmt} às ${ag.horario} com a Orientação Educacional (CE Pedro Rizzi).\n\n👇 *Por favor, confirme sua presença clicando no link abaixo:*\n${linkConfirm}`;
-            
-            sigeDB.logWhatsappDispatch(ag.id, {
-                tipo: "🤖 Lembrete Automático do Dia",
-                mensagem: textAuto,
-                modo: "em_lote_confirmado",
-                status: "sucesso",
-                destinatario: phoneNum
-            });
 
-            if (cleanPhone && cleanPhone.length >= 8) {
-                const waNum = cleanPhone.startsWith('55') ? cleanPhone : ('55' + cleanPhone);
-                const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(textAuto)}`;
-                itemsParaEnviar.push({ aluno: ag.aluno, url: waUrl });
-            }
+            itemsParaEnviar.push({
+                agId: ag.id,
+                aluno: ag.aluno,
+                responsavel: ag.responsavel,
+                telefone: phoneNum,
+                cleanPhone: cleanPhone,
+                texto: textAuto
+            });
         }
     }
-
-    closeDispararLembretesHojeModal();
 
     if (itemsParaEnviar.length === 0) {
         showToast("⚠️ Nenhum telefone válido encontrado nos atendimentos selecionados.", "warning");
         return;
     }
 
-    // Abre a conversa do WhatsApp para cada destinatário selecionado
-    window.open(itemsParaEnviar[0].url, "_blank");
+    // Modo 1: Disparo Silencioso em Fila Automática com Anti-Ban (Evolution API)
+    if (usandoEvolution) {
+        const btnEnviar = document.getElementById("btnDispararLembretesHoje");
+        if (btnEnviar) {
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando Fila...`;
+        }
+
+        const sucessos = [];
+        const falhas = [];
+
+        for (let i = 0; i < itemsParaEnviar.length; i++) {
+            const item = itemsParaEnviar[i];
+            const progTxt = `Enviando ${i + 1} de ${itemsParaEnviar.length} (${item.aluno})...`;
+            showToast(`⏳ ${progTxt}`, "info");
+
+            if (btnEnviar) {
+                btnEnviar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i + 1}/${itemsParaEnviar.length}`;
+            }
+
+            if (!item.cleanPhone || item.cleanPhone.length < 8) {
+                falhas.push({
+                    nome: item.aluno,
+                    telefone: item.telefone || 'Sem número',
+                    motivo: 'Telefone inválido ou incompleto'
+                });
+                continue;
+            }
+
+            const sendRes = await evolutionClient.sendText(item.cleanPhone, item.texto, { instanceName: remetenteInst });
+
+            if (sendRes.success) {
+                sigeDB.logWhatsappDispatch(item.agId, {
+                    tipo: "🤖 Lembrete Automático do Dia",
+                    mensagem: item.texto,
+                    modo: "lote_automatico_evolution",
+                    status: "sucesso",
+                    destinatario: item.cleanPhone,
+                    instancia: remetenteInst
+                });
+                sucessos.push({ nome: item.aluno, telefone: item.cleanPhone });
+            } else {
+                falhas.push({
+                    nome: item.aluno,
+                    telefone: item.cleanPhone,
+                    motivo: sendRes.error || 'Erro no envio'
+                });
+            }
+
+            // Intervalo de segurança anti-ban entre mensagens se houver próximo item
+            if (i < itemsParaEnviar.length - 1) {
+                const delayMs = evolutionClient.getRandomAntiBanDelayMs();
+                await new Promise(r => setTimeout(r, delayMs));
+            }
+        }
+
+        if (btnEnviar) {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = `<i class="fa-brands fa-whatsapp"></i> Enviar Lembretes`;
+        }
+
+        closeDispararLembretesHojeModal();
+        exibirRelatorioDisparoWhatsApp(sucessos, falhas);
+
+        setTimeout(() => {
+            renderModuleOrientacaoPedagogica();
+        }, 100);
+        return;
+    }
+
+    // Modo 2: Fallback Tradicional abrindo abas wa.me
+    closeDispararLembretesHojeModal();
+    window.open(`https://wa.me/${itemsParaEnviar[0].cleanPhone}?text=${encodeURIComponent(itemsParaEnviar[0].texto)}`, "_blank");
 
     if (itemsParaEnviar.length === 1) {
         showToast(`📲 Lembrete registrado e WhatsApp aberto para ${itemsParaEnviar[0].aluno}!`, "success");
@@ -3252,12 +3376,12 @@ async function confirmarEnviarLembretesHoje() {
         showToast(`📲 Abrindo conversas no WhatsApp para os ${itemsParaEnviar.length} selecionados...`, "info");
         itemsParaEnviar.slice(1).forEach((item, index) => {
             setTimeout(() => {
-                window.open(item.url, "_blank");
+                window.open(`https://wa.me/${item.cleanPhone}?text=${encodeURIComponent(item.texto)}`, "_blank");
             }, (index + 1) * 800);
         });
         showToast(`✅ ${itemsParaEnviar.length} lembretes registrados e disparados no WhatsApp!`, "success");
     }
-    
+
     setTimeout(() => {
         renderModuleOrientacaoPedagogica();
     }, 100);
@@ -3276,6 +3400,18 @@ window.toggleSelectAllLembretesHoje = toggleSelectAllLembretesHoje;
 window.closeDispararLembretesHojeModal = closeDispararLembretesHojeModal;
 window.enviarLembreteIndividualHoje = enviarLembreteIndividualHoje;
 window.confirmarEnviarLembretesHoje = confirmarEnviarLembretesHoje;
+window.openModalQrCodeWhatsApp = openModalQrCodeWhatsApp;
+window.closeModalQrCodeWhatsApp = closeModalQrCodeWhatsApp;
+window.refreshQrCodeModal = refreshQrCodeModal;
+window.desconectarWhatsAppInstanciaModal = desconectarWhatsAppInstanciaModal;
+window.atualizarStatusRemetenteDirecao = atualizarStatusRemetenteDirecao;
+window.atualizarStatusRemetenteLembrete = atualizarStatusRemetenteLembrete;
+window.exibirRelatorioDisparoWhatsApp = exibirRelatorioDisparoWhatsApp;
+window.closeModalRelatorioDisparoWhatsApp = closeModalRelatorioDisparoWhatsApp;
+window.iniciarDisparoFilaAutomatico = iniciarDisparoFilaAutomatico;
+window.testarConexaoWhatsapp = testarConexaoWhatsapp;
+window.salvarConfiguracoesWhatsapp = salvarConfiguracoesWhatsapp;
+window.renderWhatsappConfigPanel = renderWhatsappConfigPanel;
 
 function togglePublicoAgendamentoOP() {
     const selectPub = document.getElementById("opInputPublico");
@@ -5858,22 +5994,31 @@ function renderWhatsappConfigPanel() {
     const selProv = document.getElementById("waConfigProvider");
     const inputUrl = document.getElementById("waConfigApiUrl");
     const inputToken = document.getElementById("waConfigApiToken");
+    const selInst = document.getElementById("waConfigActiveInstance");
+    const inputDelayMin = document.getElementById("waConfigDelayMin");
+    const inputDelayMax = document.getElementById("waConfigDelayMax");
     const chkCreate = document.getElementById("waConfigAutoCreate");
     const chkArrival = document.getElementById("waConfigAutoArrival");
     const chkRemind = document.getElementById("waConfigAutoReminders");
 
-    if (selProv) selProv.value = config.provider || "simulated";
-    if (inputUrl) inputUrl.value = config.apiUrl || "";
-    if (inputToken) inputToken.value = config.apiToken || "";
+    if (selProv) selProv.value = config.provider || "evolution_api";
+    if (inputUrl) inputUrl.value = config.evolutionApiUrl || config.apiUrl || "";
+    if (inputToken) inputToken.value = config.evolutionApiKey || config.apiToken || "";
+    if (selInst) selInst.value = config.activeInstance || "sige_orientacao";
+    if (inputDelayMin) inputDelayMin.value = config.antiBanDelayMin || 5;
+    if (inputDelayMax) inputDelayMax.value = config.antiBanDelayMax || 12;
     if (chkCreate) chkCreate.checked = config.autoSendOnCreate !== false;
     if (chkArrival) chkArrival.checked = config.autoSendOnArrival !== false;
     if (chkRemind) chkRemind.checked = config.autoSendReminders !== false;
 }
 
 function salvarConfiguracoesWhatsapp() {
-    const provider = document.getElementById("waConfigProvider")?.value || "simulated";
-    const apiUrl = document.getElementById("waConfigApiUrl")?.value || "";
-    const apiToken = document.getElementById("waConfigApiToken")?.value || "";
+    const provider = document.getElementById("waConfigProvider")?.value || "evolution_api";
+    const apiUrl = (document.getElementById("waConfigApiUrl")?.value || "").trim().replace(/\/+$/, '');
+    const apiToken = (document.getElementById("waConfigApiToken")?.value || "").trim();
+    const activeInstance = document.getElementById("waConfigActiveInstance")?.value || "sige_orientacao";
+    const antiBanDelayMin = parseInt(document.getElementById("waConfigDelayMin")?.value, 10) || 5;
+    const antiBanDelayMax = parseInt(document.getElementById("waConfigDelayMax")?.value, 10) || 12;
     const autoSendOnCreate = document.getElementById("waConfigAutoCreate")?.checked !== false;
     const autoSendOnArrival = document.getElementById("waConfigAutoArrival")?.checked !== false;
     const autoSendReminders = document.getElementById("waConfigAutoReminders")?.checked !== false;
@@ -5883,33 +6028,275 @@ function salvarConfiguracoesWhatsapp() {
         provider,
         apiUrl,
         apiToken,
+        evolutionApiUrl: apiUrl,
+        evolutionApiKey: apiToken,
+        activeInstance,
+        antiBanDelayMin,
+        antiBanDelayMax,
         autoSendOnCreate,
         autoSendOnArrival,
         autoSendReminders
     });
 
-    showToast("💾 Configurações do WhatsApp Automático salvas!");
+    showToast("💾 Configurações do WhatsApp salvas com sucesso!");
 }
 
-function testarConexaoWhatsapp() {
+async function testarConexaoWhatsapp() {
     salvarConfiguracoesWhatsapp();
-    const mockAg = {
-        id: "test-" + Date.now(),
-        aluno: "Aluno Teste SIGE",
-        turma: "7º Ano A",
-        responsavel: "Direção Escolar",
-        telefone: "47999887766",
-        orientadora: ((sigeDB.getOrientadoras && sigeDB.getOrientadoras()[0]) ? sigeDB.getOrientadoras()[0].nome : "Orientação Educacional"),
-        data: new Date().toISOString().split("T")[0],
-        horario: "10:00"
-    };
+    if (typeof evolutionClient === 'undefined' || !evolutionClient.isConfigured()) {
+        showToast("⚠️ Preencha a URL da Evolution API e a Chave de API antes de testar.", "warning");
+        return;
+    }
 
-    sendAutomaticWhatsapp(mockAg, "agendamento_criado", "⚡ Teste de conexão do Motor de WhatsApp Automático do SIGE Pedro Rizzi! Tudo operacional sem intervenção humana.");
-    showToast("⚡ Teste de disparo automático enviado com sucesso!");
+    const inst = document.getElementById("waConfigActiveInstance")?.value || sigeDB.getActiveWhatsappInstance();
+    showToast(`🔍 Testando conexão com a instância '${inst}'...`, "info");
+
+    const res = await evolutionClient.checkConnectionState(inst);
+    if (res.connected) {
+        showToast(`🟢 Instância '${inst}' CONECTADA e pronta para envios!`, "success");
+    } else if (res.state === 'not_found') {
+        showToast(`ℹ️ Instância '${inst}' ainda não criada. Clique em 'Conectar / Ver QR Code'.`, "info");
+    } else {
+        showToast(`🔴 Instância '${inst}' está desconectada. Clique em 'Conectar / Ver QR Code'.`, "warning");
+    }
 }
 
 // ==========================================
-// MOTOR DE DISPARO AUTOMÁTICO DE WHATSAPP
+// MODAL DE CONEXÃO WHATSAPP / QR CODE
+// ==========================================
+let qrCodePollingInterval = null;
+let currentQrInstanceName = "sige_orientacao";
+
+async function openModalQrCodeWhatsApp(instanceName) {
+    salvarConfiguracoesWhatsapp();
+    if (typeof evolutionClient === 'undefined' || !evolutionClient.isConfigured()) {
+        showToast("⚠️ Configure primeiro a URL e a Chave da Evolution API nas Configurações.", "warning");
+        const tabBtn = document.getElementById("tabBtnAdmin") || document.querySelector('[data-tab="admin"]');
+        if (tabBtn) tabBtn.click();
+        return;
+    }
+
+    currentQrInstanceName = instanceName || sigeDB.getActiveWhatsappInstance() || "sige_orientacao";
+
+    const modal = document.getElementById("modalQrCodeWhatsApp");
+    const instLabel = document.getElementById("modalQrCodeInstanceLabel");
+    const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+    const loadingBox = document.getElementById("modalQrCodeLoading");
+    const qrImg = document.getElementById("modalQrCodeImg");
+    const successBox = document.getElementById("modalQrCodeSuccessBox");
+
+    if (instLabel) instLabel.innerText = currentQrInstanceName;
+    if (statusBadge) {
+        statusBadge.innerText = "🔍 Verificando...";
+        statusBadge.style.background = "#e0f2fe";
+        statusBadge.style.color = "#0369a1";
+    }
+
+    if (modal) modal.style.display = "flex";
+    if (loadingBox) loadingBox.style.display = "flex";
+    if (qrImg) qrImg.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+
+    // 1. Verifica se já está conectado
+    const check = await evolutionClient.checkConnectionState(currentQrInstanceName);
+    if (check.connected) {
+        if (loadingBox) loadingBox.style.display = "none";
+        if (successBox) successBox.style.display = "flex";
+        if (statusBadge) {
+            statusBadge.innerText = "🟢 Conectado";
+            statusBadge.style.background = "#dcfce7";
+            statusBadge.style.color = "#15803d";
+        }
+        showToast(`🟢 WhatsApp '${currentQrInstanceName}' já está conectado!`, "success");
+        return;
+    }
+
+    // 2. Se não estiver conectado, busca o QR Code
+    await refreshQrCodeModal();
+
+    // 3. Inicia polling de conexão
+    iniciarPollingConexaoQrCode(currentQrInstanceName);
+}
+
+async function refreshQrCodeModal() {
+    const loadingBox = document.getElementById("modalQrCodeLoading");
+    const qrImg = document.getElementById("modalQrCodeImg");
+    const successBox = document.getElementById("modalQrCodeSuccessBox");
+    const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+
+    if (loadingBox) loadingBox.style.display = "flex";
+    if (qrImg) qrImg.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+
+    const qrData = await evolutionClient.getQrCode(currentQrInstanceName);
+
+    if (qrData.success && qrData.base64) {
+        const src = qrData.base64.startsWith("data:") ? qrData.base64 : `data:image/png;base64,${qrData.base64}`;
+        if (qrImg) {
+            qrImg.src = src;
+            qrImg.style.display = "block";
+        }
+        if (loadingBox) loadingBox.style.display = "none";
+        if (statusBadge) {
+            statusBadge.innerText = "📱 Aguardando Leitura";
+            statusBadge.style.background = "#fef3c7";
+            statusBadge.style.color = "#b45309";
+        }
+    } else {
+        if (loadingBox) {
+            loadingBox.innerHTML = `
+                <div style="color:#b91c1c; font-weight:800; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:8px;"></i>
+                    <p style="margin:0;">Não foi possível obter o QR Code.</p>
+                    <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Verifique se a Evolution API está rodando.'}</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function iniciarPollingConexaoQrCode(instanceName) {
+    if (qrCodePollingInterval) clearInterval(qrCodePollingInterval);
+
+    qrCodePollingInterval = setInterval(async () => {
+        const check = await evolutionClient.checkConnectionState(instanceName);
+        if (check.connected) {
+            clearInterval(qrCodePollingInterval);
+            qrCodePollingInterval = null;
+
+            const qrImg = document.getElementById("modalQrCodeImg");
+            const loadingBox = document.getElementById("modalQrCodeLoading");
+            const successBox = document.getElementById("modalQrCodeSuccessBox");
+            const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+
+            if (qrImg) qrImg.style.display = "none";
+            if (loadingBox) loadingBox.style.display = "none";
+            if (successBox) successBox.style.display = "flex";
+
+            if (statusBadge) {
+                statusBadge.innerText = "🟢 Conectado";
+                statusBadge.style.background = "#dcfce7";
+                statusBadge.style.color = "#15803d";
+            }
+
+            atualizarStatusRemetenteDirecao(instanceName);
+            atualizarStatusRemetenteLembrete(instanceName);
+
+            showToast(`🎉 WhatsApp conectado com sucesso na instância '${instanceName}'!`, "success");
+
+            // Fecha o modal automaticamente após 2 segundos
+            setTimeout(() => {
+                closeModalQrCodeWhatsApp();
+            }, 2000);
+        }
+    }, 2500);
+}
+
+function closeModalQrCodeWhatsApp() {
+    if (qrCodePollingInterval) {
+        clearInterval(qrCodePollingInterval);
+        qrCodePollingInterval = null;
+    }
+    const modal = document.getElementById("modalQrCodeWhatsApp");
+    if (modal) modal.style.display = "none";
+}
+
+async function desconectarWhatsAppInstanciaModal() {
+    if (!confirm(`Deseja realmente desconectar a sessão do WhatsApp da instância '${currentQrInstanceName}'?\nVocê poderá reconectar com outro número escaneando um novo QR Code.`)) {
+        return;
+    }
+
+    showToast(`Desconectando instância '${currentQrInstanceName}'...`, "info");
+    await evolutionClient.logoutInstance(currentQrInstanceName);
+    showToast(`Sessão desconectada. Gerando novo QR Code...`, "info");
+
+    atualizarStatusRemetenteDirecao(currentQrInstanceName);
+    atualizarStatusRemetenteLembrete(currentQrInstanceName);
+
+    await refreshQrCodeModal();
+    iniciarPollingConexaoQrCode(currentQrInstanceName);
+}
+
+async function atualizarStatusRemetenteDirecao(instanceName) {
+    const badge = document.getElementById("dirWpStatusBadge");
+    if (!badge || typeof evolutionClient === 'undefined') return;
+
+    badge.innerText = "⏳ Verificando...";
+    badge.style.background = "#f1f5f9";
+    badge.style.color = "#475569";
+
+    const check = await evolutionClient.checkConnectionState(instanceName);
+    if (check.connected) {
+        badge.innerText = "🟢 Conectado";
+        badge.style.background = "#dcfce7";
+        badge.style.color = "#15803d";
+    } else {
+        badge.innerText = "🔴 Desconectado";
+        badge.style.background = "#fee2e2";
+        badge.style.color = "#991b1b";
+    }
+}
+
+async function atualizarStatusRemetenteLembrete(instanceName) {
+    const badge = document.getElementById("opLembreteStatusBadge");
+    if (!badge || typeof evolutionClient === 'undefined') return;
+
+    badge.innerText = "⏳ Verificando...";
+    badge.style.background = "#f1f5f9";
+    badge.style.color = "#475569";
+
+    const check = await evolutionClient.checkConnectionState(instanceName);
+    if (check.connected) {
+        badge.innerText = "🟢 Conectado";
+        badge.style.background = "#dcfce7";
+        badge.style.color = "#15803d";
+    } else {
+        badge.innerText = "🔴 Desconectado";
+        badge.style.background = "#fee2e2";
+        badge.style.color = "#991b1b";
+    }
+}
+
+// ==========================================
+// MODAL DE RELATÓRIO FINAL DE DISPARO
+// ==========================================
+function exibirRelatorioDisparoWhatsApp(sucessos = [], falhas = []) {
+    const modal = document.getElementById("modalRelatorioDisparoWhatsApp");
+    const sucCountEl = document.getElementById("relatorioWpSucessoCount");
+    const falhaCountEl = document.getElementById("relatorioWpFalhaCount");
+    const falhasSection = document.getElementById("relatorioWpFalhasSection");
+    const listaFalhasCont = document.getElementById("relatorioWpListaFalhasContainer");
+
+    if (sucCountEl) sucCountEl.innerText = sucessos.length;
+    if (falhaCountEl) falhaCountEl.innerText = falhas.length;
+
+    if (falhas.length > 0) {
+        if (falhasSection) falhasSection.style.display = "block";
+        if (listaFalhasCont) {
+            listaFalhasCont.innerHTML = falhas.map(f => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:white; border-radius:6px; border-left:4px solid #ef4444;">
+                    <div>
+                        <strong style="color:#0f172a;">${escapeHtml(f.nome || 'Contato')}</strong>
+                        <span style="color:#64748b; font-size:0.75rem; margin-left:6px;">(${escapeHtml(f.telefone || 'Sem fone')})</span>
+                    </div>
+                    <span style="color:#b91c1c; font-size:0.75rem; font-weight:700;">${escapeHtml(f.motivo || 'Erro de entrega')}</span>
+                </div>
+            `).join("");
+        }
+    } else {
+        if (falhasSection) falhasSection.style.display = "none";
+    }
+
+    if (modal) modal.style.display = "flex";
+}
+
+function closeModalRelatorioDisparoWhatsApp() {
+    const modal = document.getElementById("modalRelatorioDisparoWhatsApp");
+    if (modal) modal.style.display = "none";
+}
+
+// ==========================================
+// MOTOR DE DISPARO AUTOMÁTICO DE WHATSAPP (SILENCIOSO VIA EVOLUTION API)
 // ==========================================
 async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
     if (!agendamento || !agendamento.telefone) return false;
@@ -5921,7 +6308,7 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
     if (tipoEvento === 'aluno_chegou' && !config.autoSendOnArrival) return false;
     if ((tipoEvento === 'lembrete_24h' || tipoEvento === 'lembrete_dia') && !config.autoSendReminders) return false;
 
-    let cleanPhone = agendamento.telefone.replace(/\D/g, "");
+    let cleanPhone = (agendamento.telefone || "").replace(/\D/g, "");
     if (cleanPhone.length === 10 || cleanPhone.length === 11) {
         cleanPhone = "55" + cleanPhone;
     }
@@ -5944,29 +6331,14 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 
     const linkRetornoOrientadora = orientadoraCleanPhone ? `\n\n💬 Retorno / Dúvidas diretamente para o WhatsApp da ${orientadoraNome}: https://wa.me/${orientadoraCleanPhone}` : "";
 
-    // Evento de Chegada na Recepção: Notifica APENAS a Orientadora (o pai já está fisicamente na escola)
+    // Evento de Chegada na Recepção: Notifica APENAS a Orientadora
     if (tipoEvento === "aluno_chegou") {
         const msgToOrientadora = `🔔 AVISO DE RECEPÇÃO OP: O responsável pelo aluno(a) ${agendamento.aluno} (${agendamento.turma}) acabou de chegar na recepção e aguarda atendimento (${agendamento.horario}).`;
         let oriSuccess = false;
 
-        if (config.provider !== "simulated" && config.apiUrl && orientadoraCleanPhone) {
-            try {
-                const resp = await fetch(config.apiUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : ""
-                    },
-                    body: JSON.stringify({
-                        phone: orientadoraCleanPhone,
-                        message: msgToOrientadora
-                    })
-                });
-                oriSuccess = resp.ok;
-            } catch (e) {
-                console.warn("Falha no envio do gateway de WhatsApp à Orientadora:", e);
-                oriSuccess = false;
-            }
+        if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured() && orientadoraCleanPhone) {
+            const sendRes = await evolutionClient.sendText(orientadoraCleanPhone, msgToOrientadora, { instanceName: "sige_orientacao" });
+            oriSuccess = sendRes.success;
         } else {
             oriSuccess = true;
         }
@@ -5997,30 +6369,13 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
     const textToSend = customMsg || defaultText;
     let success = false;
 
-    if (config.provider !== "simulated" && config.apiUrl) {
-        try {
-            const resp = await fetch(config.apiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": config.apiToken ? `Bearer ${config.apiToken}` : ""
-                },
-                body: JSON.stringify({
-                    phone: cleanPhone,
-                    message: textToSend
-                })
-            });
-            success = resp.ok;
-        } catch (e) {
-            console.warn("Falha no envio do gateway externo de WhatsApp:", e);
-            success = false;
-        }
+    if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+        const sendRes = await evolutionClient.sendText(cleanPhone, textToSend, { instanceName: "sige_orientacao" });
+        success = sendRes.success;
     } else {
-        // Modo Integrado/Simulado de Background: 100% Automático
         success = true;
     }
 
-    // Gravar Log para o Responsável
     sigeDB.logWhatsappDispatch(agendamento.id, {
         tipo: tipoTitulo,
         mensagem: textToSend,
@@ -7041,6 +7396,8 @@ function executarAcaoDisparoWhatsApp() {
         return;
     }
 
+    const remetenteInst = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
+
     if (dirWpModoEnvio === 'individual') {
         const nome = document.getElementById("dirWpInputNome")?.value.trim();
         let fone = document.getElementById("dirWpInputTelefone")?.value.replace(/\D/g, '');
@@ -7056,6 +7413,41 @@ function executarAcaoDisparoWhatsApp() {
             .replace(/{nome}/gi, nome)
             .replace(/{escola}/gi, "Centro Educacional Pedro Rizzi");
 
+        // 1. Envio Silencioso via Evolution API (1 Clique)
+        if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+            (async () => {
+                const check = await evolutionClient.checkConnectionState(remetenteInst);
+                if (!check.connected) {
+                    openModalQrCodeWhatsApp(remetenteInst);
+                    showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de enviar.`, "warning");
+                    return;
+                }
+
+                showToast(`⏳ Enviando mensagem direta para ${nome}...`, "info");
+                const res = await evolutionClient.sendText(fone, msgFinal, { instanceName: remetenteInst });
+
+                if (res.success) {
+                    sigeDB.addMensagemWhatsAppLog({
+                        contatoNome: nome,
+                        telefone: fone,
+                        tag: 'Avulso',
+                        mensagem: msgFinal,
+                        status: 'enviado',
+                        instancia: remetenteInst
+                    });
+                    renderDirWhatsAppLogs();
+                    showToast(`✅ MENSAGEM ENVIADA para ${nome}!`, "success");
+                } else {
+                    showToast(`⚠️ Falha no envio: ${res.error}`, "error");
+                    if (confirm(`Não foi possível enviar via Evolution API (${res.error}). Deseja abrir a aba do WhatsApp Web tradicional?`)) {
+                        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msgFinal)}`, '_blank');
+                    }
+                }
+            })();
+            return;
+        }
+
+        // Fallback: Abre no WhatsApp Web
         window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msgFinal)}`, '_blank');
 
         sigeDB.addMensagemWhatsAppLog({
@@ -7081,6 +7473,122 @@ function executarAcaoDisparoWhatsApp() {
 
         iniciarFilaEnvioWhatsApp();
     }
+}
+
+// Disparo 100% Automático da Fila da Central de Contatos
+let filaAutomatedCancelled = false;
+
+async function iniciarDisparoFilaAutomatico() {
+    if (!dirWpFilaEnvio || dirWpFilaEnvio.length === 0) {
+        showToast("Nenhum contato na fila para disparo.", "warning");
+        return;
+    }
+
+    const remetenteInst = document.getElementById("dirWpRemetenteSelect")?.value || "sige_direcao";
+
+    if (typeof evolutionClient === 'undefined' || !evolutionClient.isConfigured()) {
+        showToast("⚠️ Configure a Evolution API antes de usar o disparo automático.", "warning");
+        return;
+    }
+
+    const check = await evolutionClient.checkConnectionState(remetenteInst);
+    if (!check.connected) {
+        openModalQrCodeWhatsApp(remetenteInst);
+        showToast(`📱 Conecte o WhatsApp da instância '${remetenteInst}' antes de iniciar a fila.`, "warning");
+        return;
+    }
+
+    const msgTemplate = document.getElementById("dirWpInputMensagem")?.value || '';
+    if (!msgTemplate.trim()) {
+        showToast("Digite a mensagem antes de disparar.", "warning");
+        return;
+    }
+
+    const btnAutomated = document.getElementById("btnIniciarDisparoAutomatedFila");
+    const statusBox = document.getElementById("statusFilaAutomatedBox");
+    const statusTxt = document.getElementById("statusFilaAutomatedText");
+
+    if (btnAutomated) btnAutomated.style.display = "none";
+    if (statusBox) statusBox.style.display = "block";
+
+    filaAutomatedCancelled = false;
+    const sucessos = [];
+    const falhas = [];
+    const total = dirWpFilaEnvio.length;
+
+    for (let i = dirWpFilaIndexAtual; i < total; i++) {
+        if (filaAutomatedCancelled) {
+            showToast("⏹️ Fila de envio interrompida pelo usuário.", "info");
+            break;
+        }
+
+        dirWpFilaIndexAtual = i;
+        renderFilaEnvioItemAtual();
+
+        const c = dirWpFilaEnvio[i];
+        let fone = (c.telefone || '').replace(/\D/g, '');
+        if (fone.length === 10 || fone.length === 11) fone = '55' + fone;
+
+        const msgFinal = msgTemplate
+            .replace(/{nome}/gi, c.nome)
+            .replace(/{escola}/gi, "Centro Educacional Pedro Rizzi");
+
+        const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
+
+        if (statusTxt) {
+            statusTxt.innerText = `Enviando ${i + 1} de ${total} para ${c.nome}...`;
+        }
+
+        if (!fone || fone.length < 10) {
+            falhas.push({
+                nome: c.nome,
+                telefone: c.telefone || 'Sem número',
+                motivo: 'Número de telefone inválido'
+            });
+            continue;
+        }
+
+        const res = await evolutionClient.sendText(fone, msgFinal, { instanceName: remetenteInst });
+
+        if (res.success) {
+            sigeDB.addMensagemWhatsAppLog({
+                contatoNome: c.nome,
+                telefone: fone,
+                tag: tags[0] || 'Geral',
+                mensagem: msgFinal,
+                status: 'enviado',
+                instancia: remetenteInst
+            });
+            sucessos.push({ nome: c.nome, telefone: fone });
+        } else {
+            falhas.push({
+                nome: c.nome,
+                telefone: fone,
+                motivo: res.error || 'Erro de entrega'
+            });
+        }
+
+        // Delay anti-ban seguro entre envios (se houver próximo)
+        if (i < total - 1 && !filaAutomatedCancelled) {
+            const delayMs = evolutionClient.getRandomAntiBanDelayMs();
+            const delaySec = Math.round(delayMs / 1000);
+            if (statusTxt) {
+                statusTxt.innerText = `Aguardando ${delaySec}s (intervalo anti-bloqueio seguro)...`;
+            }
+            await new Promise(r => setTimeout(r, delayMs));
+        }
+    }
+
+    if (btnAutomated) btnAutomated.style.display = "block";
+    if (statusBox) statusBox.style.display = "none";
+
+    fecharFilaEnvioWhatsApp();
+    renderDirWhatsAppLogs();
+    selectedWpContactIds.clear();
+    atualizarContadoresSelecaoWp();
+    renderDirWhatsAppContatos();
+
+    exibirRelatorioDisparoWhatsApp(sucessos, falhas);
 }
 
 // ----------------------------------------------------
