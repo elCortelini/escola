@@ -2917,10 +2917,10 @@ class SigeDatabase {
             this.data.whatsappConfig = {
                 enabled: true,
                 provider: "evolution_api",
-                apiUrl: "",
-                apiToken: "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI",
-                evolutionApiUrl: "",
-                evolutionApiKey: "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI",
+                apiUrl: "https://pc28.taild665db.ts.net:8443",
+                apiToken: "B6D711FCDE4D4FD5936544120E713976",
+                evolutionApiUrl: "https://pc28.taild665db.ts.net:8443",
+                evolutionApiKey: "B6D711FCDE4D4FD5936544120E713976",
                 activeInstance: "sige_orientacao",
                 antiBanDelayMin: 5,
                 antiBanDelayMax: 12,
@@ -2930,10 +2930,12 @@ class SigeDatabase {
             };
             this.saveData(this.data);
         } else {
-            // Garante que campos novos da Evolution API existam
-            if (!this.data.whatsappConfig.evolutionApiKey) {
-                this.data.whatsappConfig.evolutionApiKey = "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI";
-                this.data.whatsappConfig.apiToken = "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI";
+            // Configura automaticamente a Evolution API ativa no servidor
+            if (!this.data.whatsappConfig.evolutionApiUrl || this.data.whatsappConfig.evolutionApiUrl === "") {
+                this.data.whatsappConfig.evolutionApiUrl = "https://pc28.taild665db.ts.net:8443";
+                this.data.whatsappConfig.apiUrl = "https://pc28.taild665db.ts.net:8443";
+                this.data.whatsappConfig.evolutionApiKey = "B6D711FCDE4D4FD5936544120E713976";
+                this.data.whatsappConfig.apiToken = "B6D711FCDE4D4FD5936544120E713976";
             }
             if (!this.data.whatsappConfig.activeInstance) {
                 this.data.whatsappConfig.activeInstance = "sige_orientacao";
