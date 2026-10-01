@@ -6202,18 +6202,68 @@ function closeModalQrCodeWhatsApp() {
 }
 
 async function desconectarWhatsAppInstanciaModal() {
-    if (!confirm(`Deseja realmente desconectar a sessão do WhatsApp da instância '${currentQrInstanceName}'?\nVocê poderá reconectar com outro número escaneando um novo QR Code.`)) {
+    if (!confirm(`Deseja realmente desconectar a sessão do WhatsApp da instância '${currentQrInstanceName}'?\nVocê poderá reconectar com qualquer outro número escaneando um novo QR Code.`)) {
         return;
     }
 
     showToast(`Desconectando instância '${currentQrInstanceName}'...`, "info");
     await evolutionClient.logoutInstance(currentQrInstanceName);
-    showToast(`Sessão desconectada. Gerando novo QR Code...`, "info");
+    await evolutionClient.deleteInstance(currentQrInstanceName);
+    showToast(`Sessão limpa. Gerando novo QR Code...`, "info");
 
     atualizarStatusRemetenteDirecao(currentQrInstanceName);
     atualizarStatusRemetenteLembrete(currentQrInstanceName);
 
-    await refreshQrCodeModal();
+    await reiniciarConexaoQrCodeModal();
+}
+
+async function reiniciarConexaoQrCodeModal() {
+    const loadingBox = document.getElementById("modalQrCodeLoading");
+    const qrImg = document.getElementById("modalQrCodeImg");
+    const successBox = document.getElementById("modalQrCodeSuccessBox");
+    const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+
+    if (loadingBox) {
+        loadingBox.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem; color:#3b82f6;"></i>
+            <span style="font-size:0.85rem; font-weight:700; color:#475569;">Reiniciando sessão e gerando novo QR Code limpo...</span>
+        `;
+        loadingBox.style.display = "flex";
+    }
+    if (qrImg) qrImg.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+    if (statusBadge) {
+        statusBadge.innerText = "🔄 Reiniciando...";
+        statusBadge.style.background = "#e0f2fe";
+        statusBadge.style.color = "#0369a1";
+    }
+
+    const qrData = await evolutionClient.resetInstance(currentQrInstanceName);
+
+    if (qrData.success && qrData.base64) {
+        const src = qrData.base64.startsWith("data:") ? qrData.base64 : `data:image/png;base64,${qrData.base64}`;
+        if (qrImg) {
+            qrImg.src = src;
+            qrImg.style.display = "block";
+        }
+        if (loadingBox) loadingBox.style.display = "none";
+        if (statusBadge) {
+            statusBadge.innerText = "📱 Aguardando Leitura";
+            statusBadge.style.background = "#fef3c7";
+            statusBadge.style.color = "#b45309";
+        }
+        showToast("Novo QR Code gerado!", "success");
+    } else {
+        if (loadingBox) {
+            loadingBox.innerHTML = `
+                <div style="color:#b91c1c; font-weight:800; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:8px;"></i>
+                    <p style="margin:0;">Não foi possível obter o QR Code.</p>
+                    <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Aguarde alguns segundos e tente novamente.'}</p>
+                </div>
+            `;
+        }
+    }
     iniciarPollingConexaoQrCode(currentQrInstanceName);
 }
 

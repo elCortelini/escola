@@ -166,6 +166,12 @@
                 const data = await response.json();
                 const base64 = data?.base64 || data?.qrcode?.base64 || data?.code;
 
+                // Se o count atingiu o limite de tentativas (30) ou o socket está morto, reinicia a sessão limpa
+                if (!base64 || (data?.count && data.count >= 30)) {
+                    console.warn(`[EvolutionClient] QR Code expirado ou limite atingido para '${inst}'. Reiniciando sessão...`);
+                    return await this.resetInstance(inst);
+                }
+
                 return {
                     success: Boolean(base64),
                     base64: base64,
@@ -196,6 +202,66 @@
                 };
             } catch (err) {
                 console.error(`[EvolutionClient] Erro ao deslogar instância '${inst}':`, err);
+                return { success: false, error: err.message };
+            }
+        }
+
+        // Deleta a instância e limpa sessões residuais no banco/redis
+        async deleteInstance(instanceName) {
+            if (!this.isConfigured()) return { success: false, error: 'API não configurada' };
+            const cfg = this.getConfig();
+            const inst = instanceName || cfg.activeInstance;
+
+            try {
+                const response = await fetch(`${cfg.apiUrl}/instance/delete/${inst}`, {
+                    method: 'DELETE',
+                    headers: this._getHeaders()
+                });
+
+                return {
+                    success: response.ok,
+                    status: response.status
+                };
+            } catch (err) {
+                console.error(`[EvolutionClient] Erro ao deletar instância '${inst}':`, err);
+                return { success: false, error: err.message };
+            }
+        }
+
+        // Reinicia a instância do zero (apaga conexão residual e recria instância limpa com QR novo)
+        async resetInstance(instanceName) {
+            if (!this.isConfigured()) return { success: false, error: 'API não configurada' };
+            const inst = instanceName || this.getConfig().activeInstance;
+
+            try {
+                await this.logoutInstance(inst).catch(() => {});
+            } catch (_) {}
+
+            try {
+                await this.deleteInstance(inst).catch(() => {});
+            } catch (_) {}
+
+            // Aguarda 500ms para limpeza dos sockets
+            await new Promise(r => setTimeout(r, 500));
+            await this.createInstance(inst);
+            await new Promise(r => setTimeout(r, 800));
+
+            // Busca novo QR Code limpo
+            const cfg = this.getConfig();
+            try {
+                const res = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
+                    method: 'GET',
+                    headers: this._getHeaders()
+                });
+                const data = await res.json();
+                const base64 = data?.base64 || data?.qrcode?.base64 || data?.code;
+                return {
+                    success: Boolean(base64),
+                    base64: base64,
+                    pairingCode: data?.pairingCode || null,
+                    count: data?.count || 1
+                };
+            } catch (err) {
                 return { success: false, error: err.message };
             }
         }

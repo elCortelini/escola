@@ -4973,9 +4973,14 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
             <!-- Botões de Ação do Modal -->
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-                <button type="button" onclick="refreshQrCodeModal()" class="dir-btn dir-btn-secondary" style="font-size:0.8rem; padding:8px 12px;">
-                    <i class="fa-solid fa-arrows-rotate"></i> Atualizar QR Code
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="refreshQrCodeModal()" class="dir-btn dir-btn-secondary" style="font-size:0.8rem; padding:8px 12px;" title="Atualiza o código QR exibido">
+                        <i class="fa-solid fa-arrows-rotate"></i> Atualizar QR
+                    </button>
+                    <button type="button" onclick="reiniciarConexaoQrCodeModal()" class="dir-btn" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.8rem; padding:8px 12px; font-weight:700;" title="Limpa qualquer conexão travada e gera um QR Code 100% novo">
+                        <i class="fa-solid fa-rotate"></i> Gerar Novo QR
+                    </button>
+                </div>
                 <div style="display:flex; gap:8px;">
                     <button type="button" onclick="desconectarWhatsAppInstanciaModal()" class="dir-btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-size:0.8rem; padding:8px 12px; font-weight:700;" title="Desconecta este número para poder escanear outro celular">
                         <i class="fa-solid fa-right-from-bracket"></i> Desconectar / Trocar
