@@ -649,11 +649,13 @@ class SigeDatabase {
         };
 
         // 2. Mesclagem de Equipe Escolar (Equipe & RBAC)
+        const mockOriIds = ['orient-1', 'orient-2'];
+        const combinedDeletedEquipeIdsWithMocks = Array.from(new Set([...combinedDeletedEquipeIds, ...mockOriIds]));
         const mergedEquipe = mergeEntityList(
-            this.data.equipeEscola || [],
-            remoteData.equipeEscola || [],
+            (this.data.equipeEscola || []).filter(p => !mockOriIds.includes(p.id)),
+            (remoteData.equipeEscola || []).filter(p => !mockOriIds.includes(p.id)),
             p => p.id || (p.cpf ? cleanCpf(p.cpf) : null) || (p.email ? p.email.toLowerCase().trim() : null),
-            combinedDeletedEquipeIds
+            combinedDeletedEquipeIdsWithMocks
         );
 
         // 3. Mesclagem de Usuários Cadastrados (Login)
@@ -676,14 +678,18 @@ class SigeDatabase {
         );
 
         // 4. Mesclagem de Pedidos de Uniformes
-        const idsExemplosUniformes = ["uni-101", "uni-102", "uni-103"];
+        const idsExemplosUniformes = [
+            "uni-101", "uni-102", "uni-103",
+            "uni-1789653168049", "uni-1789663651268", "uni-1789739032382", "uni-d92ba552-e9f7-472a-ac16-2a3c7a663294"
+        ];
+        const combinedDeletedPedidosUniIdsWithTests = Array.from(new Set([...combinedDeletedPedidosUniIds, ...idsExemplosUniformes]));
         const cleanLocalPedidos = (this.data.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
         const cleanRemotePedidos = (remoteData.pedidosUniformes || []).filter(p => !idsExemplosUniformes.includes(p.id));
         const mergedPedidosUniformes = mergeEntityList(
             cleanLocalPedidos,
             cleanRemotePedidos,
             p => p.id,
-            combinedDeletedPedidosUniIds
+            combinedDeletedPedidosUniIdsWithTests
         );
 
         // 5. Mesclagem de Lotes SME
@@ -1158,6 +1164,29 @@ class SigeDatabase {
                 merged.agendamentosOP = [];
                 merged.projetosOrientacao = [];
                 merged.limpezaOP_zerada_20260928 = true;
+            }
+
+            // Limpeza mandatória: Excluir os 4 pedidos de teste de uniformes (solicitação 02/10/2026)
+            const testUniIds = ['uni-1789653168049', 'uni-1789663651268', 'uni-1789739032382', 'uni-d92ba552-e9f7-472a-ac16-2a3c7a663294'];
+            if (!merged.limpezaTestesUniformes_20261002) {
+                merged.deletedPedidoUniformeIds = Array.from(new Set([...(merged.deletedPedidoUniformeIds || []), ...testUniIds]));
+                if (Array.isArray(merged.pedidosUniformes)) {
+                    merged.pedidosUniformes = merged.pedidosUniformes.filter(p => !testUniIds.includes(p.id));
+                }
+                merged.limpezaTestesUniformes_20261002 = true;
+            }
+
+            // Limpeza mandatória: Excluir orientadoras mock/duplicadas antigas (orient-1, orient-2)
+            const mockOriIds = ['orient-1', 'orient-2'];
+            if (!merged.limpezaMockOrientadoras_20261002) {
+                merged.deletedEquipeIds = Array.from(new Set([...(merged.deletedEquipeIds || []), ...mockOriIds]));
+                if (Array.isArray(merged.equipeEscola)) {
+                    merged.equipeEscola = merged.equipeEscola.filter(p => !mockOriIds.includes(p.id));
+                }
+                if (Array.isArray(merged.orientadoras)) {
+                    merged.orientadoras = merged.orientadoras.filter(o => !mockOriIds.includes(o.id));
+                }
+                merged.limpezaMockOrientadoras_20261002 = true;
             }
 
             // Normalização estrita de usuários cadastrados e migração de senha para hash
@@ -2462,10 +2491,36 @@ class SigeDatabase {
 
     getOrientadoras() {
         const equipe = this.getEquipeEscolar();
-        const deEquipe = equipe.filter(p => this.getOpPerfil(p) === "executora");
+        const mockOriIds = ['orient-1', 'orient-2'];
+        const deEquipe = equipe.filter(p => {
+            if (mockOriIds.includes(p.id)) return false;
+            return this.getOpPerfil(p) === "executora";
+        });
         
+        // Deduplica por nome normalizado (case-insensitive e sem acentos) para garantir que cada orientadora apareça estritamente UMA vez
+        const mapPorNome = new Map();
+        deEquipe.forEach(p => {
+            const rawName = (p.nome || "").trim();
+            const normKey = rawName.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (!normKey) return;
+
+            if (mapPorNome.has(normKey)) {
+                const existing = mapPorNome.get(normKey);
+                const isCurrentOfficial = (p.email && p.email.includes("@edu.itajai")) || (p.id && p.id.startsWith("prof-"));
+                const isExistingOfficial = (existing.email && existing.email.includes("@edu.itajai")) || (existing.id && existing.id.startsWith("prof-"));
+                if (isCurrentOfficial && !isExistingOfficial) {
+                    mapPorNome.set(normKey, p);
+                }
+            } else {
+                mapPorNome.set(normKey, p);
+            }
+        });
+
+        const dedupList = Array.from(mapPorNome.values());
+
         // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar com perfil executora
-        const orientadorasValidas = deEquipe.map(p => {
+        const orientadorasValidas = dedupList.map(p => {
             const existente = (this.data && Array.isArray(this.data.orientadoras)) ? this.data.orientadoras.find(o => 
                 o.id === p.id || 
                 (o.nome && p.nome && o.nome.toLowerCase().trim() === p.nome.toLowerCase().trim())
@@ -2620,6 +2675,13 @@ class SigeDatabase {
                 devProf.permissoes = { ...(devProf.permissoes || {}), op: true, op_perfil: 'gerencial' };
                 saveNeeded = true;
             }
+        }
+
+        // Purga orientadoras mock antigas (orient-1, orient-2) caso ainda constem na equipe
+        const mockOriIds = ['orient-1', 'orient-2'];
+        if (this.data.equipeEscola.some(p => mockOriIds.includes(p.id))) {
+            this.data.equipeEscola = this.data.equipeEscola.filter(p => !mockOriIds.includes(p.id));
+            saveNeeded = true;
         }
 
         // Garante identificador id e objeto de permissoes em cada membro da equipe

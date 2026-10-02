@@ -734,7 +734,7 @@ function loadSystems(force = false) {
             finalUrl = "sistema-gestao.html?aba=direcao";
         }
         if (sys.id === 'uniformes') {
-            finalUrl = "sistema-gestao.html?aba=admin#adminSecUniformes";
+            finalUrl = "sistema-gestao.html?aba=uniformes";
         }
         if (sys.id === 'desenvolvedor') {
             finalUrl = "sistema-gestao.html?aba=dev";

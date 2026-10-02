@@ -988,12 +988,7 @@ function setupRoleSelector() {
         syncRoleFilters();
 
         // Atualiza abas visíveis conforme o papel ativo
-        const tabBtns = document.querySelectorAll(".sige-tab-btn");
-        tabBtns.forEach(btn => {
-            const tabKey = btn.dataset.tab;
-            const hasPerm = sigeDB.temPermissaoModulo(tabKey);
-            btn.style.display = hasPerm ? "inline-flex" : "none";
-        });
+        atualizarAbasNavegacaoVisibilidade();
 
         renderNotifications();
         renderAllModules();
@@ -1063,6 +1058,29 @@ window.autoSuggestModulosPorSetor = autoSuggestModulosPorSetor;
 // ==========================================
 // NAVEGAÇÃO POR ABAS
 // ==========================================
+function atualizarAbasNavegacaoVisibilidade() {
+    const tabBtns = document.querySelectorAll(".sige-tab-btn");
+    tabBtns.forEach(btn => {
+        const tabKey = btn.dataset.tab;
+        let hasPerm = sigeDB.temPermissaoModulo(tabKey);
+        
+        // Tratamento especial para o módulo de Uniformes integrado em Administração
+        if (tabKey === 'admin') {
+            const hasAdmin = sigeDB.temPermissaoModulo('admin');
+            const hasUniformes = sigeDB.temPermissaoModulo('uniformes');
+            hasPerm = hasAdmin || hasUniformes;
+            if (hasPerm && !hasAdmin && hasUniformes) {
+                btn.innerHTML = `<i class="fa-solid fa-shirt" style="color:var(--admin-color);"></i> Uniformes Escolares`;
+            } else if (hasPerm && hasAdmin) {
+                btn.innerHTML = `<i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração <span class="tab-badge" id="badgeTabAdm">0</span>`;
+            }
+        }
+        
+        btn.style.display = hasPerm ? "inline-flex" : "none";
+    });
+}
+window.atualizarAbasNavegacaoVisibilidade = atualizarAbasNavegacaoVisibilidade;
+
 function setupTabNavigation() {
     const tabBtns = document.querySelectorAll(".sige-tab-btn");
     const sections = document.querySelectorAll(".tab-content-section");
@@ -1100,10 +1118,14 @@ function setupTabNavigation() {
         } else if (activeRole === 'supervisao') {
             abaParam = 'supervisao';
         } else if (activeRole === 'uniformes') {
-            abaParam = 'admin';
+            abaParam = 'uniformes';
         } else {
             abaParam = 'op'; // Padrão: Orientação Educacional
         }
+    }
+
+    if (abaParam === 'admin' && !sigeDB.temPermissaoModulo('admin') && sigeDB.temPermissaoModulo('uniformes')) {
+        abaParam = 'uniformes';
     }
 
     switchTab(abaParam);
@@ -1112,19 +1134,12 @@ function setupTabNavigation() {
     const navTabs = document.querySelector(".sige-nav-tabs");
     if (navTabs) {
         navTabs.style.display = "flex";
-        tabBtns.forEach(btn => {
-            const tabKey = btn.dataset.tab;
-            const hasPerm = sigeDB.temPermissaoModulo(tabKey);
-            btn.style.display = hasPerm ? "inline-flex" : "none";
-        });
+        atualizarAbasNavegacaoVisibilidade();
     }
 }
 
 function switchTab(tabId) {
-    if (tabId === 'uniformes') {
-        tabId = 'admin';
-        setTimeout(() => switchAdminSubTab('uniformes'), 50);
-    }
+    const isTargetingUniformes = (tabId === 'uniformes');
 
     const modulosLabels = {
         op: "Orientação Educacional (OE)",
@@ -1136,12 +1151,28 @@ function switchTab(tabId) {
         uniformes: "Controle de Uniformes"
     };
 
-    if (!sigeDB.temPermissaoModulo(tabId)) {
+    // Verificação de permissão
+    let hasPerm = false;
+    if (isTargetingUniformes) {
+        hasPerm = sigeDB.temPermissaoModulo('uniformes') || sigeDB.temPermissaoModulo('admin');
+    } else if (tabId === 'admin') {
+        hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes');
+    } else {
+        hasPerm = sigeDB.temPermissaoModulo(tabId);
+    }
+
+    if (!hasPerm) {
         const moduloNome = modulosLabels[tabId] || tabId;
         showToast(`⚠️ Acesso Restrito: Seu perfil de usuário não possui permissão para acessar o módulo "${moduloNome}".`, "warning");
         const modulosOrdem = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'dev'];
-        const primeiroPermitido = modulosOrdem.find(m => sigeDB.temPermissaoModulo(m)) || 'op';
+        const primeiroPermitido = modulosOrdem.find(m => sigeDB.temPermissaoModulo(m) || (m === 'admin' && sigeDB.temPermissaoModulo('uniformes'))) || 'op';
         tabId = primeiroPermitido;
+    }
+
+    if (isTargetingUniformes || (tabId === 'admin' && !sigeDB.temPermissaoModulo('admin') && sigeDB.temPermissaoModulo('uniformes'))) {
+        tabId = 'admin';
+        currentAdminSubTab = 'uniformes';
+        setTimeout(() => switchAdminSubTab('uniformes'), 30);
     }
 
     const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
@@ -1160,7 +1191,11 @@ function switchTab(tabId) {
     if (tabId === 'direcao') {
         switchDirSubTab(currentDirSubTab || 'whatsapp');
     } else if (tabId === 'admin') {
-        switchAdminSubTab(currentAdminSubTab || 'uniformes');
+        if (!sigeDB.temPermissaoModulo('admin') && sigeDB.temPermissaoModulo('uniformes')) {
+            switchAdminSubTab('uniformes');
+        } else {
+            switchAdminSubTab(currentAdminSubTab || 'uniformes');
+        }
     } else if (tabId === 'dev') {
         switchDevSubTab(currentDevSubTab || 'rbac');
     }
@@ -5640,6 +5675,14 @@ function submitNovaReuniaoPedagogica(e) {
 let currentAdminSubTab = 'uniformes';
 
 function switchAdminSubTab(subTab) {
+    const hasAdmin = sigeDB.temPermissaoModulo('admin');
+    const hasUniformes = sigeDB.temPermissaoModulo('uniformes');
+
+    // Se o usuário tem permissão para Uniformes, mas não para a Administração Geral
+    if (!hasAdmin && hasUniformes) {
+        subTab = 'uniformes';
+    }
+
     currentAdminSubTab = subTab;
     const contents = document.querySelectorAll(".admin-subtab-content");
     const btns = document.querySelectorAll(".admin-subtab-btn");
@@ -5649,6 +5692,22 @@ function switchAdminSubTab(subTab) {
         c.classList.remove("active");
     });
     btns.forEach(b => b.classList.remove("active"));
+
+    // Oculta botões e cartões administrativos se o usuário só possui acesso a Uniformes
+    if (!hasAdmin && hasUniformes) {
+        btns.forEach(b => {
+            const adminSub = b.getAttribute("data-adminsub");
+            b.style.display = (adminSub === 'uniformes') ? "flex" : "none";
+        });
+        const toolbarButtons = document.querySelectorAll("#tab-admin .action-toolbar button");
+        toolbarButtons.forEach(btn => {
+            if (btn.innerText.includes("Comunicado") || btn.innerText.includes("Cadastrar Colaborador")) {
+                btn.style.display = "none";
+            }
+        });
+    } else {
+        btns.forEach(b => b.style.display = "flex");
+    }
 
     const targetContent = document.getElementById(`adminSubTab_${subTab}`);
     const targetBtn = document.querySelector(`.admin-subtab-btn[data-adminsub="${subTab}"]`);
