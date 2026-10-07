@@ -13,9 +13,12 @@
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260921_v27">
-    <link rel="stylesheet" href="css/gestao.css?v=20260922_v32">
+    <link rel="stylesheet" href="css/style.css?v=20261007_v44">
+    <link rel="stylesheet" href="css/gestao.css?v=20261007_v44">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
+
+    <!-- Verificador e Atualizador Automático de Versão de Cache -->
+    <script src="js/version-checker.js?v=20261007_v44"></script>
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -596,7 +599,12 @@
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
                     <div>
                         <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
-                        <input type="text" id="filterUniSearch" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box;">
+                        <div style="position:relative; display:flex; align-items:center;">
+                            <input type="search" id="filterUniSearch" name="busca_aluno_turma_uniformes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box; padding-right:28px;">
+                            <button type="button" onclick="limparBuscaTextoUniformes()" title="Limpar busca" style="position:absolute; right:8px; background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.85rem; padding:2px;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div>
@@ -1172,7 +1180,7 @@
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1rem;">
                         <div>
                             <label style="font-size:0.8rem; font-weight:700; color:#334155;">API Key (apiKey):</label>
-                            <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                            <input type="password" id="fbApiKey" autocomplete="new-password" placeholder="AIzaSy..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                         </div>
                         <div>
                             <label style="font-size:0.8rem; font-weight:700; color:#334155;">Project ID (projectId):</label>
@@ -1274,7 +1282,7 @@
 
                     <div>
                         <label style="font-size:0.8rem; font-weight:700; color:#334155;">Chave de Autenticação (Global API Key):</label>
-                        <input type="password" id="waConfigApiToken" onchange="salvarConfiguracoesWhatsapp()" value="B6D711FCDE4D4FD5936544120E713976" placeholder="Chave de API configurada no .env..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        <input type="password" id="waConfigApiToken" autocomplete="new-password" onchange="salvarConfiguracoesWhatsapp()" value="B6D711FCDE4D4FD5936544120E713976" placeholder="Chave de API configurada no .env..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                     </div>
                 </div>
 
@@ -3495,12 +3503,12 @@
             <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
                 <div>
                     <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF do Usuário:</label>
-                    <input type="text" id="loginCpfInput" placeholder="000.000.000-00" required maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
+                    <input type="text" id="loginCpfInput" name="username" autocomplete="username" placeholder="000.000.000-00" required maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
                 </div>
 
                 <div>
                     <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-lock" style="color:#2563eb;"></i> Senha (Data de Nascimento):</label>
-                    <input type="password" id="loginSenhaInput" placeholder="DD/MM/AAAA" required maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
+                    <input type="password" id="loginSenhaInput" name="password" autocomplete="current-password" placeholder="DD/MM/AAAA" required maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
                     <span style="font-size:0.75rem; color:#64748b; display:block; margin-top:3px;">Sua senha inicial é sua data de nascimento (ex: 15/05/1985).</span>
                 </div>
 
@@ -5098,17 +5106,17 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.09.25_v43</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.10.07_v44</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20260925_v43"></script>
-    <script src="js/evolution-client.js?v=20261001_v1"></script>
-    <script src="js/gestao-data.js?v=20260925_v43"></script>
-    <script src="js/gestao-app.js?v=20260925_v43"></script>
-    <script src="js/pdf-importer.js?v=20260925_v43"></script>
+    <script src="js/calendario-oficial-data.js?v=20261007_v44"></script>
+    <script src="js/evolution-client.js?v=20261007_v44"></script>
+    <script src="js/gestao-data.js?v=20261007_v44"></script>
+    <script src="js/gestao-app.js?v=20261007_v44"></script>
+    <script src="js/pdf-importer.js?v=20261007_v44"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">

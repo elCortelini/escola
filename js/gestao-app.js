@@ -11225,7 +11225,26 @@ function switchEstoqueGenero(genero) {
     renderPainelEstoqueUniformes();
 }
 
+function limparBuscaTextoUniformes() {
+    const el = document.getElementById("filterUniSearch");
+    if (el) {
+        el.value = "";
+        el.focus();
+    }
+    renderTabelaPedidosUniformes();
+}
+
 function renderModuleUniformes() {
+    const inputSearch = document.getElementById("filterUniSearch");
+    if (inputSearch) {
+        const val = inputSearch.value.trim();
+        const userLogado = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+        const cpfLogadoLimpo = userLogado?.cpf ? String(userLogado.cpf).replace(/\D/g, '') : '';
+        const searchValLimpo = val.replace(/\D/g, '');
+        if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val) || (searchValLimpo.length === 11 && searchValLimpo === cpfLogadoLimpo)) {
+            inputSearch.value = "";
+        }
+    }
     populaDropdownTurmasUniformes();
     renderTabelaPedidosUniformes();
     renderPainelEstoqueUniformes();
@@ -11293,8 +11312,19 @@ function renderTabelaPedidosUniformes() {
     if (elD) elD.innerText = countDisponiveis;
     if (elT) elT.innerText = countEntregues;
 
-    // Leitura dos Filtros
-    const searchVal = (document.getElementById("filterUniSearch")?.value || "").toLowerCase().trim();
+    // Leitura dos Filtros com salvaguarda ativa contra autofill de CPF pelo navegador
+    const inputSearch = document.getElementById("filterUniSearch");
+    let searchVal = (inputSearch?.value || "").toLowerCase().trim();
+
+    const userLogado = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+    const cpfLogadoLimpo = userLogado?.cpf ? String(userLogado.cpf).replace(/\D/g, '') : '';
+    const searchValLimpo = searchVal.replace(/\D/g, '');
+
+    // Se o navegador inseriu CPF do usuário ou formato de CPF no campo de busca de alunos
+    if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(searchVal) || (searchValLimpo.length === 11 && searchValLimpo === cpfLogadoLimpo)) {
+        if (inputSearch) inputSearch.value = "";
+        searchVal = "";
+    }
     const turmaVal = document.getElementById("filterUniTurma")?.value || "todas";
     const statusVal = document.getElementById("filterUniStatus")?.value || "todos";
     const motivoVal = document.getElementById("filterUniMotivo")?.value || "todos";
@@ -12590,6 +12620,43 @@ function imprimirRelatorioEntregasConcluidas() {
         </html>
     `);
     win.document.close();
+}
+
+// -------------------------------------------------------------
+// Salvaguarda Contínua contra Autofill Indevido do Campo de Busca de Uniformes
+// -------------------------------------------------------------
+function setupSafeguardAutofillUniformes() {
+    const input = document.getElementById("filterUniSearch");
+    if (!input) return;
+
+    const checkAndClear = () => {
+        const val = input.value.trim();
+        if (!val) return;
+        const loggedUser = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
+        const cleanUserCpf = loggedUser?.cpf ? String(loggedUser.cpf).replace(/\D/g, '') : '';
+        const cleanVal = val.replace(/\D/g, '');
+        if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val) || (cleanVal.length === 11 && cleanVal === cleanUserCpf)) {
+            input.value = "";
+            if (typeof renderTabelaPedidosUniformes === "function") {
+                renderTabelaPedidosUniformes();
+            }
+        }
+    };
+
+    input.addEventListener("input", checkAndClear);
+    input.addEventListener("change", checkAndClear);
+    input.addEventListener("focus", checkAndClear);
+    input.addEventListener("blur", checkAndClear);
+
+    setTimeout(checkAndClear, 400);
+    setTimeout(checkAndClear, 1200);
+    setTimeout(checkAndClear, 3000);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupSafeguardAutofillUniformes);
+} else {
+    setupSafeguardAutofillUniformes();
 }
 
 
