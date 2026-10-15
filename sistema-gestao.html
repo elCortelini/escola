@@ -117,14 +117,18 @@
         </div>
     </header>
 
-    <!-- Navegação por Abas dos Módulos do Sistema (5 Macro-Módulos) -->
+    <!-- Navegação por Abas dos Módulos do Sistema -->
     <nav class="sige-nav-tabs">
         <button class="sige-tab-btn active" data-tab="direcao">
             <i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Gestão & Direção
         </button>
-        <button class="sige-tab-btn" data-tab="pedagogico">
-            <i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Pedagógico & Alunos
-            <span class="tab-badge" id="badgeTabPed">0</span>
+        <button class="sige-tab-btn" data-tab="op">
+            <i class="fa-solid fa-heart-pulse" style="color:#ec4899;"></i> Orientação Educacional
+            <span class="tab-badge" id="badgeTabOP">0</span>
+        </button>
+        <button class="sige-tab-btn" data-tab="supervisao">
+            <i class="fa-solid fa-clipboard-check" style="color:#0284c7;"></i> Supervisão Pedagógica
+            <span class="tab-badge" id="badgeTabSup">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="admin">
             <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Secretaria & Operacional
@@ -143,43 +147,9 @@
     <main class="container" style="margin-top:1.5rem; margin-bottom:3rem;">
 
         <!-- ========================================== -->
-        <!-- MÓDULO 2: PEDAGÓGICO & ATENDIMENTO AO ALUNO -->
+        <!-- MÓDULO 2: ORIENTAÇÃO EDUCACIONAL (OE) -->
         <!-- ========================================== -->
-        <section id="tab-pedagogico" class="tab-content-section">
-            <!-- Barra Superior do Módulo Pedagógico -->
-            <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <h3 class="dir-card-title" style="font-size: 1.25rem;">
-                        <i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Núcleo Pedagógico & Atendimento ao Estudante
-                    </h3>
-                    <p class="dir-card-subtitle">Orientação Educacional (OE), Supervisão Pedagógica Docente e Dossiê Completo do Aluno</p>
-                </div>
-            </div>
-
-            <!-- CARDS DE NAVEGAÇÃO INTERNA DO PEDAGÓGICO -->
-            <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
-                <button type="button" class="dir-nav-card ped-subtab-btn active" data-pedsub="op" onclick="switchPedSubTab('op')">
-                    <div class="dir-nav-card-icon" style="background:#fce7f3; color:#ec4899;">
-                        <i class="fa-solid fa-heart-pulse"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Orientação (OE)</div>
-                </button>
-                <button type="button" class="dir-nav-card ped-subtab-btn" data-pedsub="supervisao" onclick="switchPedSubTab('supervisao')">
-                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0284c7;">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Supervisão</div>
-                </button>
-                <button type="button" class="dir-nav-card ped-subtab-btn" data-pedsub="dossie" onclick="switchPedSubTab('dossie')">
-                    <div class="dir-nav-card-icon" style="background:#eff6ff; color:#2563eb;">
-                        <i class="fa-solid fa-id-card"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Dossiê do Aluno</div>
-                </button>
-            </div>
-
-            <!-- SUB-ABA PED 1: ORIENTAÇÃO EDUCACIONAL (OE) -->
-            <div id="pedSubTab_op" class="ped-subtab-content active">
+        <section id="tab-op" class="tab-content-section">
             <div class="action-toolbar" style="padding:0.5rem 1rem; margin-bottom:0.75rem;">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.15rem; margin:0;">
@@ -258,9 +228,12 @@
                     <!-- Rendered via JS -->
                 </div>
             </div>
+        </section>
 
-            <!-- SUB-ABA PED 2: SUPERVISÃO PEDAGÓGICA -->
-            <div id="pedSubTab_supervisao" class="ped-subtab-content" style="display:none;">
+        <!-- ========================================== -->
+        <!-- MÓDULO 3: SUPERVISÃO PEDAGÓGICA -->
+        <!-- ========================================== -->
+        <section id="tab-supervisao" class="tab-content-section">
             <div class="action-toolbar">
                 <div>
                     <h3 style="color:#0f172a; font-weight:800; font-size:1.3rem;">
@@ -451,47 +424,6 @@
                     </div>
                 </div>
             </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SUB-ABA PED 3: DOSSIÊ COMPLETO DO ESTUDANTE -->
-            <!-- ========================================== -->
-            <div id="pedSubTab_dossie" class="ped-subtab-content" style="display:none;">
-                <div class="dir-card" style="padding:16px 20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                    <div>
-                        <h4 class="dir-card-title" style="font-size:1.15rem; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-id-card" style="color:#2563eb;"></i> Dossiê 360º do Estudante & Prontuário Escolar
-                        </h4>
-                        <p class="dir-card-subtitle" style="margin:2px 0 0 0;">Pesquise qualquer estudante da escola para visualizar histórico de atendimentos, dados da matrícula, uniforme escolar e emitir ficha timbrada.</p>
-                    </div>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <span id="dossieTotalAlunosBadge" class="dir-badge dir-badge-info" style="font-size:0.8rem; padding:6px 14px; font-weight:800;">
-                            <i class="fa-solid fa-users"></i> 0 Alunos
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Barra de Pesquisa e Filtros do Dossiê -->
-                <div style="display:flex; gap:12px; margin-bottom:18px; flex-wrap:wrap; align-items:center; background:white; padding:14px 18px; border-radius:14px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                    <div style="flex:1; min-width:260px; position:relative;">
-                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.95rem;"></i>
-                        <input type="text" id="dossieSearchInput" oninput="filtrarDossieAlunosUI()" placeholder="Digite o nome do estudante para consultar o dossiê..." style="width:100%; padding:10px 14px 10px 38px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:0.9rem; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
-                    </div>
-                    <div style="min-width:180px;">
-                        <select id="dossieFilterTurma" onchange="filtrarDossieAlunosUI()" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:0.88rem; font-weight:700; color:#1e293b; background:white; cursor:pointer;">
-                            <option value="todas">🏫 Todas as Turmas</option>
-                        </select>
-                    </div>
-                    <button type="button" onclick="resetDossieBuscaUI()" class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:9px 14px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer;">
-                        <i class="fa-solid fa-rotate-left"></i> Limpar
-                    </button>
-                </div>
-
-                <!-- Grid de Cards de Dossiês dos Alunos -->
-                <div id="dossieEstudantesGridContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:14px;">
-                    <!-- Renderizado dinamicamente via JS -->
-                </div>
-            </div>
         </section>
 
 
@@ -520,11 +452,11 @@
 
             <!-- CARDS DE NAVEGAÇÃO INTERNA DA ADMINISTRAÇÃO -->
             <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
-                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="uniformes" onclick="switchAdminSubTab('uniformes')">
-                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
-                        <i class="fa-solid fa-shirt"></i>
+                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="telefones" onclick="switchAdminSubTab('telefones')">
+                    <div class="dir-nav-card-icon" style="background:#dcfce7; color:#16a34a;">
+                        <i class="fa-solid fa-address-book"></i>
                     </div>
-                    <div class="dir-nav-card-title">Uniformes Escolares</div>
+                    <div class="dir-nav-card-title">Contatos & Telefones</div>
                 </button>
                 <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="turnos" onclick="switchAdminSubTab('turnos')">
                     <div class="dir-nav-card-icon" style="background:#fef3c7; color:#d97706;">
@@ -546,250 +478,8 @@
                 </button>
             </div>
 
-            <!-- SUB-ABA 1: UNIFORMES ESCOLARES (INTEGRADO À ADMINISTRAÇÃO) -->
-            <div id="adminSubTab_uniformes" class="admin-subtab-content active">
-                <div id="adminSecUniformes">
-                                <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
-                    </h3>
-                    <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Gestão de solicitações de alunos novos, trocas, remessas para a SME, estoque local e emissão de listas de entrega por turma.</p>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <button onclick="openModalNovoPedidoUniforme()" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-plus-circle"></i> Nova Solicitação de Uniforme
-                    </button>
-                    <button onclick="openModalFecharLoteSME()" class="btn btn-secondary" style="width:auto; background:#7c3aed; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-truck-ramp-box"></i> Fechar Remessa / Lote SME
-                    </button>
-                    <button onclick="openModalAjustarEstoque()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
-                        <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
-                    </button>
-                    <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
-                        <i class="fa-solid fa-file-signature"></i> Imprimir Relação por Turma
-                    </button>
-                    <button onclick="imprimirRelatorioEntregasConcluidas()" class="btn btn-secondary" style="width:auto; background:#16a34a; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Relatório de Uniformes Entregues aos alunos com histórico">
-                        <i class="fa-solid fa-square-check"></i> Relatório de Entregas Realizadas
-                    </button>
-                </div>
-            </div>
-
-            <!-- Cards Sintéticos de Métricas do Módulo -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #f59e0b; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando Envio à SME</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:4px;" id="statUniPendentesSme">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Pedidos aguardando lote</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #7c3aed; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Em Remessa / Lote SME</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#7c3aed; margin-top:4px;" id="statUniEnviadosSme">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Aguardando chegada da SME</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Disponível p/ Entrega</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:4px;" id="statUniDisponiveisEntrega">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Na escola pronto para o aluno</div>
-                </div>
-
-                <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                    <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Entregues aos Alunos</div>
-                    <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:4px;" id="statUniEntregues">0</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Total de entregas concluídas</div>
-                </div>
-            </div>
-
-            <!-- Filtros Principais & Tabela -->
-            <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-filter" style="color:#0284c7;"></i>
-                        <strong style="color:#0f172a; font-size:1rem;">Filtros de Pesquisa & Relatórios</strong>
-                    </div>
-
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button onclick="limparFiltrosUniformes()" class="btn btn-secondary" style="font-size:0.78rem; padding:4px 10px;">
-                            <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
-                        </button>
-                    </div>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
-                        <div style="position:relative; display:flex; align-items:center;">
-                            <input type="search" id="filterUniSearch" name="busca_aluno_turma_uniformes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box; padding-right:28px;">
-                            <button type="button" onclick="limparBuscaTextoUniformes()" title="Limpar busca" style="position:absolute; right:8px; background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.85rem; padding:2px;">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
-                        <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todas">Todas as Turmas</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
-                        <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todos">Todos os Status</option>
-                            <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
-                            <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
-                            <option value="disponivel_estoque">📦 Disponível para Entrega</option>
-                            <option value="entregue">✅ Entregue ao Aluno</option>
-                            <option value="cancelado">❌ Cancelado</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
-                        <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                            <option value="todos">Todos os Motivos</option>
-                            <option value="aluno_novo">Aluno Novo</option>
-                            <option value="troca_tamanho">Troca de Tamanho</option>
-                            <option value="danificado">Uniforme Danificado</option>
-                            <option value="perda">Perda do Uniforme</option>
-                            <option value="outro">Outro Motivo</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
-                        <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                    </div>
-
-                    <div>
-                        <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
-                        <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
-                    </div>
-                </div>
-
-                <!-- Tabela de Pedidos de Uniformes -->
-                <div style="overflow-x:auto;">
-                    <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
-                        <thead>
-                            <tr style="background:#f1f5f9; color:#334155;">
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;"><input type="checkbox" id="chkSelectAllUni" onchange="toggleSelectAllPedidosUni(this)"></th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Data</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Aluno & Turma</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Motivo</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Solicitação & Tamanho</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Responsável</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Remessa SME / Previsão</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Status</th>
-                                <th style="padding:10px; border-bottom:2px solid #cbd5e1; text-align:center;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaPedidosUniformesBody">
-                            <!-- Renderizado via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Seção Dupla: Painel de Estoque Local + Histórico de Lotes SME -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.5rem;">
-                
-                <!-- Painel de Estoque Escolar Local -->
-                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
-                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
-                        </h4>
-                        
-                        <div style="display:flex; gap:6px; align-items:center;">
-                            <div class="est-gender-tabs" style="display:inline-flex; background:#e2e8f0; border-radius:8px; padding:2px; font-size:0.75rem; font-weight:800;">
-                                <button type="button" class="btn-est-gen active" id="btnEstGenMasc" onclick="switchEstoqueGenero('masculino')" style="padding:3px 8px; border-radius:6px; border:none; background:#059669; color:white; cursor:pointer;">👨 Masc</button>
-                                <button type="button" class="btn-est-gen" id="btnEstGenFem" onclick="switchEstoqueGenero('feminino')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">👩 Fem</button>
-                                <button type="button" class="btn-est-gen" id="btnEstGenTodos" onclick="switchEstoqueGenero('todos')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">🌐 Total</button>
-                            </div>
-                            <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
-                                <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
-                            </button>
-                        </div>
-                    </div>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
-                        Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
-                    </p>
-                    <div id="painelEstoqueUniformesContainer" style="overflow-x:auto;">
-                        <!-- Renderizado via JS -->
-                    </div>
-                </div>
-
-                <!-- Painel de Remessas / Lotes EnViados à SME -->
-                <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
-                        <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-truck-fast" style="color:#7c3aed;"></i> Lotes & Remessas Enviadas para a SME
-                        </h4>
-                        <button onclick="openModalFecharLoteSME()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#7c3aed; border-color:#7c3aed;">
-                            <i class="fa-solid fa-plus"></i> Novo Lote SME
-                        </button>
-                    </div>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
-                        Remessas agrupadas com data de corte, acompanhamento de entrega e registro de recebimento.
-                    </p>
-                    <div id="painelLotesSMEContainer">
-                        <!-- Renderizado via JS -->
-                    </div>
-                </div>
-
-            </div>
-                </div>
-            </div>
-
-            <!-- SUB-ABA 2: SISTEMAS EXTERNOS INTEGRADOS (CONTÁBIL & PATRIMÔNIO) -->
-            <div id="adminSubTab_sistemas" class="admin-subtab-content" style="display:none;">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.2rem; margin-bottom:2rem;">
-                    <!-- Card Sistema Contábil (APMF) -->
-                    <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                <span style="font-size:0.75rem; font-weight:800; background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:20px; text-transform:uppercase;">
-                                    <i class="fa-solid fa-calculator"></i> Gestão Financeira
-                                </span>
-                                <span style="font-size:0.75rem; color:#16a34a; font-weight:700;"><i class="fa-solid fa-circle"></i> Disponível</span>
-                            </div>
-                            <h4 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin:0 0 6px 0;">Sistema Contábil (APMF)</h4>
-                            <p style="font-size:0.85rem; color:#64748b; margin:0 0 16px 0; line-height:1.5;">Controle de receitas, despesas, prestação de contas, fluxo de caixa e movimentações financeiras da APMF escolar.</p>
-                        </div>
-                        <div>
-                            <button type="button" onclick="abrirSistemaContabil()" class="btn btn-primary" style="width:100%; background:#2563eb; color:white; font-size:0.88rem; padding:10px 16px; font-weight:800; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar Sistema Contábil
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card Sistema de Patrimônio -->
-                    <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                <span style="font-size:0.75rem; font-weight:800; background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:20px; text-transform:uppercase;">
-                                    <i class="fa-solid fa-boxes-stacked"></i> Controle Patrimonial
-                                </span>
-                                <span style="font-size:0.75rem; color:#16a34a; font-weight:700;"><i class="fa-solid fa-circle"></i> Disponível</span>
-                            </div>
-                            <h4 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin:0 0 6px 0;">Sistema de Patrimônio</h4>
-                            <p style="font-size:0.85rem; color:#64748b; margin:0 0 16px 0; line-height:1.5;">Inventário de bens móveis, tombamento de equipamentos tecnológicos, auditoria e gestão de ativos da escola.</p>
-                        </div>
-                        <div>
-                            <button type="button" onclick="abrirSistemaPatrimonio()" class="btn btn-primary" style="width:100%; background:#ea580c; color:white; font-size:0.88rem; padding:10px 16px; font-weight:800; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar Sistema de Patrimônio
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUB-ABA 3: CADASTRO DE TELEFONES DE PROFISSIONAIS & DISPARO DE MENSAGENS -->
-            <div id="adminSubTab_telefones" class="admin-subtab-content" style="display:none;">
+            <!-- SUB-ABA 1: CADASTRO DE TELEFONES DE PROFISSIONAIS & DISPARO DE MENSAGENS -->
+            <div id="adminSubTab_telefones" class="admin-subtab-content active">
                 <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
                         <div>
@@ -981,13 +671,230 @@
             <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; border-left:6px solid #8b5cf6; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Serviços & Sistemas Externos Integrados
+                        <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Serviços & Sistemas Integrados
                     </h3>
-                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Acesse com um clique as plataformas pedagógicas, administrativas e de apoio do C.E. Pedro Rizzi.</p>
+                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Gestão de uniformes escolares e acesso rápido às plataformas e sistemas externos da unidade.</p>
                 </div>
             </div>
 
-            <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
+            <!-- CARDS DE NAVEGAÇÃO INTERNA DE SERVIÇOS & SISTEMAS -->
+            <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
+                <button type="button" class="dir-nav-card ext-subtab-btn active" data-extsub="uniformes" onclick="switchExtSubTab('uniformes')">
+                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
+                        <i class="fa-solid fa-shirt"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Uniformes Escolares</div>
+                </button>
+                <button type="button" class="dir-nav-card ext-subtab-btn" data-extsub="plataformas" onclick="switchExtSubTab('plataformas')">
+                    <div class="dir-nav-card-icon" style="background:#f5f3ff; color:#7c3aed;">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Plataformas & Links</div>
+                </button>
+            </div>
+
+            <!-- SUB-ABA 1: UNIFORMES ESCOLARES -->
+            <div id="extSubTab_uniformes" class="ext-subtab-content active">
+                <div id="adminSecUniformes">
+                    <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Controle de Pedidos e Entregas de Uniforme Escolar
+                            </h3>
+                            <p style="font-size:0.83rem; color:#64748b; margin:2px 0 0 0;">Gestão de solicitações de alunos novos, trocas, remessas para a SME, estoque local e emissão de listas de entrega por turma.</p>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button onclick="openModalNovoPedidoUniforme()" class="btn btn-primary" style="width:auto; background:#0284c7; border-color:#0284c7; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                                <i class="fa-solid fa-plus-circle"></i> Nova Solicitação de Uniforme
+                            </button>
+                            <button onclick="openModalFecharLoteSME()" class="btn btn-secondary" style="width:auto; background:#7c3aed; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                                <i class="fa-solid fa-truck-ramp-box"></i> Fechar Remessa / Lote SME
+                            </button>
+                            <button onclick="openModalAjustarEstoque()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;">
+                                <i class="fa-solid fa-boxes-stacked"></i> Estoque Local da Escola
+                            </button>
+                            <button onclick="openModalRelacaoEntregaTurma()" class="btn btn-secondary" style="width:auto; background:#d97706; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Imprimir lista por turma com campo para assinatura do aluno/responsável">
+                                <i class="fa-solid fa-file-signature"></i> Imprimir Relação por Turma
+                            </button>
+                            <button onclick="imprimirRelatorioEntregasConcluidas()" class="btn btn-secondary" style="width:auto; background:#16a34a; color:white; font-size:0.88rem; font-weight:800; padding:8px 16px;" title="Relatório de Uniformes Entregues aos alunos com histórico">
+                                <i class="fa-solid fa-square-check"></i> Relatório de Entregas Realizadas
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cards Sintéticos de Métricas do Módulo -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                        <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #f59e0b; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Aguardando Envio à SME</div>
+                            <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:4px;" id="statUniPendentesSme">0</div>
+                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Pedidos aguardando lote</div>
+                        </div>
+
+                        <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #7c3aed; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Em Remessa / Lote SME</div>
+                            <div style="font-size:1.8rem; font-weight:900; color:#7c3aed; margin-top:4px;" id="statUniEnviadosSme">0</div>
+                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Aguardando chegada da SME</div>
+                        </div>
+
+                        <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Disponível p/ Entrega</div>
+                            <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:4px;" id="statUniDisponiveisEntrega">0</div>
+                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Na escola pronto para o aluno</div>
+                        </div>
+
+                        <div style="background:white; padding:1.2rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Entregues aos Alunos</div>
+                            <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:4px;" id="statUniEntregues">0</div>
+                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Total de entregas concluídas</div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Principais & Tabela -->
+                    <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-filter" style="color:#0284c7;"></i>
+                                <strong style="color:#0f172a; font-size:1rem;">Filtros de Pesquisa & Relatórios</strong>
+                            </div>
+
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button onclick="limparFiltrosUniformes()" class="btn btn-secondary" style="font-size:0.78rem; padding:4px 10px;">
+                                    <i class="fa-solid fa-filter-circle-xmark"></i> Limpar Filtros
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:1rem;">
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pesquisar Aluno/Turma</label>
+                                <div style="position:relative; display:flex; align-items:center;">
+                                    <input type="search" id="filterUniSearch" name="busca_aluno_turma_uniformes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderTabelaPedidosUniformes()" placeholder="Nome do aluno ou turma..." class="search-input" style="width:100%; box-sizing:border-box; padding-right:28px;">
+                                    <button type="button" onclick="limparBuscaTextoUniformes()" title="Limpar busca" style="position:absolute; right:8px; background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.85rem; padding:2px;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
+                                <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                    <option value="todas">Todas as Turmas</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
+                                <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                    <option value="todos">Todos os Status</option>
+                                    <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
+                                    <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
+                                    <option value="disponivel_estoque">📦 Disponível para Entrega</option>
+                                    <option value="entregue">✅ Entregue ao Aluno</option>
+                                    <option value="cancelado">❌ Cancelado</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
+                                <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                    <option value="todos">Todos os Motivos</option>
+                                    <option value="aluno_novo">Aluno Novo</option>
+                                    <option value="troca_tamanho">Troca de Tamanho</option>
+                                    <option value="danificado">Uniforme Danificado</option>
+                                    <option value="perda">Perda do Uniforme</option>
+                                    <option value="outro">Outro Motivo</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
+                                <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
+                                <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Pedidos de Uniformes -->
+                        <div style="overflow-x:auto;">
+                            <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+                                <thead>
+                                    <tr style="background:#f1f5f9; color:#334155;">
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;"><input type="checkbox" id="chkSelectAllUni" onchange="toggleSelectAllPedidosUni(this)"></th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Data</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Aluno & Turma</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Motivo</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Solicitação & Tamanho</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Responsável</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Remessa SME / Previsão</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1;">Status</th>
+                                        <th style="padding:10px; border-bottom:2px solid #cbd5e1; text-align:center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaPedidosUniformesBody">
+                                    <!-- Renderizado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Seção Dupla: Painel de Estoque Local + Histórico de Lotes SME -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.5rem;">
+                        
+                        <!-- Painel de Estoque Escolar Local -->
+                        <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
+                                <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Estoque Escolar Disponível na Escola
+                                </h4>
+                                
+                                <div style="display:flex; gap:6px; align-items:center;">
+                                    <div class="est-gender-tabs" style="display:inline-flex; background:#e2e8f0; border-radius:8px; padding:2px; font-size:0.75rem; font-weight:800;">
+                                        <button type="button" class="btn-est-gen active" id="btnEstGenMasc" onclick="switchEstoqueGenero('masculino')" style="padding:3px 8px; border-radius:6px; border:none; background:#059669; color:white; cursor:pointer;">👨 Masc</button>
+                                        <button type="button" class="btn-est-gen" id="btnEstGenFem" onclick="switchEstoqueGenero('feminino')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">👩 Fem</button>
+                                        <button type="button" class="btn-est-gen" id="btnEstGenTodos" onclick="switchEstoqueGenero('todos')" style="padding:3px 8px; border-radius:6px; border:none; background:transparent; color:#475569; cursor:pointer;">🌐 Total</button>
+                                    </div>
+                                    <button onclick="openModalAjustarEstoque()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#059669; border-color:#059669;">
+                                        <i class="fa-solid fa-pen-to-square"></i> Ajustar Saldo
+                                    </button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                                Controle quantitativo por tamanho e item. As entregas com saldo local realizam baixa automática.
+                            </p>
+                            <div id="painelEstoqueUniformesContainer" style="overflow-x:auto;">
+                                <!-- Renderizado via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Painel de Remessas / Lotes EnViados à SME -->
+                        <div style="background:white; padding:1.25rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+                                <h4 style="font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid fa-truck-fast" style="color:#7c3aed;"></i> Lotes & Remessas Enviadas para a SME
+                                </h4>
+                                <button onclick="openModalFecharLoteSME()" class="btn btn-primary" style="font-size:0.75rem; padding:4px 10px; background:#7c3aed; border-color:#7c3aed;">
+                                    <i class="fa-solid fa-plus"></i> Novo Lote SME
+                                </button>
+                            </div>
+                            <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                                Remessas agrupadas com data de corte, acompanhamento de entrega e registro de recebimento.
+                            </p>
+                            <div id="painelLotesSMEContainer">
+                                <!-- Renderizado via JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-ABA 2: PLATAFORMAS & LINKS EXTERNOS -->
+            <div id="extSubTab_plataformas" class="ext-subtab-content" style="display:none;">
+                <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
                 <!-- Card 1: Agendamento de Recursos & Informática -->
                 <div class="dir-card" style="padding:24px; display:flex; flex-direction:column; justify-content:space-between; border-radius:16px; border:1px solid #e2e8f0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
                     <div>
@@ -1102,6 +1009,7 @@
                         </a>
                     </div>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -1547,216 +1455,10 @@
                         <i class="fa-solid fa-calendar-days"></i>
                     </div>
                     <div class="dir-nav-card-title">Calendário Escolar</div>
-                </button>
-
-                <button type="button" class="dir-nav-card dir-subtab-btn" data-dirsub="atendimentos" onclick="switchDirSubTab('atendimentos')">
-                    <div class="dir-nav-card-icon" style="background:#fef3c7; color:#d97706;">
-                        <i class="fa-solid fa-chart-pie"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Painel Executivo</div>
-                </button>
             </div>
 
             <!-- ========================================== -->
-            <!-- SUB-ABA 1: ATENDIMENTOS & RELATÓRIOS DA ORIENTAÇÃO -->
-            <!-- ========================================== -->
-            <div id="dirSubTab_atendimentos" class="dir-subtab-content">
-                <!-- Cabeçalho com Alternador Segmentado (Atendimentos vs Relatórios) -->
-                <div class="dir-card" style="padding:14px 20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                    <div>
-                        <h4 class="dir-card-title" style="font-size:1.15rem; margin:0;">
-                            <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Orientação Educacional (OE)
-                        </h4>
-                        <p class="dir-card-subtitle" style="margin:2px 0 0 0;">Acompanhe os atendimentos individuais ou emita relatórios analíticos consolidados por período.</p>
-                    </div>
-                    <div class="dir-segmented-control" role="tablist" aria-label="Visão da Orientação">
-                        <button type="button" id="btnDirAtendViewLista" onclick="setDirAtendViewMode('lista')" class="dir-segment-btn active" title="Ver listagem e status dos atendimentos">
-                            <i class="fa-solid fa-table-list"></i> Atendimentos Registrados
-                        </button>
-                        <button type="button" id="btnDirAtendViewRelatorios" onclick="setDirAtendViewMode('relatorios')" class="dir-segment-btn" title="Ver relatórios estatísticos e quantitativos">
-                            <i class="fa-solid fa-chart-pie"></i> Relatórios da Orientação
-                        </button>
-                    </div>
-                </div>
-
-                <!-- VISÃO 1: LISTAGEM DE ATENDIMENTOS & KPIS -->
-                <div id="dirAtendListaViewContainer">
-                    <!-- KPI Cards Executivos da Orientação (8-Point Grid) -->
-                    <div class="dir-kpi-grid">
-                        <div class="dir-kpi-card">
-                            <div class="dir-kpi-title">Total Atendimentos OE</div>
-                            <div id="dirStatTotalOP" class="dir-kpi-val" style="color:var(--dir-accent-primary);">0</div>
-                            <div class="dir-kpi-desc">Cadastrados no sistema</div>
-                        </div>
-
-                        <div class="dir-kpi-card">
-                            <div class="dir-kpi-title">Presença Confirmada (Pais)</div>
-                            <div id="dirStatOkSec" class="dir-kpi-val" style="color:#10b981;">0%</div>
-                            <div id="dirStatOkSecCount" class="dir-kpi-desc">0 comparecimentos confirmados</div>
-                        </div>
-
-                        <div class="dir-kpi-card">
-                            <div class="dir-kpi-title">Aguardando / Em Aberto</div>
-                            <div id="dirStatPendentesOP" class="dir-kpi-val" style="color:var(--dir-accent-amber);">0</div>
-                            <div class="dir-kpi-desc">Agendamentos futuros / pendentes</div>
-                        </div>
-
-                        <div class="dir-kpi-card">
-                            <div class="dir-kpi-title">Ausências / Faltas de Pais</div>
-                            <div id="dirStatFaltasOP" class="dir-kpi-val" style="color:var(--dir-accent-danger);">0</div>
-                            <div class="dir-kpi-desc">Convocações não atendidas</div>
-                        </div>
-                    </div>
-
-                    <!-- Barra de Filtros dos Atendimentos (Ergonomia & Fitts) -->
-                    <div class="dir-filter-bar">
-                        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:280px;">
-                            <input type="text" id="dirAtendFilterBusca" oninput="renderDirAtendimentos()" placeholder="🔍 Buscar por aluno ou responsável..." class="dir-input" style="min-width:220px; flex:1;">
-                            
-                            <select id="dirAtendFilterTurma" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:140px; width:auto;">
-                                <option value="">🏫 Todas as Turmas</option>
-                            </select>
-
-                            <select id="dirAtendFilterOrientadora" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:160px; width:auto;">
-                                <option value="">💛 Todas as Orientadoras</option>
-                            </select>
-
-                            <select id="dirAtendFilterStatus" onchange="renderDirAtendimentos()" class="dir-select" style="min-width:150px; width:auto;">
-                                <option value="">Todos os Status</option>
-                                <option value="realizado">✅ Compareceu / Realizado</option>
-                                <option value="aguardando">⏳ Aguardando / Pendente</option>
-                                <option value="falta">❌ Não Compareceu / Falta</option>
-                            </select>
-                        </div>
-
-                        <div style="display:flex; gap:8px;">
-                            <button type="button" onclick="resetDirAtendFiltros()" class="dir-btn dir-btn-secondary" style="min-height:38px; font-size:0.8125rem; padding:6px 14px;" title="Limpar Filtros">
-                                <i class="fa-solid fa-arrow-rotate-left"></i> Limpar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Tabela de Atendimentos da Orientação -->
-                    <div class="dir-table-card">
-                        <div style="overflow-x:auto;">
-                            <table class="dir-table">
-                                <thead>
-                                    <tr>
-                                        <th>Data & Horário</th>
-                                        <th>Estudante</th>
-                                        <th>Turma</th>
-                                        <th>Orientadora</th>
-                                        <th>Motivo Principal</th>
-                                        <th>Presença Família</th>
-                                        <th style="text-align:center;">Ações da Direção</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dirTableAtendimentosOEBody">
-                                    <!-- Renderizado via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="dirAtendPagination" class="dir-table-pagination">
-                            <span id="dirAtendCountInfo">Mostrando 0 de 0 atendimentos</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VISÃO 2: RELATÓRIOS CONSOLIDADOS & GRÁFICOS DA ORIENTAÇÃO -->
-                <div id="dirAtendRelatoriosViewContainer" style="display:none;">
-                    <!-- Filtros Dinâmicos de Data e Período -->
-                    <div class="dir-card">
-                        <div class="dir-card-header">
-                            <div>
-                                <h4 class="dir-card-title">
-                                    <i class="fa-solid fa-sliders" style="color:var(--dir-accent-primary);"></i> Filtros do Relatório de Atendimentos da Orientação
-                                </h4>
-                                <p class="dir-card-subtitle">Defina o intervalo cronológico e recorte desejado para consolidar dados oficiais da escola.</p>
-                            </div>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; align-items:flex-end;">
-                            <div>
-                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Inicial (De):</label>
-                                <input type="date" id="dirRelDataInicio" class="dir-input">
-                            </div>
-
-                            <div>
-                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Data Final (Até):</label>
-                                <input type="date" id="dirRelDataFim" class="dir-input">
-                            </div>
-
-                            <div>
-                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Turma / Segmento:</label>
-                                <select id="dirRelTurmaSelect" class="dir-select">
-                                    <option value="">🏫 Todas as Turmas</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="font-size:0.75rem; font-weight:700; color:var(--dir-text-secondary); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Orientadora:</label>
-                                <select id="dirRelOrientadoraSelect" class="dir-select">
-                                    <option value="">Todas as Orientadoras</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <button type="button" onclick="gerarRelatorioExecutivoDirecao()" class="dir-btn dir-btn-primary" style="width:100%;">
-                                    <i class="fa-solid fa-bolt"></i> Gerar Relatório
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Atalhos de Período -->
-                        <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; align-items:center; padding-top:12px; border-top:1px solid var(--dir-border-subtle);">
-                            <span style="font-size:0.75rem; font-weight:700; color:var(--dir-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Atalhos de Período:</span>
-                            <button type="button" onclick="setDirRelPeriodo('mes_atual')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Mês Atual</button>
-                            <button type="button" onclick="setDirRelPeriodo('trimestre_1')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">1º Trimestre</button>
-                            <button type="button" onclick="setDirRelPeriodo('trimestre_2')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">2º Trimestre</button>
-                            <button type="button" onclick="setDirRelPeriodo('trimestre_3')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">3º Trimestre</button>
-                            <button type="button" onclick="setDirRelPeriodo('ano_todo')" class="dir-btn dir-btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.75rem;">Ano Todo (2026)</button>
-                        </div>
-                    </div>
-
-                    <!-- Painel de Exibição dos Resultados do Relatório -->
-                    <div id="dirRelatorioResultadosContainer" class="dir-card">
-                        <!-- Renderizado dinamicamente via JS -->
-                        <div style="text-align:center; padding:32px 16px; color:var(--dir-text-muted);">
-                            <i class="fa-solid fa-chart-pie" style="font-size:2.5rem; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
-                            <p style="margin:0;">Clique em "Gerar Relatório" para consolidar as informações do período selecionado.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SUB-ABA 2: MURAL DIGITAL DA ESCOLA (EM BREVE) -->
-            <!-- ========================================== -->
-            <div id="dirSubTab_dossie" class="dir-subtab-content">
-                <div class="dir-card" style="text-align:center; padding:64px 24px;">
-                    <div style="width:72px; height:72px; border-radius:20px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:20px; box-shadow:0 8px 20px rgba(37,99,235,0.15);">
-                        <i class="fa-solid fa-bullhorn"></i>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <span class="dir-badge dir-badge-info" style="font-size:0.75rem; padding:4px 14px; text-transform:uppercase; letter-spacing:1px; font-weight:800;">
-                            <i class="fa-solid fa-clock-rotate-left"></i> Em Breve
-                        </span>
-                    </div>
-                    <h3 style="font-size:1.5rem; font-weight:900; color:var(--dir-text-headings); margin-bottom:8px;">
-                        Mural Digital & Comunicados da Escola
-                    </h3>
-                    <p style="font-size:0.9375rem; color:var(--dir-text-secondary); max-width:560px; margin:0 auto 24px auto; line-height:1.6;">
-                        Este módulo está em fase de desenvolvimento. Em breve, a Direção poderá publicar informativos institucionais, gerenciar comunicados para o corpo docente e acompanhar murais de recados unificados diretamente pelo portal.
-                    </p>
-                    <div style="display:inline-flex; gap:8px; background:#f8fafc; border:1px solid var(--dir-border-subtle); padding:10px 18px; border-radius:12px; font-size:0.8125rem; color:var(--dir-text-muted); font-weight:600;">
-                        <i class="fa-solid fa-shield-halved" style="color:var(--dir-accent-primary); margin-top:2px;"></i>
-                        <span>Previsão de lançamento nas próximas atualizações do IntegraRizzi</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SUB-ABA 3: CENTRAL WHATSAPP & CONTATOS -->
+            <!-- SUB-ABA 1: CENTRAL WHATSAPP & CONTATOS -->
             <!-- ========================================== -->
             <div id="dirSubTab_whatsapp" class="dir-subtab-content active">
 

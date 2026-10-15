@@ -1132,37 +1132,11 @@ window.renderExternalNavTabLinks = function() {}; // Mantido como no-op para com
 let currentPedSubTab = 'op';
 
 function switchPedSubTab(subTab) {
-    if (!subTab) subTab = 'op';
-    currentPedSubTab = subTab;
-
-    const btns = document.querySelectorAll(".ped-subtab-btn");
-    const contents = document.querySelectorAll(".ped-subtab-content");
-
-    btns.forEach(b => {
-        if (b.dataset.pedsub === subTab) {
-            b.classList.add("active");
-        } else {
-            b.classList.remove("active");
-        }
-    });
-
-    contents.forEach(c => {
-        if (c.id === `pedSubTab_${subTab}`) {
-            c.style.display = "block";
-            c.classList.add("active");
-        } else {
-            c.style.display = "none";
-            c.classList.remove("active");
-        }
-    });
-
-    if (subTab === 'op') {
-        try { renderModuleOrientacaoPedagogica(); } catch(e) { console.error("Erro ao renderizar OE:", e); }
-    } else if (subTab === 'supervisao') {
-        try { renderModuleSupervisao(); } catch(e) { console.error("Erro ao renderizar Supervisão:", e); }
-    } else if (subTab === 'dossie') {
-        try { renderDossieEstudantesModulo(); } catch(e) { console.error("Erro ao renderizar Dossiê:", e); }
+    if (subTab === 'supervisao') {
+        switchTab('supervisao');
+        return;
     }
+    switchTab('op');
 }
 window.switchPedSubTab = switchPedSubTab;
 
@@ -1175,17 +1149,12 @@ function atualizarAbasNavegacaoVisibilidade() {
         
         if (tabKey === 'direcao') {
             hasPerm = sigeDB.temPermissaoModulo('direcao');
-        } else if (tabKey === 'pedagogico') {
-            hasPerm = sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
+        } else if (tabKey === 'op') {
+            hasPerm = sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('direcao');
+        } else if (tabKey === 'supervisao') {
+            hasPerm = sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
         } else if (tabKey === 'admin') {
-            const hasAdmin = sigeDB.temPermissaoModulo('admin');
-            const hasUniformes = sigeDB.temPermissaoModulo('uniformes');
-            hasPerm = hasAdmin || hasUniformes || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
-            if (hasPerm && !hasAdmin && hasUniformes) {
-                btn.innerHTML = `<i class="fa-solid fa-shirt" style="color:var(--admin-color);"></i> Uniformes Escolares`;
-            } else if (hasPerm) {
-                btn.innerHTML = `<i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Secretaria & Operacional <span class="tab-badge" id="badgeTabAdm">0</span>`;
-            }
+            hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
         } else if (tabKey === 'externos') {
             hasPerm = true;
         } else if (tabKey === 'dev') {
@@ -1196,12 +1165,6 @@ function atualizarAbasNavegacaoVisibilidade() {
         
         btn.style.display = hasPerm ? "inline-flex" : "none";
     });
-
-    // Controla visibilidade de botões internos do pedagógico conforme perfil
-    const btnPedOp = document.querySelector('.ped-subtab-btn[data-pedsub="op"]');
-    const btnPedSup = document.querySelector('.ped-subtab-btn[data-pedsub="supervisao"]');
-    if (btnPedOp) btnPedOp.style.display = (sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('direcao')) ? "flex" : "none";
-    if (btnPedSup) btnPedSup.style.display = (sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao')) ? "flex" : "none";
 }
 window.atualizarAbasNavegacaoVisibilidade = atualizarAbasNavegacaoVisibilidade;
 
@@ -1234,11 +1197,11 @@ function setupTabNavigation() {
         } else if (activeRole === 'admin' || activeRole === 'secretaria') {
             abaParam = 'admin';
         } else if (activeRole.startsWith('supervisora') || activeRole === 'supervisao') {
-            abaParam = 'pedagogico';
-            currentPedSubTab = 'supervisao';
+            abaParam = 'supervisao';
+        } else if (activeRole.includes('orientadora') || activeRole === 'op') {
+            abaParam = 'op';
         } else {
-            abaParam = 'pedagogico'; // Visão padrão: Pedagógico / OE
-            currentPedSubTab = 'op';
+            abaParam = 'direcao';
         }
     }
 
@@ -1255,17 +1218,12 @@ function switchTab(tabId, subKey) {
     // Normalização e Redirecionamento de Rotas Legadas
     if (!tabId) tabId = 'direcao';
 
-    if (tabId === 'op') {
-        tabId = 'pedagogico';
-        subKey = 'op';
-    } else if (tabId === 'supervisao') {
-        tabId = 'pedagogico';
-        subKey = 'supervisao';
+    if (tabId === 'pedagogico') {
+        tabId = 'op';
     } else if (tabId === 'dossie' || tabId === 'dir_mural') {
-        tabId = 'pedagogico';
-        subKey = 'dossie';
+        tabId = 'op';
     } else if (tabId === 'uniformes') {
-        tabId = 'admin';
+        tabId = 'externos';
         subKey = 'uniformes';
     } else if (tabId === 'dir_mensagens') {
         tabId = 'direcao';
@@ -1277,18 +1235,18 @@ function switchTab(tabId, subKey) {
         tabId = 'direcao';
         subKey = 'calendario';
     } else if (tabId === 'dir_atendimentos') {
-        tabId = 'direcao';
-        subKey = 'atendimentos';
+        tabId = 'op';
     } else if (tabId === 'mural') {
         tabId = 'direcao';
         subKey = 'calendario';
     }
 
     const modulosLabels = {
-        direcao: "Gestão & Direção Executiva",
-        pedagogico: "Pedagógico & Alunos",
+        direcao: "Gestão & Direção",
+        op: "Orientação Educacional",
+        supervisao: "Supervisão Pedagógica",
         admin: "Secretaria & Operacional",
-        externos: "Serviços & Sistemas Externos",
+        externos: "Serviços & Sistemas",
         dev: "Painel do Desenvolvedor & TI"
     };
 
@@ -1296,10 +1254,12 @@ function switchTab(tabId, subKey) {
     let hasPerm = false;
     if (tabId === 'direcao') {
         hasPerm = sigeDB.temPermissaoModulo('direcao');
-    } else if (tabId === 'pedagogico') {
-        hasPerm = sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
+    } else if (tabId === 'op') {
+        hasPerm = sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('direcao');
+    } else if (tabId === 'supervisao') {
+        hasPerm = sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
     } else if (tabId === 'admin') {
-        hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
+        hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
     } else if (tabId === 'externos') {
         hasPerm = true;
     } else if (tabId === 'dev') {
@@ -1311,15 +1271,16 @@ function switchTab(tabId, subKey) {
     if (!hasPerm) {
         const moduloNome = modulosLabels[tabId] || tabId;
         showToast(`⚠️ Acesso Restrito: Seu perfil de usuário não possui permissão para acessar o módulo "${moduloNome}".`, "warning");
-        const modulosOrdem = ['direcao', 'pedagogico', 'admin', 'externos', 'dev'];
+        const modulosOrdem = ['direcao', 'op', 'supervisao', 'admin', 'externos', 'dev'];
         const primeiroPermitido = modulosOrdem.find(m => {
             if (m === 'direcao') return sigeDB.temPermissaoModulo('direcao');
-            if (m === 'pedagogico') return sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
-            if (m === 'admin') return sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes');
+            if (m === 'op') return sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('direcao');
+            if (m === 'supervisao') return sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
+            if (m === 'admin') return sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
             if (m === 'externos') return true;
             if (m === 'dev') return sigeDB.temPermissaoModulo('dev');
             return false;
-        }) || 'pedagogico';
+        }) || 'externos';
         tabId = primeiroPermitido;
     }
 
@@ -1330,7 +1291,7 @@ function switchTab(tabId, subKey) {
     tabBtns.forEach(b => b.classList.remove("active"));
 
     const targetSectionId = `tab-${tabId}`;
-    const targetSection = document.getElementById(targetSectionId) || document.getElementById("tab-pedagogico") || document.getElementById("tab-direcao");
+    const targetSection = document.getElementById(targetSectionId) || document.getElementById("tab-direcao") || document.getElementById("tab-op");
     if (targetSection) targetSection.classList.add("active");
 
     const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
@@ -1341,17 +1302,14 @@ function switchTab(tabId, subKey) {
     // Ativação das sub-abas internas
     if (tabId === 'direcao') {
         switchDirSubTab(subKey || currentDirSubTab || 'whatsapp');
-    } else if (tabId === 'pedagogico') {
-        if (!sigeDB.temPermissaoModulo('op') && sigeDB.temPermissaoModulo('supervisao') && !subKey) {
-            subKey = 'supervisao';
-        }
-        switchPedSubTab(subKey || currentPedSubTab || 'op');
+    } else if (tabId === 'op') {
+        renderModuleOrientacaoPedagogica();
+    } else if (tabId === 'supervisao') {
+        renderModuleSupervisao();
     } else if (tabId === 'admin') {
-        if (!sigeDB.temPermissaoModulo('admin') && sigeDB.temPermissaoModulo('uniformes')) {
-            switchAdminSubTab('uniformes');
-        } else {
-            switchAdminSubTab(subKey || currentAdminSubTab || 'uniformes');
-        }
+        switchAdminSubTab(subKey || currentAdminSubTab || 'telefones');
+    } else if (tabId === 'externos') {
+        switchExtSubTab(subKey || currentExtSubTab || 'uniformes');
     } else if (tabId === 'dev') {
         switchDevSubTab(subKey || currentDevSubTab || 'rbac');
     }
@@ -1458,30 +1416,29 @@ function renderAllModules(targetModule = null, forceAll = false) {
     }
 
     switch (activeTab) {
-        case 'pedagogico':
         case 'op':
-        case 'supervisao':
+        case 'pedagogico':
         case 'dossie':
-            if (currentPedSubTab === 'supervisao') {
-                try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
-            } else if (currentPedSubTab === 'dossie') {
-                try { renderDossieEstudantesModulo(); } catch (e) { console.error("Erro em renderDossieEstudantesModulo:", e); }
-            } else {
-                try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
-            }
+            try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro em renderModuleOrientacaoPedagogica:", e); }
+            break;
+        case 'supervisao':
+            try { renderModuleSupervisao(); } catch (e) { console.error("Erro em renderModuleSupervisao:", e); }
             break;
         case 'direcao':
             try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
             break;
         case 'admin':
-        case 'uniformes':
             try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
+            break;
+        case 'externos':
+        case 'uniformes':
+            try {
+                if (typeof switchExtSubTab === "function") switchExtSubTab(currentExtSubTab || 'uniformes');
+                else if (typeof renderModuleUniformes === "function") renderModuleUniformes();
+            } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
             break;
         case 'dev':
             try { renderModuleDev(); } catch (e) { console.error("Erro em renderModuleDev:", e); }
-            break;
-        case 'externos':
-            // Serviços externos já estão prontos nos cards interativos
             break;
         default:
             try { renderModuleOrientacaoPedagogica(); } catch (e) { console.error("Erro default render:", e); }
@@ -1519,8 +1476,14 @@ function updateBadgesCounts() {
         bAdm.innerText = totalAdm;
         bAdm.style.display = totalAdm > 0 ? "inline-flex" : "none";
     }
-    if (bOp) bOp.innerText = countOp;
-    if (bSup) bSup.innerText = countSup;
+    if (bOp) {
+        bOp.innerText = countOp;
+        bOp.style.display = countOp > 0 ? "inline-flex" : "none";
+    }
+    if (bSup) {
+        bSup.innerText = countSup;
+        bSup.style.display = countSup > 0 ? "inline-flex" : "none";
+    }
     if (bUni) {
         bUni.innerText = countUni;
         bUni.style.display = countUni > 0 ? "inline-block" : "none";
@@ -6094,18 +6057,17 @@ function submitNovaReuniaoPedagogica(e) {
 // ==========================================
 // MÓDULO 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA
 // ==========================================
-let currentAdminSubTab = 'uniformes';
+let currentAdminSubTab = 'telefones';
 
 function switchAdminSubTab(subTab) {
-    const hasAdmin = sigeDB.temPermissaoModulo('admin');
-    const hasUniformes = sigeDB.temPermissaoModulo('uniformes');
-
-    // Se o usuário tem permissão para Uniformes, mas não para a Administração Geral
-    if (!hasAdmin && hasUniformes) {
-        subTab = 'uniformes';
+    if (subTab === 'uniformes') {
+        switchExtSubTab('uniformes');
+        switchTab('externos', 'uniformes');
+        return;
     }
-
+    if (!subTab) subTab = 'telefones';
     currentAdminSubTab = subTab;
+
     const contents = document.querySelectorAll(".admin-subtab-content");
     const btns = document.querySelectorAll(".admin-subtab-btn");
 
@@ -6114,22 +6076,7 @@ function switchAdminSubTab(subTab) {
         c.classList.remove("active");
     });
     btns.forEach(b => b.classList.remove("active"));
-
-    // Oculta botões e cartões administrativos se o usuário só possui acesso a Uniformes
-    if (!hasAdmin && hasUniformes) {
-        btns.forEach(b => {
-            const adminSub = b.getAttribute("data-adminsub");
-            b.style.display = (adminSub === 'uniformes') ? "flex" : "none";
-        });
-        const toolbarButtons = document.querySelectorAll("#tab-admin .action-toolbar button");
-        toolbarButtons.forEach(btn => {
-            if (btn.innerText.includes("Comunicado") || btn.innerText.includes("Cadastrar Colaborador")) {
-                btn.style.display = "none";
-            }
-        });
-    } else {
-        btns.forEach(b => b.style.display = "flex");
-    }
+    btns.forEach(b => b.style.display = "flex");
 
     const targetContent = document.getElementById(`adminSubTab_${subTab}`);
     const targetBtn = document.querySelector(`.admin-subtab-btn[data-adminsub="${subTab}"]`);
@@ -6143,9 +6090,7 @@ function switchAdminSubTab(subTab) {
     }
 
     // Ações específicas ao abrir cada sub-aba da Administração
-    if (subTab === 'uniformes') {
-        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
-    } else if (subTab === 'telefones') {
+    if (subTab === 'telefones') {
         renderAdminTelefonesTable();
     } else if (subTab === 'turnos') {
         if (typeof renderTurmasAdminTable === "function") renderTurmasAdminTable();
@@ -6155,13 +6100,41 @@ function switchAdminSubTab(subTab) {
         if (typeof renderConfigEscolaForm === "function") renderConfigEscolaForm();
     }
 }
+window.switchAdminSubTab = switchAdminSubTab;
+
+let currentExtSubTab = 'uniformes';
+
+function switchExtSubTab(subTab) {
+    if (!subTab) subTab = 'uniformes';
+    currentExtSubTab = subTab;
+
+    const contents = document.querySelectorAll(".ext-subtab-content");
+    const btns = document.querySelectorAll(".ext-subtab-btn");
+
+    contents.forEach(c => {
+        c.style.display = "none";
+        c.classList.remove("active");
+    });
+    btns.forEach(b => b.classList.remove("active"));
+
+    const targetContent = document.getElementById(`extSubTab_${subTab}`);
+    const targetBtn = document.querySelector(`.ext-subtab-btn[data-extsub="${subTab}"]`);
+
+    if (targetContent) {
+        targetContent.style.display = "block";
+        targetContent.classList.add("active");
+    }
+    if (targetBtn) {
+        targetBtn.classList.add("active");
+    }
+
+    if (subTab === 'uniformes') {
+        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
+    }
+}
+window.switchExtSubTab = switchExtSubTab;
 
 function renderModuleAdministracao() {
-    try {
-        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
-    } catch (e) {
-        console.error("Erro ao renderizar uniformes na administração:", e);
-    }
     try {
         renderAdminTelefonesTable();
     } catch (e) {
@@ -7209,25 +7182,20 @@ function setDirAtendViewMode(mode) {
 }
 
 function switchDirSubTab(subTabId) {
-    if (subTabId === 'relatorios') {
-        // Redireciona diretamente para a visão de Relatórios dentro da sub-aba Orientação
-        currentDirSubTab = 'atendimentos';
-        subTabId = 'atendimentos';
-        setDirAtendViewMode('relatorios');
-    } else if (subTabId === 'atendimentos') {
-        currentDirSubTab = 'atendimentos';
-        if (dirAtendViewMode !== 'relatorios') {
-            setDirAtendViewMode('lista');
-        }
-    } else {
-        currentDirSubTab = subTabId;
+    if (subTabId === 'relatorios' || subTabId === 'atendimentos') {
+        switchTab('op');
+        return;
     }
+    if (!subTabId || subTabId === 'dossie') {
+        subTabId = 'whatsapp';
+    }
+    currentDirSubTab = subTabId;
 
     const btns = document.querySelectorAll(".dir-subtab-btn");
     const contents = document.querySelectorAll(".dir-subtab-content");
 
     btns.forEach(b => {
-        if (b.dataset.dirsub === subTabId || (subTabId === 'atendimentos' && dirAtendViewMode === 'relatorios' && b.dataset.dirsub === 'relatorios')) {
+        if (b.dataset.dirsub === subTabId) {
             b.classList.add("active");
         } else {
             b.classList.remove("active");
@@ -7254,10 +7222,7 @@ function switchDirSubTab(subTabId) {
         });
     }
 
-    if (subTabId === 'atendimentos') {
-        setDirAtendViewMode(dirAtendViewMode || 'lista');
-    }
-    else if (subTabId === 'whatsapp') renderDirWhatsApp();
+    if (subTabId === 'whatsapp') renderDirWhatsApp();
     else if (subTabId === 'atas') renderDirLivroAta();
     else if (subTabId === 'calendario') renderDirCalendarioEscolar();
 }

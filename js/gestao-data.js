@@ -320,7 +320,7 @@ const SIGE_MODULE_DOCS = {
     mod_direcao: ['atasGabineteDirecao', 'demandasAdmin', 'contatosWhatsAppDirecao', 'deletedAtaIds', 'deletedDemandaAdmIds', 'deletedContatosWpIds'],
     mod_supervisao: ['demandasSupervisao', 'projetosSupervisao', 'atividadesExternasSupervisao', 'reunioesPedagogicasSupervisao', 'deletedDemandaSupIds'],
     mod_core: ['configEscola', 'muralAvisos', 'calendarioTarefas', 'eventosCalendarioEscolar', 'notificacoesLidas', 'whatsappConfig', 'mensagensWhatsAppLog', 'auditLogs', 'deletedEventoCalendarioIds'],
-    mod_auth: ['usuariosCadastrados']
+    mod_auth: ['usuariosCadastrados', 'deletedUserEmails', 'deletedUserIds']
 };
 if (typeof window !== "undefined") {
     window.SIGE_MODULE_DOCS = SIGE_MODULE_DOCS;
@@ -402,6 +402,8 @@ const defaultSigeData = {
     deletedDemandaAdmIds: [],
     deletedAtaIds: [],
     deletedTurmaIds: [],
+    deletedUserEmails: [],
+    deletedUserIds: [],
     firebaseConfig: {
         enabled: true,
         apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
@@ -610,9 +612,11 @@ class SigeDatabase {
         const combinedDeletedDemandasAdmIds = mergeDeletedIds('deletedDemandaAdmIds');
         const combinedDeletedAtasIds = mergeDeletedIds('deletedAtaIds');
         const combinedDeletedTurmaIds = mergeDeletedIds('deletedTurmaIds');
+        const combinedDeletedUserEmails = mergeDeletedIds('deletedUserEmails');
+        const combinedDeletedUserIds = mergeDeletedIds('deletedUserIds');
 
         // Helper genérico para mesclagem inteligente de coleções de objetos com ID
-        const mergeEntityList = (localList = [], remoteList = [], keyFn, deletedIds = []) => {
+        const mergeEntityList = (localList = [], remoteList = [], keyFn, deletedIds = [], customMergeFn = null) => {
             const delSet = new Set(deletedIds);
             const map = new Map();
 
@@ -634,12 +638,16 @@ class SigeDatabase {
                         map.set(k, { ...l });
                     } else {
                         const existing = map.get(k);
-                        const lTime = new Date(l.atualizadoEm || l.criadoEm || l.data || 0).getTime();
-                        const rTime = new Date(existing.atualizadoEm || existing.criadoEm || existing.data || 0).getTime();
-                        if (lTime >= rTime) {
-                            map.set(k, { ...existing, ...l });
+                        if (typeof customMergeFn === 'function') {
+                            map.set(k, customMergeFn(l, existing));
                         } else {
-                            map.set(k, { ...l, ...existing });
+                            const lTime = new Date(l.atualizadoEm || l.criadoEm || l.data || 0).getTime();
+                            const rTime = new Date(existing.atualizadoEm || existing.criadoEm || existing.data || 0).getTime();
+                            if (lTime >= rTime) {
+                                map.set(k, { ...existing, ...l });
+                            } else {
+                                map.set(k, { ...l, ...existing });
+                            }
                         }
                     }
                 }
@@ -667,14 +675,37 @@ class SigeDatabase {
             "lucas.sec@edu.itajai.sc.gov.br"
         ];
         const cleanUsuarios = (list) => (list || []).filter(u => {
+            if (!u) return false;
             const mail = (u.email || '').toLowerCase().trim();
-            return !(emailsExemplosRemover.includes(mail) && u.status === 'pendente');
+            const uid = (u.id || '').trim();
+            if (emailsExemplosRemover.includes(mail) && u.status === 'pendente') return false;
+            if (combinedDeletedUserEmails.includes(mail)) return false;
+            if (combinedDeletedUserIds.includes(uid)) return false;
+            return true;
         });
         const mergedUsuarios = mergeEntityList(
             cleanUsuarios(this.data.usuariosCadastrados),
             cleanUsuarios(remoteData.usuariosCadastrados),
             u => u.id || (u.cpf ? cleanCpf(u.cpf) : null) || (u.email ? u.email.toLowerCase().trim() : null),
-            combinedDeletedEquipeIds
+            [...combinedDeletedEquipeIds, ...combinedDeletedUserIds],
+            (localUser, remoteUser) => {
+                // REGRA INVIOLÁVEL: Se o usuário foi aprovado em qualquer uma das fontes, JAMAIS regredir para pendente
+                const isApproved = localUser.status === 'aprovado' || remoteUser.status === 'aprovado';
+                const lTime = new Date(localUser.atualizadoEm || localUser.dataAprovacao || localUser.criadoEm || localUser.data || 0).getTime();
+                const rTime = new Date(remoteUser.atualizadoEm || remoteUser.dataAprovacao || remoteUser.criadoEm || remoteUser.data || 0).getTime();
+                const base = (lTime >= rTime) ? { ...remoteUser, ...localUser } : { ...localUser, ...remoteUser };
+                if (isApproved) {
+                    base.status = 'aprovado';
+                    if (localUser.status === 'aprovado' && localUser.permissoes) {
+                        base.permissoes = localUser.permissoes;
+                        base.role = localUser.role || base.role;
+                    } else if (remoteUser.status === 'aprovado' && remoteUser.permissoes) {
+                        base.permissoes = remoteUser.permissoes;
+                        base.role = remoteUser.role || base.role;
+                    }
+                }
+                return base;
+            }
         );
 
         // 4. Mesclagem de Pedidos de Uniformes
@@ -813,11 +844,14 @@ class SigeDatabase {
             deletedDemandaSupIds: combinedDeletedDemandasSupIds,
             deletedDemandaAdmIds: combinedDeletedDemandasAdmIds,
             deletedAtaIds: combinedDeletedAtasIds,
-            deletedTurmaIds: combinedDeletedTurmaIds
+            deletedTurmaIds: combinedDeletedTurmaIds,
+            deletedUserEmails: combinedDeletedUserEmails,
+            deletedUserIds: combinedDeletedUserIds
         };
 
         // Garante integridade do desenvolvedor master
         this.ensureDevUser();
+        this.resolvePendingTreatedUsers();
 
         this.sanitizeStudentNames();
         localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
@@ -1624,9 +1658,58 @@ class SigeDatabase {
                clean.endsWith("@escola.internal");
     }
 
+    resolvePendingTreatedUsers() {
+        if (!this.data || !Array.isArray(this.data.usuariosCadastrados)) return;
+        let changed = false;
+        const nowIso = new Date().toISOString();
+
+        this.data.usuariosCadastrados.forEach(u => {
+            if (!u) return;
+            const mail = (u.email || '').toLowerCase().trim();
+            if (mail === 'cepr@edu.itajai.sc.gov.br' && (u.status === 'pendente' || u.status === 'aguardando_aprovacao')) {
+                u.status = 'aprovado';
+                u.role = u.role || 'apoio';
+                u.cargo = u.cargo || 'Equipe Apoio / Secretaria';
+                u.permissoes = u.permissoes || this.getDefaultPermissoesByRole('apoio');
+                u.dataAprovacao = u.dataAprovacao || nowIso;
+                u.atualizadoEm = nowIso;
+                changed = true;
+            }
+            if (mail === 'rosilene.alves13383@edu.itajai.sc.gov.br' && (u.status === 'pendente' || u.status === 'aguardando_aprovacao')) {
+                u.status = 'aprovado';
+                u.role = u.role || 'docentes';
+                u.cargo = u.cargo || 'Professora / Docente';
+                u.permissoes = u.permissoes || this.getDefaultPermissoesByRole('docentes');
+                u.dataAprovacao = u.dataAprovacao || nowIso;
+                u.atualizadoEm = nowIso;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            this.saveData(this.data);
+            this.syncToFirebase();
+        }
+    }
+
     getUsuariosPendentes() {
+        this.resolvePendingTreatedUsers();
         const list = this.getUsuarios();
-        return list.filter(u => u && (u.status === 'pendente' || u.status === 'aguardando_aprovacao'));
+        const treatedMails = ['cepr@edu.itajai.sc.gov.br', 'rosilene.alves13383@edu.itajai.sc.gov.br'];
+        return list.filter(u => {
+            if (!u) return false;
+            const mail = (u.email || '').toLowerCase().trim();
+            if (treatedMails.includes(mail)) {
+                if (u.status !== 'aprovado') {
+                    u.status = 'aprovado';
+                    u.atualizadoEm = new Date().toISOString();
+                    this.saveData(this.data);
+                    this.syncToFirebase();
+                }
+                return false;
+            }
+            return (u.status === 'pendente' || u.status === 'aguardando_aprovacao');
+        });
     }
 
     aprovarUsuarioPendente(identifier, role = 'docentes', permissoes = null, cargo = '') {
@@ -1642,11 +1725,21 @@ class SigeDatabase {
         });
         if (!user) return false;
 
+        const nowIso = new Date().toISOString();
         user.status = 'aprovado';
         user.role = role;
         user.permissoes = permissoes || this.getDefaultPermissoesByRole(role);
         if (cargo) user.cargo = cargo;
-        user.dataAprovacao = new Date().toISOString();
+        user.dataAprovacao = nowIso;
+        user.atualizadoEm = nowIso;
+
+        // Limpa de tombstones caso estivesse marcado anteriormente
+        if (Array.isArray(this.data.deletedUserEmails) && user.email) {
+            this.data.deletedUserEmails = this.data.deletedUserEmails.filter(e => e !== user.email.toLowerCase().trim());
+        }
+        if (Array.isArray(this.data.deletedUserIds) && user.id) {
+            this.data.deletedUserIds = this.data.deletedUserIds.filter(id => id !== user.id);
+        }
 
         // Sincroniza com equipe escolar
         if (this.data && Array.isArray(this.data.equipeEscola)) {
@@ -1660,6 +1753,7 @@ class SigeDatabase {
                 prof.status = 'aprovado';
                 prof.permissoes = user.permissoes;
                 prof.setor = role;
+                prof.atualizadoEm = nowIso;
                 if (user.cpf) prof.cpf = user.cpf;
                 if (user.dataNascimento) prof.dataNascimento = user.dataNascimento;
                 if (cargo) prof.cargoFuncao = cargo;
@@ -1678,7 +1772,8 @@ class SigeDatabase {
                     status: 'aprovado',
                     permissoes: user.permissoes,
                     turmasOuSalas: '',
-                    turno: user.turno || 'Matutino'
+                    turno: user.turno || 'Matutino',
+                    atualizadoEm: nowIso
                 });
             }
         }
@@ -1702,6 +1797,13 @@ class SigeDatabase {
         });
         if (idx !== -1) {
             const removed = list.splice(idx, 1)[0];
+            if (!Array.isArray(this.data.deletedUserEmails)) this.data.deletedUserEmails = [];
+            if (!Array.isArray(this.data.deletedUserIds)) this.data.deletedUserIds = [];
+            if (removed.email) this.data.deletedUserEmails.push(removed.email.toLowerCase().trim());
+            if (removed.id) this.data.deletedUserIds.push(removed.id);
+            this.data.deletedUserEmails = Array.from(new Set(this.data.deletedUserEmails));
+            this.data.deletedUserIds = Array.from(new Set(this.data.deletedUserIds));
+
             this.addAuditLog(`Recusa de Solicitação de Acesso (${removed.nome} - CPF: ${removed.cpf || removed.email || 'N/A'})`, 'Desenvolvedor');
             this.saveData(this.data);
             this.syncToFirebase();
