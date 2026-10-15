@@ -222,17 +222,41 @@
     background: #f8fafc;
 }
 
-.sige-tab-btn .tab-badge {
-    background: #cbd5e1;
-    color: #1e293b;
-    padding: 2px 8px;
+.sige-tab-btn .subtab-count-pill {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 7px;
     border-radius: 10px;
     font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.sige-tab-btn.active .subtab-count-pill {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.sige-tab-btn .tab-badge {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 1;
 }
 
 .sige-tab-btn.active .tab-badge {
-    background: #f59e0b;
+    background: #ef4444;
     color: white;
+    border-color: #dc2626;
 }
 
 a.sige-tab-btn.sige-tab-link {

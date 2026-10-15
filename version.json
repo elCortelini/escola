@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v46",
-  "build": 1792080100,
-  "updatedAt": "2026-10-15T15:28:00-03:00",
-  "description": "Ajuste de layout mesa interativa, chancelas compactas com edicao e remocao de boxes redundantes"
+  "version": "20261015_v47",
+  "build": 1792080200,
+  "updatedAt": "2026-10-15T15:35:00-03:00",
+  "description": "Botao limpar PDF na mesa interativa e identificacao clara de submodulos e alertas nas abas"
 }

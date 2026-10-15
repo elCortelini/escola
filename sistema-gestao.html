@@ -13,12 +13,12 @@
     
     <!-- FontAwesome 6 Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20261007_v44">
-    <link rel="stylesheet" href="css/gestao.css?v=20261007_v44">
+    <link rel="stylesheet" href="css/style.css?v=20261015_v47">
+    <link rel="stylesheet" href="css/gestao.css?v=20261015_v47">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Verificador e Atualizador Automático de Versão de Cache -->
-    <script src="js/version-checker.js?v=20261015_v45"></script>
+    <script src="js/version-checker.js?v=20261015_v47"></script>
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -122,24 +122,30 @@
     <nav class="sige-nav-tabs">
         <button class="sige-tab-btn active" data-tab="direcao">
             <i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Gestão & Direção
+            <span class="subtab-count-pill" title="7 submódulos disponíveis">7</span>
         </button>
         <button class="sige-tab-btn" data-tab="op">
             <i class="fa-solid fa-heart-pulse" style="color:#ec4899;"></i> Orientação Educacional
-            <span class="tab-badge" id="badgeTabOP">0</span>
+            <span class="subtab-count-pill" title="3 submódulos disponíveis">3</span>
+            <span class="tab-badge" id="badgeTabOP" style="display:none;" title="Pendências na Orientação">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="supervisao">
             <i class="fa-solid fa-clipboard-check" style="color:#0284c7;"></i> Supervisão Pedagógica
-            <span class="tab-badge" id="badgeTabSup">0</span>
+            <span class="subtab-count-pill" title="3 submódulos disponíveis">3</span>
+            <span class="tab-badge" id="badgeTabSup" style="display:none;" title="Demandas pendentes na Supervisão">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="admin">
             <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Secretaria & Operacional
-            <span class="tab-badge" id="badgeTabAdm">0</span>
+            <span class="subtab-count-pill" title="5 submódulos disponíveis">5</span>
+            <span class="tab-badge" id="badgeTabAdm" style="display:none;" title="Pendências em aberto na Secretaria">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="externos">
             <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Sistemas
+            <span class="subtab-count-pill" title="5 sistemas integrados">5</span>
         </button>
         <button class="sige-tab-btn" data-tab="dev" id="tabBtnDev" style="display:none;">
             <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Desenvolvedor & TI
+            <span class="subtab-count-pill" title="2 submódulos disponíveis">2</span>
             <span class="tab-badge" id="badgeTabDev" style="background:#f59e0b; display:none;">0</span>
         </button>
     </nav>
@@ -857,6 +863,9 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:8px 14px; border-radius:10px; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <span style="font-size:0.8rem; font-weight:800; color:#1e293b;" id="pdfMetaFileName">documento.pdf</span>
+                                    <button type="button" onclick="limparPdfMesa()" class="btn" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:0.75rem; padding:4px 9px; border-radius:6px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" title="Remover e fechar este PDF da mesa">
+                                        <i class="fa-solid fa-trash-can"></i> Limpar / Fechar PDF
+                                    </button>
                                 </div>
 
                                 <div style="display:flex; align-items:center; gap:6px;">
@@ -930,6 +939,9 @@
                                     </button>
                                     <button type="button" onclick="openModalEnviarEmail()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; font-weight:800; background:#0284c7; color:white; border:none; padding:9px 16px; box-shadow:0 4px 12px rgba(2, 132, 199, 0.25);">
                                         <i class="fa-solid fa-envelope"></i> Enviar E-mail
+                                    </button>
+                                    <button type="button" onclick="limparPdfMesa()" class="btn btn-secondary" style="width:auto; font-size:0.85rem; font-weight:800; background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; padding:9px 14px;" title="Remover e fechar este PDF da mesa">
+                                        <i class="fa-solid fa-trash-can"></i> Limpar Mesa
                                     </button>
                                 </div>
                             </div>
@@ -5133,12 +5145,12 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20261015_v45"></script>
-    <script src="js/evolution-client.js?v=20261015_v45"></script>
-    <script src="js/gestao-data.js?v=20261015_v45"></script>
-    <script src="js/gestao-app.js?v=20261015_v45"></script>
-    <script src="js/pdf-importer.js?v=20261015_v45"></script>
-    <script src="js/assinatura-docs.js?v=20261015_v45"></script>
+    <script src="js/calendario-oficial-data.js?v=20261015_v47"></script>
+    <script src="js/evolution-client.js?v=20261015_v47"></script>
+    <script src="js/gestao-data.js?v=20261015_v47"></script>
+    <script src="js/gestao-app.js?v=20261015_v47"></script>
+    <script src="js/pdf-importer.js?v=20261015_v47"></script>
+    <script src="js/assinatura-docs.js?v=20261015_v47"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">

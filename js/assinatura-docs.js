@@ -462,6 +462,44 @@
     }
     window.navegarPaginaPdf = navegarPaginaPdf;
 
+    function limparPdfMesa() {
+        AssinaturaModule.currentPdfBytes = null;
+        AssinaturaModule.currentPdfDoc = null;
+        AssinaturaModule.currentFileName = '';
+        AssinaturaModule.currentPageNum = 1;
+        AssinaturaModule.totalPdfPages = 1;
+        AssinaturaModule.signedPdfBytes = null;
+        AssinaturaModule.signedPdfBlob = null;
+        AssinaturaModule.signedPdfBase64 = null;
+        AssinaturaModule.signedFileName = '';
+
+        const container = document.getElementById('pdfMesaTrabalhoContainer');
+        if (container) container.style.display = 'none';
+
+        const placeholder = document.getElementById('pdfEmptyPlaceholder');
+        if (placeholder) placeholder.style.display = 'block';
+
+        const successAlert = document.getElementById('pdfSignedSuccessAlert');
+        if (successAlert) successAlert.style.display = 'none';
+
+        const canvas = document.getElementById('pdfViewerCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = 0;
+            canvas.height = 0;
+        }
+
+        const overlay = document.getElementById('signatureOverlayBox');
+        if (overlay) overlay.style.display = 'none';
+
+        const fileInput = document.getElementById('pdfExternalFileInput');
+        if (fileInput) fileInput.value = '';
+
+        showToast('Documento PDF removido da mesa de trabalho.');
+    }
+    window.limparPdfMesa = limparPdfMesa;
+
     // =========================================================================
     // 4. MESA DE POSICIONAMENTO INTERATIVO DA ASSINATURA (OPÇÃO 1-A)
     // =========================================================================

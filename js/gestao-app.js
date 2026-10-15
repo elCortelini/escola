@@ -1469,23 +1469,28 @@ function updateBadgesCounts() {
     const totalAdm = countAdm + countUni;
 
     if (bPed) {
-        bPed.innerText = totalPed;
+        bPed.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${totalPed}`;
+        bPed.title = `${totalPed} pendência(s) pedagógica(s) em aberto`;
         bPed.style.display = totalPed > 0 ? "inline-flex" : "none";
     }
     if (bAdm) {
-        bAdm.innerText = totalAdm;
+        bAdm.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${totalAdm}`;
+        bAdm.title = `${totalAdm} pendência(s) em aberto na Secretaria (Demandas / Uniformes)`;
         bAdm.style.display = totalAdm > 0 ? "inline-flex" : "none";
     }
     if (bOp) {
-        bOp.innerText = countOp;
+        bOp.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${countOp}`;
+        bOp.title = `${countOp} atendimento(s) pendente(s) na Orientação`;
         bOp.style.display = countOp > 0 ? "inline-flex" : "none";
     }
     if (bSup) {
-        bSup.innerText = countSup;
+        bSup.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${countSup}`;
+        bSup.title = `${countSup} demanda(s) pendente(s) na Supervisão Pedagógica`;
         bSup.style.display = countSup > 0 ? "inline-flex" : "none";
     }
     if (bUni) {
         bUni.innerText = countUni;
+        bUni.title = `${countUni} pedido(s) de uniforme aguardando envio ou entrega`;
         bUni.style.display = countUni > 0 ? "inline-block" : "none";
     }
 }
