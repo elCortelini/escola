@@ -7145,6 +7145,11 @@ function setDirAtendViewMode(mode) {
 }
 
 function switchDirSubTab(subTabId) {
+    if (subTabId === 'avaliacao') {
+        const win = window.open('dashboard.html', '_blank');
+        if (win) win.focus();
+        return;
+    }
     if (subTabId === 'relatorios' || subTabId === 'atendimentos') {
         switchTab('op');
         return;
@@ -7188,9 +7193,6 @@ function switchDirSubTab(subTabId) {
     if (subTabId === 'whatsapp') renderDirWhatsApp();
     else if (subTabId === 'atas') renderDirLivroAta();
     else if (subTabId === 'calendario') renderDirCalendarioEscolar();
-    else if (subTabId === 'avaliacao') {
-        // Sub-aba Avaliação de Satisfação Escolar exibe o painel analítico
-    }
 }
 
 function renderModuleDirecao() {
