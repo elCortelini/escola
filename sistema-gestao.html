@@ -135,7 +135,7 @@
             <span class="tab-badge" id="badgeTabAdm">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="externos">
-            <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Serviços & Sistemas
+            <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Sistemas
         </button>
         <button class="sige-tab-btn" data-tab="dev" id="tabBtnDev" style="display:none;">
             <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Desenvolvedor & TI
@@ -430,33 +430,17 @@
         
         
         <!-- ========================================== -->
-        <!-- ABA 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA -->
+        <!-- ========================================== -->
+        <!-- ABA 4: SECRETARIA & OPERACIONAL -->
         <!-- ========================================== -->
         <section id="tab-admin" class="tab-content-section">
-            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração Escolar & Logística
-                    </h3>
-                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Painel de gestão da Administradora: uniformes escolares, sistemas externos, telefones da equipe, turnos e dados da unidade.</p>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.83rem; font-weight:800; padding:8px 14px; border-radius:10px; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 4px 10px rgba(22,163,74,0.25);">
-                        <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado à Equipe
-                    </button>
-                    <button type="button" onclick="openCadastroProfissionalModal()" class="btn" style="background:linear-gradient(135deg, #1e3a8a, #2563eb); color:white; font-size:0.83rem; font-weight:800; padding:8px 14px; border-radius:10px; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 4px 10px rgba(37,99,235,0.25);">
-                        <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador
-                    </button>
-                </div>
-            </div>
-
             <!-- CARDS DE NAVEGAÇÃO INTERNA DA ADMINISTRAÇÃO -->
             <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
-                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="telefones" onclick="switchAdminSubTab('telefones')">
-                    <div class="dir-nav-card-icon" style="background:#dcfce7; color:#16a34a;">
-                        <i class="fa-solid fa-address-book"></i>
+                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="uniformes" onclick="switchAdminSubTab('uniformes')">
+                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
+                        <i class="fa-solid fa-shirt"></i>
                     </div>
-                    <div class="dir-nav-card-title">Contatos & Telefones</div>
+                    <div class="dir-nav-card-title">Uniformes Escolares</div>
                 </button>
                 <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="turnos" onclick="switchAdminSubTab('turnos')">
                     <div class="dir-nav-card-icon" style="background:#fef3c7; color:#d97706;">
@@ -478,223 +462,8 @@
                 </button>
             </div>
 
-            <!-- SUB-ABA 1: CADASTRO DE TELEFONES DE PROFISSIONAIS & DISPARO DE MENSAGENS -->
-            <div id="adminSubTab_telefones" class="admin-subtab-content active">
-                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
-                        <div>
-                            <h4 style="font-size:1.15rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:8px; margin:0;">
-                                <i class="fa-solid fa-address-book" style="color:#16a34a; font-size:1.3rem;"></i> Cadastro de Telefones & Contatos dos Profissionais
-                            </h4>
-                            <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                                Agenda institucional e telefones de professores e colaboradores para comunicação direta e envio de mensagens WhatsApp.
-                            </p>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.82rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer;">
-                                <i class="fa-brands fa-whatsapp"></i> Disparar Mensagem Geral
-                            </button>
-                            <button type="button" onclick="openCadastroProfissionalModal()" class="btn" style="background:#2563eb; color:white; font-size:0.82rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer;">
-                                <i class="fa-solid fa-user-plus"></i> + Novo Profissional
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Barra de Filtros e Busca de Telefones -->
-                    <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
-                        <input type="text" id="adminTelefonesBuscaInput" oninput="renderAdminTelefonesTable()" placeholder="🔍 Buscar profissional por nome, cargo ou telefone..." class="search-input" style="flex:1; min-width:240px; font-size:0.85rem;">
-                        <select id="adminTelefonesSetorFilter" onchange="renderAdminTelefonesTable()" class="search-input" style="min-width:180px; font-size:0.85rem; font-weight:700;">
-                            <option value="todos">Todos os Setores</option>
-                            <option value="docentes">👨‍🏫 Docentes</option>
-                            <option value="orientacao">🧭 Orientação</option>
-                            <option value="supervisao">📋 Supervisão</option>
-                            <option value="direcao">👑 Direção</option>
-                            <option value="secretaria">📑 Secretaria</option>
-                            <option value="apoio">🔧 Apoio & TI</option>
-                        </select>
-                    </div>
-
-                    <!-- Tabela de Telefones e Contatos -->
-                    <div style="overflow-x:auto;">
-                        <table class="sige-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
-                            <thead>
-                                <tr style="background:#f1f5f9; color:#334155;">
-                                    <th style="padding:10px;">Colaborador</th>
-                                    <th style="padding:10px;">Cargo / Setor</th>
-                                    <th style="padding:10px;">Telefone / WhatsApp</th>
-                                    <th style="padding:10px;">Turmas / Salas</th>
-                                    <th style="padding:10px; text-align:center;">Ações de Contato</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminTelefonesTableBody">
-                                <!-- Renderizado via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUB-ABA 4: ESTRUTURA DE TURNOS & TURMAS -->
-            <div id="adminSubTab_turnos" class="admin-subtab-content" style="display:none;">
-                            <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
-            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
-                    <div>
-                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                            <i class="fa-solid fa-chalkboard" style="color:#0284c7; font-size:1.3rem;"></i> Cadastro & Estrutura de Turmas e Turnos
-                        </h4>
-                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
-                            Mapeamento de turmas, turnos letivos (Matutino/Vespertino/Noturno), salas de aula e tutores regentes.
-                        </p>
-                    </div>
-                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#0284c7;">
-                        <i class="fa-solid fa-plus"></i> + Nova Turma
-                    </button>
-                </div>
-
-                <div id="admTurmasIconesContainer" style="display:flex; flex-direction:column; gap:14px;">
-                    <!-- Renderizado dinamicamente em ícones compactos agrupados por turno -->
-                </div>
-            </div>
-            </div>
-
-            <!-- SUB-ABA 5: IMPORTAÇÃO DE ALUNOS VIA PDF -->
-            <div id="adminSubTab_alunos_pdf" class="admin-subtab-content" style="display:none;">
-                            <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
-            <div style="background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 1rem;">
-                    <div>
-                        <h4 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0;">
-                            <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 1.3rem;"></i> Painel de Importação de Alunos & Contatos (PDF)
-                        </h4>
-                        <p style="font-size: 0.83rem; color: #64748b; margin-top: 3px;">
-                            Carregue o relatório PDF <strong>"Alunos Enturmados Contatos"</strong> para cadastrar/atualizar alunos, turmas (ex: 101, 102), turnos, e-mails institucionais e telefones.
-                        </p>
-                    </div>
-                    <button onclick="openImportPDFAlunosModal()" class="btn btn-primary" style="width: auto; font-size: 0.88rem; padding: 9px 18px; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(16,185,129,0.35); cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.1rem;"></i> <span>Abrir Importador PDF</span>
-                    </button>
-                </div>
-
-                <!-- Dropzone Direta na Página (Quick Upload) -->
-                <div id="inlinePdfDropZone" onclick="openImportPDFAlunosModal()" style="border: 2px dashed #94a3b8; border-radius: 14px; padding: 1.6rem 1rem; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;">
-                    <i class="fa-solid fa-file-import" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 6px;"></i>
-                    <div style="font-size: 1rem; font-weight: 800; color: #1e293b;">Clique aqui para selecionar ou arraste o arquivo PDF de Alunos</div>
-                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">O sistema processará as turmas (ex: 101, 102), turnos e telefones automaticamente.</div>
-                </div>
-
-                <!-- Status e Resumo de Dados Importados -->
-                <div id="adminPdfImportMetaInfo" style="background: #f1f5f9; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <!-- Renderizado dinamicamente via updateAdminPdfImportMetaInfoDisplay() -->
-                </div>
-                
-                <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                    <button type="button" onclick="confirmarLimparAlunosImportados()" class="btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:800; font-size:0.8rem; padding:6px 12px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" title="Remover todos os alunos da base de dados">
-                        <i class="fa-solid fa-trash-can"></i> Limpar Cadastro de Alunos do Banco
-                    </button>
-                </div>
-            </div>
-            </div>
-
-            <!-- SUB-ABA 6: PARÂMETROS DA UNIDADE ESCOLAR -->
-            <div id="adminSubTab_parametros" class="admin-subtab-content" style="display:none;">
-                                <!-- Parâmetros da Unidade -->
-                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-school-flag" style="color:#1e3a8a;"></i> Parâmetros da Unidade Escolar
-                    </h4>
-
-                    <form onsubmit="salvarConfiguracoesEscola(event)" style="display:flex; flex-direction:column; gap:10px;">
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Nome da Unidade Escolar:</label>
-                            <input type="text" id="cfgNomeEscola" required class="search-input" style="width:100%; font-size:0.85rem;">
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Cidade / UF:</label>
-                                <input type="text" id="cfgCidadeUf" required class="search-input" style="width:100%; font-size:0.85rem;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Ano Letivo Vigente:</label>
-                                <input type="text" id="cfgAnoLetivo" required class="search-input" style="width:100%; font-size:0.85rem;">
-                            </div>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Período Letivo Atual:</label>
-                                <input type="text" id="cfgPeriodoAtual" required class="search-input" style="width:100%; font-size:0.85rem;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Telefone Institucional:</label>
-                                <input type="text" id="cfgTelefoneContato" class="search-input" style="width:100%; font-size:0.85rem;">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Logotipo Oficial da Escola (Usado em Documentos e Termos):</label>
-                            <div style="display:flex; align-items:center; gap:14px; margin-top:6px; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0;">
-                                <div style="width:60px; height:60px; border-radius:8px; border:1px solid #cbd5e1; background:white; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
-                                    <img id="cfgLogoPreview" class="cfg-logo-preview-img" src="img/logo-pedro-rizzi.png" alt="Prévia do Logo" style="max-width:100%; max-height:100%; object-fit:contain;">
-                                </div>
-                                <div style="flex:1;">
-                                    <input type="file" id="cfgLogoFileInput" accept="image/*" onchange="handleLogoUpload(event)" style="display:none;">
-                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                        <button type="button" onclick="document.getElementById('cfgLogoFileInput').click()" class="btn" style="background:#2563eb; color:white; font-size:0.78rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700;">
-                                            <i class="fa-solid fa-upload"></i> Enviar Logo
-                                        </button>
-                                        <button type="button" onclick="resetarLogoEscolaPadrao()" class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.78rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700;" title="Restaurar o logotipo padrão">
-                                            <i class="fa-solid fa-rotate-left"></i> Restaurar Padrão
-                                        </button>
-                                    </div>
-                                    <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Formatos: PNG, JPG, SVG, WebP (Máx 2MB).</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
-                            <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#1e3a8a;">
-                                <i class="fa-solid fa-floppy-disk"></i> Salvar Parâmetros
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- ========================================== -->
-        <!-- MÓDULO 4: SERVIÇOS & SISTEMAS EXTERNOS -->
-        <!-- ========================================== -->
-        <section id="tab-externos" class="tab-content-section">
-            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; border-left:6px solid #8b5cf6; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Serviços & Sistemas Integrados
-                    </h3>
-                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Gestão de uniformes escolares e acesso rápido às plataformas e sistemas externos da unidade.</p>
-                </div>
-            </div>
-
-            <!-- CARDS DE NAVEGAÇÃO INTERNA DE SERVIÇOS & SISTEMAS -->
-            <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
-                <button type="button" class="dir-nav-card ext-subtab-btn active" data-extsub="uniformes" onclick="switchExtSubTab('uniformes')">
-                    <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
-                        <i class="fa-solid fa-shirt"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Uniformes Escolares</div>
-                </button>
-                <button type="button" class="dir-nav-card ext-subtab-btn" data-extsub="plataformas" onclick="switchExtSubTab('plataformas')">
-                    <div class="dir-nav-card-icon" style="background:#f5f3ff; color:#7c3aed;">
-                        <i class="fa-solid fa-cubes"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Plataformas & Links</div>
-                </button>
-            </div>
-
             <!-- SUB-ABA 1: UNIFORMES ESCOLARES -->
-            <div id="extSubTab_uniformes" class="ext-subtab-content active">
+            <div id="adminSubTab_uniformes" class="admin-subtab-content active">
                 <div id="adminSecUniformes">
                     <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <div>
@@ -892,9 +661,151 @@
                 </div>
             </div>
 
-            <!-- SUB-ABA 2: PLATAFORMAS & LINKS EXTERNOS -->
-            <div id="extSubTab_plataformas" class="ext-subtab-content" style="display:none;">
-                <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
+            <!-- SUB-ABA 4: ESTRUTURA DE TURNOS & TURMAS -->
+            <div id="adminSubTab_turnos" class="admin-subtab-content" style="display:none;">
+                            <!-- CARD 2: GESTÃO DE TURMAS & TURNOS DA ESCOLA -->
+            <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; margin-bottom:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-chalkboard" style="color:#0284c7; font-size:1.3rem;"></i> Cadastro & Estrutura de Turmas e Turnos
+                        </h4>
+                        <p style="font-size:0.83rem; color:#64748b; margin-top:2px;">
+                            Mapeamento de turmas, turnos letivos (Matutino/Vespertino/Noturno), salas de aula e tutores regentes.
+                        </p>
+                    </div>
+                    <button onclick="openCadastroTurmaModal()" class="btn btn-primary" style="width:auto; font-size:0.82rem; padding:6px 12px; background:#0284c7;">
+                        <i class="fa-solid fa-plus"></i> + Nova Turma
+                    </button>
+                </div>
+
+                <div id="admTurmasIconesContainer" style="display:flex; flex-direction:column; gap:14px;">
+                    <!-- Renderizado dinamicamente em ícones compactos agrupados por turno -->
+                </div>
+            </div>
+            </div>
+
+            <!-- SUB-ABA 5: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+            <div id="adminSubTab_alunos_pdf" class="admin-subtab-content" style="display:none;">
+                            <!-- PAINEL EXCLUSIVO: IMPORTAÇÃO DE ALUNOS VIA PDF -->
+            <div style="background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 1.3rem;"></i> Painel de Importação de Alunos & Contatos (PDF)
+                        </h4>
+                        <p style="font-size: 0.83rem; color: #64748b; margin-top: 3px;">
+                            Carregue o relatório PDF <strong>"Alunos Enturmados Contatos"</strong> para cadastrar/atualizar alunos, turmas (ex: 101, 102), turnos, e-mails institucionais e telefones.
+                        </p>
+                    </div>
+                    <button onclick="openImportPDFAlunosModal()" class="btn btn-primary" style="width: auto; font-size: 0.88rem; padding: 9px 18px; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(16,185,129,0.35); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.1rem;"></i> <span>Abrir Importador PDF</span>
+                    </button>
+                </div>
+
+                <!-- Dropzone Direta na Página (Quick Upload) -->
+                <div id="inlinePdfDropZone" onclick="openImportPDFAlunosModal()" style="border: 2px dashed #94a3b8; border-radius: 14px; padding: 1.6rem 1rem; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-file-import" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 6px;"></i>
+                    <div style="font-size: 1rem; font-weight: 800; color: #1e293b;">Clique aqui para selecionar ou arraste o arquivo PDF de Alunos</div>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">O sistema processará as turmas (ex: 101, 102), turnos e telefones automaticamente.</div>
+                </div>
+
+                <!-- Status e Resumo de Dados Importados -->
+                <div id="adminPdfImportMetaInfo" style="background: #f1f5f9; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <!-- Renderizado dinamicamente via updateAdminPdfImportMetaInfoDisplay() -->
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                    <button type="button" onclick="confirmarLimparAlunosImportados()" class="btn" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:800; font-size:0.8rem; padding:6px 12px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" title="Remover todos os alunos da base de dados">
+                        <i class="fa-solid fa-trash-can"></i> Limpar Cadastro de Alunos do Banco
+                    </button>
+                </div>
+            </div>
+            </div>
+
+            <!-- SUB-ABA 6: PARÂMETROS DA UNIDADE ESCOLAR -->
+            <div id="adminSubTab_parametros" class="admin-subtab-content" style="display:none;">
+                                <!-- Parâmetros da Unidade -->
+                <div style="background:white; padding:1.5rem; border-radius:18px; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                    <h4 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-school-flag" style="color:#1e3a8a;"></i> Parâmetros da Unidade Escolar
+                    </h4>
+
+                    <form onsubmit="salvarConfiguracoesEscola(event)" style="display:flex; flex-direction:column; gap:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Nome da Unidade Escolar:</label>
+                            <input type="text" id="cfgNomeEscola" required class="search-input" style="width:100%; font-size:0.85rem;">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Cidade / UF:</label>
+                                <input type="text" id="cfgCidadeUf" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Ano Letivo Vigente:</label>
+                                <input type="text" id="cfgAnoLetivo" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Período Letivo Atual:</label>
+                                <input type="text" id="cfgPeriodoAtual" required class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem; font-weight:700; color:#334155;">Telefone Institucional:</label>
+                                <input type="text" id="cfgTelefoneContato" class="search-input" style="width:100%; font-size:0.85rem;">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:#334155;">Logotipo Oficial da Escola (Usado em Documentos e Termos):</label>
+                            <div style="display:flex; align-items:center; gap:14px; margin-top:6px; background:#f8fafc; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0;">
+                                <div style="width:60px; height:60px; border-radius:8px; border:1px solid #cbd5e1; background:white; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                                    <img id="cfgLogoPreview" class="cfg-logo-preview-img" src="img/logo-pedro-rizzi.png" alt="Prévia do Logo" style="max-width:100%; max-height:100%; object-fit:contain;">
+                                </div>
+                                <div style="flex:1;">
+                                    <input type="file" id="cfgLogoFileInput" accept="image/*" onchange="handleLogoUpload(event)" style="display:none;">
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <button type="button" onclick="document.getElementById('cfgLogoFileInput').click()" class="btn" style="background:#2563eb; color:white; font-size:0.78rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700;">
+                                            <i class="fa-solid fa-upload"></i> Enviar Logo
+                                        </button>
+                                        <button type="button" onclick="resetarLogoEscolaPadrao()" class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.78rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700;" title="Restaurar o logotipo padrão">
+                                            <i class="fa-solid fa-rotate-left"></i> Restaurar Padrão
+                                        </button>
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Formatos: PNG, JPG, SVG, WebP (Máx 2MB).</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
+                            <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#1e3a8a;">
+                                <i class="fa-solid fa-floppy-disk"></i> Salvar Parâmetros
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- ========================================== -->
+        <!-- MÓDULO 5: SISTEMAS & PLATAFORMAS EXTERNAS -->
+        <!-- ========================================== -->
+        <section id="tab-externos" class="tab-content-section">
+            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; border-left:6px solid #8b5cf6; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Sistemas & Plataformas Integradas
+                    </h3>
+                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Acesso rápido às plataformas digitais e sistemas externos integrados da unidade.</p>
+                </div>
+            </div>
+
+            <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
                 <!-- Card 1: Agendamento de Recursos & Informática -->
                 <div class="dir-card" style="padding:24px; display:flex; flex-direction:column; justify-content:space-between; border-radius:16px; border:1px solid #e2e8f0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
                     <div>
@@ -1009,7 +920,6 @@
                         </a>
                     </div>
                 </div>
-            </div>
             </div>
         </section>
 

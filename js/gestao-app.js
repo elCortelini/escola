@@ -1223,7 +1223,7 @@ function switchTab(tabId, subKey) {
     } else if (tabId === 'dossie' || tabId === 'dir_mural') {
         tabId = 'op';
     } else if (tabId === 'uniformes') {
-        tabId = 'externos';
+        tabId = 'admin';
         subKey = 'uniformes';
     } else if (tabId === 'dir_mensagens') {
         tabId = 'direcao';
@@ -1246,7 +1246,7 @@ function switchTab(tabId, subKey) {
         op: "Orientação Educacional",
         supervisao: "Supervisão Pedagógica",
         admin: "Secretaria & Operacional",
-        externos: "Serviços & Sistemas",
+        externos: "Sistemas",
         dev: "Painel do Desenvolvedor & TI"
     };
 
@@ -1307,9 +1307,9 @@ function switchTab(tabId, subKey) {
     } else if (tabId === 'supervisao') {
         renderModuleSupervisao();
     } else if (tabId === 'admin') {
-        switchAdminSubTab(subKey || currentAdminSubTab || 'telefones');
+        switchAdminSubTab(subKey || currentAdminSubTab || 'uniformes');
     } else if (tabId === 'externos') {
-        switchExtSubTab(subKey || currentExtSubTab || 'uniformes');
+        // Sistemas externos já renderizados nos cards
     } else if (tabId === 'dev') {
         switchDevSubTab(subKey || currentDevSubTab || 'rbac');
     }
@@ -1428,14 +1428,11 @@ function renderAllModules(targetModule = null, forceAll = false) {
             try { renderModuleDirecao(); } catch (e) { console.error("Erro em renderModuleDirecao:", e); }
             break;
         case 'admin':
+        case 'uniformes':
             try { renderModuleAdministracao(); } catch (e) { console.error("Erro em renderModuleAdministracao:", e); }
             break;
         case 'externos':
-        case 'uniformes':
-            try {
-                if (typeof switchExtSubTab === "function") switchExtSubTab(currentExtSubTab || 'uniformes');
-                else if (typeof renderModuleUniformes === "function") renderModuleUniformes();
-            } catch (e) { console.error("Erro em renderModuleUniformes:", e); }
+            // Sistemas externos já renderizados nos cards
             break;
         case 'dev':
             try { renderModuleDev(); } catch (e) { console.error("Erro em renderModuleDev:", e); }
@@ -6057,15 +6054,10 @@ function submitNovaReuniaoPedagogica(e) {
 // ==========================================
 // MÓDULO 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA
 // ==========================================
-let currentAdminSubTab = 'telefones';
+let currentAdminSubTab = 'uniformes';
 
 function switchAdminSubTab(subTab) {
-    if (subTab === 'uniformes') {
-        switchExtSubTab('uniformes');
-        switchTab('externos', 'uniformes');
-        return;
-    }
-    if (!subTab) subTab = 'telefones';
+    if (!subTab || subTab === 'telefones') subTab = 'uniformes';
     currentAdminSubTab = subTab;
 
     const contents = document.querySelectorAll(".admin-subtab-content");
@@ -6090,8 +6082,8 @@ function switchAdminSubTab(subTab) {
     }
 
     // Ações específicas ao abrir cada sub-aba da Administração
-    if (subTab === 'telefones') {
-        renderAdminTelefonesTable();
+    if (subTab === 'uniformes') {
+        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
     } else if (subTab === 'turnos') {
         if (typeof renderTurmasAdminTable === "function") renderTurmasAdminTable();
     } else if (subTab === 'alunos_pdf') {
@@ -6102,43 +6094,16 @@ function switchAdminSubTab(subTab) {
 }
 window.switchAdminSubTab = switchAdminSubTab;
 
-let currentExtSubTab = 'uniformes';
-
 function switchExtSubTab(subTab) {
-    if (!subTab) subTab = 'uniformes';
-    currentExtSubTab = subTab;
-
-    const contents = document.querySelectorAll(".ext-subtab-content");
-    const btns = document.querySelectorAll(".ext-subtab-btn");
-
-    contents.forEach(c => {
-        c.style.display = "none";
-        c.classList.remove("active");
-    });
-    btns.forEach(b => b.classList.remove("active"));
-
-    const targetContent = document.getElementById(`extSubTab_${subTab}`);
-    const targetBtn = document.querySelector(`.ext-subtab-btn[data-extsub="${subTab}"]`);
-
-    if (targetContent) {
-        targetContent.style.display = "block";
-        targetContent.classList.add("active");
-    }
-    if (targetBtn) {
-        targetBtn.classList.add("active");
-    }
-
-    if (subTab === 'uniformes') {
-        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
-    }
+    switchTab('externos');
 }
 window.switchExtSubTab = switchExtSubTab;
 
 function renderModuleAdministracao() {
     try {
-        renderAdminTelefonesTable();
+        if (typeof renderModuleUniformes === "function") renderModuleUniformes();
     } catch (e) {
-        console.error("Erro ao renderizar telefones na administração:", e);
+        console.error("Erro ao renderizar uniformes na administração:", e);
     }
     try {
         renderTurmasAdminTable();
