@@ -150,6 +150,7 @@
         grid.innerHTML = gridHtml;
         if (selectDoc) selectDoc.innerHTML = optionsHtml;
     }
+    window.renderChancelasCards = renderChancelasCards;
 
     function selecionarChancelaParaUso(id) {
         AssinaturaModule.selectedChancelaId = id;
@@ -250,11 +251,23 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
+                    // Limita as dimensões máximas para otimizar tamanho do armazenamento (máx 640x300)
+                    const maxW = 640;
+                    const maxH = 300;
+                    let targetW = img.width;
+                    let targetH = img.height;
+
+                    if (targetW > maxW || targetH > maxH) {
+                        const ratio = Math.min(maxW / targetW, maxH / targetH);
+                        targetW = Math.max(1, Math.round(targetW * ratio));
+                        targetH = Math.max(1, Math.round(targetH * ratio));
+                    }
+
                     const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    canvas.width = targetW;
+                    canvas.height = targetH;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0, 0, targetW, targetH);
 
                     if (removerFundoBranco) {
                         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -265,11 +278,11 @@
                             const g = d[i + 1];
                             const b = d[i + 2];
                             // Se for quase branco ou cinza muito claro
-                            if (r > 230 && g > 230 && b > 230) {
+                            if (r > 220 && g > 220 && b > 220) {
                                 d[i + 3] = 0; // alfa zero
-                            } else if (r > 205 && g > 205 && b > 205) {
+                            } else if (r > 195 && g > 195 && b > 195) {
                                 // Suavização de borda (antialiasing)
-                                const alphaFactor = (255 - Math.max(r, g, b)) / 50;
+                                const alphaFactor = (255 - Math.max(r, g, b)) / 60;
                                 d[i + 3] = Math.min(255, Math.floor(d[i + 3] * Math.max(0, alphaFactor)));
                             }
                         }
@@ -286,7 +299,10 @@
     }
 
     async function salvarNovaChancela(event) {
-        if (event) event.preventDefault();
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
         const editId = document.getElementById('chancelaInputEditId')?.value || '';
         const nome = document.getElementById('chancelaInputNome').value.trim();
@@ -315,6 +331,8 @@
                 base64Png = await processarImagemChancela(fileInput.files[0], removerFundo);
             }
 
+            const nowIso = new Date().toISOString();
+
             if (editId) {
                 const chancelas = sigeDB.getChancelasAssinaturas();
                 const existente = chancelas.find(c => c.id === editId);
@@ -326,11 +344,15 @@
                 existente.cargo = cargo;
                 existente.setor = setor;
                 existente.portaria = portaria;
+                existente.atualizadoEm = nowIso;
                 if (base64Png) {
                     existente.imagemBase64 = base64Png;
                 }
                 sigeDB.saveChancelaAssinatura(existente);
                 showToast(`Chancela de ${nome} atualizada com sucesso!`);
+                if (AssinaturaModule.selectedChancelaId === editId) {
+                    selecionarChancelaParaUso(editId);
+                }
             } else {
                 const novaChancela = {
                     nome,
@@ -339,7 +361,9 @@
                     portaria,
                     imagemBase64: base64Png,
                     permissoesUso: ['direcao', 'secretaria', 'admin', 'desenvolvedor'],
-                    ativo: true
+                    ativo: true,
+                    criadoEm: nowIso,
+                    atualizadoEm: nowIso
                 };
 
                 const salva = sigeDB.saveChancelaAssinatura(novaChancela);
@@ -348,6 +372,7 @@
             }
 
             closeModalNovaChancela();
+            renderChancelasCards();
             renderModuleAssinaturasDocs();
         } catch (err) {
             console.error('Erro ao salvar chancela:', err);
@@ -358,14 +383,20 @@
 
     function excluirChancela(id) {
         const c = sigeDB.getChancelasAssinaturas().find(item => item.id === id);
-        if (!c) return;
+        if (!c) {
+            showToast('Chancela não encontrada ou já excluída.');
+            return;
+        }
         if (!confirm(`Deseja realmente excluir a chancela de "${c.nome}"?`)) return;
 
         sigeDB.deleteChancelaAssinatura(id);
         if (AssinaturaModule.selectedChancelaId === id) {
             AssinaturaModule.selectedChancelaId = null;
+            const overlay = document.getElementById('signatureOverlayBox');
+            if (overlay) overlay.style.display = 'none';
         }
-        showToast('Chancela removida.');
+        showToast(`Chancela de "${c.nome}" removida.`);
+        renderChancelasCards();
         renderModuleAssinaturasDocs();
     }
     window.excluirChancela = excluirChancela;

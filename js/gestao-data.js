@@ -647,6 +647,7 @@ class SigeDatabase {
         const combinedDeletedTurmaIds = mergeDeletedIds('deletedTurmaIds');
         const combinedDeletedUserEmails = mergeDeletedIds('deletedUserEmails');
         const combinedDeletedUserIds = mergeDeletedIds('deletedUserIds');
+        const combinedDeletedChancelaIds = mergeDeletedIds('deletedChancelaIds');
 
         // Helper genérico para mesclagem inteligente de coleções de objetos com ID
         const mergeEntityList = (localList = [], remoteList = [], keyFn, deletedIds = [], customMergeFn = null) => {
@@ -850,11 +851,35 @@ class SigeDatabase {
             ...(remoteData.estoqueUniformes || {})
         };
 
+        // 15. Mesclagem de Chancelas e Carimbos Oficiais (com tombstones e timestamps)
+        const mergedChancelas = mergeEntityList(
+            this.data.chancelasAssinaturas || [],
+            remoteData.chancelasAssinaturas || [],
+            c => c.id,
+            combinedDeletedChancelaIds,
+            (localC, remoteC) => {
+                const lTime = new Date(localC.atualizadoEm || localC.criadoEm || 0).getTime();
+                const rTime = new Date(remoteC.atualizadoEm || remoteC.criadoEm || 0).getTime();
+                return lTime >= rTime ? { ...remoteC, ...localC } : { ...localC, ...remoteC };
+            }
+        );
+
+        // 16. Mesclagem de Histórico de Documentos Expedidos (Auditoria)
+        const mergedDocsExpedidos = mergeEntityList(
+            this.data.documentosExpedidos || [],
+            remoteData.documentosExpedidos || [],
+            d => d.id,
+            []
+        );
+
         // Montagem do novo estado consolidado
         this.data = {
             ...defaultSigeData,
             ...this.data,
             ...remoteData,
+            chancelasAssinaturas: mergedChancelas,
+            documentosExpedidos: mergedDocsExpedidos,
+            deletedChancelaIds: combinedDeletedChancelaIds,
             equipeEscola: mergedEquipe,
             usuariosCadastrados: mergedUsuarios,
             pedidosUniformes: mergedPedidosUniformes,
@@ -899,6 +924,7 @@ class SigeDatabase {
         if (typeof renderTabelaPedidosUniformes === "function") renderTabelaPedidosUniformes();
         if (typeof renderPortalAuthBar === "function") renderPortalAuthBar();
         if (typeof updateActionPillars === "function") updateActionPillars();
+        if (typeof renderChancelasCards === "function") renderChancelasCards();
     }
 
     ensureDevUser() {
@@ -1256,9 +1282,13 @@ class SigeDatabase {
                 }
             });
 
-            // Se ainda não existirem chancelas cadastradas, injeta as chancelas padrão oficiais
-            if (!merged.chancelasAssinaturas || merged.chancelasAssinaturas.length === 0) {
-                merged.chancelasAssinaturas = [...defaultSigeData.chancelasAssinaturas];
+            // Se ainda não existirem chancelas cadastradas, injeta as chancelas padrão oficiais respeitando exclusões
+            if (!merged.chancelasAssinaturas) {
+                const delSet = new Set(merged.deletedChancelaIds || []);
+                merged.chancelasAssinaturas = (defaultSigeData.chancelasAssinaturas || []).filter(c => !delSet.has(c.id));
+            } else if (Array.isArray(merged.deletedChancelaIds) && merged.deletedChancelaIds.length > 0) {
+                const delSet = new Set(merged.deletedChancelaIds);
+                merged.chancelasAssinaturas = merged.chancelasAssinaturas.filter(c => !delSet.has(c.id));
             }
 
             // Limpeza mandatória: Zerar todos os atendimentos da OP (solicitação 28/09/2026)
@@ -3581,27 +3611,38 @@ class SigeDatabase {
     // CHANCELAS, CARIMBOS E ASSINATURAS DIGITAIS
     // ==========================================
     getChancelasAssinaturas() {
-        if (!this.data.chancelasAssinaturas || !Array.isArray(this.data.chancelasAssinaturas) || this.data.chancelasAssinaturas.length === 0) {
-            this.data.chancelasAssinaturas = [...(defaultSigeData.chancelasAssinaturas || [])];
+        if (!this.data.chancelasAssinaturas || !Array.isArray(this.data.chancelasAssinaturas)) {
+            const delSet = new Set(this.data?.deletedChancelaIds || []);
+            this.data.chancelasAssinaturas = [...(defaultSigeData.chancelasAssinaturas || [])].filter(c => !delSet.has(c.id));
+        }
+        const delIds = this.data.deletedChancelaIds || [];
+        if (delIds.length > 0) {
+            this.data.chancelasAssinaturas = this.data.chancelasAssinaturas.filter(c => !delIds.includes(c.id));
         }
         return this.data.chancelasAssinaturas;
     }
 
     saveChancelaAssinatura(chancela) {
         if (!this.data.chancelasAssinaturas) this.data.chancelasAssinaturas = [];
+        const nowIso = new Date().toISOString();
         if (!chancela.id) {
             chancela.id = generateSecureId("chancela");
-            chancela.criadoEm = new Date().toISOString();
+            chancela.criadoEm = nowIso;
+            chancela.atualizadoEm = nowIso;
             const logged = this.getLoggedUser();
             chancela.criadoPor = logged ? (logged.nome || logged.email) : "Operador Escolar";
             this.data.chancelasAssinaturas.unshift(chancela);
         } else {
+            chancela.atualizadoEm = nowIso;
             const idx = this.data.chancelasAssinaturas.findIndex(c => c.id === chancela.id);
             if (idx >= 0) {
-                this.data.chancelasAssinaturas[idx] = { ...this.data.chancelasAssinaturas[idx], ...chancela };
+                this.data.chancelasAssinaturas[idx] = { ...this.data.chancelasAssinaturas[idx], ...chancela, atualizadoEm: nowIso };
             } else {
                 this.data.chancelasAssinaturas.unshift(chancela);
             }
+        }
+        if (this.data.deletedChancelaIds && this.data.deletedChancelaIds.includes(chancela.id)) {
+            this.data.deletedChancelaIds = this.data.deletedChancelaIds.filter(id => id !== chancela.id);
         }
         this.saveData(this.data);
         return chancela;
@@ -3611,7 +3652,9 @@ class SigeDatabase {
         if (!this.data.chancelasAssinaturas) return;
         this.data.chancelasAssinaturas = this.data.chancelasAssinaturas.filter(c => c.id !== id);
         if (!this.data.deletedChancelaIds) this.data.deletedChancelaIds = [];
-        if (!this.data.deletedChancelaIds.includes(id)) this.data.deletedChancelaIds.push(id);
+        if (!this.data.deletedChancelaIds.includes(id)) {
+            this.data.deletedChancelaIds.push(id);
+        }
         this.saveData(this.data);
     }
 

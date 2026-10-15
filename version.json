@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v47",
-  "build": 1792080200,
-  "updatedAt": "2026-10-15T15:35:00-03:00",
-  "description": "Botao limpar PDF na mesa interativa e identificacao clara de submodulos e alertas nas abas"
+  "version": "20261015_v48",
+  "build": 1792080300,
+  "updatedAt": "2026-10-15T16:08:00-03:00",
+  "description": "Correcao de persistencia, edicao, exclusao e sincronizacao em nuvem de chancelas com otimizacao de imagem"
 }
