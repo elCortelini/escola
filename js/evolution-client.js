@@ -327,6 +327,62 @@
             }
         }
 
+        // Envia documento em anexo (ex: PDF assinado) via Evolution API v2
+        async sendDocument(phone, base64Pdf, fileName = 'documento.pdf', caption = '', options = {}) {
+            if (!this.isConfigured()) {
+                return { success: false, error: 'Evolution API não configurada no sistema', isConfigError: true };
+            }
+
+            const cleanPhone = this.normalizePhone(phone);
+            if (!cleanPhone || cleanPhone.length < 10) {
+                return { success: false, error: 'Número de telefone inválido ou incompleto' };
+            }
+
+            const cfg = this.getConfig();
+            const inst = options.instanceName || cfg.activeInstance;
+            const delay = options.delay || 1500;
+
+            let mediaData = base64Pdf || '';
+            if (mediaData.startsWith('data:')) {
+                // mantém data-uri
+            } else {
+                mediaData = `data:application/pdf;base64,${mediaData}`;
+            }
+
+            try {
+                const response = await fetch(`${cfg.apiUrl}/message/sendMedia/${inst}`, {
+                    method: 'POST',
+                    headers: this._getHeaders(),
+                    body: JSON.stringify({
+                        number: cleanPhone,
+                        mediatype: 'document',
+                        mimetype: 'application/pdf',
+                        caption: caption || '',
+                        media: mediaData,
+                        fileName: fileName || 'documento_assinado.pdf',
+                        delay: delay
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData?.message || errData?.error || `HTTP ${response.status}`;
+                    return { success: false, error: errMsg, status: response.status };
+                }
+
+                const data = await response.json();
+                return {
+                    success: true,
+                    data: data,
+                    cleanPhone: cleanPhone,
+                    fileName: fileName
+                };
+            } catch (err) {
+                console.error(`[EvolutionClient] Erro ao enviar documento para ${cleanPhone}:`, err);
+                return { success: false, error: err.message };
+            }
+        }
+
         // Delay aleatório humano seguro para fila anti-ban (ex: 5 a 12 segundos)
         getRandomAntiBanDelayMs() {
             const cfg = this.getConfig();

@@ -317,7 +317,7 @@ const SIGE_MODULE_DOCS = {
     mod_op: ['agendamentosOP', 'projetosOrientacao', 'deletedOPIds'],
     mod_uniformes: ['pedidosUniformes', 'lotesSME', 'estoqueUniformes', 'deletedPedidoUniformeIds'],
     mod_equipe: ['equipeEscola', 'turmasEscola', 'orientadoras', 'supervisoras', 'professores', 'deletedEquipeIds', 'deletedTurmaIds'],
-    mod_direcao: ['atasGabineteDirecao', 'demandasAdmin', 'contatosWhatsAppDirecao', 'deletedAtaIds', 'deletedDemandaAdmIds', 'deletedContatosWpIds'],
+    mod_direcao: ['atasGabineteDirecao', 'demandasAdmin', 'contatosWhatsAppDirecao', 'chancelasAssinaturas', 'documentosExpedidos', 'deletedAtaIds', 'deletedDemandaAdmIds', 'deletedContatosWpIds', 'deletedChancelaIds'],
     mod_supervisao: ['demandasSupervisao', 'projetosSupervisao', 'atividadesExternasSupervisao', 'reunioesPedagogicasSupervisao', 'deletedDemandaSupIds'],
     mod_core: ['configEscola', 'muralAvisos', 'calendarioTarefas', 'eventosCalendarioEscolar', 'notificacoesLidas', 'whatsappConfig', 'mensagensWhatsAppLog', 'auditLogs', 'deletedEventoCalendarioIds'],
     mod_auth: ['usuariosCadastrados', 'deletedUserEmails', 'deletedUserIds']
@@ -325,6 +325,11 @@ const SIGE_MODULE_DOCS = {
 if (typeof window !== "undefined") {
     window.SIGE_MODULE_DOCS = SIGE_MODULE_DOCS;
 }
+
+// Chancelas e Carimbos Oficiais Padrão (SVG com transparência convertível para PNG)
+const DEFAULT_STAMP_DIRECAO_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" width="320" height="130"><g fill="none" stroke="%231d4ed8" stroke-width="2.5"><rect x="5" y="5" width="310" height="120" rx="10" stroke-dasharray="4 2" /><rect x="8" y="8" width="304" height="114" rx="8" /></g><text x="160" y="27" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="%231e40af" text-anchor="middle" letter-spacing="0.5">CENTRO EDUCACIONAL PEDRO RIZZI</text><text x="160" y="42" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="%232563eb" text-anchor="middle">SECRETARIA MUNICIPAL DE EDUCAÇÃO - ITAJAÍ/SC</text><path d="M 40 80 Q 80 50 120 78 T 190 68 T 260 82 Q 280 62 295 72" fill="none" stroke="%231e3a8a" stroke-width="2.8" stroke-linecap="round"/><path d="M 65 70 Q 100 95 150 66 T 230 73" fill="none" stroke="%231e3a8a" stroke-width="1.8" stroke-linecap="round"/><line x1="25" y1="96" x2="295" y2="96" stroke="%231d4ed8" stroke-width="1.2" /><text x="160" y="108" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="%231e3a8a" text-anchor="middle">DIREÇÃO ESCOLAR</text><text x="160" y="120" font-family="Arial, sans-serif" font-size="8.5" font-weight="600" fill="%23475569" text-anchor="middle">Portaria Nº 108/2024 - SME/PMI</text></svg>';
+
+const DEFAULT_STAMP_SECRETARIA_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" width="320" height="130"><g fill="none" stroke="%23047857" stroke-width="2.5"><rect x="5" y="5" width="310" height="120" rx="10" stroke-dasharray="4 2" /><rect x="8" y="8" width="304" height="114" rx="8" /></g><text x="160" y="27" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="%23065f46" text-anchor="middle" letter-spacing="0.5">CENTRO EDUCACIONAL PEDRO RIZZI</text><text x="160" y="42" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="%23047857" text-anchor="middle">SECRETARIA MUNICIPAL DE EDUCAÇÃO - ITAJAÍ/SC</text><path d="M 45 76 Q 85 54 125 72 T 195 64 T 255 76 Q 275 58 290 68" fill="none" stroke="%23064e3b" stroke-width="2.8" stroke-linecap="round"/><path d="M 70 68 Q 110 90 160 64 T 225 70" fill="none" stroke="%23064e3b" stroke-width="1.8" stroke-linecap="round"/><line x1="25" y1="96" x2="295" y2="96" stroke="%23047857" stroke-width="1.2" /><text x="160" y="108" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="%23064e3b" text-anchor="middle">SECRETARIA ESCOLAR</text><text x="160" y="120" font-family="Arial, sans-serif" font-size="8.5" font-weight="600" fill="%23475569" text-anchor="middle">Matrícula Funcional Nº 842.109-2</text></svg>';
 
 // Estrutura Padrão Inicial
 const defaultSigeData = {
@@ -394,6 +399,34 @@ const defaultSigeData = {
     contatosWhatsAppDirecao: [],
     mensagensWhatsAppLog: [],
     auditLogs: [],
+    chancelasAssinaturas: [
+        {
+            id: "chancela-direcao-oficial",
+            nome: "Direção Escolar",
+            cargo: "Diretora Geral",
+            setor: "direcao",
+            portaria: "Portaria Nº 108/2024 - SME/PMI",
+            permissoesUso: ["direcao", "secretaria", "admin", "desenvolvedor"],
+            imagemBase64: DEFAULT_STAMP_DIRECAO_SVG,
+            ativo: true,
+            criadoEm: "2026-02-01T10:00:00.000Z",
+            criadoPor: "Sistema SIGE"
+        },
+        {
+            id: "chancela-secretaria-oficial",
+            nome: "Secretaria Escolar",
+            cargo: "Secretário(a) Geral",
+            setor: "secretaria",
+            portaria: "Matrícula Funcional Nº 842.109-2",
+            permissoesUso: ["direcao", "secretaria", "admin", "desenvolvedor"],
+            imagemBase64: DEFAULT_STAMP_SECRETARIA_SVG,
+            ativo: true,
+            criadoEm: "2026-02-01T10:00:00.000Z",
+            criadoPor: "Sistema SIGE"
+        }
+    ],
+    documentosExpedidos: [],
+    deletedChancelaIds: [],
     deletedContatosWpIds: [],
     deletedEventoCalendarioIds: [],
     deletedEquipeIds: [],
@@ -1212,6 +1245,7 @@ class SigeDatabase {
                 'demandasSupervisao', 'demandasAdmin', 'equipeEscola', 'turmasEscola',
                 'contatosWhatsAppDirecao', 'eventosCalendarioEscolar', 'atasGabineteDirecao',
                 'mensagensWhatsAppLog', 'auditLogs', 'notificacoesLidas',
+                'chancelasAssinaturas', 'documentosExpedidos', 'deletedChancelaIds',
                 'deletedOPIds', 'deletedContatosWpIds', 'deletedEventoCalendarioIds',
                 'deletedEquipeIds', 'deletedPedidoUniformeIds', 'deletedDemandaSupIds',
                 'deletedDemandaAdmIds', 'deletedAtaIds', 'deletedTurmaIds'
@@ -1221,6 +1255,11 @@ class SigeDatabase {
                     merged[k] = Array.isArray(defaultSigeData[k]) ? [...defaultSigeData[k]] : [];
                 }
             });
+
+            // Se ainda não existirem chancelas cadastradas, injeta as chancelas padrão oficiais
+            if (!merged.chancelasAssinaturas || merged.chancelasAssinaturas.length === 0) {
+                merged.chancelasAssinaturas = [...defaultSigeData.chancelasAssinaturas];
+            }
 
             // Limpeza mandatória: Zerar todos os atendimentos da OP (solicitação 28/09/2026)
             if (!merged.limpezaOP_zerada_20260928) {
@@ -3536,6 +3575,92 @@ class SigeDatabase {
             d.status = status;
             this.saveData(this.data);
         }
+    }
+
+    // ==========================================
+    // CHANCELAS, CARIMBOS E ASSINATURAS DIGITAIS
+    // ==========================================
+    getChancelasAssinaturas() {
+        if (!this.data.chancelasAssinaturas || !Array.isArray(this.data.chancelasAssinaturas) || this.data.chancelasAssinaturas.length === 0) {
+            this.data.chancelasAssinaturas = [...(defaultSigeData.chancelasAssinaturas || [])];
+        }
+        return this.data.chancelasAssinaturas;
+    }
+
+    saveChancelaAssinatura(chancela) {
+        if (!this.data.chancelasAssinaturas) this.data.chancelasAssinaturas = [];
+        if (!chancela.id) {
+            chancela.id = generateSecureId("chancela");
+            chancela.criadoEm = new Date().toISOString();
+            const logged = this.getLoggedUser();
+            chancela.criadoPor = logged ? (logged.nome || logged.email) : "Operador Escolar";
+            this.data.chancelasAssinaturas.unshift(chancela);
+        } else {
+            const idx = this.data.chancelasAssinaturas.findIndex(c => c.id === chancela.id);
+            if (idx >= 0) {
+                this.data.chancelasAssinaturas[idx] = { ...this.data.chancelasAssinaturas[idx], ...chancela };
+            } else {
+                this.data.chancelasAssinaturas.unshift(chancela);
+            }
+        }
+        this.saveData(this.data);
+        return chancela;
+    }
+
+    deleteChancelaAssinatura(id) {
+        if (!this.data.chancelasAssinaturas) return;
+        this.data.chancelasAssinaturas = this.data.chancelasAssinaturas.filter(c => c.id !== id);
+        if (!this.data.deletedChancelaIds) this.data.deletedChancelaIds = [];
+        if (!this.data.deletedChancelaIds.includes(id)) this.data.deletedChancelaIds.push(id);
+        this.saveData(this.data);
+    }
+
+    // Validação de Permissão RBAC para uso de Chancela
+    canUserUseChancela(chancela) {
+        if (!chancela) return false;
+        const user = this.getLoggedUser();
+        const role = this.getRole();
+        // Desenvolvedor e Direção Geral têm acesso irrestrito
+        if (role === 'desenvolvedor' || role === 'direcao' || (user && (user.role === 'desenvolvedor' || user.role === 'direcao'))) {
+            return true;
+        }
+        // Se a chancela tiver lista explícita de permissões
+        if (Array.isArray(chancela.permissoesUso) && chancela.permissoesUso.length > 0) {
+            if (chancela.permissoesUso.includes(role)) return true;
+            if (user && chancela.permissoesUso.includes(user.role)) return true;
+            return false;
+        }
+        // Padrão: perfis de gestão têm acesso
+        return ['secretaria', 'admin', 'direcao', 'desenvolvedor'].includes(role);
+    }
+
+    // ==========================================
+    // HISTÓRICO DE DOCUMENTOS EXPEDIDOS (AUDITORIA)
+    // ==========================================
+    getDocumentosExpedidos() {
+        if (!this.data.documentosExpedidos || !Array.isArray(this.data.documentosExpedidos)) {
+            this.data.documentosExpedidos = [];
+        }
+        return this.data.documentosExpedidos;
+    }
+
+    addDocumentoExpedido(doc) {
+        if (!this.data.documentosExpedidos) this.data.documentosExpedidos = [];
+        if (!doc.id) doc.id = generateSecureId("docexp");
+        if (!doc.dataHora) doc.dataHora = new Date().toISOString();
+        const logged = this.getLoggedUser();
+        if (!doc.operador) {
+            doc.operador = logged ? (logged.nome || logged.email) : "Secretaria";
+        }
+        this.data.documentosExpedidos.unshift(doc);
+        this.saveData(this.data);
+        return doc;
+    }
+
+    deleteDocumentoExpedido(id) {
+        if (!this.data.documentosExpedidos) return;
+        this.data.documentosExpedidos = this.data.documentosExpedidos.filter(d => d.id !== id);
+        this.saveData(this.data);
     }
 
     // Mural de Avisos

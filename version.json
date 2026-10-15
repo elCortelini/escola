@@ -1,6 +1,6 @@
 {
-  "version": "20261007_v44",
-  "build": 1791378000,
-  "updatedAt": "2026-10-07T09:55:00-03:00",
-  "description": "Correção de autofill no filtro de uniformes e sistema de atualização automática de cache"
+  "version": "20261015_v45",
+  "build": 1792080000,
+  "updatedAt": "2026-10-15T15:10:00-03:00",
+  "description": "Novo módulo: Assinatura e Expedição de Documentos com mesclagem PDF, WhatsApp e E-mail"
 }

@@ -6093,6 +6093,8 @@ function switchAdminSubTab(subTab) {
         if (typeof updateAdminPdfImportMetaInfoDisplay === "function") updateAdminPdfImportMetaInfoDisplay();
     } else if (subTab === 'parametros') {
         if (typeof renderConfigEscolaForm === "function") renderConfigEscolaForm();
+    } else if (subTab === 'assinaturas_docs') {
+        if (typeof renderModuleAssinaturasDocs === "function") renderModuleAssinaturasDocs();
     }
 }
 window.switchAdminSubTab = switchAdminSubTab;
@@ -6112,6 +6114,11 @@ function renderModuleAdministracao() {
         renderTurmasAdminTable();
     } catch (e) {
         console.error("Erro ao renderizar turmas:", e);
+    }
+    try {
+        if (typeof renderModuleAssinaturasDocs === "function") renderModuleAssinaturasDocs();
+    } catch (e) {
+        console.error("Erro ao renderizar assinaturas na administração:", e);
     }
     try {
         renderConfigEscolaForm();

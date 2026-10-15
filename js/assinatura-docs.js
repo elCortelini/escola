@@ -1,0 +1,1239 @@
+/**
+ * ASSINATURA & EXPEDIÇÃO DE DOCUMENTOS (SIGE)
+ * Centro Educacional Pedro Rizzi - Secretaria & Operacional
+ * Permite cadastrar chancelas/carimbos da direção/secretaria,
+ * posicionar interativamente em PDFs (upload ou gerados pelo sistema),
+ * mesclar via PDF-Lib e expedir via WhatsApp (Evolution API), E-mail e Download.
+ */
+
+(function (window) {
+    'use strict';
+
+    // Estado local do módulo
+    const AssinaturaModule = {
+        currentPdfBytes: null,
+        currentPdfDoc: null,
+        currentPageNum: 1,
+        totalPdfPages: 1,
+        pdfScale: 1.25,
+        currentFileName: 'documento.pdf',
+        
+        // Estado da assinatura/chancela ativa
+        selectedChancelaId: null,
+        stampWidth: 200, // pixels no canvas
+        stampHeight: 82, // calculado pela proporção
+        overlayPos: { x: 50, y: 50 }, // pixels relativos ao canvas
+        isDragging: false,
+        dragOffset: { x: 0, y: 0 },
+        isResizing: false,
+        resizeStartX: 0,
+        resizeStartWidth: 200,
+
+        // PDF assinado resultante
+        signedPdfBytes: null,
+        signedPdfBlob: null,
+        signedPdfBase64: null,
+        signedFileName: '',
+
+        // Filtro do histórico
+        historyFilterCanal: 'todos',
+        historySearch: ''
+    };
+
+    // =========================================================================
+    // 1. INICIALIZAÇÃO E RENDERIZAÇÃO PRINCIPAL DO MÓDULO
+    // =========================================================================
+    function renderModuleAssinaturasDocs() {
+        const container = document.getElementById('adminSubTab_assinaturas_docs');
+        if (!container) return;
+
+        // Renderiza sub-painéis
+        renderChancelasCards();
+        renderHistorialExpedicoes();
+        atualizarContadoresAssinatura();
+
+        // Se já tiver uma chancela selecionada ou existir alguma no banco, inicializa
+        const chancelas = sigeDB.getChancelasAssinaturas().filter(c => c.ativo !== false);
+        if (!AssinaturaModule.selectedChancelaId && chancelas.length > 0) {
+            selecionarChancelaParaUso(chancelas[0].id);
+        }
+    }
+    window.renderModuleAssinaturasDocs = renderModuleAssinaturasDocs;
+
+    function atualizarContadoresAssinatura() {
+        const docs = sigeDB.getDocumentosExpedidos();
+        const chancelas = sigeDB.getChancelasAssinaturas().filter(c => c.ativo !== false);
+
+        const elTotal = document.getElementById('statTotalDocsExpedidos');
+        if (elTotal) elTotal.textContent = docs.length;
+
+        const elWp = document.getElementById('statDocsEnviadosWhatsapp');
+        if (elWp) elWp.textContent = docs.filter(d => d.canal === 'whatsapp').length;
+
+        const elEmail = document.getElementById('statDocsEnviadosEmail');
+        if (elEmail) elEmail.textContent = docs.filter(d => d.canal === 'email').length;
+
+        const elChancelas = document.getElementById('statChancelasAtivas');
+        if (elChancelas) elChancelas.textContent = chancelas.length;
+    }
+
+    // =========================================================================
+    // 2. GESTOR DE CHANCELAS E CARIMBOS DA ESCOLA
+    // =========================================================================
+    function renderChancelasCards() {
+        const grid = document.getElementById('chancelasCardsGrid');
+        const selectDoc = document.getElementById('selectChancelaMesa');
+        if (!grid) return;
+
+        const chancelas = sigeDB.getChancelasAssinaturas();
+        const user = sigeDB.getLoggedUser();
+        const currentRole = sigeDB.getRole();
+
+        if (chancelas.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column:1/-1; text-align:center; padding:30px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+                    <i class="fa-solid fa-stamp" style="font-size:2rem; color:#94a3b8; margin-bottom:8px;"></i>
+                    <p style="margin:0; font-weight:700;">Nenhuma chancela ou carimbo cadastrado ainda.</p>
+                    <p style="margin:4px 0 12px 0; font-size:0.83rem;">Cadastre a imagem da assinatura com carimbo da Direção ou Secretaria.</p>
+                    <button type="button" onclick="openModalNovaChancela()" class="btn btn-primary" style="font-size:0.85rem; width:auto; margin:0 auto;">
+                        <i class="fa-solid fa-plus-circle"></i> Cadastrar Primeira Chancela
+                    </button>
+                </div>
+            `;
+            if (selectDoc) selectDoc.innerHTML = `<option value="">Nenhuma chancela disponível</option>`;
+            return;
+        }
+
+        let gridHtml = '';
+        let optionsHtml = '';
+
+        chancelas.forEach(c => {
+            const podeUsar = sigeDB.canUserUseChancela(c);
+            const isSelected = AssinaturaModule.selectedChancelaId === c.id;
+            const borderStyle = isSelected ? 'border: 2px solid #4f46e5; background: #f5f3ff;' : 'border: 1px solid #e2e8f0; background: white;';
+            const setorIcon = c.setor === 'direcao' ? '👑 Direção' : (c.setor === 'secretaria' ? '📑 Secretaria' : '💛 Gestão');
+            const setorBadgeBg = c.setor === 'direcao' ? '#fef3c7; color:#b45309;' : '#ecfdf5; color:#047857;';
+
+            gridHtml += `
+                <div class="chancela-card" style="${borderStyle} padding:14px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.04); position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <span style="background:${setorBadgeBg}; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px;">${setorIcon}</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${podeUsar ? `<span title="Você tem permissão para assinar" style="color:#10b981; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Autorizado</span>` : `<span title="Apenas Direção/Secretaria autorizada" style="color:#ef4444; font-size:0.8rem;"><i class="fa-solid fa-lock"></i> Restrito</span>`}
+                            <button type="button" onclick="excluirChancela('${c.id}')" title="Excluir Chancela" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:0.85rem; padding:2px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center; padding:10px 6px; background:#f8fafc; border-radius:8px; border:1px dashed #e2e8f0; min-height:85px; display:flex; align-items:center; justify-content:center;">
+                        <img src="${c.imagemBase64}" alt="${c.nome}" style="max-height:75px; max-width:100%; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08));" />
+                    </div>
+
+                    <div>
+                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a;">${c.nome}</div>
+                        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">${c.cargo}</div>
+                        ${c.portaria ? `<div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;"><i class="fa-solid fa-certificate"></i> ${c.portaria}</div>` : ''}
+                    </div>
+
+                    <button type="button" onclick="selecionarChancelaParaUso('${c.id}')" class="btn" style="width:100%; font-size:0.82rem; font-weight:700; padding:6px 10px; ${isSelected ? 'background:#4f46e5; color:white; border:none;' : 'background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;'} cursor:pointer;">
+                        ${isSelected ? '<i class="fa-solid fa-check"></i> Chancela em Uso' : '<i class="fa-regular fa-hand-pointer"></i> Selecionar na Mesa'}
+                    </button>
+                </div>
+            `;
+
+            optionsHtml += `
+                <option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.nome} (${c.cargo} - ${c.setor.toUpperCase()})</option>
+            `;
+        });
+
+        grid.innerHTML = gridHtml;
+        if (selectDoc) selectDoc.innerHTML = optionsHtml;
+    }
+
+    function selecionarChancelaParaUso(id) {
+        AssinaturaModule.selectedChancelaId = id;
+        const chancelas = sigeDB.getChancelasAssinaturas();
+        const c = chancelas.find(item => item.id === id);
+
+        renderChancelasCards();
+
+        const overlay = document.getElementById('signatureOverlayBox');
+        const img = document.getElementById('overlayChancelaImg');
+        const badge = document.getElementById('overlaySignatarioBadge');
+
+        if (c && overlay && img) {
+            img.src = c.imagemBase64;
+            if (badge) badge.textContent = `${c.nome} • ${c.cargo}`;
+            if (AssinaturaModule.currentPdfDoc) {
+                overlay.style.display = 'block';
+            }
+        }
+    }
+    window.selecionarChancelaParaUso = selecionarChancelaParaUso;
+
+    function openModalNovaChancela() {
+        const modal = document.getElementById('modalNovaChancela');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.getElementById('formNovaChancela')?.reset();
+            const preview = document.getElementById('previewNovaChancelaImg');
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+        }
+    }
+    window.openModalNovaChancela = openModalNovaChancela;
+
+    function closeModalNovaChancela() {
+        const modal = document.getElementById('modalNovaChancela');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeModalNovaChancela = closeModalNovaChancela;
+
+    // Converte arquivo de imagem (PNG/JPG) com opção de remover fundo branco para transparência limpa
+    async function processarImagemChancela(file, removerFundoBranco = true) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    if (removerFundoBranco) {
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const d = imgData.data;
+                        // Converte pixels claros (fundo de papel escaneado) em transparentes
+                        for (let i = 0; i < d.length; i += 4) {
+                            const r = d[i];
+                            const g = d[i + 1];
+                            const b = d[i + 2];
+                            // Se for quase branco ou cinza muito claro
+                            if (r > 230 && g > 230 && b > 230) {
+                                d[i + 3] = 0; // alfa zero
+                            } else if (r > 205 && g > 205 && b > 205) {
+                                // Suavização de borda (antialiasing)
+                                const alphaFactor = (255 - Math.max(r, g, b)) / 50;
+                                d[i + 3] = Math.min(255, Math.floor(d[i + 3] * Math.max(0, alphaFactor)));
+                            }
+                        }
+                        ctx.putImageData(imgData, 0, 0);
+                    }
+
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => reject(new Error('Imagem inválida'));
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function salvarNovaChancela(event) {
+        if (event) event.preventDefault();
+
+        const nome = document.getElementById('chancelaInputNome').value.trim();
+        const cargo = document.getElementById('chancelaInputCargo').value.trim();
+        const setor = document.getElementById('chancelaInputSetor').value;
+        const portaria = document.getElementById('chancelaInputPortaria').value.trim();
+        const fileInput = document.getElementById('chancelaInputFile');
+        const removerFundo = document.getElementById('chancelaCheckRemoverFundo')?.checked ?? true;
+
+        if (!nome || !cargo) {
+            showToast('Preencha os campos obrigatórios do signatário.');
+            return;
+        }
+
+        if (!fileInput.files || !fileInput.files[0]) {
+            showToast('Por favor, anexe uma imagem com a assinatura e o carimbo.');
+            return;
+        }
+
+        try {
+            showToast('Processando e otimizando carimbo...');
+            const base64Png = await processarImagemChancela(fileInput.files[0], removerFundo);
+
+            const novaChancela = {
+                nome,
+                cargo,
+                setor,
+                portaria,
+                imagemBase64: base64Png,
+                permissoesUso: ['direcao', 'secretaria', 'admin', 'desenvolvedor'],
+                ativo: true
+            };
+
+            const salva = sigeDB.saveChancelaAssinatura(novaChancela);
+            showToast(`Chancela de ${nome} cadastrada com sucesso!`);
+            closeModalNovaChancela();
+            selecionarChancelaParaUso(salva.id);
+            renderModuleAssinaturasDocs();
+        } catch (err) {
+            console.error('Erro ao salvar chancela:', err);
+            showToast('Falha ao processar a imagem do carimbo: ' + err.message);
+        }
+    }
+    window.salvarNovaChancela = salvarNovaChancela;
+
+    function excluirChancela(id) {
+        const c = sigeDB.getChancelasAssinaturas().find(item => item.id === id);
+        if (!c) return;
+        if (!confirm(`Deseja realmente excluir a chancela de "${c.nome}"?`)) return;
+
+        sigeDB.deleteChancelaAssinatura(id);
+        if (AssinaturaModule.selectedChancelaId === id) {
+            AssinaturaModule.selectedChancelaId = null;
+        }
+        showToast('Chancela removida.');
+        renderModuleAssinaturasDocs();
+    }
+    window.excluirChancela = excluirChancela;
+
+    // =========================================================================
+    // 3. CARREGAMENTO E GERENCIAMENTO DO ARQUIVO PDF (UPLOAD OU SISTEMA)
+    // =========================================================================
+    async function carregarPdfFile(file) {
+        if (!file) return;
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            showToast('O arquivo selecionado deve ser um documento PDF (.pdf).');
+            return;
+        }
+
+        try {
+            showToast(`Carregando documento "${file.name}"...`);
+            const arrayBuffer = await file.arrayBuffer();
+            AssinaturaModule.currentPdfBytes = new Uint8Array(arrayBuffer);
+            AssinaturaModule.currentFileName = file.name;
+            AssinaturaModule.currentPageNum = 1;
+            AssinaturaModule.signedPdfBytes = null; // limpa anterior
+
+            await inicializarVisualizadorPdf();
+        } catch (err) {
+            console.error('Erro ao carregar PDF:', err);
+            showToast('Erro ao carregar o PDF: ' + err.message);
+        }
+    }
+    window.carregarPdfFile = carregarPdfFile;
+
+    async function inicializarVisualizadorPdf() {
+        if (!AssinaturaModule.currentPdfBytes) return;
+
+        if (typeof pdfjsLib === 'undefined') {
+            showToast('Biblioteca PDF.js não encontrada.');
+            return;
+        }
+
+        const loadingTask = pdfjsLib.getDocument({ data: AssinaturaModule.currentPdfBytes });
+        AssinaturaModule.currentPdfDoc = await loadingTask.promise;
+        AssinaturaModule.totalPdfPages = AssinaturaModule.currentPdfDoc.numPages;
+
+        document.getElementById('pdfMetaFileName').textContent = AssinaturaModule.currentFileName;
+        document.getElementById('pdfMesaTrabalhoContainer').style.display = 'block';
+        document.getElementById('pdfEmptyPlaceholder').style.display = 'none';
+        document.getElementById('pdfSignedSuccessAlert').style.display = 'none';
+
+        await renderizarPaginaPdf(AssinaturaModule.currentPageNum);
+        setupInteracaoMesaOverlay();
+    }
+
+    async function renderizarPaginaPdf(numPagina) {
+        if (!AssinaturaModule.currentPdfDoc) return;
+
+        AssinaturaModule.currentPageNum = Math.max(1, Math.min(numPagina, AssinaturaModule.totalPdfPages));
+        const page = await AssinaturaModule.currentPdfDoc.getPage(AssinaturaModule.currentPageNum);
+
+        const canvas = document.getElementById('pdfViewerCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Calcula escala adequada para visualização nítida na tela
+        const viewport = page.getViewport({ scale: AssinaturaModule.pdfScale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+        };
+
+        await page.render(renderContext).promise;
+
+        // Atualiza indicadores de página
+        const elNum = document.getElementById('pdfCurrentPageNum');
+        const elTotal = document.getElementById('pdfTotalPages');
+        if (elNum) elNum.textContent = AssinaturaModule.currentPageNum;
+        if (elTotal) elTotal.textContent = AssinaturaModule.totalPdfPages;
+
+        // Se houver chancela selecionada, exibe o overlay na tela
+        const overlay = document.getElementById('signatureOverlayBox');
+        if (overlay && AssinaturaModule.selectedChancelaId) {
+            overlay.style.display = 'block';
+            ajustarPosicaoOverlayNaTela();
+        }
+    }
+    window.renderizarPaginaPdf = renderizarPaginaPdf;
+
+    function navegarPaginaPdf(delta) {
+        if (!AssinaturaModule.currentPdfDoc) return;
+        const nova = AssinaturaModule.currentPageNum + delta;
+        if (nova >= 1 && nova <= AssinaturaModule.totalPdfPages) {
+            renderizarPaginaPdf(nova);
+        }
+    }
+    window.navegarPaginaPdf = navegarPaginaPdf;
+
+    // =========================================================================
+    // 4. MESA DE POSICIONAMENTO INTERATIVO DA ASSINATURA (OPÇÃO 1-A)
+    // =========================================================================
+    function setupInteracaoMesaOverlay() {
+        const canvas = document.getElementById('pdfViewerCanvas');
+        const overlay = document.getElementById('signatureOverlayBox');
+        const resizeHandle = document.getElementById('overlayResizeHandle');
+        const wrapper = document.getElementById('pdfCanvasWrapper');
+
+        if (!canvas || !overlay) return;
+
+        // 1. Clique no Canvas posiciona a assinatura centralizada no clique
+        canvas.onclick = (e) => {
+            if (AssinaturaModule.isDragging || AssinaturaModule.isResizing) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, clickX - (AssinaturaModule.stampWidth / 2)));
+            AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, clickY - (AssinaturaModule.stampHeight / 2)));
+
+            ajustarPosicaoOverlayNaTela();
+        };
+
+        // 2. Drag and drop do overlay
+        overlay.onmousedown = (e) => {
+            if (e.target === resizeHandle) return;
+            AssinaturaModule.isDragging = true;
+            AssinaturaModule.dragOffset.x = e.clientX - overlay.offsetLeft;
+            AssinaturaModule.dragOffset.y = e.clientY - overlay.offsetTop;
+            overlay.style.cursor = 'grabbing';
+            e.preventDefault();
+        };
+
+        // 3. Redimensionamento pelo canto
+        if (resizeHandle) {
+            resizeHandle.onmousedown = (e) => {
+                AssinaturaModule.isResizing = true;
+                AssinaturaModule.resizeStartX = e.clientX;
+                AssinaturaModule.resizeStartWidth = AssinaturaModule.stampWidth;
+                e.stopPropagation();
+                e.preventDefault();
+            };
+        }
+
+        window.onmousemove = (e) => {
+            if (AssinaturaModule.isDragging) {
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const newX = e.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
+                const newY = e.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
+
+                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, newX));
+                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, newY));
+
+                ajustarPosicaoOverlayNaTela();
+            } else if (AssinaturaModule.isResizing) {
+                const delta = e.clientX - AssinaturaModule.resizeStartX;
+                const newW = Math.max(100, Math.min(420, AssinaturaModule.resizeStartWidth + delta));
+                setTamanhoAssinatura(newW);
+            }
+        };
+
+        window.onmouseup = () => {
+            if (AssinaturaModule.isDragging) {
+                AssinaturaModule.isDragging = false;
+                overlay.style.cursor = 'move';
+            }
+            if (AssinaturaModule.isResizing) {
+                AssinaturaModule.isResizing = false;
+            }
+        };
+
+        // Suporte para Dispositivos Touch / Tablets
+        overlay.ontouchstart = (e) => {
+            if (e.touches && e.touches[0]) {
+                const touch = e.touches[0];
+                AssinaturaModule.isDragging = true;
+                AssinaturaModule.dragOffset.x = touch.clientX - overlay.offsetLeft;
+                AssinaturaModule.dragOffset.y = touch.clientY - overlay.offsetTop;
+            }
+        };
+
+        window.ontouchmove = (e) => {
+            if (AssinaturaModule.isDragging && e.touches && e.touches[0]) {
+                const touch = e.touches[0];
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const newX = touch.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
+                const newY = touch.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
+
+                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, newX));
+                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, newY));
+
+                ajustarPosicaoOverlayNaTela();
+                e.preventDefault();
+            }
+        };
+
+        window.ontouchend = () => {
+            AssinaturaModule.isDragging = false;
+        };
+
+        // Posição padrão inicial: Canto inferior direito da página
+        posicionarAssinaturaPreset('rodape_direita');
+    }
+
+    function ajustarPosicaoOverlayNaTela() {
+        const overlay = document.getElementById('signatureOverlayBox');
+        if (!overlay) return;
+
+        overlay.style.left = `${AssinaturaModule.overlayPos.x}px`;
+        overlay.style.top = `${AssinaturaModule.overlayPos.y}px`;
+        overlay.style.width = `${AssinaturaModule.stampWidth}px`;
+        overlay.style.height = `${AssinaturaModule.stampHeight}px`;
+
+        const coordDisplay = document.getElementById('stampCoordIndicator');
+        if (coordDisplay) {
+            coordDisplay.textContent = `X: ${Math.round(AssinaturaModule.overlayPos.x)}px | Y: ${Math.round(AssinaturaModule.overlayPos.y)}px (Pág. ${AssinaturaModule.currentPageNum})`;
+        }
+    }
+
+    function setTamanhoAssinatura(larguraPx) {
+        AssinaturaModule.stampWidth = Number(larguraPx);
+        // Mantém a proporção padrão 320 x 130
+        AssinaturaModule.stampHeight = Math.round(AssinaturaModule.stampWidth * (130 / 320));
+
+        const slider = document.getElementById('sliderStampSize');
+        if (slider && Number(slider.value) !== Number(larguraPx)) {
+            slider.value = larguraPx;
+        }
+        const label = document.getElementById('stampSizeLabel');
+        if (label) label.textContent = `${larguraPx}px`;
+
+        ajustarPosicaoOverlayNaTela();
+    }
+    window.setTamanhoAssinatura = setTamanhoAssinatura;
+
+    function posicionarAssinaturaPreset(preset) {
+        const canvas = document.getElementById('pdfViewerCanvas');
+        if (!canvas) return;
+
+        const cw = canvas.width || 600;
+        const ch = canvas.height || 850;
+        const sw = AssinaturaModule.stampWidth;
+        const sh = AssinaturaModule.stampHeight;
+
+        if (preset === 'rodape_direita') {
+            AssinaturaModule.overlayPos.x = cw - sw - 40;
+            AssinaturaModule.overlayPos.y = ch - sh - 50;
+        } else if (preset === 'rodape_centro') {
+            AssinaturaModule.overlayPos.x = (cw - sw) / 2;
+            AssinaturaModule.overlayPos.y = ch - sh - 50;
+        } else if (preset === 'rodape_esquerda') {
+            AssinaturaModule.overlayPos.x = 40;
+            AssinaturaModule.overlayPos.y = ch - sh - 50;
+        }
+
+        ajustarPosicaoOverlayNaTela();
+    }
+    window.posicionarAssinaturaPreset = posicionarAssinaturaPreset;
+
+    // =========================================================================
+    // 5. PROCESSAMENTO E MESCLAGEM VIA PDF-LIB
+    // =========================================================================
+    async function converterImagemParaPngBytes(imgSrc) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = img.width || 320;
+                c.height = img.height || 130;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+
+                c.toBlob(blob => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(new Uint8Array(reader.result));
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(blob);
+                }, 'image/png');
+            };
+            img.onerror = () => reject(new Error('Falha ao renderizar carimbo para mesclagem'));
+            img.src = imgSrc;
+        });
+    }
+
+    async function aplicarAssinaturaNoPdf() {
+        if (!AssinaturaModule.currentPdfBytes) {
+            showToast('Nenhum documento PDF aberto na mesa de trabalho.');
+            return;
+        }
+
+        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+        if (!chancela) {
+            showToast('Por favor, selecione uma chancela oficial para aplicar.');
+            return;
+        }
+
+        // Validação de Permissão RBAC
+        if (!sigeDB.canUserUseChancela(chancela)) {
+            showToast(`⚠️ Permissão negada: o perfil ativo não tem autorização para assinar com a chancela da ${chancela.cargo}.`);
+            return;
+        }
+
+        if (typeof PDFLib === 'undefined') {
+            showToast('Biblioteca PDF-Lib não carregada.');
+            return;
+        }
+
+        try {
+            showToast('Mesclando assinatura e gerando documento autenticado...');
+
+            // 1. Carrega documento no PDF-Lib
+            const pdfDoc = await PDFLib.PDFDocument.load(AssinaturaModule.currentPdfBytes);
+            const pages = pdfDoc.getPages();
+            const targetPageIndex = AssinaturaModule.currentPageNum - 1;
+            const targetPage = pages[targetPageIndex] || pages[0];
+
+            // 2. Converte e incorpora imagem PNG do carimbo
+            const pngBytes = await converterImagemParaPngBytes(chancela.imagemBase64);
+            const embeddedImage = await pdfDoc.embedPng(pngBytes);
+
+            // 3. Calcula coordenadas exatas entre o Canvas na tela e o PDF real
+            const canvas = document.getElementById('pdfViewerCanvas');
+            const pageWidth = targetPage.getWidth();
+            const pageHeight = targetPage.getHeight();
+
+            const scaleX = pageWidth / canvas.width;
+            const scaleY = pageHeight / canvas.height;
+
+            const pdfX = AssinaturaModule.overlayPos.x * scaleX;
+            // No PDF-Lib a origem Y=0 é no rodapé inferior esquerdo
+            const pdfY = (canvas.height - (AssinaturaModule.overlayPos.y + AssinaturaModule.stampHeight)) * scaleY;
+            const pdfW = AssinaturaModule.stampWidth * scaleX;
+            const pdfH = AssinaturaModule.stampHeight * scaleY;
+
+            // 4. Desenha o carimbo e assinatura
+            targetPage.drawImage(embeddedImage, {
+                x: pdfX,
+                y: pdfY,
+                width: pdfW,
+                height: pdfH
+            });
+
+            // 5. Opcional: Adiciona linha de autenticação eletrônica (carimbo digital)
+            const checkAuth = document.getElementById('checkIncluirAutenticidade')?.checked ?? true;
+            if (checkAuth) {
+                const now = new Date();
+                const authCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                const authText = `Autenticado digitalmente pelo SIGE • C.E. Pedro Rizzi em ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR')} • Cód: PR-${authCode}`;
+                
+                targetPage.drawText(authText, {
+                    x: Math.max(20, pdfX - 10),
+                    y: Math.max(10, pdfY - 12),
+                    size: 6.5,
+                    color: PDFLib.rgb(0.3, 0.35, 0.4)
+                });
+            }
+
+            // 6. Salva o PDF final
+            const signedBytes = await pdfDoc.save();
+            AssinaturaModule.signedPdfBytes = signedBytes;
+            AssinaturaModule.signedPdfBlob = new Blob([signedBytes], { type: 'application/pdf' });
+
+            // Gera Base64 limpa
+            const reader = new FileReader();
+            reader.readAsDataURL(AssinaturaModule.signedPdfBlob);
+            reader.onloadend = () => {
+                AssinaturaModule.signedPdfBase64 = reader.result;
+            };
+
+            const baseName = AssinaturaModule.currentFileName.replace(/\.pdf$/i, '');
+            AssinaturaModule.signedFileName = `${baseName}_assinado.pdf`;
+
+            // Exibe mensagem de sucesso e botões de expedição
+            document.getElementById('pdfSignedSuccessAlert').style.display = 'flex';
+            document.getElementById('pdfSignedFileNameDisplay').textContent = AssinaturaModule.signedFileName;
+
+            showToast('✅ Documento assinado com sucesso! Pronto para download ou envio.');
+
+            // Atualiza a visualização no canvas com o PDF assinado
+            AssinaturaModule.currentPdfBytes = signedBytes;
+            await inicializarVisualizadorPdf();
+
+        } catch (err) {
+            console.error('Erro ao mesclar PDF:', err);
+            showToast('Falha ao assinar documento: ' + err.message);
+        }
+    }
+    window.aplicarAssinaturaNoPdf = aplicarAssinaturaNoPdf;
+
+    // =========================================================================
+    // 6. EXPEDIÇÃO: DOWNLOAD, WHATSAPP E E-MAIL
+    // =========================================================================
+    
+    // 6.1 Download direto do PDF
+    function baixarDocumentoAssinado() {
+        if (!AssinaturaModule.signedPdfBlob) {
+            showToast('Nenhum documento assinado para download. Clique em "Carimbar e Assinar" primeiro.');
+            return;
+        }
+
+        const url = URL.createObjectURL(AssinaturaModule.signedPdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = AssinaturaModule.signedFileName || 'documento_assinado.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Registra no histórico de auditoria
+        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+        sigeDB.addDocumentoExpedido({
+            titulo: AssinaturaModule.signedFileName,
+            nomeArquivo: AssinaturaModule.signedFileName,
+            signatarioId: chancela?.id || '',
+            signatarioNome: chancela?.nome || 'Direção/Secretaria',
+            signatarioCargo: chancela?.cargo || '',
+            canal: 'download',
+            destinatario: 'Download Local (Secretaria)',
+            status: 'concluido',
+            tamanhoBytes: AssinaturaModule.signedPdfBlob.size
+        });
+
+        renderHistorialExpedicoes();
+        atualizarContadoresAssinatura();
+        showToast('Download do documento assinado concluído!');
+    }
+    window.baixarDocumentoAssinado = baixarDocumentoAssinado;
+
+    // 6.2 Envio via WhatsApp
+    function openModalEnviarWhatsApp() {
+        if (!AssinaturaModule.signedPdfBytes && !AssinaturaModule.currentPdfBytes) {
+            showToast('Abra e assine um documento antes de enviar.');
+            return;
+        }
+
+        const modal = document.getElementById('modalEnviarWhatsAppDoc');
+        if (!modal) return;
+
+        // Pré-preenche instâncias ativas
+        const selectInst = document.getElementById('sendWpInstanciaSelect');
+        if (selectInst && window.evolutionClient) {
+            selectInst.innerHTML = window.evolutionClient.defaultInstances.map(inst => `
+                <option value="${inst.instanceName}">${inst.label}</option>
+            `).join('');
+            selectInst.value = 'sige_secretaria';
+        }
+
+        // Pré-carrega mensagem padrão
+        const msgInput = document.getElementById('sendWpMensagemCaption');
+        if (msgInput) {
+            msgInput.value = `Olá! Segue em anexo o documento oficial emitido pelo Centro Educacional Pedro Rizzi devidamente assinado pela Direção/Secretaria.\n\nQualquer dúvida, estamos à disposição.`;
+        }
+
+        document.getElementById('sendWpNomeArquivoDoc').textContent = AssinaturaModule.signedFileName || AssinaturaModule.currentFileName;
+        modal.style.display = 'flex';
+    }
+    window.openModalEnviarWhatsApp = openModalEnviarWhatsApp;
+
+    function closeModalEnviarWhatsApp() {
+        const modal = document.getElementById('modalEnviarWhatsAppDoc');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeModalEnviarWhatsApp = closeModalEnviarWhatsApp;
+
+    async function dispararEnvioWhatsAppDoc() {
+        const phone = document.getElementById('sendWpTelefoneInput').value.trim();
+        const instanceName = document.getElementById('sendWpInstanciaSelect')?.value || 'sige_secretaria';
+        const caption = document.getElementById('sendWpMensagemCaption')?.value.trim();
+        const destinatarioNome = document.getElementById('sendWpDestinatarioNome')?.value.trim() || 'Destinatário';
+
+        if (!phone || phone.replace(/\D/g, '').length < 10) {
+            showToast('Por favor, informe um número de telefone com DDD válido.');
+            return;
+        }
+
+        // Se ainda não tiver gerado a base64 do assinado, gera agora
+        const bytesParaEnvio = AssinaturaModule.signedPdfBytes || AssinaturaModule.currentPdfBytes;
+        if (!bytesParaEnvio) {
+            showToast('Nenhum documento disponível para envio.');
+            return;
+        }
+
+        try {
+            showToast('Enviando documento via WhatsApp em segundo plano...');
+            
+            // Converte Uint8Array para base64
+            let binary = '';
+            const len = bytesParaEnvio.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytesParaEnvio[i]);
+            }
+            const base64Str = window.btoa(binary);
+
+            const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+
+            // Chamada ao Evolution Client
+            const result = await window.evolutionClient.sendDocument(
+                phone,
+                base64Str,
+                AssinaturaModule.signedFileName || 'documento_assinado.pdf',
+                caption,
+                { instanceName: instanceName }
+            );
+
+            if (result.success) {
+                showToast(`✅ Documento enviado com sucesso para ${result.cleanPhone}!`);
+                closeModalEnviarWhatsApp();
+
+                // Registra auditoria
+                sigeDB.addDocumentoExpedido({
+                    titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
+                    nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
+                    signatarioId: chancela?.id || '',
+                    signatarioNome: chancela?.nome || 'Direção/Secretaria',
+                    signatarioCargo: chancela?.cargo || '',
+                    canal: 'whatsapp',
+                    destinatario: `${destinatarioNome} (${phone})`,
+                    status: 'enviado',
+                    tamanhoBytes: bytesParaEnvio.byteLength
+                });
+
+                renderHistorialExpedicoes();
+                atualizarContadoresAssinatura();
+            } else {
+                console.warn('Falha no envio via Evolution API:', result);
+                // Fallback amigável: oferece abrir o WhatsApp Web diretamente
+                if (confirm(`A API de WhatsApp retornou: "${result.error}". Deseja abrir o WhatsApp Web para enviar manualmente?`)) {
+                    baixarDocumentoAssinado();
+                    const clean = phone.replace(/\D/g, '');
+                    const url = `https://wa.me/55${clean}?text=${encodeURIComponent(caption + "\n\n*(Em anexo o documento oficial baixado)*")}`;
+                    window.open(url, '_blank');
+                }
+            }
+        } catch (err) {
+            console.error('Erro no envio via WhatsApp:', err);
+            showToast('Erro ao disparar mensagem: ' + err.message);
+        }
+    }
+    window.dispararEnvioWhatsAppDoc = dispararEnvioWhatsAppDoc;
+
+    // 6.3 Envio via E-mail
+    function openModalEnviarEmail() {
+        if (!AssinaturaModule.signedPdfBytes && !AssinaturaModule.currentPdfBytes) {
+            showToast('Abra e assine um documento antes de enviar.');
+            return;
+        }
+
+        const modal = document.getElementById('modalEnviarEmailDoc');
+        if (!modal) return;
+
+        const assuntoInput = document.getElementById('sendEmailAssuntoInput');
+        if (assuntoInput) {
+            assuntoInput.value = `Documento Oficial Assinado - C.E. Pedro Rizzi [${AssinaturaModule.signedFileName || 'Documento'}]`;
+        }
+
+        const corpoInput = document.getElementById('sendEmailCorpoInput');
+        if (corpoInput) {
+            corpoInput.value = `Prezados,\n\nSegue em anexo o documento oficial emitido pela Secretaria e Gabinete da Direção do Centro Educacional Pedro Rizzi, devidamente autenticado e assinado digitalmente.\n\nAtenciosamente,\nSecretaria Escolar / Direção\nCentro Educacional Pedro Rizzi\nTelefone: (47) 3508-0264`;
+        }
+
+        modal.style.display = 'flex';
+    }
+    window.openModalEnviarEmail = openModalEnviarEmail;
+
+    function closeModalEnviarEmail() {
+        const modal = document.getElementById('modalEnviarEmailDoc');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeModalEnviarEmail = closeModalEnviarEmail;
+
+    function dispararEnvioEmailDoc() {
+        const email = document.getElementById('sendEmailDestinatarioInput').value.trim();
+        const assunto = document.getElementById('sendEmailAssuntoInput').value.trim();
+        const corpo = document.getElementById('sendEmailCorpoInput').value.trim();
+
+        if (!email || !email.includes('@')) {
+            showToast('Informe um endereço de e-mail válido.');
+            return;
+        }
+
+        // 1. Baixa uma via local para anexar facilmente
+        baixarDocumentoAssinado();
+
+        // 2. Abre o cliente de e-mail padrão do operador (mailto) com tudo preenchido
+        const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+        window.location.href = mailtoUrl;
+
+        // 3. Registra expedição no livro
+        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+        sigeDB.addDocumentoExpedido({
+            titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
+            nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
+            signatarioId: chancela?.id || '',
+            signatarioNome: chancela?.nome || 'Direção/Secretaria',
+            signatarioCargo: chancela?.cargo || '',
+            canal: 'email',
+            destinatario: email,
+            status: 'expedido',
+            tamanhoBytes: AssinaturaModule.signedPdfBytes?.byteLength || 0
+        });
+
+        closeModalEnviarEmail();
+        renderHistorialExpedicoes();
+        atualizarContadoresAssinatura();
+        showToast(`E-mail aberto no cliente local! O documento assinado foi baixado para anexar.`);
+    }
+    window.dispararEnvioEmailDoc = dispararEnvioEmailDoc;
+
+    // =========================================================================
+    // 7. GERADOR DE DOCUMENTOS OFICIAIS DO PRÓPRIO SISTEMA (REQUISITO 4)
+    // =========================================================================
+    function openModalGeradorDocumentosSige() {
+        const modal = document.getElementById('modalGeradorDocsSIGE');
+        if (modal) {
+            modal.style.display = 'flex';
+            popularSelectAlunosSige();
+        }
+    }
+    window.openModalGeradorDocumentosSige = openModalGeradorDocumentosSige;
+
+    function closeModalGeradorDocumentosSige() {
+        const modal = document.getElementById('modalGeradorDocsSIGE');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeModalGeradorDocumentosSige = closeModalGeradorDocumentosSige;
+
+    function popularSelectAlunosSige() {
+        const select = document.getElementById('sigeDocSelectAluno');
+        if (!select) return;
+
+        let options = '<option value="">-- Selecionar Aluno da Base Escolar (Opcional) --</option>';
+        if (sigeDB.data && Array.isArray(sigeDB.data.alunosImportados)) {
+            // Ordena alunos por nome
+            const alunos = [...sigeDB.data.alunosImportados].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+            alunos.slice(0, 300).forEach(a => {
+                options += `<option value="${a.id || a.matricula}" data-nome="${a.nome}" data-turma="${a.turma || ''}" data-turno="${a.turno || ''}">${a.nome} (${a.turma || 'Sem turma'})</option>`;
+            });
+        }
+        select.innerHTML = options;
+
+        select.onchange = () => {
+            const opt = select.options[select.selectedIndex];
+            if (opt && opt.dataset.nome) {
+                document.getElementById('sigeDocInputNomeAluno').value = opt.dataset.nome;
+                document.getElementById('sigeDocInputTurma').value = opt.dataset.turma || '';
+                document.getElementById('sigeDocInputTurno').value = opt.dataset.turno || 'Matutino';
+            }
+        };
+    }
+
+    async function gerarDocumentoOficialSige(tipo) {
+        if (typeof PDFLib === 'undefined') {
+            showToast('PDF-Lib não carregada.');
+            return;
+        }
+
+        const tipoDoc = tipo || document.getElementById('sigeDocSelectTipo').value;
+        const nomeAluno = document.getElementById('sigeDocInputNomeAluno').value.trim() || 'NOME DO ESTUDANTE';
+        const turma = document.getElementById('sigeDocInputTurma').value.trim() || '101';
+        const turno = document.getElementById('sigeDocInputTurno').value.trim() || 'Matutino';
+        const textoExtra = document.getElementById('sigeDocInputObservacoes')?.value.trim() || '';
+
+        try {
+            showToast('Gerando documento oficial timbrado...');
+
+            // Cria novo PDF A4
+            const pdfDoc = await PDFLib.PDFDocument.create();
+            // A4 em pontos: 595.28 x 841.89
+            const page = pdfDoc.addPage([595.28, 841.89]);
+            const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+            const pw = page.getWidth();
+            const ph = page.getHeight();
+            let y = ph - 60;
+
+            // Borda decorativa institucional
+            page.drawRectangle({
+                x: 35,
+                y: 35,
+                width: pw - 70,
+                height: ph - 70,
+                borderColor: PDFLib.rgb(0.8, 0.85, 0.9),
+                borderWidth: 1
+            });
+
+            // Cabeçalho da Escola
+            page.drawText('ESTADO DE SANTA CATARINA', { x: pw / 2 - 100, y, size: 10, font: fontBold, color: PDFLib.rgb(0.2, 0.25, 0.3) });
+            y -= 14;
+            page.drawText('MUNICÍPIO DE ITAJAÍ • SECRETARIA MUNICIPAL DE EDUCAÇÃO', { x: pw / 2 - 160, y, size: 9, font: fontRegular, color: PDFLib.rgb(0.3, 0.35, 0.4) });
+            y -= 16;
+            page.drawText('CENTRO EDUCACIONAL PEDRO RIZZI', { x: pw / 2 - 120, y, size: 13, font: fontBold, color: PDFLib.rgb(0.1, 0.2, 0.4) });
+            y -= 14;
+            page.drawText('Rua Agílio Cunha, 812 - Cidade Nova - Itajaí - SC • Fone: (47) 3508-0264', { x: pw / 2 - 150, y, size: 8.5, font: fontRegular, color: PDFLib.rgb(0.4, 0.45, 0.5) });
+            y -= 18;
+
+            // Linha divisória
+            page.drawLine({
+                start: { x: 50, y },
+                end: { x: pw - 50, y },
+                thickness: 1.5,
+                color: PDFLib.rgb(0.1, 0.2, 0.4)
+            });
+            y -= 50;
+
+            // Título do Documento
+            let titulo = 'DECLARAÇÃO DE MATRÍCULA E FREQUÊNCIA';
+            let nomeArq = `declaracao_matricula_${nomeAluno.replace(/\s+/g, '_')}.pdf`;
+
+            if (tipoDoc === 'frequencia') {
+                titulo = 'DECLARAÇÃO DE FREQUÊNCIA ESCOLAR';
+                nomeArq = `declaracao_frequencia_${nomeAluno.replace(/\s+/g, '_')}.pdf`;
+            } else if (tipoDoc === 'comparecimento') {
+                titulo = 'DECLARAÇÃO DE COMPARECIMENTO';
+                nomeArq = `declaracao_comparecimento.pdf`;
+            } else if (tipoDoc === 'transferencia') {
+                titulo = 'DECLARAÇÃO DE TRANSFERÊNCIA ESCOLAR';
+                nomeArq = `declaracao_transferencia_${nomeAluno.replace(/\s+/g, '_')}.pdf`;
+            } else if (tipoDoc === 'oficio') {
+                titulo = 'COMUNICADO / OFÍCIO OFICIAL DE GABINETE';
+                nomeArq = `oficio_gabinete_escola.pdf`;
+            }
+
+            const titleWidth = fontBold.widthOfTextAtSize(titulo, 14);
+            page.drawText(titulo, {
+                x: (pw - titleWidth) / 2,
+                y,
+                size: 14,
+                font: fontBold,
+                color: PDFLib.rgb(0.1, 0.15, 0.25)
+            });
+            y -= 60;
+
+            // Corpo do Texto
+            const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+            let corpo = '';
+
+            if (tipoDoc === 'matricula') {
+                corpo = `Declaramos, para os devidos fins a quem interessar possa, que o(a) estudante ${nomeAluno.toUpperCase()}, encontra-se regularmente matriculado(a) e com frequência ativa nesta unidade escolar no presente Ano Letivo de 2026, cursando a Turma ${turma}, no Turno ${turno}.\n\nPor ser a expressão da verdade, firmamos o presente documento com chancela oficial do Gabinete da Direção e Secretaria Escolar.`;
+            } else if (tipoDoc === 'frequencia') {
+                corpo = `Declaramos para os devidos fins que o(a) estudante ${nomeAluno.toUpperCase()} está regularmente frequente às atividades pedagógicas da Turma ${turma} (Turno ${turno}), cumprindo assiduamente a carga horária curricular estabelecida pelo calendário escolar vigente.`;
+            } else if (tipoDoc === 'comparecimento') {
+                corpo = `Declaramos para os devidos fins que o(a) responsável pelo estudante ${nomeAluno.toUpperCase()} compareceu a esta instituição de ensino na presente data para reunião, alinhamento pedagógico e tratativas de interesse educacional perante a Gestão Escolar.`;
+            } else if (tipoDoc === 'transferencia') {
+                corpo = `Declaramos que o(a) estudante ${nomeAluno.toUpperCase()}, matriculado(a) na Turma ${turma}, solicitou transferência desta instituição de ensino, estando com sua documentação escolar em fase de expedição de histórico definitivo conforme os ditames da Lei de Diretrizes e Bases da Educação Nacional.`;
+            } else {
+                corpo = `O Centro Educacional Pedro Rizzi, por intermédio de sua Equipe Diretiva e Administrativa, expede a presente comunicação oficial em referência aos assuntos de gestão pedagógica e operacional da comunidade escolar.\n\n${textoExtra}`;
+            }
+
+            // Renderiza linhas de texto com quebra automática
+            const margemEsq = 65;
+            const larguraUtil = pw - 130;
+            const linhas = quebrarTextoEmLinhas(corpo, fontRegular, 11.5, larguraUtil);
+
+            linhas.forEach(linha => {
+                page.drawText(linha, {
+                    x: margemEsq,
+                    y,
+                    size: 11.5,
+                    font: fontRegular,
+                    color: PDFLib.rgb(0.15, 0.15, 0.15),
+                    lineHeight: 18
+                });
+                y -= 22;
+            });
+
+            // Data e Cidade
+            y -= 40;
+            const dataTexto = `Itajaí (SC), ${dataAtual}.`;
+            page.drawText(dataTexto, {
+                x: pw - fontRegular.widthOfTextAtSize(dataTexto, 11) - 65,
+                y,
+                size: 11,
+                font: fontRegular,
+                color: PDFLib.rgb(0.2, 0.2, 0.2)
+            });
+
+            // Linha e espaço de carimbo pré-reservado no rodapé
+            y = 170;
+            page.drawLine({
+                start: { x: pw - 280, y },
+                end: { x: pw - 65, y },
+                thickness: 0.8,
+                color: PDFLib.rgb(0.5, 0.5, 0.5)
+            });
+            y -= 14;
+            page.drawText('Gabinete da Direção / Secretaria Escolar', {
+                x: pw - 245,
+                y,
+                size: 9,
+                font: fontRegular,
+                color: PDFLib.rgb(0.4, 0.4, 0.4)
+            });
+
+            // Salva PDF em memória e joga direto na mesa de trabalho!
+            const pdfBytes = await pdfDoc.save();
+            AssinaturaModule.currentPdfBytes = pdfBytes;
+            AssinaturaModule.currentFileName = nomeArq;
+            AssinaturaModule.currentPageNum = 1;
+
+            closeModalGeradorDocumentosSige();
+            await inicializarVisualizadorPdf();
+            showToast('Documento oficial gerado! Posicione a assinatura e clique em Carimbar.');
+
+        } catch (err) {
+            console.error('Erro ao gerar documento do SIGE:', err);
+            showToast('Erro ao gerar documento: ' + err.message);
+        }
+    }
+    window.gerarDocumentoOficialSige = gerarDocumentoOficialSige;
+
+    function quebrarTextoEmLinhas(texto, font, fontSize, maxWidth) {
+        const paragrafos = texto.split('\n');
+        const resultado = [];
+
+        paragrafos.forEach(par => {
+            if (!par.trim()) {
+                resultado.push('');
+                return;
+            }
+            const palavras = par.split(' ');
+            let linhaAtual = '';
+
+            palavras.forEach(p => {
+                const teste = linhaAtual ? `${linhaAtual} ${p}` : p;
+                const w = font.widthOfTextAtSize(teste, fontSize);
+                if (w < maxWidth) {
+                    linhaAtual = teste;
+                } else {
+                    resultado.push(linhaAtual);
+                    linhaAtual = p;
+                }
+            });
+            if (linhaAtual) resultado.push(linhaAtual);
+        });
+
+        return resultado;
+    }
+
+    // =========================================================================
+    // 8. HISTÓRICO E LIVRO DE REGISTROS DE EXPEDIÇÕES
+    // =========================================================================
+    function renderHistorialExpedicoes() {
+        const tbody = document.getElementById('tabelaHistoricoExpedicoesBody');
+        if (!tbody) return;
+
+        let docs = sigeDB.getDocumentosExpedidos();
+
+        // Filtro por canal
+        if (AssinaturaModule.historyFilterCanal !== 'todos') {
+            docs = docs.filter(d => d.canal === AssinaturaModule.historyFilterCanal);
+        }
+
+        // Filtro por busca
+        if (AssinaturaModule.historySearch) {
+            const q = AssinaturaModule.historySearch.toLowerCase();
+            docs = docs.filter(d => 
+                (d.titulo && d.titulo.toLowerCase().includes(q)) ||
+                (d.destinatario && d.destinatario.toLowerCase().includes(q)) ||
+                (d.signatarioNome && d.signatarioNome.toLowerCase().includes(q))
+            );
+        }
+
+        if (docs.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:24px; color:#94a3b8; font-size:0.88rem;">
+                        <i class="fa-regular fa-folder-open" style="font-size:1.6rem; display:block; margin-bottom:6px; color:#cbd5e1;"></i>
+                        Nenhum documento expedido encontrado no histórico.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        docs.forEach(d => {
+            const dataHora = d.dataHora ? new Date(d.dataHora).toLocaleString('pt-BR') : '-';
+            let canalBadge = '';
+            if (d.canal === 'whatsapp') {
+                canalBadge = `<span style="background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</span>`;
+            } else if (d.canal === 'email') {
+                canalBadge = `<span style="background:#e0e7ff; color:#4338ca; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-envelope"></i> E-mail</span>`;
+            } else {
+                canalBadge = `<span style="background:#f1f5f9; color:#475569; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-download"></i> Download</span>`;
+            }
+
+            html += `
+                <tr style="border-bottom:1px solid #f1f5f9; font-size:0.83rem;">
+                    <td style="padding:10px 12px; font-weight:600; color:#475569;">${dataHora}</td>
+                    <td style="padding:10px 12px;">
+                        <div style="font-weight:700; color:#0f172a;">${d.titulo || d.nomeArquivo}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8;">${d.nomeArquivo}</div>
+                    </td>
+                    <td style="padding:10px 12px;">
+                        <span style="font-weight:700; color:#1e293b;">${d.signatarioNome}</span>
+                        <div style="font-size:0.75rem; color:#64748b;">${d.signatarioCargo || ''}</div>
+                    </td>
+                    <td style="padding:10px 12px;">${canalBadge}</td>
+                    <td style="padding:10px 12px; font-weight:600; color:#334155;">${d.destinatario || '-'}</td>
+                    <td style="padding:10px 12px; font-size:0.78rem; color:#64748b;">${d.operador || 'Secretaria'}</td>
+                    <td style="padding:10px 12px; text-align:right;">
+                        <button type="button" onclick="excluirItemHistoricoExpedicao('${d.id}')" title="Excluir Registro" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; padding:4px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+    window.renderHistorialExpedicoes = renderHistorialExpedicoes;
+
+    function filtrarHistoricoCanal(canal) {
+        AssinaturaModule.historyFilterCanal = canal;
+        const btns = document.querySelectorAll('.filtro-canal-btn');
+        btns.forEach(b => {
+            if (b.dataset.canal === canal) {
+                b.classList.add('active');
+                b.style.background = '#4f46e5';
+                b.style.color = 'white';
+            } else {
+                b.classList.remove('active');
+                b.style.background = '#f1f5f9';
+                b.style.color = '#475569';
+            }
+        });
+        renderHistorialExpedicoes();
+    }
+    window.filtrarHistoricoCanal = filtrarHistoricoCanal;
+
+    function filtrarHistoricoBusca(termo) {
+        AssinaturaModule.historySearch = termo;
+        renderHistorialExpedicoes();
+    }
+    window.filtrarHistoricoBusca = filtrarHistoricoBusca;
+
+    function excluirItemHistoricoExpedicao(id) {
+        if (!confirm('Deseja remover este registro de expedição do histórico?')) return;
+        sigeDB.deleteDocumentoExpedido(id);
+        renderHistorialExpedicoes();
+        atualizarContadoresAssinatura();
+        showToast('Registro excluído.');
+    }
+    window.excluirItemHistoricoExpedicao = excluirItemHistoricoExpedicao;
+
+    // Exporta objeto principal
+    window.AssinaturaModule = AssinaturaModule;
+
+})(typeof window !== 'undefined' ? window : this);
