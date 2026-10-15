@@ -49,7 +49,7 @@
                     <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
                 </select>
             </div>
-            <div id="activeRoleBadge"></div>
+            <div id="activeRoleBadge" style="display:none;"></div>
         </div>
 
         <div style="display:flex; align-items:center; gap:16px;">
@@ -58,14 +58,13 @@
                 <i id="cloudSyncBtnIcon" class="fa-solid fa-cloud-arrow-down"></i> <span id="cloudSyncBtnText">Nuvem Conectada (Tempo Real)</span>
             </button>
 
-            <!-- Conta de Usuário Logado -->
+            <!-- Conta de Usuário Logado: Nome e Função sem e-mail -->
             <div id="userAccountDisplay" style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#e2e8f0; font-weight:700;">
-                <i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem;"></i>
-                <span id="loggedUserEmailText">elcortelini@gmail.com</span>
+                <span id="loggedUserEmailText"><i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem; margin-right:4px;"></i><strong>Elevi Cortelini</strong> (Desenvolvedor)</span>
                 <button id="btnTopBarPendingAlert" onclick="scrollToPendingRequests()" style="display:none; background:#f59e0b; color:#0f172a; border:none; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:800; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(245,158,11,0.3);" title="Solicitações de Acesso Pendentes">
                     <i class="fa-solid fa-user-clock"></i> <span id="topBarPendingCountText">0 Pendentes</span>
                 </button>
-                <button id="btnDevManageUsers" onclick="openDevUserModal()" style="display:none; background:#7c3aed; color:white; border:none; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Painel do Desenvolvedor: Gestão de E-mails">
+                <button id="btnDevManageUsers" onclick="openDevUserModal()" style="display:none !important; background:#7c3aed; color:white; border:none; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Painel do Desenvolvedor: Gestão de E-mails">
                     <i class="fa-solid fa-user-gear"></i> Gestão E-mails
                 </button>
                 <button onclick="handleSigeLogout()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); color:white; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Sair da Conta">
@@ -796,16 +795,7 @@
         <!-- MÓDULO 5: SISTEMAS & PLATAFORMAS EXTERNAS -->
         <!-- ========================================== -->
         <section id="tab-externos" class="tab-content-section">
-            <div class="action-toolbar" style="padding:1rem 1.4rem; margin-bottom:1.5rem; background:white; border-radius:16px; border:1px solid #cbd5e1; border-left:6px solid #8b5cf6; box-shadow:0 4px 14px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3 style="color:#0f172a; font-weight:900; font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-cubes" style="color:#8b5cf6;"></i> Sistemas & Plataformas Integradas
-                    </h3>
-                    <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0 0;">Acesso rápido às plataformas digitais e sistemas externos integrados da unidade.</p>
-                </div>
-            </div>
-
-            <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
+            <div id="externosCardsGrid" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:20px;">
                 <!-- Card 1: Agendamento de Recursos & Informática -->
                 <div class="dir-card" style="padding:24px; display:flex; flex-direction:column; justify-content:space-between; border-radius:16px; border:1px solid #e2e8f0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
                     <div>
@@ -1330,19 +1320,8 @@
         <!-- ABA 5: DIREÇÃO & GESTÃO EXECUTIVA -->
         <!-- ========================================== -->
         <section id="tab-direcao" class="tab-content-section">
-            <!-- 1. BARRA SUPERIOR: PAINEL DE GESTÃO -->
-            <div class="dir-card" style="padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <h3 class="dir-card-title" style="font-size: 1.25rem;">
-                        <i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Painel de Gestão
-                    </h3>
-                    <p class="dir-card-subtitle">Centro Educacional Pedro Rizzi — Gabinete da Direção & Gestão Integrada</p>
-                </div>
-                <!-- Status escondido conforme solicitado (mantido para compatibilidade com JS) -->
-                <div style="display:none;">
-                    <span id="dirSyncBadgeStatus"></span>
-                </div>
-            </div>
+            <!-- Status invisível mantido para compatibilidade com JS -->
+            <span id="dirSyncBadgeStatus" style="display:none;"></span>
 
             <!-- 2. CARDS DE NAVEGAÇÃO INTERNA DA DIREÇÃO -->
             <div class="dir-nav-cards-container">
@@ -1376,29 +1355,29 @@
                 <!-- BLOCO 1: CONTATOS (LARGURA TOTAL - VISUAL REFINADO) -->
                 <!-- ============================================================ -->
                 <div class="dir-card">
-                    <!-- Cabeçalho do Bloco de Contatos com Ações -->
-                    <div class="dir-card-header">
+                    <!-- Cabeçalho do Bloco de Contatos com Ações em Linha Única -->
+                    <div class="dir-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
                         <div>
                             <h4 class="dir-card-title">
                                 <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos & Telefones dos Profissionais
                             </h4>
                             <p class="dir-card-subtitle">Agenda institucional unificada: professores, equipe e colaboradores com envio rápido e WhatsApp</p>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.8125rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-height:36px;" title="Disparar mensagem geral para todos os colaboradores">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:nowrap; width:auto;">
+                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="width:auto !important; white-space:nowrap; background:#16a34a; color:white; font-size:0.8125rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-height:36px; flex-shrink:0;" title="Disparar mensagem geral para todos os colaboradores">
                                 <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> Disparar Mensagem Geral
                             </button>
                             <!-- Botões de CSV em ícones compactos conforme solicitado -->
-                            <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
+                            <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" style="flex-shrink:0;" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
                                 <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i>
                             </button>
-                            <button type="button" onclick="openImportarContatosCSVModal()" class="dir-btn-icon" title="Importar contatos de arquivo CSV" aria-label="Importar contatos CSV">
+                            <button type="button" onclick="openImportarContatosCSVModal()" class="dir-btn-icon" style="flex-shrink:0;" title="Importar contatos de arquivo CSV" aria-label="Importar contatos CSV">
                                 <i class="fa-solid fa-file-import" style="color:#2563eb;"></i>
                             </button>
-                            <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
+                            <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" style="flex-shrink:0;" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
                                 <i class="fa-solid fa-file-export" style="color:#166534;"></i>
                             </button>
-                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; min-height:36px; padding:6px 14px; font-size:0.8125rem; font-weight:800; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="width:auto !important; white-space:nowrap; background:#2563eb; border-color:#2563eb; min-height:36px; padding:6px 14px; font-size:0.8125rem; font-weight:800; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; flex-shrink:0;">
                                 <i class="fa-solid fa-user-plus"></i> + Novo Profissional / Contato
                             </button>
                         </div>

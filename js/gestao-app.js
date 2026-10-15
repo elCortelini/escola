@@ -79,7 +79,10 @@ function checkSigeAuth() {
     }
 
     if (userText) {
-        userText.innerHTML = `<i class="fa-solid fa-user-circle"></i> <strong>${escapeHtml(user.nome || '')}</strong> (${escapeHtml(user.email || '')})`;
+        const funcaoDesc = (user.role === "desenvolvedor" || (user.email && user.email.toLowerCase().includes("cortelini")))
+            ? "Desenvolvedor"
+            : (user.cargo || (typeof sigeDB.getRoleFormatted === "function" ? sigeDB.getRoleFormatted() : (user.role || "Colaborador")));
+        userText.innerHTML = `<i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem; margin-right:4px;"></i><strong>${escapeHtml(user.nome || "Elevi Cortelini")}</strong> (${escapeHtml(funcaoDesc)})`;
     }
 
     // Define papel no BD local
@@ -91,7 +94,7 @@ function checkSigeAuth() {
         (user.cpf && cleanCpf(user.cpf) === '80603742068')
     );
     if (roleWrapper) roleWrapper.style.display = isDev ? "inline-flex" : "none";
-    if (btnDev) btnDev.style.display = isDev ? "inline-flex" : "none";
+    if (btnDev) btnDev.style.display = "none";
 
     // Alerta de solicitações pendentes na barra do topo (Exclusivo Desenvolvedor)
     if (btnTopAlert) {
@@ -998,8 +1001,7 @@ function setupRoleSelector() {
 
 function updateRoleBadgePill(role, badgeElem) {
     if (!badgeElem) return;
-    badgeElem.className = `role-badge-pill role-pill-${role}`;
-    badgeElem.innerHTML = `<i class="${getRoleIcon(role)}"></i> ${getRoleLabel(role)}`;
+    badgeElem.style.display = "none";
 }
 
 window.checkSigeAuth = checkSigeAuth;
@@ -6196,15 +6198,10 @@ function renderAdminTelefonesTable() {
                 </td>
                 <td style="padding:10px; text-align:center;">
                     <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
-                        ${temTelefone ? `
-                            <a href="${waLink}" target="_blank" class="btn" style="background:#16a34a; color:white; padding:5px 10px; font-size:0.78rem; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="Conversar no WhatsApp">
-                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
-                            </a>
-                        ` : ''}
-                        <button type="button" onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:5px 9px; font-size:0.78rem; border-radius:6px; cursor:pointer;" title="Enviar Recado Rápido">
-                            <i class="fa-solid fa-paper-plane"></i>
+                        <button type="button" onclick="openDisparoAvisoProfessorModal('${p.id}')" class="btn" style="width:auto; background:#dcfce7; color:#16a34a; border:1px solid #86efac; padding:5px 9px; font-size:0.85rem; border-radius:6px; cursor:pointer;" title="Enviar Recado Rápido via WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
                         </button>
-                        <button type="button" onclick="openCadastroProfissionalModal('${p.id}')" class="btn" style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:5px 9px; font-size:0.78rem; border-radius:6px; cursor:pointer;" title="Editar Dados e Telefone">
+                        <button type="button" onclick="openCadastroProfissionalModal('${p.id}')" class="btn" style="width:auto; background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:5px 9px; font-size:0.78rem; border-radius:6px; cursor:pointer;" title="Editar Dados e Telefone">
                             <i class="fa-solid fa-pen"></i>
                         </button>
                     </div>
@@ -7830,13 +7827,8 @@ function renderDirWhatsAppContatos() {
                     ${tagsHtml}
                 </div>
                 <div style="display:flex; gap:6px; align-items:center; justify-content:flex-end;">
-                    ${temTelefone ? `
-                        <button type="button" onclick="abrirConversaWhatsApp('${c.telefone}', '${escapeHtml(c.nome)}')" class="btn" style="background:#16a34a; color:white; padding:5px 10px; font-size:0.78rem; border-radius:6px; font-weight:700; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;" title="Conversar no WhatsApp">
-                            <i class="fa-brands fa-whatsapp" style="font-size:0.95rem;"></i> WhatsApp
-                        </button>
-                    ` : ''}
-                    <button type="button" onclick="openDisparoAvisoProfessorModal('${c.id}')" class="dir-btn-icon" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; width:34px; height:34px;" title="Enviar Recado Rápido">
-                        <i class="fa-solid fa-paper-plane"></i>
+                    <button type="button" onclick="openDisparoAvisoProfessorModal('${c.id}')" class="dir-btn-icon" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac; width:34px; height:34px;" title="Enviar Recado Rápido via WhatsApp">
+                        <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i>
                     </button>
                     <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" class="dir-btn-icon edit" style="width:34px; height:34px;" title="Editar dados de ${escapeHtml(c.nome)}">
                         <i class="fa-solid fa-pen-to-square"></i>
