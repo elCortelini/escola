@@ -12,6 +12,7 @@
     // Estado local do módulo
     const AssinaturaModule = {
         currentPdfBytes: null,
+        currentPdfFile: null,
         currentPdfDoc: null,
         currentPageNum: 1,
         totalPdfPages: 1,
@@ -429,6 +430,7 @@
 
         try {
             showToast(`Carregando documento "${file.name}"...`);
+            AssinaturaModule.currentPdfFile = file;
             const arrayBuffer = await file.arrayBuffer();
             AssinaturaModule.currentPdfBytes = new Uint8Array(arrayBuffer);
             AssinaturaModule.currentFileName = file.name;
@@ -443,15 +445,50 @@
     }
     window.carregarPdfFile = carregarPdfFile;
 
+    // Helper: Garante que os bytes do PDF comecem com o cabeçalho mágico %PDF- (0x25 0x50 0x44 0x46 0x2D)
+    function sanitizePdfBytes(bytes) {
+        if (!bytes || bytes.length === 0) return bytes;
+        const maxSearch = Math.min(bytes.length, 2048);
+        for (let i = 0; i < maxSearch - 4; i++) {
+            if (
+                bytes[i] === 0x25 && // %
+                bytes[i + 1] === 0x50 && // P
+                bytes[i + 2] === 0x44 && // D
+                bytes[i + 3] === 0x46 && // F
+                bytes[i + 4] === 0x2D    // -
+            ) {
+                if (i === 0) return bytes;
+                console.warn(`[AssinaturaModule] Removendo ${i} bytes de cabeçalho extra antes de %PDF-`);
+                return bytes.slice(i);
+            }
+        }
+        return bytes;
+    }
+
     async function inicializarVisualizadorPdf() {
-        if (!AssinaturaModule.currentPdfBytes) return;
+        // Se buffer foi desanexado ou está vazio, tenta reler do arquivo original
+        if ((!AssinaturaModule.currentPdfBytes || AssinaturaModule.currentPdfBytes.byteLength === 0) && AssinaturaModule.currentPdfFile) {
+            try {
+                const arrayBuffer = await AssinaturaModule.currentPdfFile.arrayBuffer();
+                AssinaturaModule.currentPdfBytes = new Uint8Array(arrayBuffer);
+            } catch (err) {
+                console.warn('Não foi possível reler o arquivo PDF original:', err);
+            }
+        }
+
+        if (!AssinaturaModule.currentPdfBytes || AssinaturaModule.currentPdfBytes.byteLength === 0) return;
 
         if (typeof pdfjsLib === 'undefined') {
             showToast('Biblioteca PDF.js não encontrada.');
             return;
         }
 
-        const loadingTask = pdfjsLib.getDocument({ data: AssinaturaModule.currentPdfBytes });
+        // Sanitiza cabeçalho
+        AssinaturaModule.currentPdfBytes = sanitizePdfBytes(AssinaturaModule.currentPdfBytes);
+
+        // CLONA O Uint8Array antes de passar ao PDF.js para impedir que o Web Worker desanexe (detach) o buffer!
+        const pdfDataClone = AssinaturaModule.currentPdfBytes.slice();
+        const loadingTask = pdfjsLib.getDocument({ data: pdfDataClone });
         AssinaturaModule.currentPdfDoc = await loadingTask.promise;
         AssinaturaModule.totalPdfPages = AssinaturaModule.currentPdfDoc.numPages;
 
@@ -511,6 +548,7 @@
 
     function limparPdfMesa() {
         AssinaturaModule.currentPdfBytes = null;
+        AssinaturaModule.currentPdfFile = null;
         AssinaturaModule.currentPdfDoc = null;
         AssinaturaModule.currentFileName = '';
         AssinaturaModule.currentPageNum = 1;
@@ -711,22 +749,48 @@
     // 5. PROCESSAMENTO E MESCLAGEM VIA PDF-LIB
     // =========================================================================
     async function converterImagemParaPngBytes(imgSrc) {
+        if (!imgSrc) throw new Error('Imagem da chancela não fornecida.');
+
+        // Se já for PNG em base64 puro, decodifica diretamente para Uint8Array sem perdas nem atrasos
+        if (typeof imgSrc === 'string' && imgSrc.startsWith('data:image/png;base64,')) {
+            try {
+                const base64Data = imgSrc.substring('data:image/png;base64,'.length);
+                const binaryString = window.atob(base64Data);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes;
+            } catch (e) {
+                console.warn('[AssinaturaModule] Conversão direta de base64 falhou, usando canvas fallback:', e);
+            }
+        }
+
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
-                const c = document.createElement('canvas');
-                c.width = img.width || 320;
-                c.height = img.height || 130;
-                const ctx = c.getContext('2d');
-                ctx.drawImage(img, 0, 0, c.width, c.height);
+                try {
+                    const c = document.createElement('canvas');
+                    c.width = img.naturalWidth || img.width || 320;
+                    c.height = img.naturalHeight || img.height || 130;
+                    const ctx = c.getContext('2d');
+                    ctx.drawImage(img, 0, 0, c.width, c.height);
 
-                c.toBlob(blob => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(new Uint8Array(reader.result));
-                    reader.onerror = reject;
-                    reader.readAsArrayBuffer(blob);
-                }, 'image/png');
+                    c.toBlob(blob => {
+                        if (!blob) {
+                            reject(new Error('Falha ao gerar blob PNG da chancela'));
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(new Uint8Array(reader.result));
+                        reader.onerror = reject;
+                        reader.readAsArrayBuffer(blob);
+                    }, 'image/png');
+                } catch (canvasErr) {
+                    reject(canvasErr);
+                }
             };
             img.onerror = () => reject(new Error('Falha ao renderizar carimbo para mesclagem'));
             img.src = imgSrc;
@@ -734,7 +798,17 @@
     }
 
     async function aplicarAssinaturaNoPdf() {
-        if (!AssinaturaModule.currentPdfBytes) {
+        // Se o buffer estiver vazio ou foi desanexado, tenta reler do arquivo original
+        if ((!AssinaturaModule.currentPdfBytes || AssinaturaModule.currentPdfBytes.byteLength === 0) && AssinaturaModule.currentPdfFile) {
+            try {
+                const buf = await AssinaturaModule.currentPdfFile.arrayBuffer();
+                AssinaturaModule.currentPdfBytes = new Uint8Array(buf);
+            } catch (e) {
+                console.warn('Erro ao reler arquivo original na mesclagem:', e);
+            }
+        }
+
+        if (!AssinaturaModule.currentPdfBytes || AssinaturaModule.currentPdfBytes.byteLength === 0) {
             showToast('Nenhum documento PDF aberto na mesa de trabalho.');
             return;
         }
@@ -759,8 +833,12 @@
         try {
             showToast('Mesclando assinatura e gerando documento autenticado...');
 
+            // Sanitiza os bytes do PDF (garante %PDF- no início e faz cópia segura)
+            const cleanBytes = sanitizePdfBytes(AssinaturaModule.currentPdfBytes);
+            const bytesParaCarregar = cleanBytes.slice();
+
             // 1. Carrega documento no PDF-Lib
-            const pdfDoc = await PDFLib.PDFDocument.load(AssinaturaModule.currentPdfBytes);
+            const pdfDoc = await PDFLib.PDFDocument.load(bytesParaCarregar, { ignoreEncryption: true });
             const pages = pdfDoc.getPages();
             const targetPageIndex = AssinaturaModule.currentPageNum - 1;
             const targetPage = pages[targetPageIndex] || pages[0];
@@ -827,8 +905,8 @@
 
             showToast('✅ Documento assinado com sucesso! Pronto para download ou envio.');
 
-            // Atualiza a visualização no canvas com o PDF assinado
-            AssinaturaModule.currentPdfBytes = signedBytes;
+            // Atualiza a visualização no canvas com o PDF assinado (Uint8Array clonado)
+            AssinaturaModule.currentPdfBytes = new Uint8Array(signedBytes);
             await inicializarVisualizadorPdf();
 
         } catch (err) {
@@ -1246,9 +1324,11 @@
 
             // Salva PDF em memória e joga direto na mesa de trabalho!
             const pdfBytes = await pdfDoc.save();
-            AssinaturaModule.currentPdfBytes = pdfBytes;
+            AssinaturaModule.currentPdfFile = null;
+            AssinaturaModule.currentPdfBytes = new Uint8Array(pdfBytes);
             AssinaturaModule.currentFileName = nomeArq;
             AssinaturaModule.currentPageNum = 1;
+            AssinaturaModule.signedPdfBytes = null;
 
             closeModalGeradorDocumentosSige();
             await inicializarVisualizadorPdf();

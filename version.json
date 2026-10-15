@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v49",
-  "build": 1792080400,
-  "updatedAt": "2026-10-15T16:26:00-03:00",
-  "description": "Exclusao definitiva das chancelas modelo/ficticias mantendo apenas chancelas reais cadastradas"
+  "version": "20261015_v50",
+  "build": 1792080500,
+  "updatedAt": "2026-10-15T16:36:00-03:00",
+  "description": "Correcao de desanexacao de buffer PDF pelo PDF.js Worker e sanitizacao de cabecalho PDF para mesclagem"
 }
