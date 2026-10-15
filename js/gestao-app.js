@@ -3526,20 +3526,29 @@ function toggleBloqueioDiaHandler(dateIso) {
 
 function excluirAgendamentoDirect(id) {
     const targetId = id || window.currentDetailAppointmentId || currentDetailAppointmentId;
-    if (!targetId) return;
+    if (!targetId) {
+        console.warn("⚠️ [excluirAgendamentoDirect]: Nenhum ID de agendamento fornecido.");
+        return;
+    }
 
     if (document.activeElement && typeof document.activeElement.blur === "function") {
         document.activeElement.blur();
     }
 
-    const ags = sigeDB.getAgendamentosOP() || [];
-    const item = ags.find(a => a.id === targetId);
+    const ags = (sigeDB.data && Array.isArray(sigeDB.data.agendamentosOP))
+        ? sigeDB.data.agendamentosOP
+        : (sigeDB.getAgendamentosOP() || []);
+    const item = ags.find(a => String(a.id) === String(targetId));
     const nomeAluno = item ? item.aluno : 'este agendamento';
 
-    // Verificação de isolamento por função/orientadora
+    // Verificação de isolamento por função/orientadora com suporte defensivo
     const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
-    if (logged && !sigeDB.isDev() && !sigeDB.isDiretor() && !logged.isAdmin && !logged.isSuperAdmin) {
-        if (logged.role.startsWith("orientadora_") || logged.setor === "orientacao") {
+    const isMaster = (typeof sigeDB !== 'undefined' && typeof sigeDB.isDev === 'function' && sigeDB.isDev()) ||
+                     (typeof sigeDB !== 'undefined' && typeof sigeDB.isDiretor === 'function' && sigeDB.isDiretor()) ||
+                     (logged && (logged.isAdmin || logged.isSuperAdmin || logged.role === 'desenvolvedor' || logged.role === 'direcao' || logged.role === 'admin'));
+
+    if (logged && !isMaster) {
+        if (logged.role && (logged.role.startsWith("orientadora_") || logged.setor === "orientacao")) {
             if (item && !matchOrientadora(item, logged.nome) && !matchOrientadora(item, logged.id)) {
                 alert("⚠️ Acesso restrito: Você só tem permissão para excluir os agendamentos da sua própria pauta.");
                 return;
@@ -4386,7 +4395,11 @@ function submitEditarAgendamentoOP(e) {
     // Verificação de isolamento por função/orientadora
     const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
     const existing = ags[itemIndex];
-    if (logged && !sigeDB.isDev() && !sigeDB.isDiretor() && !logged.isAdmin && !logged.isSuperAdmin) {
+    const isMaster = (typeof sigeDB !== 'undefined' && typeof sigeDB.isDev === 'function' && sigeDB.isDev()) ||
+                     (typeof sigeDB !== 'undefined' && typeof sigeDB.isDiretor === 'function' && sigeDB.isDiretor()) ||
+                     (logged && (logged.isAdmin || logged.isSuperAdmin || logged.role === 'desenvolvedor' || logged.role === 'direcao' || logged.role === 'admin'));
+
+    if (logged && !isMaster) {
         if (logged.role && (logged.role.startsWith("orientadora_") || logged.setor === "orientacao")) {
             if (existing && !matchOrientadora(existing, logged.nome) && !matchOrientadora(existing, logged.id)) {
                 alert("⚠️ Acesso restrito: Você só tem permissão para editar os agendamentos da sua própria pauta.");

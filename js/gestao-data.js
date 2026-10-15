@@ -2378,6 +2378,26 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    isDev() {
+        const user = this.getLoggedUser();
+        const role = this.getRole();
+        return (user && (user.role === "desenvolvedor" || (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com"))) || role === "desenvolvedor";
+    }
+
+    isDiretor() {
+        const user = this.getLoggedUser();
+        const role = this.getRole();
+        return (user && (user.role === "direcao" || user.role === "admin" || user.isAdmin || user.isSuperAdmin)) || role === "direcao" || role === "admin";
+    }
+
+    isAdmin() {
+        return this.isDev() || this.isDiretor();
+    }
+
+    isMasterUser() {
+        return this.isAdmin();
+    }
+
     // Orientação Pedagógica
     getAgendamentosOP() {
         const all = (this.data && this.data.agendamentosOP) ? this.data.agendamentosOP : [];
@@ -2423,6 +2443,9 @@ class SigeDatabase {
         let list = (this.data && this.data.agendamentosOP) ? this.data.agendamentosOP : [];
         this.data.agendamentosOP = list.filter(a => a.id !== id);
         this.saveData(this.data);
+        if (typeof this.syncToFirebase === "function") {
+            this.syncToFirebase();
+        }
         this.logAuditEvent("Orientação", `Excluído agendamento ${id}`, "Orientação");
         return true;
     }
