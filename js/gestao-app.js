@@ -1058,14 +1058,87 @@ window.autoSuggestModulosPorSetor = autoSuggestModulosPorSetor;
 // ==========================================
 // NAVEGAÇÃO POR ABAS
 // ==========================================
+function renderExternalNavTabLinks() {
+    const container = document.getElementById("externalNavTabsContainer");
+    if (!container) return;
+
+    let savedUrls = {};
+    try {
+        savedUrls = JSON.parse(localStorage.getItem('pedro_rizzi_urls') || '{}');
+    } catch (e) {
+        savedUrls = {};
+    }
+
+    const extModules = [
+        {
+            key: 'ext_recursos',
+            title: 'Laboratório & Recursos',
+            icon: 'fa-solid fa-calendar-check',
+            color: '#ea580c',
+            url: savedUrls['recursos'] || 'https://elcortelini.github.io/agendamento-cepr/'
+        },
+        {
+            key: 'ext_dashboard',
+            title: 'Dashboard Avaliação',
+            icon: 'fa-solid fa-chart-line',
+            color: '#10b981',
+            url: 'dashboard.html'
+        },
+        {
+            key: 'ext_contabil',
+            title: 'Contábil (APMF)',
+            icon: 'fa-solid fa-calculator',
+            color: '#2563eb',
+            url: savedUrls['contabil'] || '#'
+        },
+        {
+            key: 'ext_biblioteca',
+            title: 'Biblioteca',
+            icon: 'fa-solid fa-book-bookmark',
+            color: '#9333ea',
+            url: savedUrls['biblioteca'] || '#'
+        },
+        {
+            key: 'ext_patrimonio',
+            title: 'Patrimônio',
+            icon: 'fa-solid fa-boxes-stacked',
+            color: '#e11d48',
+            url: savedUrls['patrimonio'] || '#'
+        }
+    ];
+
+    let html = '';
+    extModules.forEach(mod => {
+        if (sigeDB.temPermissaoModulo(mod.key)) {
+            const isPlaceholder = !mod.url || mod.url === '#' || mod.url === 'javascript:void(0)';
+            const clickAttr = isPlaceholder 
+                ? `onclick="event.preventDefault(); showToast('⚠️ Link do sistema ${mod.title} ainda não configurado pelo Desenvolvedor.', 'warning');"`
+                : `target="_blank" rel="noopener noreferrer"`;
+            const hrefAttr = isPlaceholder ? 'href="#"' : `href="${mod.url}"`;
+
+            html += `
+                <a class="sige-tab-btn sige-tab-link" ${hrefAttr} ${clickAttr} title="Acessar ${mod.title} (Link Externo)">
+                    <i class="${mod.icon}" style="color:${mod.color};"></i> ${mod.title}
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem; margin-left:4px; opacity:0.6;"></i>
+                </a>
+            `;
+        }
+    });
+
+    container.innerHTML = html;
+}
+window.renderExternalNavTabLinks = renderExternalNavTabLinks;
+
 function atualizarAbasNavegacaoVisibilidade() {
-    const tabBtns = document.querySelectorAll(".sige-tab-btn");
+    const tabBtns = document.querySelectorAll(".sige-tab-btn:not(.sige-tab-link)");
     tabBtns.forEach(btn => {
         const tabKey = btn.dataset.tab;
-        let hasPerm = sigeDB.temPermissaoModulo(tabKey);
+        if (!tabKey) return;
+        let hasPerm = false;
         
-        // Tratamento especial para o módulo de Uniformes integrado em Administração
-        if (tabKey === 'admin') {
+        if (tabKey.startsWith('dir_') || tabKey === 'direcao') {
+            hasPerm = sigeDB.temPermissaoModulo('direcao');
+        } else if (tabKey === 'admin') {
             const hasAdmin = sigeDB.temPermissaoModulo('admin');
             const hasUniformes = sigeDB.temPermissaoModulo('uniformes');
             hasPerm = hasAdmin || hasUniformes;
@@ -1074,29 +1147,27 @@ function atualizarAbasNavegacaoVisibilidade() {
             } else if (hasPerm && hasAdmin) {
                 btn.innerHTML = `<i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração <span class="tab-badge" id="badgeTabAdm">0</span>`;
             }
+        } else {
+            hasPerm = sigeDB.temPermissaoModulo(tabKey);
         }
         
         btn.style.display = hasPerm ? "inline-flex" : "none";
     });
+
+    renderExternalNavTabLinks();
 }
 window.atualizarAbasNavegacaoVisibilidade = atualizarAbasNavegacaoVisibilidade;
 
 function setupTabNavigation() {
-    const tabBtns = document.querySelectorAll(".sige-tab-btn");
-    const sections = document.querySelectorAll(".tab-content-section");
+    const tabBtns = document.querySelectorAll(".sige-tab-btn:not(.sige-tab-link)");
 
     tabBtns.forEach(btn => {
         btn.addEventListener("click", () => {
             const targetId = btn.dataset.tab;
-
-            tabBtns.forEach(b => b.classList.remove("active"));
-            sections.forEach(s => s.classList.remove("active"));
-
-            btn.classList.add("active");
-            const targetSection = document.getElementById(`tab-${targetId}`);
-            if (targetSection) targetSection.classList.add("active");
-
-            renderAllModules();
+            const dirSub = btn.dataset.dirsub;
+            if (targetId) {
+                switchTab(targetId, dirSub);
+            }
         });
     });
 
@@ -1114,7 +1185,7 @@ function setupTabNavigation() {
         } else if (activeRole === 'admin') {
             abaParam = 'admin';
         } else if (activeRole === 'direcao') {
-            abaParam = 'direcao';
+            abaParam = 'dir_mensagens'; // Visão padrão da direção desmembrada
         } else if (activeRole === 'supervisao') {
             abaParam = 'supervisao';
         } else if (activeRole === 'uniformes') {
@@ -1138,8 +1209,18 @@ function setupTabNavigation() {
     }
 }
 
-function switchTab(tabId) {
+function switchTab(tabId, dirSubKey) {
     const isTargetingUniformes = (tabId === 'uniformes');
+    const isDirectionSub = tabId && tabId.startsWith('dir_');
+    const isDirection = isDirectionSub || tabId === 'direcao';
+
+    const dirSubMap = {
+        dir_mensagens: 'whatsapp',
+        dir_atendimentos: 'atendimentos',
+        dir_atas: 'atas',
+        dir_mural: 'dossie',
+        dir_calendario: 'calendario'
+    };
 
     const modulosLabels = {
         op: "Orientação Educacional (OE)",
@@ -1147,6 +1228,11 @@ function switchTab(tabId) {
         supervisao: "Supervisão Pedagógica",
         admin: "Administração Integrada",
         direcao: "Direção Executiva",
+        dir_mensagens: "Mensagens & Comunicação",
+        dir_atendimentos: "Orientação & Relatórios",
+        dir_atas: "Atas Escolares",
+        dir_mural: "Mural & Prontuários",
+        dir_calendario: "Calendário Escolar",
         dev: "Painel do Desenvolvedor & TI",
         uniformes: "Controle de Uniformes"
     };
@@ -1157,6 +1243,8 @@ function switchTab(tabId) {
         hasPerm = sigeDB.temPermissaoModulo('uniformes') || sigeDB.temPermissaoModulo('admin');
     } else if (tabId === 'admin') {
         hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes');
+    } else if (isDirection) {
+        hasPerm = sigeDB.temPermissaoModulo('direcao');
     } else {
         hasPerm = sigeDB.temPermissaoModulo(tabId);
     }
@@ -1164,8 +1252,12 @@ function switchTab(tabId) {
     if (!hasPerm) {
         const moduloNome = modulosLabels[tabId] || tabId;
         showToast(`⚠️ Acesso Restrito: Seu perfil de usuário não possui permissão para acessar o módulo "${moduloNome}".`, "warning");
-        const modulosOrdem = ['op', 'mural', 'supervisao', 'admin', 'direcao', 'dev'];
-        const primeiroPermitido = modulosOrdem.find(m => sigeDB.temPermissaoModulo(m) || (m === 'admin' && sigeDB.temPermissaoModulo('uniformes'))) || 'op';
+        const modulosOrdem = ['op', 'mural', 'supervisao', 'dir_mensagens', 'admin', 'dev'];
+        const primeiroPermitido = modulosOrdem.find(m => {
+            if (m === 'dir_mensagens') return sigeDB.temPermissaoModulo('direcao');
+            if (m === 'admin') return sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes');
+            return sigeDB.temPermissaoModulo(m);
+        }) || 'op';
         tabId = primeiroPermitido;
     }
 
@@ -1175,21 +1267,28 @@ function switchTab(tabId) {
         setTimeout(() => switchAdminSubTab('uniformes'), 30);
     }
 
-    const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
     const sections = document.querySelectorAll(".tab-content-section");
-    const tabBtns = document.querySelectorAll(".sige-tab-btn");
+    const tabBtns = document.querySelectorAll(".sige-tab-btn:not(.sige-tab-link)");
 
     sections.forEach(s => s.classList.remove("active"));
     tabBtns.forEach(b => b.classList.remove("active"));
 
-    const targetSection = document.getElementById(`tab-${tabId}`) || document.getElementById("tab-op");
+    let targetSectionId = `tab-${tabId}`;
+    if (isDirection) {
+        targetSectionId = 'tab-direcao';
+    }
+
+    const targetSection = document.getElementById(targetSectionId) || document.getElementById("tab-op");
     if (targetSection) targetSection.classList.add("active");
+
+    const btn = document.querySelector(`.sige-tab-btn[data-tab="${tabId}"]`);
     if (btn) btn.classList.add("active");
 
-    renderAllModules(tabId);
+    renderAllModules(isDirection ? 'direcao' : tabId);
 
-    if (tabId === 'direcao') {
-        switchDirSubTab(currentDirSubTab || 'whatsapp');
+    if (isDirection) {
+        const targetSub = dirSubKey || dirSubMap[tabId] || currentDirSubTab || 'whatsapp';
+        switchDirSubTab(targetSub);
     } else if (tabId === 'admin') {
         if (!sigeDB.temPermissaoModulo('admin') && sigeDB.temPermissaoModulo('uniformes')) {
             switchAdminSubTab('uniformes');
@@ -1529,6 +1628,12 @@ function renderModuleOrientacaoPedagogica() {
 
     // 3. Renderiza Visão Projetos OP
     renderOpProjetosList();
+
+    // 4. Controle estrito de visibilidade do botão 'Zerar Atendimentos' (Exclusivo Desenvolvedor)
+    const btnZerar = document.getElementById("btnZerarAtendimentosOP");
+    if (btnZerar) {
+        btnZerar.style.display = (typeof sigeDB !== 'undefined' && typeof sigeDB.isDev === 'function' && sigeDB.isDev()) ? "inline-flex" : "none";
+    }
 }
 
 let agendaLayoutMode = localStorage.getItem("sige_op_agenda_layout_mode") || "timeline"; // "timeline" or "grid"
@@ -2161,18 +2266,46 @@ function renderOrientadoraStatusPills(containerId, sem, mes) {
     `;
 }
 
-function getSecretariaBadgeText(status) {
-    const map = {
-        pendente: "⏳ Pendente",
-        aguardando: "🔔 Chegou / Aguardando",
-        confirmado: "🟢 Presença Confirmada (WhatsApp)",
-        confirmado_whatsapp: "🟢 Presença Confirmada (WhatsApp)",
-        realizado: "✅ Atendido",
-        ausente: "❌ Ausente / Não Veio",
-        cancelado: "🚫 Cancelado"
-    };
-    return map[status] || status;
+function isStatusFalta(st) {
+    if (!st) return false;
+    const s = String(st).toLowerCase().trim();
+    return s === 'falta' || s === 'ausente' || s === 'nao_veio' || s === 'faltou';
 }
+
+function isStatusRealizado(st) {
+    if (!st) return false;
+    const s = String(st).toLowerCase().trim();
+    return s === 'realizado' || s === 'atendido' || s === 'concluido' || s === 'presente';
+}
+
+function isStatusConfirmado(st) {
+    if (!st) return false;
+    const s = String(st).toLowerCase().trim();
+    return s === 'confirmado' || s === 'confirmado_whatsapp';
+}
+
+function isStatusCancelado(st) {
+    if (!st) return false;
+    const s = String(st).toLowerCase().trim();
+    return s === 'cancelado';
+}
+
+function getSecretariaBadgeText(status) {
+    const s = String(status || '').toLowerCase().trim();
+    if (isStatusRealizado(s)) return "✅ Atendido / Compareceu";
+    if (isStatusFalta(s)) return "❌ Ausente / Não Veio";
+    if (isStatusConfirmado(s)) return "🟢 Presença Confirmada (WhatsApp)";
+    if (isStatusCancelado(s)) return "🚫 Cancelado";
+    if (s === "aguardando") return "🔔 Chegou / Aguardando";
+    if (s === "agendado" || s === "pendente") return "⏳ Agendado / Pendente";
+    return status || "Pendente";
+}
+
+window.isStatusFalta = isStatusFalta;
+window.isStatusRealizado = isStatusRealizado;
+window.isStatusConfirmado = isStatusConfirmado;
+window.isStatusCancelado = isStatusCancelado;
+window.getSecretariaBadgeText = getSecretariaBadgeText;
 
 // ==========================================
 // PROJETOS CONTINUADOS DA ORIENTAÇÃO PEDAGÓGICA (OP)
@@ -4013,20 +4146,7 @@ function closeVisaoDetalhadaDiaModal() {
     if (modal) modal.style.display = "none";
 }
 
-function getSecretariaBadgeText(status) {
-    const labels = {
-        agendado: "Agendado",
-        aguardando: "Aguardando na Recepção",
-        confirmado: "Presença Confirmada (WhatsApp)",
-        confirmado_whatsapp: "Presença Confirmada (WhatsApp)",
-        atendido: "Atendido",
-        realizado: "Atendido",
-        nao_veio: "Não Veio",
-        faltou: "Não Veio",
-        cancelado: "Cancelado"
-    };
-    return labels[status] || status;
-}
+// getSecretariaBadgeText unificada e declarada globalmente acima
 
 function updateAgendamentoStatusDirect(id, newStatus) {
     const ags = sigeDB.getAgendamentosOP() || [];
@@ -6588,6 +6708,10 @@ async function sendAutomaticWhatsapp(agendamento, tipoEvento, customMsg = "") {
 }
 
 function zerarTodosAtendimentosOPConfirm() {
+    if (!sigeDB || !sigeDB.isDev()) {
+        showToast("⚠️ Acesso Restrito: Apenas o Desenvolvedor do Sistema tem permissão para zerar atendimentos da Orientação Educacional.", "warning");
+        return;
+    }
     const total = (typeof sigeDB !== 'undefined' && sigeDB.getAgendamentosOP) ? sigeDB.getAgendamentosOP().length : 0;
     const confirmMsg = `ATENÇÃO: Deseja realmente zerar e excluir TODOS os atendimentos da Orientação Educacional?\n\n` +
         `• Quantidade de atendimentos atuais: ${total}\n` +
@@ -6829,6 +6953,18 @@ function switchDirSubTab(subTabId) {
         }
     });
 
+    // Sincroniza a aba ativa no menu principal superior
+    const topTabBtns = document.querySelectorAll(".sige-tab-btn[data-dirsub]");
+    if (topTabBtns.length > 0) {
+        topTabBtns.forEach(b => {
+            if (b.dataset.dirsub === subTabId) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        });
+    }
+
     if (subTabId === 'atendimentos') {
         setDirAtendViewMode(dirAtendViewMode || 'lista');
     }
@@ -6920,9 +7056,9 @@ function renderDirAtendimentos() {
     if (!tbody) return;
 
     const allOp = sigeDB.getAgendamentosOP() || [];
-    const realizedOp = allOp.filter(a => a.statusSecretaria === "realizado").length;
-    const faltasOp = allOp.filter(a => a.statusSecretaria === "falta").length;
-    const pendentesOp = allOp.filter(a => a.statusSecretaria !== "realizado" && a.statusSecretaria !== "falta").length;
+    const realizedOp = allOp.filter(a => isStatusRealizado(a.statusSecretaria)).length;
+    const faltasOp = allOp.filter(a => isStatusFalta(a.statusSecretaria)).length;
+    const pendentesOp = allOp.filter(a => !isStatusRealizado(a.statusSecretaria) && !isStatusFalta(a.statusSecretaria) && !isStatusCancelado(a.statusSecretaria)).length;
     const pctOk = allOp.length > 0 ? Math.round((realizedOp / allOp.length) * 100) : 100;
 
     if (totalOpElem) totalOpElem.innerText = allOp.length;
@@ -6947,9 +7083,9 @@ function renderDirAtendimentos() {
         if (turma && a.turma !== turma) return false;
         if (orientadora && !matchOrientadora(a, orientadora)) return false;
         if (status) {
-            if (status === 'realizado' && a.statusSecretaria !== 'realizado') return false;
-            if (status === 'falta' && a.statusSecretaria !== 'falta') return false;
-            if (status === 'aguardando' && (a.statusSecretaria === 'realizado' || a.statusSecretaria === 'falta')) return false;
+            if (status === 'realizado' && !isStatusRealizado(a.statusSecretaria)) return false;
+            if (status === 'falta' && !isStatusFalta(a.statusSecretaria)) return false;
+            if (status === 'aguardando' && (isStatusRealizado(a.statusSecretaria) || isStatusFalta(a.statusSecretaria) || isStatusCancelado(a.statusSecretaria))) return false;
         }
         return true;
     });
@@ -6976,10 +7112,14 @@ function renderDirAtendimentos() {
     tbody.innerHTML = ordenados.map(a => {
         const dataFmt = formatDateBR(a.data);
         let statusBadge = '';
-        if (a.statusSecretaria === 'realizado') {
+        if (isStatusRealizado(a.statusSecretaria)) {
             statusBadge = `<span style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-check"></i> Compareceu</span>`;
-        } else if (a.statusSecretaria === 'falta') {
-            statusBadge = `<span style="background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> Falta</span>`;
+        } else if (isStatusFalta(a.statusSecretaria)) {
+            statusBadge = `<span style="background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> Ausente / Não Veio</span>`;
+        } else if (isStatusConfirmado(a.statusSecretaria)) {
+            statusBadge = `<span style="background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-check"></i> Confirmado (WhatsApp)</span>`;
+        } else if (isStatusCancelado(a.statusSecretaria)) {
+            statusBadge = `<span style="background:#f1f5f9; color:#64748b; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-ban"></i> Cancelado</span>`;
         } else {
             statusBadge = `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Aguardando</span>`;
         }
@@ -7089,8 +7229,8 @@ function renderDirDossieAluno(nomeAluno) {
     const uniformesAluno = allUni.filter(u => (u.aluno || '').toLowerCase() === nomeAluno.toLowerCase());
 
     const totalAtend = atendimentosAluno.length;
-    const comparecidos = atendimentosAluno.filter(a => a.statusSecretaria === 'realizado').length;
-    const faltas = atendimentosAluno.filter(a => a.statusSecretaria === 'falta').length;
+    const comparecidos = atendimentosAluno.filter(a => isStatusRealizado(a.statusSecretaria)).length;
+    const faltas = atendimentosAluno.filter(a => isStatusFalta(a.statusSecretaria)).length;
     const pctPresenca = totalAtend > 0 ? Math.round((comparecidos / totalAtend) * 100) : 100;
 
     let html = `
@@ -7151,13 +7291,13 @@ function renderDirDossieAluno(nomeAluno) {
                 ` : `
                     <div style="display:flex; flex-direction:column; gap:12px;">
                         ${atendimentosAluno.map(a => `
-                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid ${a.statusSecretaria === 'realizado' ? '#10b981' : (a.statusSecretaria === 'falta' ? '#ef4444' : '#f59e0b')}; border-radius:10px; padding:1rem;">
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid ${isStatusRealizado(a.statusSecretaria) ? '#10b981' : (isStatusFalta(a.statusSecretaria) ? '#ef4444' : (isStatusConfirmado(a.statusSecretaria) ? '#2563eb' : '#f59e0b'))}; border-radius:10px; padding:1rem;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
                                     <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
                                         ${formatDateBR(a.data)} às ${a.horario || 'Horário agendado'} — ${a.orientadora || 'Orientadora'}
                                     </div>
-                                    <span style="font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:10px; background:${a.statusSecretaria === 'realizado' ? '#dcfce7' : (a.statusSecretaria === 'falta' ? '#fee2e2' : '#fef3c7')}; color:${a.statusSecretaria === 'realizado' ? '#166534' : (a.statusSecretaria === 'falta' ? '#991b1b' : '#92400e')};">
-                                        ${a.statusSecretaria === 'realizado' ? '✅ Compareceu' : (a.statusSecretaria === 'falta' ? '❌ Falta Registrada' : '⏳ Aguardando')}
+                                    <span style="font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:10px; background:${isStatusRealizado(a.statusSecretaria) ? '#dcfce7' : (isStatusFalta(a.statusSecretaria) ? '#fee2e2' : (isStatusConfirmado(a.statusSecretaria) ? '#dbeafe' : '#fef3c7'))}; color:${isStatusRealizado(a.statusSecretaria) ? '#166534' : (isStatusFalta(a.statusSecretaria) ? '#991b1b' : (isStatusConfirmado(a.statusSecretaria) ? '#1e40af' : '#92400e'))};">
+                                        ${isStatusRealizado(a.statusSecretaria) ? '✅ Compareceu' : (isStatusFalta(a.statusSecretaria) ? '❌ Falta Registrada' : (isStatusConfirmado(a.statusSecretaria) ? '🟢 Confirmado' : '⏳ Aguardando'))}
                                     </span>
                                 </div>
                                 <div style="font-size:0.85rem; color:#334155; margin-bottom:4px;">
@@ -7250,7 +7390,7 @@ function openPrintDossieModal(alunoNome) {
                             <td style="padding:6px;">${formatDateBR(a.data)} ${a.horario || ''}</td>
                             <td style="padding:6px;">${a.orientadora || '-'}</td>
                             <td style="padding:6px;">${a.motivo || '-'}</td>
-                            <td style="padding:6px;">${a.statusSecretaria === 'realizado' ? 'Presente' : (a.statusSecretaria === 'falta' ? 'Ausente' : 'Aguardando')}</td>
+                            <td style="padding:6px;">${isStatusRealizado(a.statusSecretaria) ? 'Presente' : (isStatusFalta(a.statusSecretaria) ? 'Ausente' : (isStatusConfirmado(a.statusSecretaria) ? 'Confirmado' : 'Aguardando'))}</td>
                             <td style="padding:6px;">${a.observacoes || '-'}</td>
                         </tr>
                     `).join("")}
@@ -7376,6 +7516,30 @@ function filtrarContatosListaPorTexto() {
 }
 
 // Renderiza a lista de contatos em linhas limpas e agradáveis
+function formatTelefoneDisplay(tel) {
+    if (!tel) return 'Não informado';
+    const digits = String(tel).replace(/\D/g, '');
+    if (digits.length === 11) {
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    } else if (digits.length === 10) {
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    }
+    return tel;
+}
+window.formatTelefoneDisplay = formatTelefoneDisplay;
+
+function abrirConversaWhatsApp(telefone, nome = "") {
+    const raw = (telefone || '').replace(/\D/g, '');
+    if (raw.length < 10) {
+        showToast("⚠️ Telefone incompleto ou não informado.", "warning");
+        return;
+    }
+    const waPhone = raw.startsWith("55") ? raw : "55" + raw;
+    const url = `https://api.whatsapp.com/send?phone=${waPhone}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+}
+window.abrirConversaWhatsApp = abrirConversaWhatsApp;
+
 function renderDirWhatsAppContatos() {
     const container = document.getElementById("dirWpContatosListContainer");
     const visibleCountElem = document.getElementById("dirWpVisibleCount");
@@ -7427,6 +7591,9 @@ function renderDirWhatsAppContatos() {
         const tags = Array.isArray(c.tags) ? c.tags : (c.tag ? [c.tag] : ['Geral']);
         const tagsHtml = tags.map(t => `<span style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:10px; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">🏷️ ${escapeHtml(t)}</span>`).join(" ");
         const tooltipInfo = tags.join(', ') + (c.notas ? ' — ' + c.notas : '') + (c.cargo ? ' (' + c.cargo + ')' : '');
+        const telefoneRaw = (c.telefone || '').replace(/\D/g, "");
+        const temTelefone = telefoneRaw.length >= 10;
+        const telefoneFormatado = formatTelefoneDisplay(c.telefone);
 
         return `
             <div class="contact-row-card ${isChecked ? 'selected' : ''}">
@@ -7435,20 +7602,27 @@ function renderDirWhatsAppContatos() {
                 </div>
                 <div style="font-weight:700; font-size:0.875rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(c.nome)}">
                     ${escapeHtml(c.nome)}
+                    ${c.cargo ? `<div style="font-size:0.75rem; color:#64748b; font-weight:500;">${escapeHtml(c.cargo)}</div>` : ''}
                 </div>
-                <div style="font-weight:700; font-size:0.85rem; color:#334155; white-space:nowrap; letter-spacing:0.3px; font-variant-numeric:tabular-nums;">
-                    ${escapeHtml(c.telefone)}
+                <div style="font-weight:700; font-size:0.85rem; color:${temTelefone ? '#334155' : '#94a3b8'}; white-space:nowrap; letter-spacing:0.3px; font-variant-numeric:tabular-nums;">
+                    <i class="fa-solid fa-phone" style="font-size:0.75rem; color:#64748b; margin-right:4px;"></i>${escapeHtml(telefoneFormatado)}
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; overflow:hidden;" title="${escapeHtml(tooltipInfo)}">
                     ${tagsHtml}
                 </div>
-                <div style="display:flex; justify-content:center;">
-                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" class="dir-btn-icon edit" title="Editar dados de ${escapeHtml(c.nome)}">
+                <div style="display:flex; gap:6px; align-items:center; justify-content:flex-end;">
+                    ${temTelefone ? `
+                        <button type="button" onclick="abrirConversaWhatsApp('${c.telefone}', '${escapeHtml(c.nome)}')" class="btn" style="background:#16a34a; color:white; padding:5px 10px; font-size:0.78rem; border-radius:6px; font-weight:700; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;" title="Conversar no WhatsApp">
+                            <i class="fa-brands fa-whatsapp" style="font-size:0.95rem;"></i> WhatsApp
+                        </button>
+                    ` : ''}
+                    <button type="button" onclick="openDisparoAvisoProfessorModal('${c.id}')" class="dir-btn-icon" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; width:34px; height:34px;" title="Enviar Recado Rápido">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <button type="button" onclick="openEditarContatoWhatsAppModal('${c.id}')" class="dir-btn-icon edit" style="width:34px; height:34px;" title="Editar dados de ${escapeHtml(c.nome)}">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                </div>
-                <div style="display:flex; justify-content:center;">
-                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="dir-btn-icon danger" title="Excluir contato ${escapeHtml(c.nome)}">
+                    <button type="button" onclick="excluirContatoWhatsApp('${c.id}')" class="dir-btn-icon danger" style="width:34px; height:34px;" title="Excluir contato ${escapeHtml(c.nome)}">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -8816,9 +8990,9 @@ function gerarRelatorioExecutivoDirecao() {
     });
 
     const total = filtrados.length;
-    const comparecidos = filtrados.filter(a => a.statusSecretaria === 'realizado').length;
-    const faltas = filtrados.filter(a => a.statusSecretaria === 'falta').length;
-    const aguardando = filtrados.filter(a => a.statusSecretaria !== 'realizado' && a.statusSecretaria !== 'falta').length;
+    const comparecidos = filtrados.filter(a => isStatusRealizado(a.statusSecretaria)).length;
+    const faltas = filtrados.filter(a => isStatusFalta(a.statusSecretaria)).length;
+    const aguardando = filtrados.filter(a => !isStatusRealizado(a.statusSecretaria) && !isStatusFalta(a.statusSecretaria) && !isStatusCancelado(a.statusSecretaria)).length;
     const pctComparecimento = total > 0 ? Math.round((comparecidos / total) * 100) : 100;
 
     // Agrupamento por motivos
@@ -8908,8 +9082,8 @@ function gerarRelatorioExecutivoDirecao() {
                             <td style="padding:10px 14px;">${a.orientadora || '-'}</td>
                             <td style="padding:10px 14px;">${a.motivo || 'Geral'}</td>
                             <td style="padding:10px 14px;">
-                                <span style="font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:10px; background:${a.statusSecretaria === 'realizado' ? '#dcfce7' : (a.statusSecretaria === 'falta' ? '#fee2e2' : '#fef3c7')}; color:${a.statusSecretaria === 'realizado' ? '#166534' : (a.statusSecretaria === 'falta' ? '#991b1b' : '#92400e')};">
-                                    ${a.statusSecretaria === 'realizado' ? 'Presente' : (a.statusSecretaria === 'falta' ? 'Falta' : 'Pendente')}
+                                <span style="font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:10px; background:${isStatusRealizado(a.statusSecretaria) ? '#dcfce7' : (isStatusFalta(a.statusSecretaria) ? '#fee2e2' : (isStatusConfirmado(a.statusSecretaria) ? '#dbeafe' : '#fef3c7'))}; color:${isStatusRealizado(a.statusSecretaria) ? '#166534' : (isStatusFalta(a.statusSecretaria) ? '#991b1b' : (isStatusConfirmado(a.statusSecretaria) ? '#1e40af' : '#92400e'))};">
+                                    ${isStatusRealizado(a.statusSecretaria) ? 'Compareceu' : (isStatusFalta(a.statusSecretaria) ? 'Falta' : (isStatusConfirmado(a.statusSecretaria) ? 'Confirmado' : 'Aguardando'))}
                                 </span>
                             </td>
                         </tr>
@@ -8975,7 +9149,7 @@ function openPrintRelatorioModal() {
                         <td style="padding:6px;">${a.turma || '-'}</td>
                         <td style="padding:6px;">${a.orientadora || '-'}</td>
                         <td style="padding:6px;">${a.motivo || '-'}</td>
-                        <td style="padding:6px;">${a.statusSecretaria === 'realizado' ? 'Compareceu' : (a.statusSecretaria === 'falta' ? 'Falta' : 'Aguardando')}</td>
+                        <td style="padding:6px;">${isStatusRealizado(a.statusSecretaria) ? 'Compareceu' : (isStatusFalta(a.statusSecretaria) ? 'Falta' : (isStatusConfirmado(a.statusSecretaria) ? 'Confirmado' : 'Aguardando'))}</td>
                     </tr>
                 `).join("")}
             </tbody>
@@ -10883,6 +11057,43 @@ function importarBackupFile(e) {
     reader.readAsText(file);
 }
 
+function getListaDestinatariosUnificada() {
+    const equipe = (typeof sigeDB !== 'undefined' && sigeDB.getEquipeEscolar) ? sigeDB.getEquipeEscolar() : [];
+    const contatos = (typeof sigeDB !== 'undefined' && sigeDB.getContatosWhatsApp) ? sigeDB.getContatosWhatsApp() : [];
+
+    const map = new Map();
+    equipe.forEach(p => {
+        map.set(p.id, {
+            id: p.id,
+            nome: p.nome,
+            telefone: p.telefone || p.whatsapp || '',
+            setorLabel: p.setor ? p.setor.toUpperCase() : "DOCENTE",
+            cargoFuncao: p.cargoFuncao || p.disciplina || 'Colaborador'
+        });
+    });
+
+    contatos.forEach(c => {
+        if (!map.has(c.id)) {
+            const cNomeNorm = (c.nome || '').toLowerCase().trim();
+            const existe = Array.from(map.values()).find(item => (item.nome || '').toLowerCase().trim() === cNomeNorm);
+            if (!existe) {
+                map.set(c.id, {
+                    id: c.id,
+                    nome: c.nome,
+                    telefone: c.telefone || '',
+                    setorLabel: (c.tags && c.tags[0]) ? c.tags[0].toUpperCase() : "CONTATO",
+                    cargoFuncao: c.cargo || (c.tags ? c.tags.join(', ') : 'Contato Escolar')
+                });
+            } else if (!existe.telefone && c.telefone) {
+                existe.telefone = c.telefone;
+            }
+        }
+    });
+
+    return Array.from(map.values());
+}
+window.getListaDestinatariosUnificada = getListaDestinatariosUnificada;
+
 function openDisparoAvisoProfessorModal(profId = "todos") {
     const modal = document.getElementById("modalDisparoAvisoProfessor");
     const selectDest = document.getElementById("avisoSelectDestinatario");
@@ -10891,13 +11102,13 @@ function openDisparoAvisoProfessorModal(profId = "todos") {
 
     if (!modal) return;
 
-    const equipe = sigeDB.getEquipeEscolar();
+    const listaUnificada = getListaDestinatariosUnificada();
 
     if (selectDest) {
-        let opts = `<option value="todos">📢 Toda a Equipe Escolar (${equipe.length} colaboradores)</option>`;
-        equipe.forEach(p => {
-            const setorLabel = p.setor ? p.setor.toUpperCase() : "DOCENTE";
-            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - [${setorLabel}] ${escapeHtml(p.cargoFuncao || p.disciplina)} (${p.telefone})</option>`;
+        let opts = `<option value="todos">📢 Toda a Equipe Escolar & Contatos (${listaUnificada.length} destinatários)</option>`;
+        listaUnificada.forEach(p => {
+            const foneExib = p.telefone ? `(${formatTelefoneDisplay(p.telefone)})` : '(sem telefone)';
+            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - [${p.setorLabel}] ${escapeHtml(p.cargoFuncao)} ${foneExib}</option>`;
         });
         selectDest.innerHTML = opts;
     }
@@ -10907,10 +11118,10 @@ function openDisparoAvisoProfessorModal(profId = "todos") {
         if (inputAssunto) inputAssunto.value = "Comunicado Oficial da Direção Escolar";
         if (inputMsg) inputMsg.value = "Prezados Colaboradores,\n\nSolicitamos a atenção de todos para os alinhamentos e diretrizes da unidade nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
     } else {
-        const p = equipe.find(item => item.id === profId);
+        const p = listaUnificada.find(item => item.id === profId);
         if (p) {
             if (inputAssunto) inputAssunto.value = `Comunicado para ${p.nome}`;
-            if (inputMsg) inputMsg.value = `Olá, ${p.nome}!\n\nEntramos em contato referente às demandas do setor ${p.setor.toUpperCase()}.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
+            if (inputMsg) inputMsg.value = `Olá, ${p.nome}!\n\nEntramos em contato referente às demandas do Centro Educacional Pedro Rizzi.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
         }
     }
 
@@ -10933,11 +11144,11 @@ function submitDisparoAvisoProfessor(e) {
         return;
     }
 
-    const equipe = sigeDB.getEquipeEscolar();
+    const listaUnificada = getListaDestinatariosUnificada();
 
     if (destId === "todos") {
         let disparosCount = 0;
-        equipe.forEach(p => {
+        listaUnificada.forEach(p => {
             if (p.telefone) {
                 const cleanPhone = p.telefone.replace(/\D/g, "");
                 const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
@@ -10959,7 +11170,7 @@ function submitDisparoAvisoProfessor(e) {
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
         showToast(`📲 Comunicado registrado para ${disparosCount} colaboradores! Janela do WhatsApp aberta.`);
     } else {
-        const p = equipe.find(item => item.id === destId);
+        const p = listaUnificada.find(item => item.id === destId);
         if (p) {
             const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
             const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;

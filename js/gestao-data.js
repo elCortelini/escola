@@ -837,7 +837,7 @@ class SigeDatabase {
     ensureDevUser() {
         if (!this.data) return;
         if (!Array.isArray(this.data.usuariosCadastrados)) this.data.usuariosCadastrados = [];
-        let devUser = this.data.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
+        let devUser = this.data.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
         const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
         if (devUser) {
             devUser.cpf = "806.037.420-68";
@@ -846,6 +846,7 @@ class SigeDatabase {
             delete devUser.senha;
             devUser.nome = "Elevi Cortelini (Desenvolvedor)";
             devUser.role = "desenvolvedor";
+            devUser.cargo = "Desenvolvedor do Sistema";
             devUser.status = "aprovado";
             devUser.cadastroCompleto = true;
             devUser.permissoes = { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
@@ -861,6 +862,36 @@ class SigeDatabase {
                 status: "aprovado",
                 cadastroCompleto: true,
                 permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+            });
+        }
+
+        // Garante que Jackson Silvano tenha estritamente o perfil Direção Escolar (e não Desenvolvedor)
+        this.data.usuariosCadastrados.forEach(u => {
+            const nomeLower = (u.nome || '').toLowerCase();
+            const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+            if (isJackson) {
+                u.role = 'direcao';
+                u.cargo = u.cargo || 'Diretor Escolar';
+                u.status = 'aprovado';
+                u.permissoes = this.getDefaultPermissoesByRole('direcao');
+            } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
+                u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
+                u.permissoes = this.getDefaultPermissoesByRole(u.role);
+            }
+        });
+
+        if (Array.isArray(this.data.equipeEscola)) {
+            this.data.equipeEscola.forEach(p => {
+                const nomeLower = (p.nome || '').toLowerCase();
+                const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                if (isJackson) {
+                    p.setor = 'direcao';
+                    p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar';
+                    p.permissoes = this.getDefaultPermissoesByRole('direcao');
+                } else if (p.setor === 'desenvolvedor' && p.email !== 'elcortelini@gmail.com' && cleanCpf(p.cpf || '') !== '80603742068') {
+                    p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
+                    p.permissoes = this.getDefaultPermissoesByRole(p.setor);
+                }
             });
         }
     }
@@ -1211,7 +1242,7 @@ class SigeDatabase {
 
             // Garante que o Desenvolvedor Master possua o CPF, Data e Hash oficiais
             const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
-            let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || u.role === 'desenvolvedor' || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
+            let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
             if (devUser) {
                 devUser.cpf = "806.037.420-68";
                 devUser.dataNascimento = "30/12/1981";
@@ -1219,6 +1250,7 @@ class SigeDatabase {
                 delete devUser.senha;
                 devUser.nome = "Elevi Cortelini (Desenvolvedor)";
                 devUser.role = "desenvolvedor";
+                devUser.cargo = "Desenvolvedor do Sistema";
                 devUser.status = "aprovado";
                 devUser.cadastroCompleto = true;
                 devUser.permissoes = { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true };
@@ -1234,6 +1266,36 @@ class SigeDatabase {
                     status: "aprovado",
                     cadastroCompleto: true,
                     permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                });
+            }
+
+            // Garante que Jackson Silvano tenha estritamente o perfil Direção Escolar (e não Desenvolvedor)
+            merged.usuariosCadastrados.forEach(u => {
+                const nomeLower = (u.nome || '').toLowerCase();
+                const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                if (isJackson) {
+                    u.role = 'direcao';
+                    u.cargo = u.cargo || 'Diretor Escolar';
+                    u.status = 'aprovado';
+                    u.permissoes = this.getDefaultPermissoesByRole('direcao');
+                } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
+                    u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
+                    u.permissoes = this.getDefaultPermissoesByRole(u.role);
+                }
+            });
+
+            if (Array.isArray(merged.equipeEscola)) {
+                merged.equipeEscola.forEach(p => {
+                    const nomeLower = (p.nome || '').toLowerCase();
+                    const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                    if (isJackson) {
+                        p.setor = 'direcao';
+                        p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar';
+                        p.permissoes = this.getDefaultPermissoesByRole('direcao');
+                    } else if (p.setor === 'desenvolvedor' && p.email !== 'elcortelini@gmail.com' && cleanCpf(p.cpf || '') !== '80603742068') {
+                        p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
+                        p.permissoes = this.getDefaultPermissoesByRole(p.setor);
+                    }
                 });
             }
 
@@ -1255,6 +1317,9 @@ class SigeDatabase {
                     });
                 }
             }
+
+            // Sincroniza contatos da equipe e lista de WhatsApp
+            this.sincronizarEquipeEContatosWhatsApp(merged);
 
             return merged;
         } catch (e) {
@@ -1735,11 +1800,14 @@ class SigeDatabase {
         const cleanEmail = loggedEmail ? loggedEmail.toLowerCase().trim() : "";
         const users = this.getUsuarios();
 
-        let found = users.find(u => {
-            if (cleanCpfDigits && cleanCpf(u.cpf || '') === cleanCpfDigits) return true;
-            if (cleanEmail && ((u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail))) return true;
-            return false;
-        });
+        // 1. Busca primeiro prioritariamente por CPF se estiver logado via CPF
+        let found = null;
+        if (cleanCpfDigits) {
+            found = users.find(u => cleanCpf(u.cpf || '') === cleanCpfDigits);
+        }
+        if (!found && cleanEmail) {
+            found = users.find(u => (u.email && u.email.toLowerCase().trim() === cleanEmail) || (u.id && u.id.toLowerCase().trim() === cleanEmail));
+        }
 
         if (found && (found.status === 'pendente' || found.status === 'aguardando_aprovacao')) {
             localStorage.removeItem("sige_logged_cpf");
@@ -1749,10 +1817,13 @@ class SigeDatabase {
 
         // Se estiver na equipe escolar, garante que as permissões mais recentes da equipe prevalecem
         if (this.data && Array.isArray(this.data.equipeEscola)) {
-            const prof = this.data.equipeEscola.find(p => 
-                (cleanCpfDigits && cleanCpf(p.cpf || '') === cleanCpfDigits) ||
-                (cleanEmail && ((p.email && p.email.toLowerCase().trim() === cleanEmail) || (p.id && p.id.toLowerCase().trim() === cleanEmail)))
-            );
+            let prof = null;
+            if (cleanCpfDigits) {
+                prof = this.data.equipeEscola.find(p => cleanCpf(p.cpf || '') === cleanCpfDigits);
+            }
+            if (!prof && cleanEmail) {
+                prof = this.data.equipeEscola.find(p => (p.email && p.email.toLowerCase().trim() === cleanEmail) || (p.id && p.id.toLowerCase().trim() === cleanEmail));
+            }
             if (prof) {
                 if (!found) {
                     let roleKey = prof.setor || "docentes";
@@ -1760,12 +1831,14 @@ class SigeDatabase {
                         roleKey = "orientadora_" + prof.id;
                     } else if (prof.setor === "supervisao") {
                         roleKey = "supervisora_" + prof.id;
+                    } else if (prof.setor === "direcao" || (prof.cargoFuncao && prof.cargoFuncao.toLowerCase().includes("diretor"))) {
+                        roleKey = "direcao";
                     }
                     found = {
                         id: prof.id,
                         cpf: prof.cpf || (cleanCpfDigits ? formatCpf(cleanCpfDigits) : ""),
                         dataNascimento: prof.dataNascimento || "",
-                        email: prof.email ? prof.email.toLowerCase().trim() : cleanEmail, 
+                        email: prof.email ? prof.email.toLowerCase().trim() : (found && found.email ? found.email : ""), 
                         nome: prof.nome, 
                         role: roleKey, 
                         cargo: prof.cargoFuncao || prof.setor,
@@ -1773,14 +1846,30 @@ class SigeDatabase {
                         cadastroCompleto: true,
                         permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor)
                     };
-                } else if (prof.permissoes) {
-                    found.permissoes = prof.permissoes;
+                } else {
+                    if (prof.permissoes) found.permissoes = prof.permissoes;
+                    if (prof.setor) {
+                        let r = prof.setor;
+                        if (r === 'orientacao') r = 'orientadora_' + prof.id;
+                        else if (r === 'supervisao') r = 'supervisora_' + prof.id;
+                        else if (r === 'diretor' || r === 'diretoria' || r === 'gestor') r = 'direcao';
+                        found.role = r;
+                    }
                 }
             }
         }
 
-        if (found) return found;
-        if (cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev" || cleanEmail === "admin" || (cleanCpfDigits && (cleanCpfDigits === "80603742068" || cleanCpfDigits === "00000000000"))) {
+        if (found) {
+            // Normalização estrita: apenas Elevi Cortelini pode ser desenvolvedor
+            const isOfficialDev = (found.email && found.email.toLowerCase().trim() === "elcortelini@gmail.com") ||
+                                  (found.cpf && cleanCpf(found.cpf) === "80603742068");
+            if (found.role === 'desenvolvedor' && !isOfficialDev) {
+                found.role = (found.cargo && found.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
+            }
+            return found;
+        }
+
+        if ((cleanEmail === "elcortelini@gmail.com" || cleanEmail === "dev") || (cleanCpfDigits && cleanCpfDigits === "80603742068")) {
             return { 
                 email: "elcortelini@gmail.com", 
                 cpf: "806.037.420-68",
@@ -1951,7 +2040,11 @@ class SigeDatabase {
 
         // Login autorizado com sucesso!
         localStorage.setItem("sige_logged_cpf", user.cpf || formatCpf(cleanNumbers));
-        if (user.email) localStorage.setItem("sige_logged_email", user.email);
+        if (user.email) {
+            localStorage.setItem("sige_logged_email", user.email);
+        } else {
+            localStorage.removeItem("sige_logged_email");
+        }
         this.setRole(user.role || 'docentes');
         this.addAuditLog(`Login Efetuado via CPF (${user.nome} - CPF: ${user.cpf || formatCpf(cleanNumbers)})`, 'Usuário');
 
@@ -2369,25 +2462,40 @@ class SigeDatabase {
         if (user.role === "desenvolvedor") {
             return (this.data && this.data.currentRole) ? this.data.currentRole : "desenvolvedor";
         }
-        return user.role;
+        let r = user.role || 'docentes';
+        if (r === 'diretor' || r === 'diretoria' || r === 'gestor') r = 'direcao';
+        return r;
     }
 
     setRole(role) {
         if (!this.data) this.data = {};
-        this.data.currentRole = role;
-        this.saveData(this.data);
+        const user = this.getLoggedUser();
+        const isOfficialDev = user && ((user.email && user.email.toLowerCase().trim() === 'elcortelini@gmail.com') || (user.cpf && cleanCpf(user.cpf) === '80603742068'));
+        if (isOfficialDev) {
+            this.data.currentRole = role;
+            this.saveData(this.data);
+        } else if (user) {
+            let r = user.role || 'docentes';
+            if (r === 'diretor' || r === 'diretoria' || r === 'gestor') r = 'direcao';
+            this.data.currentRole = r;
+            this.saveData(this.data);
+        }
     }
 
     isDev() {
         const user = this.getLoggedUser();
-        const role = this.getRole();
-        return (user && (user.role === "desenvolvedor" || (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com"))) || role === "desenvolvedor";
+        if (!user) return false;
+        const cleanEmail = (user.email || '').toLowerCase().trim();
+        const cleanUserCpf = cleanCpf(user.cpf || '');
+        return (cleanEmail === 'elcortelini@gmail.com' || cleanUserCpf === '80603742068');
     }
 
     isDiretor() {
         const user = this.getLoggedUser();
+        if (!user) return false;
         const role = this.getRole();
-        return (user && (user.role === "direcao" || user.role === "admin" || user.isAdmin || user.isSuperAdmin)) || role === "direcao" || role === "admin";
+        const cargo = (user.cargo || '').toLowerCase();
+        return user.role === 'direcao' || role === 'direcao' || cargo.includes('diretor') || (user.permissoes && user.permissoes.direcao);
     }
 
     isAdmin() {
@@ -2455,6 +2563,10 @@ class SigeDatabase {
     }
 
     zerarAtendimentosOP() {
+        if (!this.isDev()) {
+            console.warn("Apenas o Desenvolvedor do Sistema tem permissão para zerar atendimentos.");
+            return false;
+        }
         if (!this.data) this.data = {};
         const oldAgs = this.data.agendamentosOP || [];
         const oldIds = oldAgs.map(a => a.id).filter(Boolean);
@@ -3985,7 +4097,97 @@ class SigeDatabase {
         return count;
     }
 
+    sincronizarEquipeEContatosWhatsApp(targetData = null) {
+        const d = targetData || this.data;
+        if (!d) return;
+        if (!Array.isArray(d.contatosWhatsAppDirecao)) d.contatosWhatsAppDirecao = [];
+        if (!Array.isArray(d.equipeEscola)) d.equipeEscola = [];
+
+        // 1. Sincroniza telefones e dados da lista de contatos para equipeEscola
+        d.contatosWhatsAppDirecao.forEach(c => {
+            const cleanPhone = (c.telefone || '').replace(/\D/g, '');
+            const nomeLower = (c.nome || '').toLowerCase().trim();
+            if (!nomeLower) return;
+
+            const prof = d.equipeEscola.find(p => {
+                if (p.id && p.id === c.id) return true;
+                const pNome = (p.nome || '').toLowerCase().trim();
+                return pNome === nomeLower || (pNome.length > 5 && nomeLower.length > 5 && (pNome.includes(nomeLower) || nomeLower.includes(pNome)));
+            });
+
+            if (prof) {
+                if (cleanPhone && (!prof.telefone || prof.telefone === 'Não informado' || prof.telefone.length < 8)) {
+                    prof.telefone = c.telefone;
+                    prof.whatsapp = cleanPhone;
+                }
+                if (prof.cargoFuncao && !c.cargo) {
+                    c.cargo = prof.cargoFuncao;
+                }
+            }
+
+            // Sincroniza com usuariosCadastrados se for Jackson Silvano ou membro com login
+            if (Array.isArray(d.usuariosCadastrados)) {
+                const u = d.usuariosCadastrados.find(user => {
+                    const uNome = (user.nome || '').toLowerCase().trim();
+                    return uNome === nomeLower || (uNome.length > 5 && (uNome.includes(nomeLower) || nomeLower.includes(uNome)));
+                });
+                if (u && cleanPhone && (!u.telefone || !u.whatsapp)) {
+                    u.telefone = cleanPhone;
+                    u.whatsapp = cleanPhone;
+                }
+            }
+        });
+
+        // 2. Sincroniza profissionais da equipeEscola para contatosWhatsAppDirecao
+        d.equipeEscola.forEach(p => {
+            const pNome = (p.nome || '').trim();
+            const pNomeLower = pNome.toLowerCase();
+            const cleanPhone = (p.telefone || p.whatsapp || '').replace(/\D/g, '');
+            if (!pNome) return;
+
+            let c = d.contatosWhatsAppDirecao.find(item => {
+                if (item.id && item.id === p.id) return true;
+                const cNome = (item.nome || '').toLowerCase().trim();
+                return cNome === pNomeLower || (cNome.length > 5 && pNomeLower.length > 5 && (cNome.includes(pNomeLower) || pNomeLower.includes(cNome)));
+            });
+
+            const setorTags = {
+                direcao: 'Direção Escolar',
+                orientacao: 'Orientação',
+                supervisao: 'Supervisora Escolar',
+                secretaria: 'Secretaria',
+                docentes: 'Professor'
+            };
+            const setorTag = setorTags[p.setor] || (p.setor ? p.setor.charAt(0).toUpperCase() + p.setor.slice(1) : 'Equipe Escolar');
+
+            if (c) {
+                if (cleanPhone && !c.telefone) {
+                    c.telefone = cleanPhone;
+                }
+                if (p.cargoFuncao && !c.cargo) {
+                    c.cargo = p.cargoFuncao;
+                }
+                const tagsArr = Array.isArray(c.tags) ? c.tags : (c.tag ? c.tag.split(',').map(s => s.trim()) : []);
+                if (!tagsArr.includes('Equipe Escolar')) tagsArr.push('Equipe Escolar');
+                if (setorTag && !tagsArr.includes(setorTag)) tagsArr.push(setorTag);
+                c.tags = tagsArr;
+                c.tag = tagsArr.join(', ');
+            } else if (cleanPhone) {
+                d.contatosWhatsAppDirecao.push({
+                    id: p.id || generateSecureId('w-cont'),
+                    nome: pNome,
+                    telefone: cleanPhone,
+                    cargo: p.cargoFuncao || p.setor || 'Colaborador',
+                    tags: ['Equipe Escolar', setorTag],
+                    tag: `Equipe Escolar, ${setorTag}`,
+                    turno: p.turno || 'Ambos'
+                });
+            }
+        });
+    }
+
     getContatosWhatsApp() {
+        this.sincronizarEquipeEContatosWhatsApp();
         return (this.data && Array.isArray(this.data.contatosWhatsAppDirecao)) ? this.data.contatosWhatsAppDirecao : [];
     }
 

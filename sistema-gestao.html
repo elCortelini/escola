@@ -104,7 +104,7 @@
     <!-- Header Navigation Principal -->
     <header class="header-nav">
         <div class="nav-container">
-            <a href="index.html" class="brand" style="display:flex; align-items:center; gap:12px;">
+            <a href="sistema-gestao.html" class="brand" style="display:flex; align-items:center; gap:12px;">
                 <img src="img/logo-pedro-rizzi.png" alt="C.E. Pedro Rizzi Logo" class="global-school-logo-img" style="height:48px; width:auto; object-fit:contain; background:white; padding:2px 6px; border-radius:8px;">
                 <div class="brand-text">
                     <h1>IntegraRizzi</h1>
@@ -112,7 +112,7 @@
                 </div>
             </a>
             <ul class="nav-links">
-                <li><a href="index.html" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 7px 16px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-house"></i> Voltar ao Portal Inicial</a></li>
+                <!-- Portal landing page desativada: navegação direta no sistema modular -->
             </ul>
         </div>
     </header>
@@ -124,14 +124,27 @@
             <span class="tab-badge" id="badgeTabOP">0</span>
         </button>
         <button class="sige-tab-btn" data-tab="mural">
-            <i class="fa-solid fa-chalkboard-user"></i> Mural & Calendário
+            <i class="fa-solid fa-chalkboard-user"></i> Mural & Prazos
         </button>
         <button class="sige-tab-btn" data-tab="supervisao">
             <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Supervisão Pedagógica
             <span class="tab-badge" id="badgeTabSup">0</span>
         </button>
-        <button class="sige-tab-btn" data-tab="direcao">
-            <i class="fa-solid fa-crown" style="color:var(--direcao-color);"></i> Direção & Painel
+        <!-- MÓDULOS DE GESTÃO DA DIREÇÃO DESMEMBRADOS COMO ABAS DIRETAS -->
+        <button class="sige-tab-btn" data-tab="dir_mensagens" data-dirsub="whatsapp">
+            <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> Mensagens
+        </button>
+        <button class="sige-tab-btn" data-tab="dir_atendimentos" data-dirsub="atendimentos">
+            <i class="fa-solid fa-users" style="color:#d97706;"></i> Orientação & Relatórios
+        </button>
+        <button class="sige-tab-btn" data-tab="dir_atas" data-dirsub="atas">
+            <i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Atas
+        </button>
+        <button class="sige-tab-btn" data-tab="dir_mural" data-dirsub="dossie">
+            <i class="fa-solid fa-id-card" style="color:#2563eb;"></i> Mural
+        </button>
+        <button class="sige-tab-btn" data-tab="dir_calendario" data-dirsub="calendario">
+            <i class="fa-solid fa-calendar-days" style="color:#ea580c;"></i> Calendário Escolar
         </button>
         <button class="sige-tab-btn" data-tab="admin">
             <i class="fa-solid fa-school" style="color:var(--admin-color);"></i> Administração
@@ -141,6 +154,8 @@
             <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Desenvolvedor & TI
             <span class="tab-badge" id="badgeTabDev" style="background:#f59e0b; display:none;">0</span>
         </button>
+        <!-- CONTAINER PARA LINKS DOS MÓDULOS EXTERNOS AUTORIZADOS -->
+        <div id="externalNavTabsContainer" style="display:contents;"></div>
     </nav>
 
     <!-- Main Container -->
@@ -196,7 +211,7 @@
                     <button onclick="openModalOrientadoras()" class="btn btn-secondary" style="width:auto; background:#1e3a8a; color:white; font-size:0.82rem; padding:6px 12px;" title="Configurar Telefones de WhatsApp das Orientadoras">
                         <i class="fa-brands fa-whatsapp"></i> WhatsApps da Orientação
                     </button>
-                    <button onclick="zerarTodosAtendimentosOPConfirm()" class="btn btn-secondary" style="width:auto; background:#b91c1c; color:white; font-size:0.82rem; padding:6px 12px; border:none;" title="Zerar e excluir permanentemente todos os atendimentos da Orientação Educacional">
+                    <button id="btnZerarAtendimentosOP" onclick="zerarTodosAtendimentosOPConfirm()" class="btn btn-secondary" style="display:none; width:auto; background:#b91c1c; color:white; font-size:0.82rem; padding:6px 12px; border:none;" title="Zerar e excluir permanentemente todos os atendimentos da Orientação Educacional (Exclusivo Desenvolvedor)">
                         <i class="fa-solid fa-trash-can"></i> Zerar Atendimentos
                     </button>
                 </div>
@@ -1608,11 +1623,14 @@
                     <div class="dir-card-header">
                         <div>
                             <h4 class="dir-card-title">
-                                <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos
+                                <i class="fa-solid fa-address-book" style="color:#d97706;"></i> Contatos & Telefones dos Profissionais
                             </h4>
-                            <p class="dir-card-subtitle">Gerencie os destinatários organizados por tags, turmas e cargos institucionais</p>
+                            <p class="dir-card-subtitle">Agenda institucional unificada: professores, equipe e colaboradores com envio rápido e WhatsApp</p>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn" style="background:#16a34a; color:white; font-size:0.8125rem; padding:6px 14px; border-radius:8px; font-weight:800; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-height:36px;" title="Disparar mensagem geral para todos os colaboradores">
+                                <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> Disparar Mensagem Geral
+                            </button>
                             <!-- Botões de CSV em ícones compactos conforme solicitado -->
                             <button type="button" onclick="downloadModeloCSVContatos()" class="dir-btn-icon" title="Baixar modelo de planilha CSV (.csv)" aria-label="Baixar modelo CSV">
                                 <i class="fa-solid fa-file-csv" style="color:#0284c7;"></i>
@@ -1623,8 +1641,8 @@
                             <button type="button" onclick="exportarContatosParaCSV()" class="dir-btn-icon" title="Exportar base de contatos em CSV" aria-label="Exportar contatos para CSV">
                                 <i class="fa-solid fa-file-export" style="color:#166534;"></i>
                             </button>
-                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="dir-btn dir-btn-primary" style="background:#16a34a; border-color:#16a34a; min-height:38px; padding:6px 14px; font-size:0.8125rem;">
-                                <i class="fa-solid fa-plus"></i> Novo Contato
+                            <button type="button" onclick="openNovoContatoWhatsAppModal()" class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; min-height:36px; padding:6px 14px; font-size:0.8125rem; font-weight:800; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-user-plus"></i> + Novo Profissional / Contato
                             </button>
                         </div>
                     </div>
@@ -3806,7 +3824,6 @@ service cloud.firestore {
                             <option value="supervisao">📋 Supervisão Pedagógica</option>
                             <option value="secretaria">📝 Secretaria Escolar</option>
                             <option value="docentes">👨‍🏫 Professor / Docente</option>
-                            <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
                         </select>
                     </div>
                     <div>
@@ -3901,7 +3918,6 @@ service cloud.firestore {
                             <option value="secretaria">📝 Secretaria Escolar</option>
                             <option value="docentes">👨‍🏫 Docente / Professor</option>
                             <option value="comunidade">👥 Comunidade Escolar / Apoio</option>
-                            <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
                         </select>
                     </div>
                     <div>

@@ -235,6 +235,26 @@
     color: white;
 }
 
+a.sige-tab-btn.sige-tab-link {
+    text-decoration: none;
+    color: #475569;
+}
+a.sige-tab-btn.sige-tab-link:hover {
+    color: #1e3a8a;
+    background: #f8fafc;
+}
+
+.status-nao_veio, .status-faltou, .status-falta {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fca5a5 !important;
+}
+.status-confirmado {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #93c5fd !important;
+}
+
 /* Painel de Conteúdo de Abas */
 .tab-content-section {
     display: none;
@@ -1874,7 +1894,7 @@
 /* ======================================================== */
 .contact-row-card {
     display: grid;
-    grid-template-columns: 36px 1.4fr 1.1fr 1.5fr 38px 38px;
+    grid-template-columns: 32px minmax(160px, 1.4fr) minmax(130px, 1fr) minmax(140px, 1.3fr) auto;
     align-items: center;
     padding: 10px 16px;
     background: #ffffff;
