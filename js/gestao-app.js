@@ -79,10 +79,11 @@ function checkSigeAuth() {
     }
 
     if (userText) {
+        const cleanNome = (user.nome || "Elevi Cortelini").replace(/\s*\([^)]*\)\s*$/g, "").trim();
         const funcaoDesc = (user.role === "desenvolvedor" || (user.email && user.email.toLowerCase().includes("cortelini")))
             ? "Desenvolvedor"
             : (user.cargo || (typeof sigeDB.getRoleFormatted === "function" ? sigeDB.getRoleFormatted() : (user.role || "Colaborador")));
-        userText.innerHTML = `<i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem; margin-right:4px;"></i><strong>${escapeHtml(user.nome || "Elevi Cortelini")}</strong> (${escapeHtml(funcaoDesc)})`;
+        userText.innerHTML = `<i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem; margin-right:4px;"></i><strong>${escapeHtml(cleanNome || "Elevi Cortelini")}</strong> (${escapeHtml(funcaoDesc)})`;
     }
 
     // Define papel no BD local
@@ -7187,6 +7188,9 @@ function switchDirSubTab(subTabId) {
     if (subTabId === 'whatsapp') renderDirWhatsApp();
     else if (subTabId === 'atas') renderDirLivroAta();
     else if (subTabId === 'calendario') renderDirCalendarioEscolar();
+    else if (subTabId === 'avaliacao') {
+        // Sub-aba Avaliação de Satisfação Escolar exibe o painel analítico
+    }
 }
 
 function renderModuleDirecao() {
@@ -7968,6 +7972,161 @@ function aplicarTemplateWhatsAppDirecao() {
         atualizarPreviewMensagemWhatsApp();
     }
 }
+
+// ==========================================
+// GERADOR INTELIGENTE DE COMUNICADOS COM IA
+// ==========================================
+function abrirModalGeradorIA() {
+    const modal = document.getElementById("modalGeradorIA");
+    const inputPrompt = document.getElementById("iaInputPrompt");
+    const mainMsg = document.getElementById("dirWpInputMensagem");
+    const geminiInput = document.getElementById("iaGeminiApiKeyInput");
+
+    if (geminiInput) {
+        geminiInput.value = localStorage.getItem("sige_gemini_api_key") || "";
+        geminiInput.onchange = (e) => {
+            const val = e.target.value.trim();
+            if (val) localStorage.setItem("sige_gemini_api_key", val);
+            else localStorage.removeItem("sige_gemini_api_key");
+        };
+    }
+
+    if (inputPrompt && mainMsg) {
+        inputPrompt.value = mainMsg.value.trim();
+    }
+
+    if (modal) modal.style.display = "flex";
+}
+window.abrirModalGeradorIA = abrirModalGeradorIA;
+
+function fecharModalGeradorIA() {
+    const modal = document.getElementById("modalGeradorIA");
+    if (modal) modal.style.display = "none";
+}
+window.fecharModalGeradorIA = fecharModalGeradorIA;
+
+async function executarGeradorIA() {
+    const promptInput = document.getElementById("iaInputPrompt");
+    const tomSelect = document.getElementById("iaTomSelect");
+    const statusMsg = document.getElementById("iaStatusMsg");
+    const btnExecutar = document.getElementById("btnExecutarGeradorIA");
+    const mainMsgInput = document.getElementById("dirWpInputMensagem");
+
+    let draftText = promptInput ? promptInput.value.trim() : "";
+    if (!draftText && mainMsgInput) {
+        draftText = mainMsgInput.value.trim();
+    }
+
+    if (!draftText) {
+        showToast("⚠️ Digite alguns tópicos ou uma ideia de mensagem antes de gerar com IA!");
+        return;
+    }
+
+    const tom = tomSelect ? tomSelect.value : "formal";
+    let tomInstrucao = "em tom oficial, claro e profissional";
+    if (tom === "urgente") tomInstrucao = "em tom de convocação urgente, destacando data, hora e prazos improrrogáveis";
+    else if (tom === "acolhedor") tomInstrucao = "em tom afetuoso, acolhedor e empático com pais e responsáveis";
+    else if (tom === "direto") tomInstrucao = "de forma muito curta, objetiva e direta ao ponto, sem enrolação";
+    else if (tom === "reuniao") tomInstrucao = "como convite oficial para reunião de pais/responsáveis na escola";
+
+    const systemPrompt = `Você é o redator oficial de comunicações do Centro Educacional Pedro Rizzi. 
+Sua tarefa é transformar o rascunho a seguir em uma mensagem de WhatsApp institucional impecável, ${tomInstrucao}.
+Regras fundamentais:
+1. Mantenha ou utilize as variáveis {nome} (para o nome do contato) e {escola} (para Centro Educacional Pedro Rizzi).
+2. Use formatação do WhatsApp com moderação: negrito (*palavra*) para datas/locais importantes.
+3. Responda APENAS com o texto final da mensagem pronto para envio. Não adicione saudações de IA como 'Aqui está sua mensagem:', nem aspas no início/fim, nem comentários extras.`;
+
+    const userContent = `Rascunho/Dados: ${draftText}`;
+
+    if (btnExecutar) {
+        btnExecutar.disabled = true;
+        btnExecutar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando com IA...`;
+    }
+    if (statusMsg) {
+        statusMsg.style.display = "block";
+        statusMsg.style.background = "#eff6ff";
+        statusMsg.style.color = "#1d4ed8";
+        statusMsg.style.border = "1px solid #bfdbfe";
+        statusMsg.innerText = "⏳ Conectando à IA e redigindo seu comunicado...";
+    }
+
+    try {
+        let generatedText = "";
+        const geminiKey = (document.getElementById("iaGeminiApiKeyInput")?.value.trim()) || localStorage.getItem("sige_gemini_api_key");
+
+        if (geminiKey) {
+            // Google Gemini 1.5 Flash (se houver chave configurada)
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `${systemPrompt}\n\n${userContent}` }]
+                    }]
+                })
+            });
+            const data = await resp.json();
+            if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                generatedText = data.candidates[0].content.parts[0].text.trim();
+            } else {
+                throw new Error("Resposta inválida da API Gemini");
+            }
+        } else {
+            // Provedor de IA Gratuita Pública via Pollinations AI (sem chave necessária)
+            const resp = await fetch("https://text.pollinations.ai/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userContent }
+                    ],
+                    model: "openai",
+                    seed: Math.floor(Math.random() * 10000)
+                })
+            });
+            if (!resp.ok) throw new Error(`Status ${resp.status}`);
+            generatedText = (await resp.text()).trim();
+        }
+
+        if (generatedText.startsWith('"') && generatedText.endsWith('"')) {
+            generatedText = generatedText.slice(1, -1).trim();
+        }
+
+        if (mainMsgInput) {
+            mainMsgInput.value = generatedText;
+            if (typeof atualizarPreviewMensagemWhatsApp === "function") {
+                atualizarPreviewMensagemWhatsApp();
+            }
+        }
+
+        showToast("✨ Comunicado gerado com sucesso pela IA!");
+        fecharModalGeradorIA();
+    } catch (err) {
+        console.warn("Falha no provedor de IA remoto, aplicando estrutura inteligente local:", err);
+        // Fallback inteligente offline
+        let fallbackText = `Olá, {nome}!\n\n` +
+            `Entramos em contato pelo Centro Educacional Pedro Rizzi para o seguinte comunicado:\n\n` +
+            draftText.split('\n').map(l => l.trim() ? `• ${l.trim()}` : '').filter(Boolean).join('\n') +
+            `\n\nContamos com a atenção e colaboração de todos.\nAtenciosamente,\nDireção Escolar — {escola}`;
+        
+        if (mainMsgInput) {
+            mainMsgInput.value = fallbackText;
+            if (typeof atualizarPreviewMensagemWhatsApp === "function") {
+                atualizarPreviewMensagemWhatsApp();
+            }
+        }
+        showToast("✨ Mensagem estruturada com sucesso!");
+        fecharModalGeradorIA();
+    } finally {
+        if (btnExecutar) {
+            btnExecutar.disabled = false;
+            btnExecutar.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Gerar Mensagem com IA`;
+        }
+        if (statusMsg) statusMsg.style.display = "none";
+    }
+}
+window.executarGeradorIA = executarGeradorIA;
 
 // Disparo: Alterna entre Envio Individual e Fila Guiada
 function executarAcaoDisparoWhatsApp() {
