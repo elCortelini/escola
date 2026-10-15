@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v50",
-  "build": 1792080500,
-  "updatedAt": "2026-10-15T16:36:00-03:00",
-  "description": "Correcao de desanexacao de buffer PDF pelo PDF.js Worker e sanitizacao de cabecalho PDF para mesclagem"
+  "version": "20261015_v51",
+  "build": 1792080600,
+  "updatedAt": "2026-10-15T16:56:00-03:00",
+  "description": "Chancela oficial completa com rubrica, nome, cargo, portaria, autenticacao em 2 linhas e correcao de coordenadas e rotacao nativa do PDF"
 }

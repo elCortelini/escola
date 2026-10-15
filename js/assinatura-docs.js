@@ -21,14 +21,14 @@
         
         // Estado da assinatura/chancela ativa
         selectedChancelaId: null,
-        stampWidth: 200, // pixels no canvas
-        stampHeight: 82, // calculado pela proporção
+        stampWidth: 220, // pixels no canvas
+        stampHeight: 140, // calculado pela proporção e conteúdo completo da chancela
         overlayPos: { x: 50, y: 50 }, // pixels relativos ao canvas
         isDragging: false,
         dragOffset: { x: 0, y: 0 },
         isResizing: false,
         resizeStartX: 0,
-        resizeStartWidth: 200,
+        resizeStartWidth: 220,
 
         // PDF assinado resultante
         signedPdfBytes: null,
@@ -179,16 +179,42 @@
         const overlay = document.getElementById('signatureOverlayBox');
         const img = document.getElementById('overlayChancelaImg');
         const badge = document.getElementById('overlaySignatarioBadge');
+        const elNome = document.getElementById('overlayNomeDisplay');
+        const elCargo = document.getElementById('overlayCargoDisplay');
+        const elPortaria = document.getElementById('overlayPortariaDisplay');
+        const elAuth = document.getElementById('overlayAuthDisplay');
+        const checkAuth = document.getElementById('checkIncluirAutenticidade');
 
         if (c && overlay && img) {
             img.src = c.imagemBase64;
-            if (badge) badge.textContent = `${c.nome} • ${c.cargo}`;
+            if (badge) badge.textContent = `${c.cargo}`;
+            if (elNome) elNome.textContent = (c.nome || '').toUpperCase();
+            if (elCargo) elCargo.textContent = c.cargo || '';
+            if (elPortaria) {
+                if (c.portaria) {
+                    elPortaria.textContent = c.portaria;
+                    elPortaria.style.display = 'block';
+                } else {
+                    elPortaria.style.display = 'none';
+                }
+            }
+            if (elAuth && checkAuth) {
+                elAuth.style.display = checkAuth.checked ? 'block' : 'none';
+            }
             if (AssinaturaModule.currentPdfDoc) {
                 overlay.style.display = 'block';
+                ajustarPosicaoOverlayNaTela();
             }
         }
     }
     window.selecionarChancelaParaUso = selecionarChancelaParaUso;
+
+    function toggleOverlayAutenticidade(checked) {
+        const elAuth = document.getElementById('overlayAuthDisplay');
+        if (elAuth) elAuth.style.display = checked ? 'block' : 'none';
+        ajustarPosicaoOverlayNaTela();
+    }
+    window.toggleOverlayAutenticidade = toggleOverlayAutenticidade;
 
     function openModalNovaChancela() {
         const modal = document.getElementById('modalNovaChancela');
@@ -603,8 +629,8 @@
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
-            AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, clickX - (AssinaturaModule.stampWidth / 2)));
-            AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, clickY - (AssinaturaModule.stampHeight / 2)));
+            AssinaturaModule.overlayPos.x = Math.max(0, Math.min(rect.width - AssinaturaModule.stampWidth, clickX - (AssinaturaModule.stampWidth / 2)));
+            AssinaturaModule.overlayPos.y = Math.max(0, Math.min(rect.height - AssinaturaModule.stampHeight, clickY - (AssinaturaModule.stampHeight / 2)));
 
             ajustarPosicaoOverlayNaTela();
         };
@@ -635,14 +661,16 @@
                 const wrapperRect = wrapper.getBoundingClientRect();
                 const newX = e.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
                 const newY = e.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
+                const maxW = canvas.clientWidth || wrapperRect.width;
+                const maxH = canvas.clientHeight || wrapperRect.height;
 
-                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, newX));
-                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, newY));
+                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, newX));
+                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - AssinaturaModule.stampHeight, newY));
 
                 ajustarPosicaoOverlayNaTela();
             } else if (AssinaturaModule.isResizing) {
                 const delta = e.clientX - AssinaturaModule.resizeStartX;
-                const newW = Math.max(100, Math.min(420, AssinaturaModule.resizeStartWidth + delta));
+                const newW = Math.max(140, Math.min(420, AssinaturaModule.resizeStartWidth + delta));
                 setTamanhoAssinatura(newW);
             }
         };
@@ -673,9 +701,11 @@
                 const wrapperRect = wrapper.getBoundingClientRect();
                 const newX = touch.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
                 const newY = touch.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
+                const maxW = canvas.clientWidth || wrapperRect.width;
+                const maxH = canvas.clientHeight || wrapperRect.height;
 
-                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(canvas.width - AssinaturaModule.stampWidth, newX));
-                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(canvas.height - AssinaturaModule.stampHeight, newY));
+                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, newX));
+                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - AssinaturaModule.stampHeight, newY));
 
                 ajustarPosicaoOverlayNaTela();
                 e.preventDefault();
@@ -692,12 +722,23 @@
 
     function ajustarPosicaoOverlayNaTela() {
         const overlay = document.getElementById('signatureOverlayBox');
+        const canvas = document.getElementById('pdfViewerCanvas');
         if (!overlay) return;
+
+        const maxW = canvas ? (canvas.clientWidth || canvas.offsetWidth) : 800;
+        const maxH = canvas ? (canvas.clientHeight || canvas.offsetHeight) : 1000;
+
+        overlay.style.width = `${AssinaturaModule.stampWidth}px`;
+        overlay.style.height = 'auto';
+
+        const actualH = overlay.offsetHeight || AssinaturaModule.stampHeight;
+        AssinaturaModule.stampHeight = actualH;
+
+        AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, AssinaturaModule.overlayPos.x));
+        AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - actualH, AssinaturaModule.overlayPos.y));
 
         overlay.style.left = `${AssinaturaModule.overlayPos.x}px`;
         overlay.style.top = `${AssinaturaModule.overlayPos.y}px`;
-        overlay.style.width = `${AssinaturaModule.stampWidth}px`;
-        overlay.style.height = `${AssinaturaModule.stampHeight}px`;
 
         const coordDisplay = document.getElementById('stampCoordIndicator');
         if (coordDisplay) {
@@ -707,8 +748,6 @@
 
     function setTamanhoAssinatura(larguraPx) {
         AssinaturaModule.stampWidth = Number(larguraPx);
-        // Mantém a proporção padrão 320 x 130
-        AssinaturaModule.stampHeight = Math.round(AssinaturaModule.stampWidth * (130 / 320));
 
         const slider = document.getElementById('sliderStampSize');
         if (slider && Number(slider.value) !== Number(larguraPx)) {
@@ -725,20 +764,20 @@
         const canvas = document.getElementById('pdfViewerCanvas');
         if (!canvas) return;
 
-        const cw = canvas.width || 600;
-        const ch = canvas.height || 850;
+        const cw = canvas.clientWidth || canvas.getBoundingClientRect().width || 600;
+        const ch = canvas.clientHeight || canvas.getBoundingClientRect().height || 850;
         const sw = AssinaturaModule.stampWidth;
         const sh = AssinaturaModule.stampHeight;
 
         if (preset === 'rodape_direita') {
-            AssinaturaModule.overlayPos.x = cw - sw - 40;
-            AssinaturaModule.overlayPos.y = ch - sh - 50;
+            AssinaturaModule.overlayPos.x = Math.max(0, cw - sw - 30);
+            AssinaturaModule.overlayPos.y = Math.max(0, ch - sh - 35);
         } else if (preset === 'rodape_centro') {
-            AssinaturaModule.overlayPos.x = (cw - sw) / 2;
-            AssinaturaModule.overlayPos.y = ch - sh - 50;
+            AssinaturaModule.overlayPos.x = Math.max(0, (cw - sw) / 2);
+            AssinaturaModule.overlayPos.y = Math.max(0, ch - sh - 35);
         } else if (preset === 'rodape_esquerda') {
-            AssinaturaModule.overlayPos.x = 40;
-            AssinaturaModule.overlayPos.y = ch - sh - 50;
+            AssinaturaModule.overlayPos.x = 30;
+            AssinaturaModule.overlayPos.y = Math.max(0, ch - sh - 35);
         }
 
         ajustarPosicaoOverlayNaTela();
@@ -748,52 +787,135 @@
     // =========================================================================
     // 5. PROCESSAMENTO E MESCLAGEM VIA PDF-LIB
     // =========================================================================
-    async function converterImagemParaPngBytes(imgSrc) {
-        if (!imgSrc) throw new Error('Imagem da chancela não fornecida.');
 
-        // Se já for PNG em base64 puro, decodifica diretamente para Uint8Array sem perdas nem atrasos
-        if (typeof imgSrc === 'string' && imgSrc.startsWith('data:image/png;base64,')) {
-            try {
-                const base64Data = imgSrc.substring('data:image/png;base64,'.length);
-                const binaryString = window.atob(base64Data);
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                return bytes;
-            } catch (e) {
-                console.warn('[AssinaturaModule] Conversão direta de base64 falhou, usando canvas fallback:', e);
-            }
-        }
-
+    /**
+     * Gera o carimbo oficial unificado em alta resolução (Retina / 300 DPI):
+     * Contém: Imagem da Rubrica + Linha divisória + Nome + Cargo + Portaria + Autenticação (2 linhas)
+     */
+    async function gerarChancelaCompletaCanvas(chancela, incluirAuth, authCode, dataHoraStr) {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
                 try {
-                    const c = document.createElement('canvas');
-                    c.width = img.naturalWidth || img.width || 320;
-                    c.height = img.naturalHeight || img.height || 130;
-                    const ctx = c.getContext('2d');
-                    ctx.drawImage(img, 0, 0, c.width, c.height);
+                    // Largura base em alta resolução para renderização cristalina na impressão
+                    const targetW = 600;
 
-                    c.toBlob(blob => {
+                    // Mede a proporção da rubrica
+                    const origW = img.naturalWidth || img.width || 320;
+                    const origH = img.naturalHeight || img.height || 120;
+                    const aspect = origH / origW;
+
+                    // Ajusta tamanho da rubrica proporcionalmente
+                    let rubricaW = Math.min(380, targetW * 0.65);
+                    let rubricaH = Math.round(rubricaW * aspect);
+                    if (rubricaH > 140) {
+                        rubricaH = 140;
+                        rubricaW = Math.round(rubricaH / aspect);
+                    }
+
+                    // Cálculo da altura dinâmica do carimbo
+                    let totalH = rubricaH + 10; // rubrica + espaçamento
+                    totalH += 8; // linha divisória
+                    totalH += 28; // Nome
+                    totalH += 24; // Cargo
+                    if (chancela.portaria) {
+                        totalH += 20; // Portaria / Decreto
+                    }
+                    if (incluirAuth) {
+                        totalH += 46; // Autenticação dividida em 2 linhas compactas
+                    }
+                    totalH += 10; // margem inferior
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetW;
+                    canvas.height = totalH;
+                    const ctx = canvas.getContext('2d');
+
+                    // Fundo transparente
+                    ctx.clearRect(0, 0, targetW, totalH);
+
+                    let y = 2;
+
+                    // 1. Imagem da rubrica centralizada
+                    const rubricaX = Math.round((targetW - rubricaW) / 2);
+                    ctx.drawImage(img, rubricaX, y, rubricaW, rubricaH);
+                    y += rubricaH + 8;
+
+                    // 2. Linha divisória horizontal
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1.8;
+                    ctx.beginPath();
+                    const lineMargin = Math.round(targetW * 0.08);
+                    ctx.moveTo(lineMargin, y);
+                    ctx.lineTo(targetW - lineMargin, y);
+                    ctx.stroke();
+                    y += 22;
+
+                    // 3. Nome do signatário (negrito, caixa alta)
+                    ctx.fillStyle = '#0f172a';
+                    ctx.font = 'bold 21px "Segoe UI", Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillText((chancela.nome || '').toUpperCase(), targetW / 2, y);
+                    y += 22;
+
+                    // 4. Cargo Oficial
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = '600 17px "Segoe UI", Arial, sans-serif';
+                    ctx.fillText(chancela.cargo || '', targetW / 2, y);
+                    y += 20;
+
+                    // 5. Portaria / Matrícula (se houver)
+                    if (chancela.portaria) {
+                        ctx.fillStyle = '#475569';
+                        ctx.font = 'normal 14px "Segoe UI", Arial, sans-serif';
+                        ctx.fillText(chancela.portaria, targetW / 2, y);
+                        y += 18;
+                    }
+
+                    // 6. Autenticação Eletrônica (Dividida em 2 linhas elegantes e legíveis)
+                    if (incluirAuth) {
+                        y += 4;
+                        ctx.strokeStyle = '#cbd5e1';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([4, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(targetW * 0.15, y);
+                        ctx.lineTo(targetW * 0.85, y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        y += 16;
+
+                        ctx.fillStyle = '#475569';
+                        ctx.font = 'normal 12px "Segoe UI", Arial, sans-serif';
+                        ctx.fillText('Autenticado digitalmente pelo SIGE • C.E. Pedro Rizzi', targetW / 2, y);
+                        y += 15;
+
+                        ctx.fillStyle = '#64748b';
+                        ctx.font = 'normal 11px "Segoe UI", Arial, sans-serif';
+                        ctx.fillText(`${dataHoraStr} • Cód: PR-${authCode}`, targetW / 2, y);
+                    }
+
+                    canvas.toBlob(blob => {
                         if (!blob) {
-                            reject(new Error('Falha ao gerar blob PNG da chancela'));
+                            reject(new Error('Falha ao gerar blob do selo'));
                             return;
                         }
                         const reader = new FileReader();
-                        reader.onload = () => resolve(new Uint8Array(reader.result));
+                        reader.onload = () => resolve({
+                            bytes: new Uint8Array(reader.result),
+                            aspectRatio: totalH / targetW
+                        });
                         reader.onerror = reject;
                         reader.readAsArrayBuffer(blob);
                     }, 'image/png');
-                } catch (canvasErr) {
-                    reject(canvasErr);
+                } catch (err) {
+                    reject(err);
                 }
             };
-            img.onerror = () => reject(new Error('Falha ao renderizar carimbo para mesclagem'));
-            img.src = imgSrc;
+            img.onerror = () => reject(new Error('Falha ao renderizar carimbo da chancela'));
+            img.src = chancela.imagemBase64;
         });
     }
 
@@ -843,46 +965,48 @@
             const targetPageIndex = AssinaturaModule.currentPageNum - 1;
             const targetPage = pages[targetPageIndex] || pages[0];
 
-            // 2. Converte e incorpora imagem PNG do carimbo
-            const pngBytes = await converterImagemParaPngBytes(chancela.imagemBase64);
-            const embeddedImage = await pdfDoc.embedPng(pngBytes);
+            // 2. Prepara dados de autenticidade (em 2 linhas compactas)
+            const checkAuth = document.getElementById('checkIncluirAutenticidade')?.checked ?? true;
+            const now = new Date();
+            const authCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR')}`;
 
-            // 3. Calcula coordenadas exatas entre o Canvas na tela e o PDF real
+            // 3. Converte a chancela completa (rubrica + nome + cargo + portaria + autenticação) em PNG nítido
+            const seloResult = await gerarChancelaCompletaCanvas(chancela, checkAuth, authCode, dataHoraStr);
+            const embeddedSeal = await pdfDoc.embedPng(seloResult.bytes);
+
+            // 4. Mapeamento preciso de coordenadas e rotação nativa do PDF
             const canvas = document.getElementById('pdfViewerCanvas');
-            const pageWidth = targetPage.getWidth();
-            const pageHeight = targetPage.getHeight();
+            const dispW = canvas.clientWidth || canvas.getBoundingClientRect().width || 600;
+            const dispH = canvas.clientHeight || canvas.getBoundingClientRect().height || 850;
 
-            const scaleX = pageWidth / canvas.width;
-            const scaleY = pageHeight / canvas.height;
+            const pdfJsPage = await AssinaturaModule.currentPdfDoc.getPage(AssinaturaModule.currentPageNum);
+            const pdfJsViewport = pdfJsPage.getViewport({ scale: AssinaturaModule.pdfScale });
 
-            const pdfX = AssinaturaModule.overlayPos.x * scaleX;
-            // No PDF-Lib a origem Y=0 é no rodapé inferior esquerdo
-            const pdfY = (canvas.height - (AssinaturaModule.overlayPos.y + AssinaturaModule.stampHeight)) * scaleY;
-            const pdfW = AssinaturaModule.stampWidth * scaleX;
-            const pdfH = AssinaturaModule.stampHeight * scaleY;
+            // Proporção entre pixels CSS na tela e o Viewport do PDF.js
+            const scaleRatioX = pdfJsViewport.width / dispW;
+            const scaleRatioY = pdfJsViewport.height / dispH;
 
-            // 4. Desenha o carimbo e assinatura
-            targetPage.drawImage(embeddedImage, {
+            const vpLeft = AssinaturaModule.overlayPos.x * scaleRatioX;
+            const vpTop = AssinaturaModule.overlayPos.y * scaleRatioY;
+            const vpWidth = AssinaturaModule.stampWidth * scaleRatioX;
+            const vpHeight = AssinaturaModule.stampHeight * scaleRatioY;
+
+            // Ponto inferior-esquerdo visual mapeado diretamente pelo PDF.js (lida perfeitamente com rotação 0, 90, 180, 270)
+            const [pdfX, pdfY] = pdfJsViewport.convertToPdfPoint(vpLeft, vpTop + vpHeight);
+            const pdfW = vpWidth / AssinaturaModule.pdfScale;
+            const pdfH = vpHeight / AssinaturaModule.pdfScale;
+
+            const pageRot = (targetPage.getRotation()?.angle || 0) % 360;
+
+            // 5. Desenha o selo completo no PDF
+            targetPage.drawImage(embeddedSeal, {
                 x: pdfX,
                 y: pdfY,
                 width: pdfW,
-                height: pdfH
+                height: pdfH,
+                rotate: PDFLib.degrees(pageRot)
             });
-
-            // 5. Opcional: Adiciona linha de autenticação eletrônica (carimbo digital)
-            const checkAuth = document.getElementById('checkIncluirAutenticidade')?.checked ?? true;
-            if (checkAuth) {
-                const now = new Date();
-                const authCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-                const authText = `Autenticado digitalmente pelo SIGE • C.E. Pedro Rizzi em ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR')} • Cód: PR-${authCode}`;
-                
-                targetPage.drawText(authText, {
-                    x: Math.max(20, pdfX - 10),
-                    y: Math.max(10, pdfY - 12),
-                    size: 6.5,
-                    color: PDFLib.rgb(0.3, 0.35, 0.4)
-                });
-            }
 
             // 6. Salva o PDF final
             const signedBytes = await pdfDoc.save();
@@ -904,6 +1028,12 @@
             document.getElementById('pdfSignedFileNameDisplay').textContent = AssinaturaModule.signedFileName;
 
             showToast('✅ Documento assinado com sucesso! Pronto para download ou envio.');
+
+            // Oculta o overlay interativo para exibir o resultado final limpo
+            const overlay = document.getElementById('signatureOverlayBox');
+            if (overlay) overlay.style.display = 'none';
+            AssinaturaModule.selectedChancelaId = null;
+            renderChancelasCards();
 
             // Atualiza a visualização no canvas com o PDF assinado (Uint8Array clonado)
             AssinaturaModule.currentPdfBytes = new Uint8Array(signedBytes);
