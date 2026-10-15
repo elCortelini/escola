@@ -798,61 +798,13 @@
 
             <!-- SUB-ABA 5: ASSINATURA & EXPEDIÇÃO DE DOCUMENTOS (NOVO MÓDULO) -->
             <div id="adminSubTab_assinaturas_docs" class="admin-subtab-content" style="display:none;">
-                <!-- Toolbar do Módulo -->
-                <div class="action-toolbar" style="padding:0.9rem 1.4rem; margin-bottom:1.25rem; background:white; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-left:6px solid #4f46e5;">
-                    <div>
-                        <h3 style="color:#0f172a; font-weight:900; font-size:1.25rem; margin:0; display:flex; align-items:center; gap:10px;">
-                            <i class="fa-solid fa-file-signature" style="color:#4f46e5;"></i> Assinatura & Expedição de Documentos Oficiais
-                        </h3>
-                        <p style="font-size:0.83rem; color:#64748b; margin:3px 0 0 0;">
-                            Cadastre chancelas com carimbos da Direção e Secretaria, assine visualmente documentos PDF e faça o envio direto via WhatsApp, E-mail ou Download.
-                        </p>
-                    </div>
-
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <input type="file" id="pdfExternalFileInput" accept="application/pdf" style="display:none;" onchange="if(this.files[0]) carregarPdfFile(this.files[0])">
-                        <button type="button" onclick="document.getElementById('pdfExternalFileInput').click()" class="btn btn-primary" style="width:auto; background:#4f46e5; border-color:#4f46e5; font-size:0.85rem; font-weight:800; padding:8px 16px;">
-                            <i class="fa-solid fa-upload"></i> Subir PDF do Computador
-                        </button>
-                        <button type="button" onclick="openModalGeradorDocumentosSige()" class="btn btn-secondary" style="width:auto; background:#0284c7; color:white; font-size:0.85rem; font-weight:800; padding:8px 16px;">
-                            <i class="fa-solid fa-file-invoice"></i> Gerar Documento do SIGE
-                        </button>
-                        <button type="button" onclick="openModalNovaChancela()" class="btn btn-secondary" style="width:auto; background:#059669; color:white; font-size:0.85rem; font-weight:800; padding:8px 16px;">
-                            <i class="fa-solid fa-stamp"></i> Nova Chancela / Carimbo
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Cards Sintéticos de Métricas -->
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
-                    <div style="background:white; padding:1.1rem; border-radius:12px; border-left:5px solid #4f46e5; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size:0.75rem; color:#64748b; font-weight:800; text-transform:uppercase;">Total Expedidos</div>
-                        <div style="font-size:1.8rem; font-weight:900; color:#4f46e5; margin-top:2px;" id="statTotalDocsExpedidos">0</div>
-                        <div style="font-size:0.72rem; color:#94a3b8;">Documentos registrados</div>
-                    </div>
-                    <div style="background:white; padding:1.1rem; border-radius:12px; border-left:5px solid #16a34a; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size:0.75rem; color:#64748b; font-weight:800; text-transform:uppercase;">Disparos WhatsApp</div>
-                        <div style="font-size:1.8rem; font-weight:900; color:#16a34a; margin-top:2px;" id="statDocsEnviadosWhatsapp">0</div>
-                        <div style="font-size:0.72rem; color:#94a3b8;">Via Evolution API</div>
-                    </div>
-                    <div style="background:white; padding:1.1rem; border-radius:12px; border-left:5px solid #0284c7; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size:0.75rem; color:#64748b; font-weight:800; text-transform:uppercase;">Expedidos por E-mail</div>
-                        <div style="font-size:1.8rem; font-weight:900; color:#0284c7; margin-top:2px;" id="statDocsEnviadosEmail">0</div>
-                        <div style="font-size:0.72rem; color:#94a3b8;">Encaminhamentos oficiais</div>
-                    </div>
-                    <div style="background:white; padding:1.1rem; border-radius:12px; border-left:5px solid #d97706; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size:0.75rem; color:#64748b; font-weight:800; text-transform:uppercase;">Chancelas Ativas</div>
-                        <div style="font-size:1.8rem; font-weight:900; color:#d97706; margin-top:2px;" id="statChancelasAtivas">0</div>
-                        <div style="font-size:0.72rem; color:#94a3b8;">Carimbos disponíveis</div>
-                    </div>
-                </div>
-
+                
                 <!-- Painel de Trabalho Principal: 2 Colunas (Mesa Interativa + Banco de Chancelas) -->
                 <div style="display:grid; grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr); gap:1.25rem; align-items:start; margin-bottom:1.5rem;">
                     
                     <!-- COLUNA ESQUERDA: MESA DE TRABALHO INTERATIVA -->
                     <div style="background:white; padding:1.3rem; border-radius:14px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
                             <div>
                                 <h4 style="font-size:1.05rem; font-weight:900; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
                                     <i class="fa-solid fa-desktop" style="color:#4f46e5;"></i> Mesa Interativa de Assinatura & Posicionamento
@@ -862,7 +814,17 @@
                                 </div>
                             </div>
 
-                            <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <input type="file" id="pdfExternalFileInput" accept="application/pdf" style="display:none;" onchange="if(this.files[0]) carregarPdfFile(this.files[0])">
+                                <button type="button" onclick="document.getElementById('pdfExternalFileInput').click()" class="btn btn-primary" style="width:auto; background:#4f46e5; border-color:#4f46e5; font-size:0.8rem; font-weight:800; padding:6px 14px; box-shadow:0 2px 6px rgba(79, 70, 229, 0.25);">
+                                    <i class="fa-solid fa-upload"></i> Subir PDF do Computador
+                                </button>
+                                <button type="button" onclick="openModalGeradorDocumentosSige()" class="btn btn-secondary" style="width:auto; background:#0284c7; color:white; font-size:0.8rem; font-weight:800; padding:6px 14px;">
+                                    <i class="fa-solid fa-file-invoice"></i> Gerar Documento SIGE
+                                </button>
+
+                                <div style="border-left:1px solid #e2e8f0; height:22px; margin:0 2px;"></div>
+
                                 <button type="button" onclick="posicionarAssinaturaPreset('rodape_direita')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px; border:1px solid #cbd5e1;" title="Posicionar no canto inferior direito">
                                     <i class="fa-solid fa-angles-right"></i> Rodapé Direito
                                 </button>
@@ -5274,18 +5236,20 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL 1: CADASTRAR NOVA CHANCELA / CARIMBO -->
+    <!-- MODAL 1: CADASTRAR / EDITAR CHANCELA & CARIMBO -->
     <!-- ========================================== -->
     <div id="modalNovaChancela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:540px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
+                <h3 id="chancelaModalTitleText" style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-stamp" style="color:#059669;"></i> Cadastrar Chancela / Carimbo Oficial
                 </h3>
                 <button type="button" onclick="closeModalNovaChancela()" style="background:transparent; border:none; font-size:1.2rem; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form id="formNovaChancela" onsubmit="salvarNovaChancela(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="chancelaInputEditId" value="">
+
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo do Signatário:</label>
                     <input type="text" id="chancelaInputNome" placeholder="Ex: Profa. Maria da Silva" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5314,7 +5278,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Arquivo da Imagem (Assinatura com Carimbo):</label>
-                    <input type="file" id="chancelaInputFile" accept="image/png, image/jpeg, image/webp" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;" onchange="
+                    <input type="file" id="chancelaInputFile" accept="image/png, image/jpeg, image/webp" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;" onchange="
                         if (this.files[0]) {
                             const reader = new FileReader();
                             reader.onload = (e) => {
@@ -5324,7 +5288,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                             reader.readAsDataURL(this.files[0]);
                         }
                     ">
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Formatos recomendados: PNG transparente ou foto nítida em papel branco.</div>
+                    <div id="chancelaImageHint" style="font-size:0.75rem; color:#64748b; margin-top:3px;">Formatos recomendados: PNG transparente ou foto nítida em papel branco.</div>
                 </div>
 
                 <div style="background:#f8fafc; padding:10px 14px; border-radius:8px; border:1px solid #e2e8f0;">
@@ -5340,7 +5304,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
                     <button type="button" onclick="closeModalNovaChancela()" class="btn btn-secondary" style="width:auto; font-size:0.85rem;"><i class="fa-solid fa-xmark"></i> Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#059669; border:none;"><i class="fa-solid fa-check"></i> Cadastrar Chancela</button>
+                    <button type="submit" id="btnSubmitChancela" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#059669; border:none;"><i class="fa-solid fa-check"></i> Cadastrar Chancela</button>
                 </div>
             </form>
         </div>

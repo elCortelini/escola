@@ -111,37 +111,39 @@
             const podeUsar = sigeDB.canUserUseChancela(c);
             const isSelected = AssinaturaModule.selectedChancelaId === c.id;
             const borderStyle = isSelected ? 'border: 2px solid #4f46e5; background: #f5f3ff;' : 'border: 1px solid #e2e8f0; background: white;';
-            const setorIcon = c.setor === 'direcao' ? '👑 Direção' : (c.setor === 'secretaria' ? '📑 Secretaria' : '💛 Gestão');
+            const setorIcon = c.setor === 'direcao' ? '👑 Direção' : (c.setor === 'secretaria' ? '📑 Secretaria' : (c.setor === 'orientacao' ? '💛 OE' : '🟣 Supervisão'));
             const setorBadgeBg = c.setor === 'direcao' ? '#fef3c7; color:#b45309;' : '#ecfdf5; color:#047857;';
 
             gridHtml += `
-                <div class="chancela-card" style="${borderStyle} padding:14px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.04); position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                        <span style="background:${setorBadgeBg}; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px;">${setorIcon}</span>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            ${podeUsar ? `<span title="Você tem permissão para assinar" style="color:#10b981; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Autorizado</span>` : `<span title="Apenas Direção/Secretaria autorizada" style="color:#ef4444; font-size:0.8rem;"><i class="fa-solid fa-lock"></i> Restrito</span>`}
-                            <button type="button" onclick="excluirChancela('${c.id}')" title="Excluir Chancela" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:0.85rem; padding:2px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-trash-can"></i></button>
+                <div class="chancela-card" style="${borderStyle} padding:10px 12px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                        <span style="background:${setorBadgeBg}; font-size:0.72rem; font-weight:800; padding:2px 6px; border-radius:4px;">${setorIcon}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${podeUsar ? `<span title="Autorizado" style="color:#10b981; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i></span>` : `<span title="Restrito" style="color:#ef4444; font-size:0.75rem;"><i class="fa-solid fa-lock"></i></span>`}
+                            <button type="button" onclick="openModalEditarChancela('${c.id}')" title="Editar Informações / Imagem" style="background:transparent; border:none; color:#475569; cursor:pointer; font-size:0.82rem; padding:2px;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#475569'"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button type="button" onclick="excluirChancela('${c.id}')" title="Excluir Chancela" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:0.82rem; padding:2px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
 
-                    <div style="text-align:center; padding:10px 6px; background:#f8fafc; border-radius:8px; border:1px dashed #e2e8f0; min-height:85px; display:flex; align-items:center; justify-content:center;">
-                        <img src="${c.imagemBase64}" alt="${c.nome}" style="max-height:75px; max-width:100%; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08));" />
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1; width:110px; height:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:2px;">
+                            <img src="${c.imagemBase64}" alt="${c.nome}" style="max-height:42px; max-width:100%; object-fit:contain;" />
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:800; font-size:0.85rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.nome}</div>
+                            <div style="font-size:0.75rem; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.cargo}</div>
+                            ${c.portaria ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fa-solid fa-certificate"></i> ${c.portaria}</div>` : ''}
+                        </div>
                     </div>
 
-                    <div>
-                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a;">${c.nome}</div>
-                        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">${c.cargo}</div>
-                        ${c.portaria ? `<div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;"><i class="fa-solid fa-certificate"></i> ${c.portaria}</div>` : ''}
-                    </div>
-
-                    <button type="button" onclick="selecionarChancelaParaUso('${c.id}')" class="btn" style="width:100%; font-size:0.82rem; font-weight:700; padding:6px 10px; ${isSelected ? 'background:#4f46e5; color:white; border:none;' : 'background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;'} cursor:pointer;">
-                        ${isSelected ? '<i class="fa-solid fa-check"></i> Chancela em Uso' : '<i class="fa-regular fa-hand-pointer"></i> Selecionar na Mesa'}
+                    <button type="button" onclick="selecionarChancelaParaUso('${c.id}')" class="btn" style="width:100%; font-size:0.76rem; font-weight:700; padding:5px 8px; ${isSelected ? 'background:#4f46e5; color:white; border:none;' : 'background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;'} cursor:pointer;">
+                        ${isSelected ? '<i class="fa-solid fa-check"></i> Em Uso na Mesa' : '<i class="fa-regular fa-hand-pointer"></i> Selecionar na Mesa'}
                     </button>
                 </div>
             `;
 
             optionsHtml += `
-                <option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.nome} (${c.cargo} - ${c.setor.toUpperCase()})</option>
+                <option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.nome} (${c.cargo})</option>
             `;
         });
 
@@ -175,6 +177,14 @@
         if (modal) {
             modal.style.display = 'flex';
             document.getElementById('formNovaChancela')?.reset();
+            const editId = document.getElementById('chancelaInputEditId');
+            if (editId) editId.value = '';
+            const title = document.getElementById('chancelaModalTitleText');
+            if (title) title.innerHTML = '<i class="fa-solid fa-stamp" style="color:#059669;"></i> Cadastrar Chancela / Carimbo Oficial';
+            const btn = document.getElementById('btnSubmitChancela');
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Cadastrar Chancela';
+            const hint = document.getElementById('chancelaImageHint');
+            if (hint) hint.textContent = 'Formatos recomendados: PNG transparente ou foto nítida em papel branco.';
             const preview = document.getElementById('previewNovaChancelaImg');
             if (preview) {
                 preview.src = '';
@@ -183,6 +193,48 @@
         }
     }
     window.openModalNovaChancela = openModalNovaChancela;
+
+    function openModalEditarChancela(id) {
+        const c = sigeDB.getChancelasAssinaturas().find(item => item.id === id);
+        if (!c) return;
+
+        const modal = document.getElementById('modalNovaChancela');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+        document.getElementById('formNovaChancela')?.reset();
+
+        const editId = document.getElementById('chancelaInputEditId');
+        if (editId) editId.value = c.id;
+
+        const inpNome = document.getElementById('chancelaInputNome');
+        if (inpNome) inpNome.value = c.nome || '';
+
+        const inpCargo = document.getElementById('chancelaInputCargo');
+        if (inpCargo) inpCargo.value = c.cargo || '';
+
+        const inpSetor = document.getElementById('chancelaInputSetor');
+        if (inpSetor) inpSetor.value = c.setor || 'direcao';
+
+        const inpPortaria = document.getElementById('chancelaInputPortaria');
+        if (inpPortaria) inpPortaria.value = c.portaria || '';
+
+        const title = document.getElementById('chancelaModalTitleText');
+        if (title) title.innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:#2563eb;"></i> Editar Chancela / Carimbo Oficial';
+
+        const btn = document.getElementById('btnSubmitChancela');
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
+
+        const hint = document.getElementById('chancelaImageHint');
+        if (hint) hint.textContent = 'Carimbo atual carregado. Deixe o campo de arquivo em branco se não quiser alterar a imagem.';
+
+        const preview = document.getElementById('previewNovaChancelaImg');
+        if (preview && c.imagemBase64) {
+            preview.src = c.imagemBase64;
+            preview.style.display = 'block';
+        }
+    }
+    window.openModalEditarChancela = openModalEditarChancela;
 
     function closeModalNovaChancela() {
         const modal = document.getElementById('modalNovaChancela');
@@ -236,6 +288,7 @@
     async function salvarNovaChancela(event) {
         if (event) event.preventDefault();
 
+        const editId = document.getElementById('chancelaInputEditId')?.value || '';
         const nome = document.getElementById('chancelaInputNome').value.trim();
         const cargo = document.getElementById('chancelaInputCargo').value.trim();
         const setor = document.getElementById('chancelaInputSetor').value;
@@ -248,33 +301,57 @@
             return;
         }
 
-        if (!fileInput.files || !fileInput.files[0]) {
+        const temNovoArquivo = Boolean(fileInput.files && fileInput.files[0]);
+
+        if (!editId && !temNovoArquivo) {
             showToast('Por favor, anexe uma imagem com a assinatura e o carimbo.');
             return;
         }
 
         try {
-            showToast('Processando e otimizando carimbo...');
-            const base64Png = await processarImagemChancela(fileInput.files[0], removerFundo);
+            let base64Png = '';
+            if (temNovoArquivo) {
+                showToast('Processando e otimizando carimbo...');
+                base64Png = await processarImagemChancela(fileInput.files[0], removerFundo);
+            }
 
-            const novaChancela = {
-                nome,
-                cargo,
-                setor,
-                portaria,
-                imagemBase64: base64Png,
-                permissoesUso: ['direcao', 'secretaria', 'admin', 'desenvolvedor'],
-                ativo: true
-            };
+            if (editId) {
+                const chancelas = sigeDB.getChancelasAssinaturas();
+                const existente = chancelas.find(c => c.id === editId);
+                if (!existente) {
+                    showToast('Chancela não encontrada.');
+                    return;
+                }
+                existente.nome = nome;
+                existente.cargo = cargo;
+                existente.setor = setor;
+                existente.portaria = portaria;
+                if (base64Png) {
+                    existente.imagemBase64 = base64Png;
+                }
+                sigeDB.saveChancelaAssinatura(existente);
+                showToast(`Chancela de ${nome} atualizada com sucesso!`);
+            } else {
+                const novaChancela = {
+                    nome,
+                    cargo,
+                    setor,
+                    portaria,
+                    imagemBase64: base64Png,
+                    permissoesUso: ['direcao', 'secretaria', 'admin', 'desenvolvedor'],
+                    ativo: true
+                };
 
-            const salva = sigeDB.saveChancelaAssinatura(novaChancela);
-            showToast(`Chancela de ${nome} cadastrada com sucesso!`);
+                const salva = sigeDB.saveChancelaAssinatura(novaChancela);
+                showToast(`Chancela de ${nome} cadastrada com sucesso!`);
+                selecionarChancelaParaUso(salva.id);
+            }
+
             closeModalNovaChancela();
-            selecionarChancelaParaUso(salva.id);
             renderModuleAssinaturasDocs();
         } catch (err) {
             console.error('Erro ao salvar chancela:', err);
-            showToast('Falha ao processar a imagem do carimbo: ' + err.message);
+            showToast('Falha ao processar a chancela: ' + err.message);
         }
     }
     window.salvarNovaChancela = salvarNovaChancela;

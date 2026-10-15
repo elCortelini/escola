@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v45",
-  "build": 1792080000,
-  "updatedAt": "2026-10-15T15:10:00-03:00",
-  "description": "Novo módulo: Assinatura e Expedição de Documentos com mesclagem PDF, WhatsApp e E-mail"
+  "version": "20261015_v46",
+  "build": 1792080100,
+  "updatedAt": "2026-10-15T15:28:00-03:00",
+  "description": "Ajuste de layout mesa interativa, chancelas compactas com edicao e remocao de boxes redundantes"
 }

@@ -3,7 +3,7 @@
  * Elimina a necessidade de Ctrl+F5 ao sincronizar automaticamente a versão do código.
  */
 (function() {
-    const CURRENT_VERSION = "20261015_v45";
+    const CURRENT_VERSION = "20261015_v46";
     window.SIGE_APP_VERSION = CURRENT_VERSION;
 
     const VERSION_STORAGE_KEY = "sige_client_version";
