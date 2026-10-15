@@ -90,6 +90,9 @@
         const currentRole = sigeDB.getRole();
 
         if (chancelas.length === 0) {
+            AssinaturaModule.selectedChancelaId = null;
+            const overlay = document.getElementById('signatureOverlayBox');
+            if (overlay) overlay.style.display = 'none';
             grid.innerHTML = `
                 <div style="grid-column:1/-1; text-align:center; padding:30px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; color:#64748b;">
                     <i class="fa-solid fa-stamp" style="font-size:2rem; color:#94a3b8; margin-bottom:8px;"></i>
@@ -102,6 +105,19 @@
             `;
             if (selectDoc) selectDoc.innerHTML = `<option value="">Nenhuma chancela disponível</option>`;
             return;
+        }
+
+        // Se a chancela selecionada for inexistente ou mock excluído, seleciona a primeira chancela válida
+        const chancelaSelecionadaValida = chancelas.some(c => c.id === AssinaturaModule.selectedChancelaId);
+        if (!chancelaSelecionadaValida) {
+            AssinaturaModule.selectedChancelaId = chancelas[0].id;
+            const overlay = document.getElementById('signatureOverlayBox');
+            const img = document.getElementById('overlayChancelaImg');
+            const badge = document.getElementById('overlaySignatarioBadge');
+            if (overlay && img && chancelas[0]) {
+                img.src = chancelas[0].imagemBase64;
+                if (badge) badge.textContent = `${chancelas[0].nome} • ${chancelas[0].cargo}`;
+            }
         }
 
         let gridHtml = '';

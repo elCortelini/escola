@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v48",
-  "build": 1792080300,
-  "updatedAt": "2026-10-15T16:08:00-03:00",
-  "description": "Correcao de persistencia, edicao, exclusao e sincronizacao em nuvem de chancelas com otimizacao de imagem"
+  "version": "20261015_v49",
+  "build": 1792080400,
+  "updatedAt": "2026-10-15T16:26:00-03:00",
+  "description": "Exclusao definitiva das chancelas modelo/ficticias mantendo apenas chancelas reais cadastradas"
 }

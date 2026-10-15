@@ -398,35 +398,9 @@ const defaultSigeData = {
     eventosCalendarioEscolar: [],
     contatosWhatsAppDirecao: [],
     mensagensWhatsAppLog: [],
-    auditLogs: [],
-    chancelasAssinaturas: [
-        {
-            id: "chancela-direcao-oficial",
-            nome: "Direção Escolar",
-            cargo: "Diretora Geral",
-            setor: "direcao",
-            portaria: "Portaria Nº 108/2024 - SME/PMI",
-            permissoesUso: ["direcao", "secretaria", "admin", "desenvolvedor"],
-            imagemBase64: DEFAULT_STAMP_DIRECAO_SVG,
-            ativo: true,
-            criadoEm: "2026-02-01T10:00:00.000Z",
-            criadoPor: "Sistema SIGE"
-        },
-        {
-            id: "chancela-secretaria-oficial",
-            nome: "Secretaria Escolar",
-            cargo: "Secretário(a) Geral",
-            setor: "secretaria",
-            portaria: "Matrícula Funcional Nº 842.109-2",
-            permissoesUso: ["direcao", "secretaria", "admin", "desenvolvedor"],
-            imagemBase64: DEFAULT_STAMP_SECRETARIA_SVG,
-            ativo: true,
-            criadoEm: "2026-02-01T10:00:00.000Z",
-            criadoPor: "Sistema SIGE"
-        }
-    ],
+    chancelasAssinaturas: [],
     documentosExpedidos: [],
-    deletedChancelaIds: [],
+    deletedChancelaIds: ['chancela-direcao-oficial', 'chancela-secretaria-oficial'],
     deletedContatosWpIds: [],
     deletedEventoCalendarioIds: [],
     deletedEquipeIds: [],
@@ -852,11 +826,13 @@ class SigeDatabase {
         };
 
         // 15. Mesclagem de Chancelas e Carimbos Oficiais (com tombstones e timestamps)
+        const mockChancelaIds = ['chancela-direcao-oficial', 'chancela-secretaria-oficial'];
+        const combinedDeletedChancelaIdsWithMocks = Array.from(new Set([...combinedDeletedChancelaIds, ...mockChancelaIds]));
         const mergedChancelas = mergeEntityList(
-            this.data.chancelasAssinaturas || [],
-            remoteData.chancelasAssinaturas || [],
+            (this.data.chancelasAssinaturas || []).filter(c => c && !mockChancelaIds.includes(c.id)),
+            (remoteData.chancelasAssinaturas || []).filter(c => c && !mockChancelaIds.includes(c.id)),
             c => c.id,
-            combinedDeletedChancelaIds,
+            combinedDeletedChancelaIdsWithMocks,
             (localC, remoteC) => {
                 const lTime = new Date(localC.atualizadoEm || localC.criadoEm || 0).getTime();
                 const rTime = new Date(remoteC.atualizadoEm || remoteC.criadoEm || 0).getTime();
@@ -879,7 +855,7 @@ class SigeDatabase {
             ...remoteData,
             chancelasAssinaturas: mergedChancelas,
             documentosExpedidos: mergedDocsExpedidos,
-            deletedChancelaIds: combinedDeletedChancelaIds,
+            deletedChancelaIds: combinedDeletedChancelaIdsWithMocks,
             equipeEscola: mergedEquipe,
             usuariosCadastrados: mergedUsuarios,
             pedidosUniformes: mergedPedidosUniformes,
@@ -1282,13 +1258,19 @@ class SigeDatabase {
                 }
             });
 
-            // Se ainda não existirem chancelas cadastradas, injeta as chancelas padrão oficiais respeitando exclusões
-            if (!merged.chancelasAssinaturas) {
-                const delSet = new Set(merged.deletedChancelaIds || []);
-                merged.chancelasAssinaturas = (defaultSigeData.chancelasAssinaturas || []).filter(c => !delSet.has(c.id));
-            } else if (Array.isArray(merged.deletedChancelaIds) && merged.deletedChancelaIds.length > 0) {
-                const delSet = new Set(merged.deletedChancelaIds);
-                merged.chancelasAssinaturas = merged.chancelasAssinaturas.filter(c => !delSet.has(c.id));
+            // Garantia de chancelas cadastradas respeitando exclusões
+            if (!Array.isArray(merged.chancelasAssinaturas)) {
+                merged.chancelasAssinaturas = [];
+            }
+            const mockChancelaIds = ['chancela-direcao-oficial', 'chancela-secretaria-oficial'];
+            const delChancelaSet = new Set([...(merged.deletedChancelaIds || []), ...mockChancelaIds]);
+            merged.chancelasAssinaturas = merged.chancelasAssinaturas.filter(c => c && !delChancelaSet.has(c.id));
+
+            // Limpeza mandatória: Excluir os 2 modelos fictícios de chancelas padrão (solicitação 15/10/2026)
+            if (!merged.limpezaChancelasMock_20261015) {
+                merged.deletedChancelaIds = Array.from(new Set([...(merged.deletedChancelaIds || []), ...mockChancelaIds]));
+                merged.chancelasAssinaturas = merged.chancelasAssinaturas.filter(c => !mockChancelaIds.includes(c.id));
+                merged.limpezaChancelasMock_20261015 = true;
             }
 
             // Limpeza mandatória: Zerar todos os atendimentos da OP (solicitação 28/09/2026)
@@ -3612,14 +3594,11 @@ class SigeDatabase {
     // ==========================================
     getChancelasAssinaturas() {
         if (!this.data.chancelasAssinaturas || !Array.isArray(this.data.chancelasAssinaturas)) {
-            const delSet = new Set(this.data?.deletedChancelaIds || []);
-            this.data.chancelasAssinaturas = [...(defaultSigeData.chancelasAssinaturas || [])].filter(c => !delSet.has(c.id));
+            this.data.chancelasAssinaturas = [];
         }
-        const delIds = this.data.deletedChancelaIds || [];
-        if (delIds.length > 0) {
-            this.data.chancelasAssinaturas = this.data.chancelasAssinaturas.filter(c => !delIds.includes(c.id));
-        }
-        return this.data.chancelasAssinaturas;
+        const mockIds = ['chancela-direcao-oficial', 'chancela-secretaria-oficial'];
+        const delIds = Array.from(new Set([...(this.data.deletedChancelaIds || []), ...mockIds]));
+        return this.data.chancelasAssinaturas.filter(c => c && !delIds.includes(c.id));
     }
 
     saveChancelaAssinatura(chancela) {
