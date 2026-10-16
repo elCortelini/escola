@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v52",
-  "build": 1792119000,
-  "updatedAt": "2026-10-16T03:38:00-03:00",
-  "description": "Suporte a CPF/Portaria na chancela, linha aproximada, padrao IntegraRizzi e validador de autenticidade de documentos"
+  "version": "20261016_v53",
+  "build": 1792147500,
+  "updatedAt": "2026-10-16T07:45:00-03:00",
+  "description": "Assinatura & Envio como primeiro submodulo padrao da Secretaria e limpeza de botoes na mesa interativa"
 }

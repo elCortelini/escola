@@ -18,7 +18,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Verificador e Atualizador Automático de Versão de Cache -->
-    <script src="js/version-checker.js?v=20261015_v52"></script>
+    <script src="js/version-checker.js?v=20261016_v53"></script>
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -443,7 +443,13 @@
         <section id="tab-admin" class="tab-content-section">
             <!-- CARDS DE NAVEGAÇÃO INTERNA DA ADMINISTRAÇÃO -->
             <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
-                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="uniformes" onclick="switchAdminSubTab('uniformes')">
+                <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="assinaturas_docs" onclick="switchAdminSubTab('assinaturas_docs')">
+                    <div class="dir-nav-card-icon" style="background:#e0e7ff; color:#4338ca;">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Assinatura & Envio</div>
+                </button>
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="uniformes" onclick="switchAdminSubTab('uniformes')">
                     <div class="dir-nav-card-icon" style="background:#e0f2fe; color:#0369a1;">
                         <i class="fa-solid fa-shirt"></i>
                     </div>
@@ -467,16 +473,10 @@
                     </div>
                     <div class="dir-nav-card-title">Parâmetros Escola</div>
                 </button>
-                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="assinaturas_docs" onclick="switchAdminSubTab('assinaturas_docs')">
-                    <div class="dir-nav-card-icon" style="background:#e0e7ff; color:#4338ca;">
-                        <i class="fa-solid fa-file-signature"></i>
-                    </div>
-                    <div class="dir-nav-card-title">Assinatura & Envio</div>
-                </button>
             </div>
 
-            <!-- SUB-ABA 1: UNIFORMES ESCOLARES -->
-            <div id="adminSubTab_uniformes" class="admin-subtab-content active">
+            <!-- SUB-ABA: UNIFORMES ESCOLARES -->
+            <div id="adminSubTab_uniformes" class="admin-subtab-content" style="display:none;">
                 <div id="adminSecUniformes">
                     <div class="action-toolbar" style="padding:0.75rem 1.25rem; margin-bottom:1rem; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <div>
@@ -802,8 +802,8 @@
                 </div>
             </div>
 
-            <!-- SUB-ABA 5: ASSINATURA & EXPEDIÇÃO DE DOCUMENTOS (NOVO MÓDULO) -->
-            <div id="adminSubTab_assinaturas_docs" class="admin-subtab-content" style="display:none;">
+            <!-- SUB-ABA 1: ASSINATURA & EXPEDIÇÃO DE DOCUMENTOS (MÓDULO PRINCIPAL) -->
+            <div id="adminSubTab_assinaturas_docs" class="admin-subtab-content active">
                 
                 <!-- Painel de Trabalho Principal: 2 Colunas (Mesa Interativa + Banco de Chancelas) -->
                 <div style="display:grid; grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr); gap:1.25rem; align-items:start; margin-bottom:1.5rem;">
@@ -825,23 +825,8 @@
                                 <button type="button" onclick="document.getElementById('pdfExternalFileInput').click()" class="btn btn-primary" style="width:auto; background:#4f46e5; border-color:#4f46e5; font-size:0.8rem; font-weight:800; padding:6px 14px; box-shadow:0 2px 6px rgba(79, 70, 229, 0.25);">
                                     <i class="fa-solid fa-upload"></i> Subir PDF do Computador
                                 </button>
-                                <button type="button" onclick="openModalGeradorDocumentosSige()" class="btn btn-secondary" style="width:auto; background:#0284c7; color:white; font-size:0.8rem; font-weight:800; padding:6px 14px;">
-                                    <i class="fa-solid fa-file-invoice"></i> Gerar Documento IntegraRizzi
-                                </button>
                                 <button type="button" onclick="openModalConsultarAutenticidade()" class="btn" style="width:auto; background:#0f172a; color:white; font-size:0.8rem; font-weight:800; padding:6px 14px; box-shadow:0 2px 6px rgba(15, 23, 42, 0.25);" title="Consultar e validar código de autenticidade">
                                     <i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> Validar Autenticidade
-                                </button>
-
-                                <div style="border-left:1px solid #e2e8f0; height:22px; margin:0 2px;"></div>
-
-                                <button type="button" onclick="posicionarAssinaturaPreset('rodape_direita')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px; border:1px solid #cbd5e1;" title="Posicionar no canto inferior direito">
-                                    <i class="fa-solid fa-angles-right"></i> Rodapé Direito
-                                </button>
-                                <button type="button" onclick="posicionarAssinaturaPreset('rodape_centro')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px; border:1px solid #cbd5e1;" title="Posicionar centralizado no rodapé">
-                                    <i class="fa-solid fa-arrows-to-dot"></i> Centro
-                                </button>
-                                <button type="button" onclick="posicionarAssinaturaPreset('rodape_esquerda')" class="btn" style="background:#f1f5f9; color:#334155; font-size:0.75rem; padding:4px 8px; border:1px solid #cbd5e1;" title="Posicionar no canto inferior esquerdo">
-                                    <i class="fa-solid fa-angles-left"></i> Esquerda
                                 </button>
                             </div>
                         </div>
@@ -851,7 +836,7 @@
                             <i class="fa-solid fa-cloud-arrow-up" style="font-size:3rem; color:#818cf8; margin-bottom:12px;"></i>
                             <h4 style="color:#1e293b; font-weight:800; margin:0 0 6px 0; font-size:1.1rem;">Nenhum documento aberto na mesa</h4>
                             <p style="color:#64748b; font-size:0.85rem; margin:0 0 16px 0; max-width:480px; margin-left:auto; margin-right:auto;">
-                                Clique aqui para <strong>subir um arquivo PDF</strong> do seu computador ou utilize o botão <strong>"Gerar Documento do SIGE"</strong> para criar declarações oficiais instantâneas.
+                                Clique aqui para <strong>subir um arquivo PDF</strong> do seu computador para posicionar a chancela oficial, assinar e expedir.
                             </p>
                             <div style="display:flex; justify-content:center; gap:10px;">
                                 <span class="btn btn-primary" style="font-size:0.82rem; background:#4f46e5; border-color:#4f46e5; width:auto;">
@@ -5171,18 +5156,18 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.10.15_v45</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.10.16_v53</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20261015_v52"></script>
-    <script src="js/evolution-client.js?v=20261015_v52"></script>
-    <script src="js/gestao-data.js?v=20261015_v52"></script>
-    <script src="js/gestao-app.js?v=20261015_v52"></script>
-    <script src="js/pdf-importer.js?v=20261015_v52"></script>
-    <script src="js/assinatura-docs.js?v=20261015_v52"></script>
+    <script src="js/calendario-oficial-data.js?v=20261016_v53"></script>
+    <script src="js/evolution-client.js?v=20261016_v53"></script>
+    <script src="js/gestao-data.js?v=20261016_v53"></script>
+    <script src="js/gestao-app.js?v=20261016_v53"></script>
+    <script src="js/pdf-importer.js?v=20261016_v53"></script>
+    <script src="js/assinatura-docs.js?v=20261016_v53"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">

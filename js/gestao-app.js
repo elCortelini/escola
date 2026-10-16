@@ -1310,7 +1310,7 @@ function switchTab(tabId, subKey) {
     } else if (tabId === 'supervisao') {
         renderModuleSupervisao();
     } else if (tabId === 'admin') {
-        switchAdminSubTab(subKey || currentAdminSubTab || 'uniformes');
+        switchAdminSubTab(subKey || 'assinaturas_docs');
     } else if (tabId === 'externos') {
         // Sistemas externos já renderizados nos cards
     } else if (tabId === 'dev') {
@@ -6062,10 +6062,10 @@ function submitNovaReuniaoPedagogica(e) {
 // ==========================================
 // MÓDULO 4: ADMINISTRAÇÃO ESCOLAR & LOGÍSTICA
 // ==========================================
-let currentAdminSubTab = 'uniformes';
+let currentAdminSubTab = 'assinaturas_docs';
 
 function switchAdminSubTab(subTab) {
-    if (!subTab || subTab === 'telefones') subTab = 'uniformes';
+    if (!subTab || subTab === 'telefones') subTab = 'assinaturas_docs';
     currentAdminSubTab = subTab;
 
     const contents = document.querySelectorAll(".admin-subtab-content");
