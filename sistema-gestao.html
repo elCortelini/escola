@@ -18,7 +18,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Verificador e Atualizador Automático de Versão de Cache -->
-    <script src="js/version-checker.js?v=20261015_v51"></script>
+    <script src="js/version-checker.js?v=20261015_v52"></script>
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -826,7 +826,10 @@
                                     <i class="fa-solid fa-upload"></i> Subir PDF do Computador
                                 </button>
                                 <button type="button" onclick="openModalGeradorDocumentosSige()" class="btn btn-secondary" style="width:auto; background:#0284c7; color:white; font-size:0.8rem; font-weight:800; padding:6px 14px;">
-                                    <i class="fa-solid fa-file-invoice"></i> Gerar Documento SIGE
+                                    <i class="fa-solid fa-file-invoice"></i> Gerar Documento IntegraRizzi
+                                </button>
+                                <button type="button" onclick="openModalConsultarAutenticidade()" class="btn" style="width:auto; background:#0f172a; color:white; font-size:0.8rem; font-weight:800; padding:6px 14px; box-shadow:0 2px 6px rgba(15, 23, 42, 0.25);" title="Consultar e validar código de autenticidade">
+                                    <i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> Validar Autenticidade
                                 </button>
 
                                 <div style="border-left:1px solid #e2e8f0; height:22px; margin:0 2px;"></div>
@@ -898,12 +901,12 @@
                                         </div>
                                         
                                         <!-- Rubrica / Assinatura manuscrita -->
-                                        <div style="height:60px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; pointer-events:none;">
+                                        <div style="height:55px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:0px; pointer-events:none;">
                                             <img id="overlayChancelaImg" src="" alt="Assinatura" style="max-width:100%; max-height:100%; object-fit:contain;">
                                         </div>
 
-                                        <!-- Linha divisória horizontal -->
-                                        <div style="height:1px; background:#475569; width:90%; margin:0 auto 4px auto; pointer-events:none;"></div>
+                                        <!-- Linha divisória horizontal (bem próxima da assinatura) -->
+                                        <div style="height:1.5px; background:#334155; width:92%; margin:1px auto 3px auto; pointer-events:none;"></div>
 
                                         <!-- Nome do Signatário -->
                                         <div id="overlayNomeDisplay" style="font-size:10.5px; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; pointer-events:none;">
@@ -915,15 +918,15 @@
                                             Cargo
                                         </div>
 
-                                        <!-- Portaria / Ato -->
-                                        <div id="overlayPortariaDisplay" style="font-size:8px; color:#64748b; line-height:1.2; margin-top:1px; pointer-events:none;">
-                                            Portaria
+                                        <!-- CPF / Portaria / Ato -->
+                                        <div id="overlayPortariaDisplay" style="font-size:8px; color:#475569; font-weight:600; line-height:1.2; margin-top:1px; pointer-events:none;">
+                                            CPF / Portaria
                                         </div>
 
                                         <!-- Autenticação Eletrônica (2 Linhas) -->
                                         <div id="overlayAuthDisplay" style="margin-top:4px; padding-top:4px; border-top:1px dashed #cbd5e1; font-size:7px; color:#64748b; line-height:1.2; pointer-events:none;">
-                                            <div style="font-weight:700;">Autenticado digitalmente pelo SIGE • C.E. Pedro Rizzi</div>
-                                            <div>Data e Hora Oficial • Cód: PR-XXXXXX</div>
+                                            <div style="font-weight:700;">Autenticado digitalmente pelo IntegraRizzi • C.E. Pedro Rizzi</div>
+                                            <div>Data e Hora Oficial • Cód: IR-XXXXXX</div>
                                         </div>
 
                                         <div id="overlayResizeHandle" title="Arraste para redimensionar" style="position:absolute; bottom:-6px; right:-6px; width:16px; height:16px; background:#4f46e5; border:2px solid white; border-radius:50%; cursor:se-resize; z-index:25; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>
@@ -952,7 +955,7 @@
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:#334155; cursor:pointer;">
                                         <input type="checkbox" id="checkIncluirAutenticidade" checked onchange="toggleOverlayAutenticidade(this.checked)" style="cursor:pointer; accent-color:#4f46e5;">
-                                        Adicionar carimbo eletrônico de autenticidade (data, hora e código SIGE)
+                                        Adicionar carimbo eletrônico de autenticidade (data, hora e código IntegraRizzi)
                                     </label>
                                 </div>
 
@@ -5174,12 +5177,12 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20261015_v51"></script>
-    <script src="js/evolution-client.js?v=20261015_v51"></script>
-    <script src="js/gestao-data.js?v=20261015_v51"></script>
-    <script src="js/gestao-app.js?v=20261015_v51"></script>
-    <script src="js/pdf-importer.js?v=20261015_v51"></script>
-    <script src="js/assinatura-docs.js?v=20261015_v51"></script>
+    <script src="js/calendario-oficial-data.js?v=20261015_v52"></script>
+    <script src="js/evolution-client.js?v=20261015_v52"></script>
+    <script src="js/gestao-data.js?v=20261015_v52"></script>
+    <script src="js/gestao-app.js?v=20261015_v52"></script>
+    <script src="js/pdf-importer.js?v=20261015_v52"></script>
+    <script src="js/assinatura-docs.js?v=20261015_v52"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
@@ -5313,8 +5316,9 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                 </div>
 
                 <div>
-                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Portaria ou Matrícula Funcional (Opcional):</label>
-                    <input type="text" id="chancelaInputPortaria" placeholder="Ex: Portaria Nº 108/2024 - SME/PMI ou Matr. 123.456" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">CPF, Portaria ou Matrícula Funcional (Opcional):</label>
+                    <input type="text" id="chancelaInputPortaria" placeholder="Ex: CPF: 000.000.000-00, Portaria Nº 108/2024 ou Matr. 123.456" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    <div style="font-size:0.73rem; color:#64748b; margin-top:2px;">Se digitar apenas os 11 números do CPF, o sistema formata automaticamente.</div>
                 </div>
 
                 <div>
@@ -5497,6 +5501,33 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                     <button type="button" onclick="dispararEnvioEmailDoc()" class="btn btn-primary" style="width:auto; font-size:0.85rem; background:#0284c7; border:none; font-weight:800;"><i class="fa-solid fa-paper-plane"></i> Expedir E-mail</button>
                 </div>
             </div>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- MODAL 5: CONSULTA & VALIDAÇÃO DE AUTENTICIDADE -->
+    <!-- ========================================== -->
+    <div id="modalValidarAutenticidade" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:620px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> Validador de Autenticidade — IntegraRizzi
+                </h3>
+                <button type="button" onclick="closeModalConsultarAutenticidade()" style="background:transparent; border:none; font-size:1.2rem; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <p style="font-size:0.83rem; color:#64748b; margin:0 0 14px 0;">
+                Insira o código impresso no carimbo oficial do documento (ex: <strong>IR-A9B8C7</strong> ou <strong>PR-XXXXXX</strong>) para verificar a sua legitimidade, signatário e operador emissor.
+            </p>
+
+            <form onsubmit="executarConsultaAutenticidade(event)" style="display:flex; gap:8px; margin-bottom:16px;">
+                <input type="text" id="inputCodigoValidacao" placeholder="Digite o código (ex: IR-XXXXXX)..." style="flex:1; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:1rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; outline:none;" required>
+                <button type="submit" class="btn btn-primary" style="width:auto; background:#0f172a; border:none; font-size:0.88rem; font-weight:800; padding:10px 18px; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Verificar
+                </button>
+            </form>
+
+            <!-- Painel de Resultado da Consulta -->
+            <div id="resultadoValidacaoContainer" style="display:none;"></div>
         </div>
     </div>
     

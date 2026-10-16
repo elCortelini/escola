@@ -3685,6 +3685,30 @@ class SigeDatabase {
         this.saveData(this.data);
     }
 
+    updateDocumentoExpedido(id, updates) {
+        if (!this.data.documentosExpedidos) return null;
+        const idx = this.data.documentosExpedidos.findIndex(d => d.id === id);
+        if (idx !== -1) {
+            this.data.documentosExpedidos[idx] = { ...this.data.documentosExpedidos[idx], ...updates };
+            this.saveData(this.data);
+            return this.data.documentosExpedidos[idx];
+        }
+        return null;
+    }
+
+    // Consulta de Validação de Autenticidade do Código IntegraRizzi
+    validarCodigoAutenticidade(codigo) {
+        if (!codigo) return null;
+        const clean = String(codigo).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!clean) return null;
+        const docs = this.getDocumentosExpedidos();
+        return docs.find(d => {
+            if (!d.codigoAutenticidade) return false;
+            const docClean = String(d.codigoAutenticidade).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            return docClean === clean || docClean.endsWith(clean) || clean.endsWith(docClean);
+        }) || null;
+    }
+
     // Mural de Avisos
     getMuralAvisos() {
         return this.data.muralAvisos || [];

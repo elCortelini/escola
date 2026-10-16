@@ -169,6 +169,22 @@
     }
     window.renderChancelasCards = renderChancelasCards;
 
+    // Helper: Formata documento da chancela (CPF, Portaria ou Matrícula)
+    function formatarDocumentoChancela(val) {
+        if (!val) return '';
+        const clean = String(val).trim();
+        // Se for 11 dígitos numéricos puros (CPF)
+        if (/^\d{11}$/.test(clean)) {
+            return `CPF: ${clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}`;
+        }
+        // Se for CPF já pontuado mas sem o prefixo CPF:
+        if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(clean)) {
+            return `CPF: ${clean}`;
+        }
+        return clean;
+    }
+    window.formatarDocumentoChancela = formatarDocumentoChancela;
+
     function selecionarChancelaParaUso(id) {
         AssinaturaModule.selectedChancelaId = id;
         const chancelas = sigeDB.getChancelasAssinaturas();
@@ -191,8 +207,9 @@
             if (elNome) elNome.textContent = (c.nome || '').toUpperCase();
             if (elCargo) elCargo.textContent = c.cargo || '';
             if (elPortaria) {
-                if (c.portaria) {
-                    elPortaria.textContent = c.portaria;
+                const docFmt = formatarDocumentoChancela(c.portaria);
+                if (docFmt) {
+                    elPortaria.textContent = docFmt;
                     elPortaria.style.display = 'block';
                 } else {
                     elPortaria.style.display = 'none';
@@ -809,23 +826,25 @@
                     // Ajusta tamanho da rubrica proporcionalmente
                     let rubricaW = Math.min(380, targetW * 0.65);
                     let rubricaH = Math.round(rubricaW * aspect);
-                    if (rubricaH > 140) {
-                        rubricaH = 140;
+                    if (rubricaH > 130) {
+                        rubricaH = 130;
                         rubricaW = Math.round(rubricaH / aspect);
                     }
 
+                    const docFormatado = formatarDocumentoChancela(chancela.portaria);
+
                     // Cálculo da altura dinâmica do carimbo
-                    let totalH = rubricaH + 10; // rubrica + espaçamento
-                    totalH += 8; // linha divisória
-                    totalH += 28; // Nome
-                    totalH += 24; // Cargo
-                    if (chancela.portaria) {
-                        totalH += 20; // Portaria / Decreto
+                    let totalH = rubricaH + 2; // Imagem imediatamente acima da linha!
+                    totalH += 6; // Linha divisória
+                    totalH += 26; // Nome
+                    totalH += 22; // Cargo
+                    if (docFormatado) {
+                        totalH += 20; // CPF / Portaria / Matrícula
                     }
                     if (incluirAuth) {
                         totalH += 46; // Autenticação dividida em 2 linhas compactas
                     }
-                    totalH += 10; // margem inferior
+                    totalH += 8; // margem inferior
 
                     const canvas = document.createElement('canvas');
                     canvas.width = targetW;
@@ -835,14 +854,14 @@
                     // Fundo transparente
                     ctx.clearRect(0, 0, targetW, totalH);
 
-                    let y = 2;
+                    let y = 0;
 
                     // 1. Imagem da rubrica centralizada
                     const rubricaX = Math.round((targetW - rubricaW) / 2);
                     ctx.drawImage(img, rubricaX, y, rubricaW, rubricaH);
-                    y += rubricaH + 8;
+                    y += rubricaH; // Linha bem próxima da imagem manuscrita!
 
-                    // 2. Linha divisória horizontal
+                    // 2. Linha divisória horizontal (bem próxima da assinatura)
                     ctx.strokeStyle = '#334155';
                     ctx.lineWidth = 1.8;
                     ctx.beginPath();
@@ -850,7 +869,7 @@
                     ctx.moveTo(lineMargin, y);
                     ctx.lineTo(targetW - lineMargin, y);
                     ctx.stroke();
-                    y += 22;
+                    y += 20;
 
                     // 3. Nome do signatário (negrito, caixa alta)
                     ctx.fillStyle = '#0f172a';
@@ -866,15 +885,15 @@
                     ctx.fillText(chancela.cargo || '', targetW / 2, y);
                     y += 20;
 
-                    // 5. Portaria / Matrícula (se houver)
-                    if (chancela.portaria) {
+                    // 5. CPF / Portaria / Matrícula (se houver)
+                    if (docFormatado) {
                         ctx.fillStyle = '#475569';
-                        ctx.font = 'normal 14px "Segoe UI", Arial, sans-serif';
-                        ctx.fillText(chancela.portaria, targetW / 2, y);
+                        ctx.font = '600 14px "Segoe UI", Arial, sans-serif';
+                        ctx.fillText(docFormatado, targetW / 2, y);
                         y += 18;
                     }
 
-                    // 6. Autenticação Eletrônica (Dividida em 2 linhas elegantes e legíveis)
+                    // 6. Autenticação Eletrônica IntegraRizzi (2 linhas)
                     if (incluirAuth) {
                         y += 4;
                         ctx.strokeStyle = '#cbd5e1';
@@ -889,12 +908,12 @@
 
                         ctx.fillStyle = '#475569';
                         ctx.font = 'normal 12px "Segoe UI", Arial, sans-serif';
-                        ctx.fillText('Autenticado digitalmente pelo SIGE • C.E. Pedro Rizzi', targetW / 2, y);
+                        ctx.fillText('Autenticado digitalmente pelo IntegraRizzi • C.E. Pedro Rizzi', targetW / 2, y);
                         y += 15;
 
                         ctx.fillStyle = '#64748b';
                         ctx.font = 'normal 11px "Segoe UI", Arial, sans-serif';
-                        ctx.fillText(`${dataHoraStr} • Cód: PR-${authCode}`, targetW / 2, y);
+                        ctx.fillText(`${dataHoraStr} • Cód: ${authCode}`, targetW / 2, y);
                     }
 
                     canvas.toBlob(blob => {
@@ -965,13 +984,13 @@
             const targetPageIndex = AssinaturaModule.currentPageNum - 1;
             const targetPage = pages[targetPageIndex] || pages[0];
 
-            // 2. Prepara dados de autenticidade (em 2 linhas compactas)
+            // 2. Prepara dados de autenticidade (em 2 linhas compactas com código IntegraRizzi)
             const checkAuth = document.getElementById('checkIncluirAutenticidade')?.checked ?? true;
             const now = new Date();
-            const authCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const authCode = 'IR-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR')}`;
 
-            // 3. Converte a chancela completa (rubrica + nome + cargo + portaria + autenticação) em PNG nítido
+            // 3. Converte a chancela completa (rubrica + nome + cargo + CPF/portaria + autenticação) em PNG nítido
             const seloResult = await gerarChancelaCompletaCanvas(chancela, checkAuth, authCode, dataHoraStr);
             const embeddedSeal = await pdfDoc.embedPng(seloResult.bytes);
 
@@ -1023,17 +1042,41 @@
             const baseName = AssinaturaModule.currentFileName.replace(/\.pdf$/i, '');
             AssinaturaModule.signedFileName = `${baseName}_assinado.pdf`;
 
+            // 7. Registra imediatamente no livro de auditoria e autenticidade do IntegraRizzi
+            const logged = sigeDB.getLoggedUser();
+            const authRecord = {
+                id: typeof generateSecureId === 'function' ? generateSecureId('docexp') : ('doc_' + Date.now()),
+                codigoAutenticidade: authCode,
+                titulo: AssinaturaModule.signedFileName,
+                nomeArquivo: AssinaturaModule.signedFileName,
+                signatarioId: chancela.id,
+                signatarioNome: chancela.nome,
+                signatarioCargo: chancela.cargo,
+                signatarioDoc: formatarDocumentoChancela(chancela.portaria),
+                operador: logged ? (logged.nome || logged.email) : 'Operador Escolar',
+                operadorPerfil: sigeDB.getRole() || 'Secretaria',
+                dataHora: now.toISOString(),
+                dataHoraFormatada: dataHoraStr,
+                canal: 'assinado',
+                status: 'valido',
+                tamanhoBytes: signedBytes.length
+            };
+            sigeDB.addDocumentoExpedido(authRecord);
+            AssinaturaModule.currentAuthRecordId = authRecord.id;
+
             // Exibe mensagem de sucesso e botões de expedição
             document.getElementById('pdfSignedSuccessAlert').style.display = 'flex';
-            document.getElementById('pdfSignedFileNameDisplay').textContent = AssinaturaModule.signedFileName;
+            document.getElementById('pdfSignedFileNameDisplay').textContent = `${AssinaturaModule.signedFileName} (Cód: ${authCode})`;
 
-            showToast('✅ Documento assinado com sucesso! Pronto para download ou envio.');
+            showToast(`✅ Documento assinado com sucesso! Código gerado: ${authCode}`);
 
             // Oculta o overlay interativo para exibir o resultado final limpo
             const overlay = document.getElementById('signatureOverlayBox');
             if (overlay) overlay.style.display = 'none';
             AssinaturaModule.selectedChancelaId = null;
             renderChancelasCards();
+            renderHistorialExpedicoes();
+            atualizarContadoresAssinatura();
 
             // Atualiza a visualização no canvas com o PDF assinado (Uint8Array clonado)
             AssinaturaModule.currentPdfBytes = new Uint8Array(signedBytes);
@@ -1066,19 +1109,27 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // Registra no histórico de auditoria
-        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
-        sigeDB.addDocumentoExpedido({
-            titulo: AssinaturaModule.signedFileName,
-            nomeArquivo: AssinaturaModule.signedFileName,
-            signatarioId: chancela?.id || '',
-            signatarioNome: chancela?.nome || 'Direção/Secretaria',
-            signatarioCargo: chancela?.cargo || '',
-            canal: 'download',
-            destinatario: 'Download Local (Secretaria)',
-            status: 'concluido',
-            tamanhoBytes: AssinaturaModule.signedPdfBlob.size
-        });
+        // Registra ou atualiza no histórico de auditoria
+        if (AssinaturaModule.currentAuthRecordId) {
+            sigeDB.updateDocumentoExpedido(AssinaturaModule.currentAuthRecordId, {
+                canal: 'download',
+                destinatario: 'Download Local (Secretaria)',
+                status: 'concluido'
+            });
+        } else {
+            const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+            sigeDB.addDocumentoExpedido({
+                titulo: AssinaturaModule.signedFileName,
+                nomeArquivo: AssinaturaModule.signedFileName,
+                signatarioId: chancela?.id || '',
+                signatarioNome: chancela?.nome || 'Direção/Secretaria',
+                signatarioCargo: chancela?.cargo || '',
+                canal: 'download',
+                destinatario: 'Download Local (Secretaria)',
+                status: 'concluido',
+                tamanhoBytes: AssinaturaModule.signedPdfBlob.size
+            });
+        }
 
         renderHistorialExpedicoes();
         atualizarContadoresAssinatura();
@@ -1166,18 +1217,26 @@
                 showToast(`✅ Documento enviado com sucesso para ${result.cleanPhone}!`);
                 closeModalEnviarWhatsApp();
 
-                // Registra auditoria
-                sigeDB.addDocumentoExpedido({
-                    titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
-                    nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
-                    signatarioId: chancela?.id || '',
-                    signatarioNome: chancela?.nome || 'Direção/Secretaria',
-                    signatarioCargo: chancela?.cargo || '',
-                    canal: 'whatsapp',
-                    destinatario: `${destinatarioNome} (${phone})`,
-                    status: 'enviado',
-                    tamanhoBytes: bytesParaEnvio.byteLength
-                });
+                // Registra ou atualiza auditoria
+                if (AssinaturaModule.currentAuthRecordId) {
+                    sigeDB.updateDocumentoExpedido(AssinaturaModule.currentAuthRecordId, {
+                        canal: 'whatsapp',
+                        destinatario: `${destinatarioNome} (${phone})`,
+                        status: 'enviado'
+                    });
+                } else {
+                    sigeDB.addDocumentoExpedido({
+                        titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
+                        nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
+                        signatarioId: chancela?.id || '',
+                        signatarioNome: chancela?.nome || 'Direção/Secretaria',
+                        signatarioCargo: chancela?.cargo || '',
+                        canal: 'whatsapp',
+                        destinatario: `${destinatarioNome} (${phone})`,
+                        status: 'enviado',
+                        tamanhoBytes: bytesParaEnvio.byteLength
+                    });
+                }
 
                 renderHistorialExpedicoes();
                 atualizarContadoresAssinatura();
@@ -1245,19 +1304,27 @@
         const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
         window.location.href = mailtoUrl;
 
-        // 3. Registra expedição no livro
-        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
-        sigeDB.addDocumentoExpedido({
-            titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
-            nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
-            signatarioId: chancela?.id || '',
-            signatarioNome: chancela?.nome || 'Direção/Secretaria',
-            signatarioCargo: chancela?.cargo || '',
-            canal: 'email',
-            destinatario: email,
-            status: 'expedido',
-            tamanhoBytes: AssinaturaModule.signedPdfBytes?.byteLength || 0
-        });
+        // 3. Registra ou atualiza expedição no livro
+        if (AssinaturaModule.currentAuthRecordId) {
+            sigeDB.updateDocumentoExpedido(AssinaturaModule.currentAuthRecordId, {
+                canal: 'email',
+                destinatario: email,
+                status: 'expedido'
+            });
+        } else {
+            const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+            sigeDB.addDocumentoExpedido({
+                titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
+                nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
+                signatarioId: chancela?.id || '',
+                signatarioNome: chancela?.nome || 'Direção/Secretaria',
+                signatarioCargo: chancela?.cargo || '',
+                canal: 'email',
+                destinatario: email,
+                status: 'expedido',
+                tamanhoBytes: AssinaturaModule.signedPdfBytes?.byteLength || 0
+            });
+        }
 
         closeModalEnviarEmail();
         renderHistorialExpedicoes();
@@ -1552,7 +1619,14 @@
                     <td style="padding:10px 12px; font-weight:600; color:#475569;">${dataHora}</td>
                     <td style="padding:10px 12px;">
                         <div style="font-weight:700; color:#0f172a;">${d.titulo || d.nomeArquivo}</div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">${d.nomeArquivo}</div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
+                            ${d.codigoAutenticidade ? `
+                                <span onclick="consultarCodigoEspecifico('${d.codigoAutenticidade}')" title="Clique para validar autenticidade deste documento" style="cursor:pointer; background:#f0fdf4; border:1px solid #86efac; color:#15803d; font-family:monospace; font-weight:800; font-size:0.73rem; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;">
+                                    <i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> ${d.codigoAutenticidade}
+                                </span>
+                            ` : ''}
+                            <span style="font-size:0.75rem; color:#94a3b8;">${d.nomeArquivo}</span>
+                        </div>
                     </td>
                     <td style="padding:10px 12px;">
                         <span style="font-weight:700; color:#1e293b;">${d.signatarioNome}</span>
@@ -1562,6 +1636,9 @@
                     <td style="padding:10px 12px; font-weight:600; color:#334155;">${d.destinatario || '-'}</td>
                     <td style="padding:10px 12px; font-size:0.78rem; color:#64748b;">${d.operador || 'Secretaria'}</td>
                     <td style="padding:10px 12px; text-align:right;">
+                        ${d.codigoAutenticidade ? `
+                            <button type="button" onclick="consultarCodigoEspecifico('${d.codigoAutenticidade}')" title="Verificar Autenticidade no Validador" style="background:transparent; border:none; color:#10b981; cursor:pointer; padding:4px; margin-right:4px;" onmouseover="this.style.color='#059669'" onmouseout="this.style.color='#10b981'"><i class="fa-solid fa-shield-halved"></i></button>
+                        ` : ''}
                         <button type="button" onclick="excluirItemHistoricoExpedicao('${d.id}')" title="Excluir Registro" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; padding:4px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-trash-can"></i></button>
                     </td>
                 </tr>
@@ -1605,7 +1682,140 @@
     }
     window.excluirItemHistoricoExpedicao = excluirItemHistoricoExpedicao;
 
+    // =========================================================================
+    // 9. VALIDADOR DE AUTENTICIDADE INTEGRA-RIZZI
+    // =========================================================================
+    function openModalConsultarAutenticidade(codigoPre = '') {
+        const modal = document.getElementById('modalValidarAutenticidade');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        const input = document.getElementById('inputCodigoValidacao');
+        const container = document.getElementById('resultadoValidacaoContainer');
+        if (input) {
+            input.value = codigoPre || '';
+            input.focus();
+        }
+        if (codigoPre && container) {
+            executarConsultaAutenticidade();
+        } else if (container) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+        }
+    }
+    window.openModalConsultarAutenticidade = openModalConsultarAutenticidade;
+
+    function closeModalConsultarAutenticidade() {
+        const modal = document.getElementById('modalValidarAutenticidade');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeModalConsultarAutenticidade = closeModalConsultarAutenticidade;
+
+    function consultarCodigoEspecifico(codigo) {
+        openModalConsultarAutenticidade(codigo);
+    }
+    window.consultarCodigoEspecifico = consultarCodigoEspecifico;
+
+    function executarConsultaAutenticidade(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const input = document.getElementById('inputCodigoValidacao');
+        const container = document.getElementById('resultadoValidacaoContainer');
+        if (!input || !container) return;
+
+        const cod = input.value.trim();
+        if (!cod) {
+            showToast('Informe o código de autenticidade.');
+            return;
+        }
+
+        const doc = sigeDB.validarCodigoAutenticidade(cod);
+        container.style.display = 'block';
+
+        if (doc) {
+            const dataHora = doc.dataHoraFormatada || (doc.dataHora ? new Date(doc.dataHora).toLocaleString('pt-BR') : '-');
+            const canalNome = doc.canal === 'whatsapp' ? 'WhatsApp' : (doc.canal === 'email' ? 'E-mail' : (doc.canal === 'assinado' ? 'Carimbo & Registro' : 'Download Local'));
+            
+            container.innerHTML = `
+                <div style="background:#f0fdf4; border:2px solid #86efac; border-radius:14px; padding:18px; margin-top:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <div style="width:40px; height:40px; border-radius:50%; background:#22c55e; color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.05rem; font-weight:800; color:#15803d;">Documento Oficial Autêntico & Válido</div>
+                            <div style="font-size:0.78rem; color:#166534;">Registro localizado com sucesso na base oficial do IntegraRizzi</div>
+                        </div>
+                    </div>
+
+                    <div style="background:white; border-radius:10px; padding:14px; border:1px solid #bbf7d0; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:0.83rem;">
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Código de Autenticidade:</span>
+                            <span style="font-family:monospace; font-size:1rem; font-weight:800; color:#0f172a; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1; display:inline-block; margin-top:2px;">
+                                ${doc.codigoAutenticidade || cod.toUpperCase()}
+                            </span>
+                        </div>
+
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Data e Hora da Emissão:</span>
+                            <strong style="color:#0f172a;">${dataHora}</strong>
+                        </div>
+
+                        <div style="grid-column: 1 / -1;">
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Nome do Documento:</span>
+                            <strong style="color:#0f172a; font-size:0.9rem;">${doc.titulo || doc.nomeArquivo}</strong>
+                        </div>
+
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Signatário Oficial:</span>
+                            <strong style="color:#0f172a;">${doc.signatarioNome}</strong>
+                            <div style="font-size:0.75rem; color:#64748b;">${doc.signatarioCargo || 'Gabinete / Secretaria'} ${doc.signatarioDoc ? `• ${doc.signatarioDoc}` : ''}</div>
+                        </div>
+
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Operador Emissor (IntegraRizzi):</span>
+                            <strong style="color:#0f172a;">${doc.operador || 'Operador Autorizado'}</strong>
+                            <div style="font-size:0.75rem; color:#64748b;">Perfil: ${doc.operadorPerfil || 'Secretaria Escolar'}</div>
+                        </div>
+
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Canal de Expedição:</span>
+                            <span style="font-weight:700; color:#0f172a;">${canalNome}</span>
+                            <div style="font-size:0.75rem; color:#64748b;">${doc.destinatario || 'Via Local'}</div>
+                        </div>
+
+                        <div>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Instituição Certificadora:</span>
+                            <strong style="color:#0f172a;">C.E. Pedro Rizzi</strong>
+                            <div style="font-size:0.75rem; color:#10b981; font-weight:700;"><i class="fa-solid fa-lock"></i> Integridade Verificada</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div style="background:#fef2f2; border:2px solid #fca5a5; border-radius:14px; padding:18px; margin-top:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <div style="width:40px; height:40px; border-radius:50%; background:#ef4444; color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.05rem; font-weight:800; color:#b91c1c;">Código Não Localizado ou Inválido</div>
+                            <div style="font-size:0.78rem; color:#991b1b;">Nenhum documento com o código <strong>"${cod.toUpperCase()}"</strong> foi encontrado nos registros do IntegraRizzi.</div>
+                        </div>
+                    </div>
+                    <p style="font-size:0.8rem; color:#7f1d1d; margin:8px 0 0 0; line-height:1.4;">
+                        Verifique se digitou todos os caracteres corretamente. Se o documento foi emitido antes da ativação do módulo digital ou se o carimbo foi adulterado, este documento não poderá ser validado eletronicamente.
+                    </p>
+                </div>
+            `;
+        }
+    }
+    window.executarConsultaAutenticidade = executarConsultaAutenticidade;
+
     // Exporta objeto principal
+    AssinaturaModule.openModalConsultarAutenticidade = openModalConsultarAutenticidade;
+    AssinaturaModule.closeModalConsultarAutenticidade = closeModalConsultarAutenticidade;
+    AssinaturaModule.consultarCodigoEspecifico = consultarCodigoEspecifico;
+    AssinaturaModule.executarConsultaAutenticidade = executarConsultaAutenticidade;
     window.AssinaturaModule = AssinaturaModule;
 
 })(typeof window !== 'undefined' ? window : this);

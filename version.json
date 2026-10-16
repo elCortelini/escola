@@ -1,6 +1,6 @@
 {
-  "version": "20261015_v51",
-  "build": 1792080600,
-  "updatedAt": "2026-10-15T16:56:00-03:00",
-  "description": "Chancela oficial completa com rubrica, nome, cargo, portaria, autenticacao em 2 linhas e correcao de coordenadas e rotacao nativa do PDF"
+  "version": "20261015_v52",
+  "build": 1792119000,
+  "updatedAt": "2026-10-16T03:38:00-03:00",
+  "description": "Suporte a CPF/Portaria na chancela, linha aproximada, padrao IntegraRizzi e validador de autenticidade de documentos"
 }
