@@ -6609,9 +6609,9 @@ async function openModalQrCodeWhatsApp(instanceName) {
         statusBadge.style.color = "#0369a1";
     }
 
-    // 1. Verifica se já está conectado no servidor
+    // 1. Verifica se já está conectado no servidor de fato
     const check = await evolutionClient.checkConnectionState(currentQrInstanceName);
-    if (check.connected) {
+    if (check.connected && !check.viaCloudCache) {
         if (loadingBox) loadingBox.style.display = "none";
         if (qrImg) qrImg.style.display = "none";
         if (instructionsBox) instructionsBox.style.display = "none";
@@ -6708,7 +6708,7 @@ function iniciarPollingConexaoQrCode(instanceName) {
 
     qrCodePollingInterval = setInterval(async () => {
         const check = await evolutionClient.checkConnectionState(instanceName);
-        if (check.connected) {
+        if (check.connected && !check.viaCloudCache) {
             clearInterval(qrCodePollingInterval);
             qrCodePollingInterval = null;
 
@@ -6755,16 +6755,109 @@ async function desconectarWhatsAppInstanciaModal() {
         return;
     }
 
-    showToast(`Desconectando WhatsApp...`, "info");
-    await evolutionClient.logoutInstance(currentQrInstanceName);
-    await evolutionClient.deleteInstance(currentQrInstanceName);
-    showToast(`Sessão desconectada. Gerando novo QR Code...`, "info");
+    // 1. Para imediatamente o polling ativo
+    if (qrCodePollingInterval) {
+        clearInterval(qrCodePollingInterval);
+        qrCodePollingInterval = null;
+    }
 
+    // 2. Prepara UI para o processo de desconexão
+    const loadingBox = document.getElementById("modalQrCodeLoading");
+    const qrImg = document.getElementById("modalQrCodeImg");
+    const successBox = document.getElementById("modalQrCodeSuccessBox");
+    const statusBadge = document.getElementById("modalQrCodeStatusBadge");
+    const instructionsBox = document.getElementById("modalQrCodeInstructions");
+    const btnRefreshQr = document.getElementById("btnRefreshQrCodeModal");
+    const btnResetQr = document.getElementById("btnResetQrCodeModal");
+
+    if (qrImg) qrImg.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+    if (instructionsBox) instructionsBox.style.display = "none";
+    if (btnRefreshQr) btnRefreshQr.style.display = "none";
+    if (btnResetQr) btnResetQr.style.display = "none";
+
+    if (loadingBox) {
+        loadingBox.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem; color:#dc2626;"></i>
+            <span style="font-size:0.85rem; font-weight:700; color:#475569;">Desconectando sessão e gerando novo QR Code...</span>
+        `;
+        loadingBox.style.display = "flex";
+    }
+    if (statusBadge) {
+        statusBadge.innerText = "🔄 Desconectando...";
+        statusBadge.style.background = "#fee2e2";
+        statusBadge.style.color = "#991b1b";
+    }
+
+    showToast(`Desconectando WhatsApp...`, "info");
+
+    // 3. Invalida cache de estado
+    if (typeof evolutionClient !== "undefined" && typeof evolutionClient._saveCloudInstanceState === "function") {
+        evolutionClient._saveCloudInstanceState(currentQrInstanceName, "close", false);
+    }
+
+    // 4. Executa reset limpo na Evolution API (logout + reconectar com novo QR Code)
+    const qrData = await evolutionClient.resetInstance(currentQrInstanceName);
+
+    if (qrData.alreadyConnected || qrData.state === "open") {
+        if (loadingBox) loadingBox.style.display = "none";
+        if (qrImg) qrImg.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "none";
+        if (successBox) successBox.style.display = "flex";
+        if (statusBadge) {
+            statusBadge.innerText = "🟢 Conectado";
+            statusBadge.style.background = "#dcfce7";
+            statusBadge.style.color = "#15803d";
+        }
+        atualizarStatusWhatsAppUnificado();
+        return;
+    }
+
+    if (qrData.success && qrData.base64) {
+        const src = qrData.base64.startsWith("data:") ? qrData.base64 : `data:image/png;base64,${qrData.base64}`;
+        if (qrImg) {
+            qrImg.src = src;
+            qrImg.style.display = "block";
+        }
+        if (loadingBox) loadingBox.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "block";
+        if (btnRefreshQr) btnRefreshQr.style.display = "inline-flex";
+        if (btnResetQr) btnResetQr.style.display = "inline-flex";
+        if (statusBadge) {
+            statusBadge.innerText = "📱 Aguardando Leitura";
+            statusBadge.style.background = "#fef3c7";
+            statusBadge.style.color = "#b45309";
+        }
+        showToast("Sessão desconectada! Aponte a câmera com o novo número.", "success");
+        iniciarPollingConexaoQrCode(currentQrInstanceName);
+    } else {
+        if (loadingBox) {
+            loadingBox.innerHTML = `
+                <div style="color:#b91c1c; font-weight:800; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:8px;"></i>
+                    <p style="margin:0;">Sessão desconectada com sucesso.</p>
+                    <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Aguarde alguns segundos e clique no botão abaixo para carregar o novo QR Code.'}</p>
+                    <button type="button" onclick="reiniciarConexaoQrCodeModal()" class="dir-btn" style="margin-top:10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.8rem; padding:6px 12px; font-weight:700;">
+                        <i class="fa-solid fa-rotate"></i> Gerar Novo QR Code
+                    </button>
+                </div>
+            `;
+        }
+        if (statusBadge) {
+            statusBadge.innerText = "🔴 Desconectado";
+            statusBadge.style.background = "#fee2e2";
+            statusBadge.style.color = "#991b1b";
+        }
+    }
     atualizarStatusWhatsAppUnificado();
-    await reiniciarConexaoQrCodeModal();
 }
 
 async function reiniciarConexaoQrCodeModal() {
+    if (qrCodePollingInterval) {
+        clearInterval(qrCodePollingInterval);
+        qrCodePollingInterval = null;
+    }
+
     const loadingBox = document.getElementById("modalQrCodeLoading");
     const qrImg = document.getElementById("modalQrCodeImg");
     const successBox = document.getElementById("modalQrCodeSuccessBox");
@@ -6782,6 +6875,7 @@ async function reiniciarConexaoQrCodeModal() {
     }
     if (qrImg) qrImg.style.display = "none";
     if (successBox) successBox.style.display = "none";
+    if (instructionsBox) instructionsBox.style.display = "none";
     if (statusBadge) {
         statusBadge.innerText = "🔄 Reiniciando...";
         statusBadge.style.background = "#e0f2fe";
@@ -6822,6 +6916,7 @@ async function reiniciarConexaoQrCodeModal() {
             statusBadge.style.color = "#b45309";
         }
         showToast("Novo QR Code gerado!", "success");
+        iniciarPollingConexaoQrCode(currentQrInstanceName);
     } else {
         if (loadingBox) {
             loadingBox.innerHTML = `
@@ -6829,11 +6924,18 @@ async function reiniciarConexaoQrCodeModal() {
                     <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:8px;"></i>
                     <p style="margin:0;">Não foi possível obter o QR Code.</p>
                     <p style="font-size:0.75rem; font-weight:500; color:#64748b; margin-top:4px;">${qrData.error || 'Aguarde alguns segundos e tente novamente.'}</p>
+                    <button type="button" onclick="reiniciarConexaoQrCodeModal()" class="dir-btn" style="margin-top:10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.8rem; padding:6px 12px; font-weight:700;">
+                        <i class="fa-solid fa-rotate"></i> Tentar Novamente
+                    </button>
                 </div>
             `;
         }
+        if (statusBadge) {
+            statusBadge.innerText = "🔴 Desconectado";
+            statusBadge.style.background = "#fee2e2";
+            statusBadge.style.color = "#991b1b";
+        }
     }
-    iniciarPollingConexaoQrCode(currentQrInstanceName);
 }
 
 // Atualiza o status do WhatsApp em todos os crachás/botões do sistema de forma unificada

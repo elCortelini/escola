@@ -1,6 +1,6 @@
 {
-  "version": "20261016_v54",
-  "build": 1792160800,
-  "updatedAt": "2026-10-16T11:45:00-03:00",
-  "description": "Isolamento de currentRole por sessao, sincronizacao RBAC multi-navegador em tempo real e correcao de conexao WhatsApp QR Code"
+  "version": "20261016_v55",
+  "build": 1792171000,
+  "updatedAt": "2026-10-16T16:15:00-03:00",
+  "description": "Correcao definitiva de desconexao e reconexao com novo numero do WhatsApp e geracao de QR Code limpo sem conflito de cache"
 }
