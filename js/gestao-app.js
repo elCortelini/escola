@@ -86,14 +86,18 @@ function checkSigeAuth() {
         userText.innerHTML = `<i class="fa-solid fa-user-circle" style="color:#fbbf24; font-size:0.95rem; margin-right:4px;"></i><strong>${escapeHtml(cleanNome || "Elevi Cortelini")}</strong> (${escapeHtml(funcaoDesc)})`;
     }
 
-    // Define papel no BD local
-    sigeDB.setRole(user.role);
-
     // O Seletor de Perfis e o botão de Gestão de Usuários são EXCLUSIVOS do Desenvolvedor Oficial
     const isDev = user.role === "desenvolvedor" || (
         (user.email && user.email.toLowerCase().trim() === "elcortelini@gmail.com") || 
         (user.cpf && cleanCpf(user.cpf) === '80603742068')
     );
+
+    // Define papel no BD local preservando simulação ativa do desenvolvedor na aba atual
+    const simulatedRole = (typeof sessionStorage !== "undefined") ? sessionStorage.getItem("sige_dev_simulated_role") : null;
+    if (!isDev || !simulatedRole) {
+        sigeDB.setRole(user.role);
+    }
+
     if (roleWrapper) roleWrapper.style.display = isDev ? "inline-flex" : "none";
     if (btnDev) btnDev.style.display = "none";
 
@@ -114,7 +118,7 @@ function checkSigeAuth() {
 
     // Trava de Orientadoras: Orientadora logada acessa estritamente seu próprio painel e agenda
     if (opFilter) {
-        const isMaster = user.role === "desenvolvedor" || user.role === "direcao" || (user.permissoes && user.permissoes.direcao);
+        const isMaster = isDev || user.role === "direcao" || (user.permissoes && user.permissoes.direcao);
         const activeOri = (typeof getOrientadoraByRole === 'function') ? getOrientadoraByRole(user.role) : null;
         if (activeOri && !isMaster) {
             opFilter.value = activeOri.nome;
@@ -124,8 +128,25 @@ function checkSigeAuth() {
         }
     }
 
+    if (typeof atualizarAbasNavegacaoVisibilidade === "function") {
+        atualizarAbasNavegacaoVisibilidade();
+    }
+
     return true;
 }
+
+function closeModalSigeLogin() {
+    const loginModal = document.getElementById("modalSigeLogin");
+    if (loginModal) loginModal.style.display = "none";
+}
+window.closeModalSigeLogin = closeModalSigeLogin;
+
+function closeModal(modalId) {
+    if (!modalId) return;
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = "none";
+}
+window.closeModal = closeModal;
 
 async function submitSigeLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -150,6 +171,21 @@ async function submitSigeLogin(e) {
     if (loginModal) loginModal.style.display = "none";
     showToast(`Bem-vindo(a), ${res.user.nome}!`);
     checkSigeAuth();
+    setupRoleSelector();
+    if (typeof atualizarAbasNavegacaoVisibilidade === "function") {
+        atualizarAbasNavegacaoVisibilidade();
+    }
+    const activeRole = sigeDB.getRole();
+    let targetTab = 'direcao';
+    if (activeRole === 'desenvolvedor' || res.user.role === 'desenvolvedor') targetTab = 'dev';
+    else if (activeRole === 'direcao' || sigeDB.temPermissaoModulo('direcao')) targetTab = 'direcao';
+    else if (activeRole === 'admin' || activeRole === 'secretaria' || sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('uniformes')) targetTab = 'admin';
+    else if (activeRole.startsWith('supervisora') || activeRole === 'supervisao' || sigeDB.temPermissaoModulo('supervisao')) targetTab = 'supervisao';
+    else if (activeRole.includes('orientadora') || activeRole === 'op' || sigeDB.temPermissaoModulo('op')) targetTab = 'op';
+    else targetTab = 'externos';
+    if (typeof switchTab === "function") {
+        switchTab(targetTab);
+    }
     renderAllModules(null, true);
 }
 
@@ -329,35 +365,37 @@ function renderDevUsersList() {
     users.forEach(u => {
         const isDevDefault = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com") || (u.cpf && cleanCpf(u.cpf) === "80603742068") || u.role === "desenvolvedor";
         const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
+        const userKey = u.id || u.cpf || u.email || u.nome;
+        const subInfo = u.email ? u.email : (u.cpf ? `CPF: ${u.cpf}` : 'Sem e-mail');
         html += `
             <tr style="border-bottom:1px solid #e2e8f0;">
                 <td style="padding:8px;">
-                    <strong style="color:#0f172a; display:block;">${u.nome}</strong>
-                    <span style="color:#64748b; font-size:0.78rem;">${u.email}</span>
+                    <strong style="color:#0f172a; display:block;">${escapeHtml(u.nome)}</strong>
+                    <span style="color:#64748b; font-size:0.78rem;">${escapeHtml(subInfo)}</span>
                 </td>
                 <td style="padding:8px;">
                     <span class="role-badge-pill role-pill-${u.role}" style="font-size:0.75rem;">${getRoleLabel(u.role)}</span>
                 </td>
-                <td style="padding:8px; color:#334155;">${u.cargo || '-'}</td>
+                <td style="padding:8px; color:#334155;">${escapeHtml(u.cargo || '-')}</td>
                 <td style="padding:8px;">
                     <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.75rem; justify-content:center;">
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#eff6ff; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Orientação Educacional">
-                            <input type="checkbox" ${perms.op ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'op', this.checked)"> OE
+                            <input type="checkbox" ${perms.op ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'op', this.checked)"> OE
                         </label>
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#f8fafc; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Mural e Prazos">
-                            <input type="checkbox" ${perms.mural ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'mural', this.checked)"> Mural
+                            <input type="checkbox" ${perms.mural ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'mural', this.checked)"> Mural
                         </label>
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#fdf4ff; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Supervisão Pedagógica">
-                            <input type="checkbox" ${perms.supervisao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'supervisao', this.checked)"> Sup
+                            <input type="checkbox" ${perms.supervisao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'supervisao', this.checked)"> Sup
                         </label>
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#f1f5f9; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Administração">
-                            <input type="checkbox" ${perms.admin ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'admin', this.checked)"> ADM
+                            <input type="checkbox" ${perms.admin ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'admin', this.checked)"> ADM
                         </label>
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:6px; font-weight:800; cursor:pointer;" title="Direção e Gestão Escolar">
-                            <input type="checkbox" ${perms.direcao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'direcao', this.checked)"> 👑 Direção
+                            <input type="checkbox" ${perms.direcao ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'direcao', this.checked)"> 👑 Direção
                         </label>
                         <label style="display:inline-flex; align-items:center; gap:3px; background:#f0fdf4; padding:2px 6px; border-radius:6px; cursor:pointer;" title="Controle de Uniformes">
-                            <input type="checkbox" ${perms.uniformes ? 'checked' : ''} onchange="toggleUserModuloPermissao('${u.email}', 'uniformes', this.checked)"> Uniformes
+                            <input type="checkbox" ${perms.uniformes ? 'checked' : ''} onchange="toggleUserModuloPermissao('${escapeHtml(userKey)}', 'uniformes', this.checked)"> Uniformes
                         </label>
                     </div>
                 </td>
@@ -365,7 +403,7 @@ function renderDevUsersList() {
                     ${isDevDefault ? `
                         <span style="color:#94a3b8; font-size:0.75rem; font-style:italic;">(Padrão Dev)</span>
                     ` : `
-                        <button onclick="deleteDevUser('${u.email}')" class="btn-sec btn-sec-fail" style="padding:3px 8px; font-size:0.72rem;">
+                        <button onclick="deleteDevUser('${escapeHtml(userKey)}')" class="btn-sec btn-sec-fail" style="padding:3px 8px; font-size:0.72rem;">
                             <i class="fa-solid fa-trash"></i> Excluir
                         </button>
                     `}
@@ -440,8 +478,9 @@ function renderAdminPermissoesUsuarios() {
         filtered = filtered.filter(u => {
             const nome = (u.nome || '').toLowerCase();
             const email = (u.email || '').toLowerCase();
+            const cpf = (u.cpf || '').toLowerCase();
             const cargo = (u.cargo || '').toLowerCase();
-            return nome.includes(rbacBuscaTexto) || email.includes(rbacBuscaTexto) || cargo.includes(rbacBuscaTexto);
+            return nome.includes(rbacBuscaTexto) || email.includes(rbacBuscaTexto) || cpf.includes(rbacBuscaTexto) || cargo.includes(rbacBuscaTexto);
         });
     }
 
@@ -475,6 +514,10 @@ function renderAdminPermissoesUsuarios() {
         const isMasterDev = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com") || (u.cpf && cleanCpf(u.cpf) === "80603742068") || u.role === "desenvolvedor";
         const perms = u.permissoes || { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false };
         const iniciais = u.nome ? u.nome.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : 'U';
+        const userKey = u.id || u.cpf || u.email || u.nome;
+        const emailOrCpfDisplay = u.email
+            ? `<i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}`
+            : (u.cpf ? `<i class="fa-solid fa-id-card"></i> CPF: ${escapeHtml(u.cpf)}` : `<i class="fa-regular fa-user"></i> Sem e-mail cadastrado`);
 
         // Chips dos Módulos & Sistemas
         const chipsHtml = modulosConfig.map(m => {
@@ -497,7 +540,7 @@ function renderAdminPermissoesUsuarios() {
 
             return `
                 <button type="button" 
-                    onclick="toggleUserModuloPermissaoCard('${escapeHtml(u.email)}', '${m.key}')" 
+                    onclick="toggleUserModuloPermissaoCard('${escapeHtml(userKey)}', '${m.key}')" 
                     class="rbac-mod-chip ${activeClass}" 
                     title="${escapeHtml(titleTooltip)}"
                     aria-label="${m.fullLabel} para ${escapeHtml(u.nome)}">
@@ -531,16 +574,16 @@ function renderAdminPermissoesUsuarios() {
         } else {
             acoesHtml = `
                 <div style="display:flex; justify-content:flex-end; align-items:center; gap:4px; flex-wrap:wrap;">
-                    <button type="button" onclick="aplicarPresetPermissoesUsuario('${escapeHtml(u.email)}', 'total')" class="rbac-preset-btn" title="Liberar todos os 6 módulos">
+                    <button type="button" onclick="aplicarPresetPermissoesUsuario('${escapeHtml(userKey)}', 'total')" class="rbac-preset-btn" title="Liberar todos os módulos">
                         <i class="fa-solid fa-bolt" style="color:#10b981;"></i> Tudo
                     </button>
-                    <button type="button" onclick="aplicarPresetPermissoesUsuario('${escapeHtml(u.email)}', 'pedagogico')" class="rbac-preset-btn" title="Liberar módulos pedagógicos (OE, Mural, Supervisão)">
+                    <button type="button" onclick="aplicarPresetPermissoesUsuario('${escapeHtml(userKey)}', 'pedagogico')" class="rbac-preset-btn" title="Liberar módulos pedagógicos (OE, Mural, Supervisão)">
                         <i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Pedag.
                     </button>
-                    <button type="button" onclick="openModalNovoUsuarioRBAC('${escapeHtml(u.email)}')" class="rbac-preset-btn" title="Editar dados e permissões">
+                    <button type="button" onclick="openModalNovoUsuarioRBAC('${escapeHtml(userKey)}')" class="rbac-preset-btn" title="Editar dados e permissões">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                    <button type="button" onclick="deleteDevUser('${escapeHtml(u.email)}')" class="rbac-preset-btn" style="color:#ef4444;" title="Excluir usuário do sistema">
+                    <button type="button" onclick="deleteDevUser('${escapeHtml(userKey)}')" class="rbac-preset-btn" style="color:#ef4444;" title="Excluir usuário do sistema">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -554,7 +597,7 @@ function renderAdminPermissoesUsuarios() {
                         <div class="rbac-user-avatar">${escapeHtml(iniciais)}</div>
                         <div class="rbac-user-details">
                             <span class="rbac-user-name">${escapeHtml(u.nome)}</span>
-                            <span class="rbac-user-email"><i class="fa-regular fa-envelope"></i> ${escapeHtml(u.email)}</span>
+                            <span class="rbac-user-email">${emailOrCpfDisplay}</span>
                             <span class="rbac-user-cargo">${escapeHtml(u.cargo || 'Colaborador Escolar')}</span>
                         </div>
                     </div>
@@ -578,16 +621,29 @@ function renderAdminPermissoesUsuarios() {
     }).join('');
 }
 
-function toggleUserModuloPermissaoCard(email, moduloKey) {
+function findUserByIdentifier(users, identifier) {
+    if (!identifier || !Array.isArray(users)) return null;
+    const norm = String(identifier).toLowerCase().trim();
+    const normCpf = typeof cleanCpf === 'function' ? cleanCpf(norm) : norm.replace(/\D/g, '');
+    return users.find(user =>
+        (user.id && String(user.id).toLowerCase().trim() === norm) ||
+        (user.email && String(user.email).toLowerCase().trim() === norm) ||
+        (normCpf && user.cpf && (typeof cleanCpf === 'function' ? cleanCpf(user.cpf) : String(user.cpf).replace(/\D/g, '')) === normCpf) ||
+        (user.nome && String(user.nome).toLowerCase().trim() === norm)
+    );
+}
+
+function toggleUserModuloPermissaoCard(userIdentifier, moduloKey) {
     const users = sigeDB.getUsuarios();
-    const u = users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    const u = findUserByIdentifier(users, userIdentifier);
     if (u) {
         if (!u.permissoes) {
             u.permissoes = sigeDB.getDefaultPermissoesByRole(u.role);
         }
         const currentState = !!u.permissoes[moduloKey];
         u.permissoes[moduloKey] = !currentState;
-        sigeDB.salvarPermissoesUsuario(email, u.permissoes);
+        const targetKey = u.id || u.cpf || u.email || userIdentifier;
+        sigeDB.salvarPermissoesUsuario(targetKey, u.permissoes);
 
         const moduloNome = {
             op: "Orientação Educacional (OE)",
@@ -611,11 +667,11 @@ function toggleUserModuloPermissaoCard(email, moduloKey) {
     }
 }
 
-function aplicarPresetPermissoesUsuario(email, preset) {
-    if (!email) return;
-    if (sigeDB.aplicarPresetPermissoes(email, preset)) {
+function aplicarPresetPermissoesUsuario(userIdentifier, preset) {
+    if (!userIdentifier) return;
+    if (sigeDB.aplicarPresetPermissoes(userIdentifier, preset)) {
         const labels = {
-            total: "Acesso Total (6 módulos)",
+            total: "Acesso Total (Todos os módulos)",
             pedagogico: "Perfil Pedagógico (OE, Mural, Supervisão)",
             administrativo: "Perfil Administrativo (Mural, ADM, Direção, Uniformes)",
             bloqueado: "Acesso Bloqueado (Sem módulos)"
@@ -626,7 +682,9 @@ function aplicarPresetPermissoesUsuario(email, preset) {
     }
 }
 
-function openModalNovoUsuarioRBAC(emailParaEditar) {
+let currentEditingRbacUserKey = null;
+
+function openModalNovoUsuarioRBAC(identificadorParaEditar) {
     const modal = document.getElementById("modalAdminNovoUsuario");
     if (!modal) return;
 
@@ -636,16 +694,19 @@ function openModalNovoUsuarioRBAC(emailParaEditar) {
     const selectRole = document.getElementById("rbacInputRole");
     const inputCargo = document.getElementById("rbacInputCargo");
 
-    if (emailParaEditar) {
+    currentEditingRbacUserKey = null;
+
+    if (identificadorParaEditar) {
         const users = sigeDB.getUsuarios();
-        const u = users.find(user => user.email.toLowerCase() === emailParaEditar.toLowerCase());
+        const u = findUserByIdentifier(users, identificadorParaEditar);
         if (u) {
+            currentEditingRbacUserKey = u.id || u.cpf || u.email;
             if (titleElem) titleElem.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#7c3aed;"></i> Editar Usuário: ${escapeHtml(u.nome)}`;
             if (inputEmail) {
-                inputEmail.value = u.email;
-                inputEmail.disabled = (u.email.toLowerCase().trim() === "elcortelini@gmail.com");
+                inputEmail.value = u.email || '';
+                inputEmail.disabled = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com");
             }
-            if (inputNome) inputNome.value = u.nome;
+            if (inputNome) inputNome.value = u.nome || '';
             if (selectRole) selectRole.value = u.role || 'orientacao';
             if (inputCargo) inputCargo.value = u.cargo || '';
 
@@ -701,12 +762,12 @@ function setAllModalRbacCheckboxes(checked) {
 
 function submitNovoUsuarioRBAC(e) {
     if (e && e.preventDefault) e.preventDefault();
-    const email = document.getElementById("rbacInputEmail")?.value.trim();
-    const nome = document.getElementById("rbacInputNome")?.value.trim();
+    const email = (document.getElementById("rbacInputEmail")?.value || '').trim();
+    const nome = (document.getElementById("rbacInputNome")?.value || '').trim();
     const role = document.getElementById("rbacInputRole")?.value;
-    const cargo = document.getElementById("rbacInputCargo")?.value.trim();
+    const cargo = (document.getElementById("rbacInputCargo")?.value || '').trim();
 
-    if (!email || !nome || !role || !cargo) {
+    if ((!email && !currentEditingRbacUserKey) || !nome || !role || !cargo) {
         alert("Preencha todos os campos obrigatórios.");
         return;
     }
@@ -720,13 +781,22 @@ function submitNovoUsuarioRBAC(e) {
         uniformes: !!document.getElementById("rbacChk_uniformes")?.checked,
         ext_recursos: !!document.getElementById("rbacChk_ext_recursos")?.checked,
         ext_dashboard: !!document.getElementById("rbacChk_ext_dashboard")?.checked,
-        ext_contabil: !!document.getElementById("rbacChk_ext_contabil")?.checked,
+        ext_contabil: !!document.getElementById("rbacChk_contabil")?.checked || !!document.getElementById("rbacChk_ext_contabil")?.checked,
         ext_biblioteca: !!document.getElementById("rbacChk_ext_biblioteca")?.checked,
         ext_patrimonio: !!document.getElementById("rbacChk_ext_patrimonio")?.checked
     };
 
-    sigeDB.addUsuario({ email, nome, role, cargo, permissoes });
-    showToast(`✅ Usuário ${nome} (${email}) salvo com permissões personalizadas!`);
+    const existingUser = currentEditingRbacUserKey ? findUserByIdentifier(sigeDB.getUsuarios(), currentEditingRbacUserKey) : null;
+    sigeDB.addUsuario({
+        id: existingUser?.id,
+        cpf: existingUser?.cpf,
+        email: email || existingUser?.email || '',
+        nome,
+        role,
+        cargo,
+        permissoes
+    });
+    showToast(`✅ Usuário ${nome} salvo com permissões personalizadas!`);
     closeModalNovoUsuarioRBAC();
     renderAdminPermissoesUsuarios();
     if (typeof renderDevUsersList === "function") renderDevUsersList();
@@ -737,21 +807,22 @@ function sincronizarUsuariosComEquipeUI() {
     if (adicionados > 0) {
         showToast(`🎉 Sincronização concluída: ${adicionados} novo(s) colaborador(es) importado(s) com sucesso!`);
     } else {
-        showToast("ℹ️ Todos os colaboradores com e-mail já constavam na base de acessos.");
+        showToast("ℹ️ Todos os colaboradores já constavam na base de acessos.");
     }
     renderAdminPermissoesUsuarios();
     if (typeof renderDevUsersList === "function") renderDevUsersList();
 }
 
-function toggleUserModuloPermissao(email, moduloKey, isChecked) {
+function toggleUserModuloPermissao(userIdentifier, moduloKey, isChecked) {
     const users = sigeDB.getUsuarios();
-    const u = users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    const u = findUserByIdentifier(users, userIdentifier);
     if (u) {
         if (!u.permissoes) {
             u.permissoes = sigeDB.getDefaultPermissoesByRole(u.role);
         }
         u.permissoes[moduloKey] = isChecked;
-        sigeDB.salvarPermissoesUsuario(email, u.permissoes);
+        const targetKey = u.id || u.cpf || u.email || userIdentifier;
+        sigeDB.salvarPermissoesUsuario(targetKey, u.permissoes);
         showToast(`Permissão "${moduloKey.toUpperCase()}" atualizada para ${u.nome}!`);
         renderAdminPermissoesUsuarios();
     }
@@ -777,9 +848,9 @@ function submitAddDevUser(e) {
     renderAdminPermissoesUsuarios();
 }
 
-function deleteDevUser(email) {
-    if (confirm(`Tem certeza que deseja remover as permissões do e-mail ${email}?`)) {
-        if (sigeDB.removeUsuario(email)) {
+function deleteDevUser(userIdentifier) {
+    if (confirm(`Tem certeza que deseja remover as permissões deste usuário (${userIdentifier})?`)) {
+        if (sigeDB.removeUsuario(userIdentifier)) {
             showToast("Usuário removido com sucesso!");
             renderDevUsersList();
             renderAdminPermissoesUsuarios();
@@ -1157,7 +1228,7 @@ function atualizarAbasNavegacaoVisibilidade() {
         } else if (tabKey === 'supervisao') {
             hasPerm = sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
         } else if (tabKey === 'admin') {
-            hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
+            hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao') || sigeDB.temPermissaoModulo('uniformes');
         } else if (tabKey === 'externos') {
             hasPerm = true;
         } else if (tabKey === 'dev') {
@@ -1262,7 +1333,7 @@ function switchTab(tabId, subKey) {
     } else if (tabId === 'supervisao') {
         hasPerm = sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
     } else if (tabId === 'admin') {
-        hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
+        hasPerm = sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao') || sigeDB.temPermissaoModulo('uniformes');
     } else if (tabId === 'externos') {
         hasPerm = true;
     } else if (tabId === 'dev') {
@@ -1279,7 +1350,7 @@ function switchTab(tabId, subKey) {
             if (m === 'direcao') return sigeDB.temPermissaoModulo('direcao');
             if (m === 'op') return sigeDB.temPermissaoModulo('op') || sigeDB.temPermissaoModulo('direcao');
             if (m === 'supervisao') return sigeDB.temPermissaoModulo('supervisao') || sigeDB.temPermissaoModulo('direcao');
-            if (m === 'admin') return sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao');
+            if (m === 'admin') return sigeDB.temPermissaoModulo('admin') || sigeDB.temPermissaoModulo('secretaria') || sigeDB.temPermissaoModulo('direcao') || sigeDB.temPermissaoModulo('uniformes');
             if (m === 'externos') return true;
             if (m === 'dev') return sigeDB.temPermissaoModulo('dev');
             return false;
@@ -6719,6 +6790,22 @@ async function reiniciarConexaoQrCodeModal() {
 
     const qrData = await evolutionClient.resetInstance(currentQrInstanceName);
 
+    if (qrData.alreadyConnected || qrData.state === "open") {
+        if (loadingBox) loadingBox.style.display = "none";
+        if (qrImg) qrImg.style.display = "none";
+        if (instructionsBox) instructionsBox.style.display = "none";
+        if (successBox) successBox.style.display = "flex";
+        if (statusBadge) {
+            statusBadge.innerText = "🟢 Conectado";
+            statusBadge.style.background = "#dcfce7";
+            statusBadge.style.color = "#15803d";
+        }
+        if (btnRefreshQr) btnRefreshQr.style.display = "none";
+        if (btnResetQr) btnResetQr.style.display = "none";
+        atualizarStatusWhatsAppUnificado();
+        return;
+    }
+
     if (qrData.success && qrData.base64) {
         const src = qrData.base64.startsWith("data:") ? qrData.base64 : `data:image/png;base64,${qrData.base64}`;
         if (qrImg) {
@@ -7239,7 +7326,7 @@ function popularTurmasSelectsDirecao() {
         ];
 
         selects.forEach(sel => {
-            if (!sel || sel.children.length > 1) return;
+            if (!sel || (sel.children && sel.children.length > 1) || (sel.options && sel.options.length > 1)) return;
             turmas.forEach(t => {
                 const opt = document.createElement("option");
                 opt.value = t.nome;

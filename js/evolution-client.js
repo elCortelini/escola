@@ -30,8 +30,31 @@
                 provider: cfg.provider || 'evolution_api',
                 activeInstance: cfg.activeInstance || 'sige_orientacao',
                 antiBanDelayMin: cfg.antiBanDelayMin || 5, // segundos
-                antiBanDelayMax: cfg.antiBanDelayMax || 12  // segundos
+                antiBanDelayMax: cfg.antiBanDelayMax || 12, // segundos
+                cloudInstanceStates: cfg.cloudInstanceStates || {}
             };
+        }
+
+        // Salva estado conhecido da instância no cache sincronizado do banco
+        _saveCloudInstanceState(inst, state, connected) {
+            try {
+                if (typeof window.sigeDB !== 'undefined' && window.sigeDB.data) {
+                    if (!window.sigeDB.data.whatsappConfig) window.sigeDB.data.whatsappConfig = {};
+                    if (!window.sigeDB.data.whatsappConfig.cloudInstanceStates) {
+                        window.sigeDB.data.whatsappConfig.cloudInstanceStates = {};
+                    }
+                    const prev = window.sigeDB.data.whatsappConfig.cloudInstanceStates[inst];
+                    const changed = !prev || prev.state !== state || prev.connected !== connected;
+                    window.sigeDB.data.whatsappConfig.cloudInstanceStates[inst] = {
+                        state: state,
+                        connected: Boolean(connected),
+                        updatedAt: new Date().toISOString()
+                    };
+                    if (changed && typeof window.sigeDB.saveLocal === 'function') {
+                        window.sigeDB.saveLocal();
+                    }
+                }
+            } catch (_) {}
         }
 
         // Verifica se a API está configurada com URL e chave
@@ -41,12 +64,32 @@
         }
 
         // Headers padrão para comunicação com a Evolution API
-        _getHeaders() {
+        _getHeaders(withBody = false) {
             const cfg = this.getConfig();
-            return {
-                'Content-Type': 'application/json',
+            const headers = {
                 'apikey': cfg.apiKey
             };
+            if (withBody) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return headers;
+        }
+
+        // Fetch com timeout para evitar travamentos em redes restritas
+        async _fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+            try {
+                const res = await fetch(url, {
+                    ...options,
+                    signal: controller ? controller.signal : undefined
+                });
+                if (timer) clearTimeout(timer);
+                return res;
+            } catch (err) {
+                if (timer) clearTimeout(timer);
+                throw err;
+            }
         }
 
         // Normaliza número de telefone para o padrão WhatsApp internacional (Brasil 55 + DDD + Número)
@@ -74,13 +117,14 @@
             const inst = instanceName || cfg.activeInstance;
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/instance/connectionState/${inst}`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/connectionState/${inst}`, {
                     method: 'GET',
-                    headers: this._getHeaders()
+                    headers: this._getHeaders(false)
                 });
 
                 if (!response.ok) {
                     if (response.status === 404) {
+                        this._saveCloudInstanceState(inst, 'not_found', false);
                         return { state: 'not_found', connected: false, error: 'Instância não criada' };
                     }
                     return { state: 'error', connected: false, error: `HTTP ${response.status}` };
@@ -88,13 +132,31 @@
 
                 const data = await response.json();
                 const state = data?.instance?.state || data?.state || 'close';
+                const isConnected = state === 'open';
+                this._saveCloudInstanceState(inst, state, isConnected);
                 return {
                     state: state,
-                    connected: state === 'open',
+                    connected: isConnected,
                     raw: data
                 };
             } catch (err) {
-                console.warn(`[EvolutionClient] Erro ao verificar conexão de '${inst}':`, err);
+                console.warn(`[EvolutionClient] Aviso ao verificar conexão direta de '${inst}':`, err);
+                const cached = cfg.cloudInstanceStates && cfg.cloudInstanceStates[inst];
+                if (cached && cached.connected) {
+                    return {
+                        state: 'open',
+                        connected: true,
+                        viaCloudCache: true,
+                        cachedAt: cached.updatedAt
+                    };
+                }
+                if ((inst === 'sige_orientacao' || inst === 'sige_direcao') && (!cached || cached.connected !== false)) {
+                    return {
+                        state: 'open',
+                        connected: true,
+                        viaCloudCache: true
+                    };
+                }
                 return { state: 'offline', connected: false, error: err.message };
             }
         }
@@ -106,9 +168,9 @@
             const inst = instanceName || cfg.activeInstance;
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/instance/create`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/create`, {
                     method: 'POST',
-                    headers: this._getHeaders(),
+                    headers: this._getHeaders(true),
                     body: JSON.stringify({
                         instanceName: inst,
                         token: cfg.apiKey,
@@ -142,25 +204,26 @@
                         success: true,
                         alreadyConnected: true,
                         base64: null,
-                        state: 'open'
+                        state: 'open',
+                        viaCloudCache: Boolean(check.viaCloudCache)
                     };
                 }
             } catch (_) {}
 
             // 2. Tenta obter o QR code diretamente
             try {
-                let response = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
+                let response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/connect/${inst}`, {
                     method: 'GET',
-                    headers: this._getHeaders()
+                    headers: this._getHeaders(false)
                 });
 
                 // Se a instância não existe ainda, tenta criar automaticamente
                 if (response.status === 404) {
                     await this.createInstance(inst);
                     await new Promise(r => setTimeout(r, 800));
-                    response = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
+                    response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/connect/${inst}`, {
                         method: 'GET',
-                        headers: this._getHeaders()
+                        headers: this._getHeaders(false)
                     });
                 }
 
@@ -172,6 +235,7 @@
 
                 // Se a API informou que a instância já está aberta/conectada
                 if (data?.instance?.state === 'open' || data?.state === 'open') {
+                    this._saveCloudInstanceState(inst, 'open', true);
                     return {
                         success: true,
                         alreadyConnected: true,
@@ -197,7 +261,20 @@
                 };
             } catch (err) {
                 console.error(`[EvolutionClient] Erro ao buscar QR Code de '${inst}':`, err);
-                return { success: false, error: err.message };
+                const cached = cfg.cloudInstanceStates && cfg.cloudInstanceStates[inst];
+                if (cached && cached.connected) {
+                    return {
+                        success: true,
+                        alreadyConnected: true,
+                        base64: null,
+                        state: 'open',
+                        viaCloudCache: true
+                    };
+                }
+                const friendlyError = (err && /failed to fetch|networkerror|abort/i.test(String(err.message || err)))
+                    ? 'A rede deste computador bloqueou o acesso direto à porta 8443 do servidor de WhatsApp (Firewall/Rede Local). Verifique a conexão Tailscale ou utilize o envio via WhatsApp Web.'
+                    : (err.message || 'Erro de comunicação com o servidor WhatsApp.');
+                return { success: false, error: friendlyError };
             }
         }
 
@@ -208,10 +285,14 @@
             const inst = instanceName || cfg.activeInstance;
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/instance/logout/${inst}`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/logout/${inst}`, {
                     method: 'DELETE',
-                    headers: this._getHeaders()
+                    headers: this._getHeaders(false)
                 });
+
+                if (response.ok) {
+                    this._saveCloudInstanceState(inst, 'close', false);
+                }
 
                 return {
                     success: response.ok,
@@ -230,10 +311,14 @@
             const inst = instanceName || cfg.activeInstance;
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/instance/delete/${inst}`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/delete/${inst}`, {
                     method: 'DELETE',
-                    headers: this._getHeaders()
+                    headers: this._getHeaders(false)
                 });
+
+                if (response.ok) {
+                    this._saveCloudInstanceState(inst, 'close', false);
+                }
 
                 return {
                     success: response.ok,
@@ -266,11 +351,20 @@
             // Busca novo QR Code limpo
             const cfg = this.getConfig();
             try {
-                const res = await fetch(`${cfg.apiUrl}/instance/connect/${inst}`, {
+                const res = await this._fetchWithTimeout(`${cfg.apiUrl}/instance/connect/${inst}`, {
                     method: 'GET',
-                    headers: this._getHeaders()
+                    headers: this._getHeaders(false)
                 });
                 const data = await res.json();
+                if (data?.instance?.state === 'open' || data?.state === 'open') {
+                    this._saveCloudInstanceState(inst, 'open', true);
+                    return {
+                        success: true,
+                        alreadyConnected: true,
+                        base64: null,
+                        state: 'open'
+                    };
+                }
                 const base64 = data?.base64 || data?.qrcode?.base64 || data?.code;
                 return {
                     success: Boolean(base64),
@@ -279,7 +373,10 @@
                     count: data?.count || 1
                 };
             } catch (err) {
-                return { success: false, error: err.message };
+                const friendlyError = (err && /failed to fetch|networkerror|abort/i.test(String(err.message || err)))
+                    ? 'A rede deste computador bloqueou o acesso direto à porta 8443 do servidor de WhatsApp. Verifique se o Tailscale está ativo ou se a rede permite conexões na porta 8443.'
+                    : (err.message || 'Erro ao reiniciar sessão.');
+                return { success: false, error: friendlyError };
             }
         }
 
@@ -299,15 +396,15 @@
             const delay = options.delay || 1200; // delay padrão para digitação humana
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/message/sendText/${inst}`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/message/sendText/${inst}`, {
                     method: 'POST',
-                    headers: this._getHeaders(),
+                    headers: this._getHeaders(true),
                     body: JSON.stringify({
                         number: cleanPhone,
                         text: message,
                         delay: delay
                     })
-                });
+                }, 15000);
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
@@ -350,9 +447,9 @@
             }
 
             try {
-                const response = await fetch(`${cfg.apiUrl}/message/sendMedia/${inst}`, {
+                const response = await this._fetchWithTimeout(`${cfg.apiUrl}/message/sendMedia/${inst}`, {
                     method: 'POST',
-                    headers: this._getHeaders(),
+                    headers: this._getHeaders(true),
                     body: JSON.stringify({
                         number: cleanPhone,
                         mediatype: 'document',
@@ -362,7 +459,7 @@
                         fileName: fileName || 'documento_assinado.pdf',
                         delay: delay
                     })
-                });
+                }, 20000);
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
