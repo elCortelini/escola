@@ -112,29 +112,27 @@
         const chancelaSelecionadaValida = chancelas.some(c => c.id === AssinaturaModule.selectedChancelaId);
         if (!chancelaSelecionadaValida) {
             AssinaturaModule.selectedChancelaId = chancelas[0].id;
-            const overlay = document.getElementById('signatureOverlayBox');
-            const img = document.getElementById('overlayChancelaImg');
-            const badge = document.getElementById('overlaySignatarioBadge');
-            if (overlay && img && chancelas[0]) {
-                img.src = chancelas[0].imagemBase64;
-                if (badge) badge.textContent = `${chancelas[0].nome} • ${chancelas[0].cargo}`;
-            }
         }
 
         let gridHtml = '';
         let optionsHtml = '';
 
         chancelas.forEach(c => {
+            const isApenasCarimbo = Boolean(c.tipo === 'apenas_carimbo' || c.apenasCarimbo || (c.nome === '..' && (c.cargo === '..' || !c.cargo)));
             const podeUsar = sigeDB.canUserUseChancela(c);
             const isSelected = AssinaturaModule.selectedChancelaId === c.id;
             const borderStyle = isSelected ? 'border: 2px solid #4f46e5; background: #f5f3ff;' : 'border: 1px solid #e2e8f0; background: white;';
             const setorIcon = c.setor === 'direcao' ? '👑 Direção' : (c.setor === 'secretaria' ? '📑 Secretaria' : (c.setor === 'orientacao' ? '💛 OE' : '🟣 Supervisão'));
             const setorBadgeBg = c.setor === 'direcao' ? '#fef3c7; color:#b45309;' : '#ecfdf5; color:#047857;';
+            const tituloChancela = isApenasCarimbo ? (c.nome && c.nome !== '..' ? c.nome : 'Carimbo Oficial da Escola') : c.nome;
 
             gridHtml += `
                 <div class="chancela-card" style="${borderStyle} padding:10px 12px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                        <span style="background:${setorBadgeBg}; font-size:0.72rem; font-weight:800; padding:2px 6px; border-radius:4px;">${setorIcon}</span>
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="background:${setorBadgeBg}; font-size:0.72rem; font-weight:800; padding:2px 6px; border-radius:4px;">${setorIcon}</span>
+                            ${isApenasCarimbo ? `<span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:0.7rem; font-weight:800; padding:1px 6px; border-radius:4px;"><i class="fa-solid fa-stamp"></i> Carimbo Institucional</span>` : ''}
+                        </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             ${podeUsar ? `<span title="Autorizado" style="color:#10b981; font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i></span>` : `<span title="Restrito" style="color:#ef4444; font-size:0.75rem;"><i class="fa-solid fa-lock"></i></span>`}
                             <button type="button" onclick="openModalEditarChancela('${c.id}')" title="Editar Informações / Imagem" style="background:transparent; border:none; color:#475569; cursor:pointer; font-size:0.82rem; padding:2px;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#475569'"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -143,13 +141,17 @@
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1; width:110px; height:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:2px;">
-                            <img src="${c.imagemBase64}" alt="${c.nome}" style="max-height:42px; max-width:100%; object-fit:contain;" />
+                        <div style="background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1; width:110px; height:48px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:2px;">
+                            <img src="${c.imagemBase64}" alt="${tituloChancela}" style="max-height:44px; max-width:100%; object-fit:contain;" />
                         </div>
                         <div style="flex:1; min-width:0;">
-                            <div style="font-weight:800; font-size:0.85rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.nome}</div>
-                            <div style="font-size:0.75rem; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.cargo}</div>
-                            ${c.portaria ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fa-solid fa-certificate"></i> ${c.portaria}</div>` : ''}
+                            <div style="font-weight:800; font-size:0.85rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tituloChancela}</div>
+                            ${isApenasCarimbo 
+                                ? `<div style="font-size:0.73rem; color:#059669; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🏛️ Carimbo Institucional</div>
+                                   <div style="font-size:0.7rem; color:#64748b; margin-top:1px;">Imagem + autenticação</div>`
+                                : `<div style="font-size:0.75rem; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.cargo}</div>
+                                   ${c.portaria ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fa-solid fa-certificate"></i> ${c.portaria}</div>` : ''}`
+                            }
                         </div>
                     </div>
 
@@ -160,7 +162,9 @@
             `;
 
             optionsHtml += `
-                <option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.nome} (${c.cargo})</option>
+                <option value="${c.id}" ${isSelected ? 'selected' : ''}>
+                    ${isApenasCarimbo ? `🏛️ ${tituloChancela} (Carimbo Institucional)` : `${c.nome} (${c.cargo})`}
+                </option>
             `;
         });
 
@@ -194,7 +198,10 @@
 
         const overlay = document.getElementById('signatureOverlayBox');
         const img = document.getElementById('overlayChancelaImg');
+        const imgWrapper = document.getElementById('overlayImgWrapper');
         const badge = document.getElementById('overlaySignatarioBadge');
+        const linha = document.getElementById('overlayLinhaAssinatura');
+        const signatarioInfo = document.getElementById('overlaySignatarioInfo');
         const elNome = document.getElementById('overlayNomeDisplay');
         const elCargo = document.getElementById('overlayCargoDisplay');
         const elPortaria = document.getElementById('overlayPortariaDisplay');
@@ -202,19 +209,34 @@
         const checkAuth = document.getElementById('checkIncluirAutenticidade');
 
         if (c && overlay && img) {
+            const isApenasCarimbo = Boolean(c.tipo === 'apenas_carimbo' || c.apenasCarimbo || (c.nome === '..' && (c.cargo === '..' || !c.cargo)));
             img.src = c.imagemBase64;
-            if (badge) badge.textContent = `${c.cargo}`;
-            if (elNome) elNome.textContent = (c.nome || '').toUpperCase();
-            if (elCargo) elCargo.textContent = c.cargo || '';
-            if (elPortaria) {
-                const docFmt = formatarDocumentoChancela(c.portaria);
-                if (docFmt) {
-                    elPortaria.textContent = docFmt;
-                    elPortaria.style.display = 'block';
-                } else {
-                    elPortaria.style.display = 'none';
+
+            if (isApenasCarimbo) {
+                if (badge) badge.textContent = (c.nome && c.nome !== '..') ? c.nome : 'Carimbo Institucional';
+                if (linha) linha.style.display = 'none';
+                if (signatarioInfo) signatarioInfo.style.display = 'none';
+                if (imgWrapper) imgWrapper.style.height = '75px';
+                img.style.maxHeight = '72px';
+            } else {
+                if (badge) badge.textContent = `${c.cargo || 'Chancela Oficial'}`;
+                if (linha) linha.style.display = 'block';
+                if (signatarioInfo) signatarioInfo.style.display = 'block';
+                if (imgWrapper) imgWrapper.style.height = '55px';
+                img.style.maxHeight = '100%';
+                if (elNome) elNome.textContent = (c.nome || '').toUpperCase();
+                if (elCargo) elCargo.textContent = c.cargo || '';
+                if (elPortaria) {
+                    const docFmt = formatarDocumentoChancela(c.portaria);
+                    if (docFmt) {
+                        elPortaria.textContent = docFmt;
+                        elPortaria.style.display = 'block';
+                    } else {
+                        elPortaria.style.display = 'none';
+                    }
                 }
             }
+
             if (elAuth && checkAuth) {
                 elAuth.style.display = checkAuth.checked ? 'block' : 'none';
             }
@@ -232,6 +254,73 @@
         ajustarPosicaoOverlayNaTela();
     }
     window.toggleOverlayAutenticidade = toggleOverlayAutenticidade;
+
+    // Alterna dinamicamente a interface do modal entre "Assinatura Pessoal" e "Apenas Carimbo da Escola"
+    function toggleChancelaTipoForm(tipo) {
+        const isApenasCarimbo = tipo === 'apenas_carimbo';
+        const banner = document.getElementById('chancelaApenasCarimboBanner');
+        const containerPessoal = document.getElementById('containerCamposSignatarioPessoal');
+        const lblNome = document.getElementById('lblChancelaNome');
+        const inpNome = document.getElementById('chancelaInputNome');
+        const inpCargo = document.getElementById('chancelaInputCargo');
+        const lblPessoal = document.getElementById('lblChancelaTipoPessoal');
+        const lblInstitucional = document.getElementById('lblChancelaTipoInstitucional');
+        const lblArquivo = document.getElementById('lblChancelaArquivo');
+
+        if (lblPessoal && lblInstitucional) {
+            if (isApenasCarimbo) {
+                lblPessoal.style.background = 'transparent';
+                lblPessoal.style.color = '#64748b';
+                lblPessoal.style.border = '1px solid transparent';
+                lblPessoal.style.boxShadow = 'none';
+
+                lblInstitucional.style.background = 'white';
+                lblInstitucional.style.color = '#065f46';
+                lblInstitucional.style.border = '1px solid #10b981';
+                lblInstitucional.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            } else {
+                lblPessoal.style.background = 'white';
+                lblPessoal.style.color = '#0f172a';
+                lblPessoal.style.border = '1px solid #cbd5e1';
+                lblPessoal.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+                lblInstitucional.style.background = 'transparent';
+                lblInstitucional.style.color = '#64748b';
+                lblInstitucional.style.border = '1px solid transparent';
+                lblInstitucional.style.boxShadow = 'none';
+            }
+        }
+
+        if (banner) banner.style.display = isApenasCarimbo ? 'block' : 'none';
+        if (containerPessoal) containerPessoal.style.display = isApenasCarimbo ? 'none' : 'flex';
+
+        if (lblNome) {
+            lblNome.innerHTML = isApenasCarimbo 
+                ? 'Identificação do Carimbo (Opcional):' 
+                : 'Nome Completo do Signatário:';
+        }
+        if (inpNome) {
+            inpNome.placeholder = isApenasCarimbo 
+                ? 'Ex: Carimbo Oficial da Escola' 
+                : 'Ex: Profa. Maria da Silva';
+            inpNome.required = !isApenasCarimbo;
+            if (isApenasCarimbo && (!inpNome.value || inpNome.value === '..')) {
+                inpNome.value = 'Carimbo Oficial da Escola';
+            }
+        }
+        if (inpCargo) {
+            inpCargo.required = !isApenasCarimbo;
+            if (isApenasCarimbo && (!inpCargo.value || inpCargo.value === '..')) {
+                inpCargo.value = 'Institucional';
+            }
+        }
+        if (lblArquivo) {
+            lblArquivo.innerHTML = isApenasCarimbo 
+                ? 'Arquivo da Imagem do Carimbo da Escola:' 
+                : 'Arquivo da Imagem (Assinatura com Carimbo):';
+        }
+    }
+    window.toggleChancelaTipoForm = toggleChancelaTipoForm;
 
     function openModalNovaChancela() {
         const modal = document.getElementById('modalNovaChancela');
@@ -251,6 +340,10 @@
                 preview.src = '';
                 preview.style.display = 'none';
             }
+
+            const radioPessoal = document.getElementById('chancelaTipo_assinatura_pessoal');
+            if (radioPessoal) radioPessoal.checked = true;
+            toggleChancelaTipoForm('assinatura_pessoal');
         }
     }
     window.openModalNovaChancela = openModalNovaChancela;
@@ -268,11 +361,28 @@
         const editId = document.getElementById('chancelaInputEditId');
         if (editId) editId.value = c.id;
 
+        const isApenasCarimbo = Boolean(c.tipo === 'apenas_carimbo' || c.apenasCarimbo || (c.nome === '..' && (c.cargo === '..' || !c.cargo)));
+
+        const radioPessoal = document.getElementById('chancelaTipo_assinatura_pessoal');
+        const radioInstitucional = document.getElementById('chancelaTipo_apenas_carimbo');
+
+        if (isApenasCarimbo) {
+            if (radioInstitucional) radioInstitucional.checked = true;
+            toggleChancelaTipoForm('apenas_carimbo');
+        } else {
+            if (radioPessoal) radioPessoal.checked = true;
+            toggleChancelaTipoForm('assinatura_pessoal');
+        }
+
         const inpNome = document.getElementById('chancelaInputNome');
-        if (inpNome) inpNome.value = c.nome || '';
+        if (inpNome) {
+            inpNome.value = (isApenasCarimbo && (c.nome === '..' || !c.nome)) ? 'Carimbo Oficial da Escola' : (c.nome || '');
+        }
 
         const inpCargo = document.getElementById('chancelaInputCargo');
-        if (inpCargo) inpCargo.value = c.cargo || '';
+        if (inpCargo) {
+            inpCargo.value = (isApenasCarimbo && (c.cargo === '..' || !c.cargo)) ? 'Institucional' : (c.cargo || '');
+        }
 
         const inpSetor = document.getElementById('chancelaInputSetor');
         if (inpSetor) inpSetor.value = c.setor || 'direcao';
@@ -365,22 +475,34 @@
         }
 
         const editId = document.getElementById('chancelaInputEditId')?.value || '';
-        const nome = document.getElementById('chancelaInputNome').value.trim();
-        const cargo = document.getElementById('chancelaInputCargo').value.trim();
+        const tipo = document.querySelector('input[name="chancelaTipo"]:checked')?.value || 'assinatura_pessoal';
+        const isApenasCarimbo = tipo === 'apenas_carimbo';
+
+        let nome = document.getElementById('chancelaInputNome').value.trim();
+        let cargo = document.getElementById('chancelaInputCargo').value.trim();
         const setor = document.getElementById('chancelaInputSetor').value;
         const portaria = document.getElementById('chancelaInputPortaria').value.trim();
         const fileInput = document.getElementById('chancelaInputFile');
         const removerFundo = document.getElementById('chancelaCheckRemoverFundo')?.checked ?? true;
 
-        if (!nome || !cargo) {
-            showToast('Preencha os campos obrigatórios do signatário.');
-            return;
+        if (isApenasCarimbo) {
+            if (!nome || nome === '..') {
+                nome = 'Carimbo Oficial da Escola';
+            }
+            cargo = 'Institucional';
+        } else {
+            if (!nome || !cargo) {
+                showToast('Preencha os campos obrigatórios do signatário (Nome e Cargo).');
+                return;
+            }
         }
 
         const temNovoArquivo = Boolean(fileInput.files && fileInput.files[0]);
 
         if (!editId && !temNovoArquivo) {
-            showToast('Por favor, anexe uma imagem com a assinatura e o carimbo.');
+            showToast(isApenasCarimbo 
+                ? 'Por favor, anexe a imagem do carimbo da escola.' 
+                : 'Por favor, anexe uma imagem com a assinatura e o carimbo.');
             return;
         }
 
@@ -400,25 +522,29 @@
                     showToast('Chancela não encontrada.');
                     return;
                 }
+                existente.tipo = tipo;
+                existente.apenasCarimbo = isApenasCarimbo;
                 existente.nome = nome;
                 existente.cargo = cargo;
                 existente.setor = setor;
-                existente.portaria = portaria;
+                existente.portaria = isApenasCarimbo ? '' : portaria;
                 existente.atualizadoEm = nowIso;
                 if (base64Png) {
                     existente.imagemBase64 = base64Png;
                 }
                 sigeDB.saveChancelaAssinatura(existente);
-                showToast(`Chancela de ${nome} atualizada com sucesso!`);
+                showToast(`Chancela "${nome}" atualizada com sucesso!`);
                 if (AssinaturaModule.selectedChancelaId === editId) {
                     selecionarChancelaParaUso(editId);
                 }
             } else {
                 const novaChancela = {
+                    tipo,
+                    apenasCarimbo: isApenasCarimbo,
                     nome,
                     cargo,
                     setor,
-                    portaria,
+                    portaria: isApenasCarimbo ? '' : portaria,
                     imagemBase64: base64Png,
                     permissoesUso: ['direcao', 'secretaria', 'admin', 'desenvolvedor'],
                     ativo: true,
@@ -427,7 +553,7 @@
                 };
 
                 const salva = sigeDB.saveChancelaAssinatura(novaChancela);
-                showToast(`Chancela de ${nome} cadastrada com sucesso!`);
+                showToast(`Chancela "${nome}" cadastrada com sucesso!`);
                 selecionarChancelaParaUso(salva.id);
             }
 
@@ -807,7 +933,8 @@
 
     /**
      * Gera o carimbo oficial unificado em alta resolução (Retina / 300 DPI):
-     * Contém: Imagem da Rubrica + Linha divisória + Nome + Cargo + Portaria + Autenticação (2 linhas)
+     * - Modo Assinatura Pessoal: Imagem da Rubrica + Linha divisória + Nome + Cargo + Portaria/CPF + Autenticação (2 linhas)
+     * - Modo Apenas Carimbo Institucional: Apenas Imagem do Carimbo + Autenticação (2 linhas), sem linha nem dados pessoais
      */
     async function gerarChancelaCompletaCanvas(chancela, incluirAuth, authCode, dataHoraStr) {
         return new Promise((resolve, reject) => {
@@ -818,12 +945,77 @@
                     // Largura base em alta resolução para renderização cristalina na impressão
                     const targetW = 600;
 
-                    // Mede a proporção da rubrica
+                    const isApenasCarimbo = Boolean(chancela.tipo === 'apenas_carimbo' || chancela.apenasCarimbo || (chancela.nome === '..' && (chancela.cargo === '..' || !chancela.cargo)));
+
+                    // Mede a proporção da imagem
                     const origW = img.naturalWidth || img.width || 320;
                     const origH = img.naturalHeight || img.height || 120;
                     const aspect = origH / origW;
 
-                    // Ajusta tamanho da rubrica proporcionalmente
+                    if (isApenasCarimbo) {
+                        // Carimbo Institucional da Escola: apenas imagem + autenticação
+                        let carimboW = Math.min(480, Math.round(targetW * 0.82));
+                        let carimboH = Math.round(carimboW * aspect);
+                        if (carimboH > 240) {
+                            carimboH = 240;
+                            carimboW = Math.round(carimboH / aspect);
+                        }
+
+                        let totalH = carimboH + 4;
+                        if (incluirAuth) {
+                            totalH += 8 + 44 + 6;
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = totalH;
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, targetW, totalH);
+
+                        const carimboX = Math.round((targetW - carimboW) / 2);
+                        ctx.drawImage(img, carimboX, 2, carimboW, carimboH);
+
+                        if (incluirAuth) {
+                            let y = carimboH + 8;
+                            ctx.strokeStyle = '#cbd5e1';
+                            ctx.lineWidth = 1;
+                            ctx.setLineDash([4, 4]);
+                            ctx.beginPath();
+                            ctx.moveTo(targetW * 0.12, y);
+                            ctx.lineTo(targetW * 0.88, y);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            y += 18;
+
+                            ctx.fillStyle = '#475569';
+                            ctx.font = 'normal 13px "Segoe UI", Arial, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'alphabetic';
+                            ctx.fillText('Autenticado digitalmente pelo IntegraRizzi • C.E. Pedro Rizzi', targetW / 2, y);
+                            y += 16;
+
+                            ctx.fillStyle = '#64748b';
+                            ctx.font = 'normal 12px "Segoe UI", Arial, sans-serif';
+                            ctx.fillText(`${dataHoraStr} • Cód: ${authCode}`, targetW / 2, y);
+                        }
+
+                        canvas.toBlob(blob => {
+                            if (!blob) {
+                                reject(new Error('Falha ao gerar blob do selo'));
+                                return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => resolve({
+                                bytes: new Uint8Array(reader.result),
+                                aspectRatio: totalH / targetW
+                            });
+                            reader.onerror = reject;
+                            reader.readAsArrayBuffer(blob);
+                        }, 'image/png');
+                        return;
+                    }
+
+                    // Caso padrão: Assinatura Pessoal com Carimbo
                     let rubricaW = Math.min(380, targetW * 0.65);
                     let rubricaH = Math.round(rubricaW * aspect);
                     if (rubricaH > 130) {
@@ -962,7 +1154,8 @@
 
         // Validação de Permissão RBAC
         if (!sigeDB.canUserUseChancela(chancela)) {
-            showToast(`⚠️ Permissão negada: o perfil ativo não tem autorização para assinar com a chancela da ${chancela.cargo}.`);
+            const rotuloChancela = (chancela.tipo === 'apenas_carimbo' || chancela.apenasCarimbo) ? 'este carimbo institucional' : `a chancela da ${chancela.cargo}`;
+            showToast(`⚠️ Permissão negada: o perfil ativo não tem autorização para assinar com ${rotuloChancela}.`);
             return;
         }
 
@@ -1044,15 +1237,16 @@
 
             // 7. Registra imediatamente no livro de auditoria e autenticidade do IntegraRizzi
             const logged = sigeDB.getLoggedUser();
+            const isApenasCarimbo = Boolean(chancela.tipo === 'apenas_carimbo' || chancela.apenasCarimbo || (chancela.nome === '..' && (chancela.cargo === '..' || !chancela.cargo)));
             const authRecord = {
                 id: typeof generateSecureId === 'function' ? generateSecureId('docexp') : ('doc_' + Date.now()),
                 codigoAutenticidade: authCode,
                 titulo: AssinaturaModule.signedFileName,
                 nomeArquivo: AssinaturaModule.signedFileName,
                 signatarioId: chancela.id,
-                signatarioNome: chancela.nome,
-                signatarioCargo: chancela.cargo,
-                signatarioDoc: formatarDocumentoChancela(chancela.portaria),
+                signatarioNome: isApenasCarimbo ? (chancela.nome && chancela.nome !== '..' ? chancela.nome : 'Carimbo Oficial da Escola') : chancela.nome,
+                signatarioCargo: isApenasCarimbo ? 'Institucional' : chancela.cargo,
+                signatarioDoc: isApenasCarimbo ? '' : formatarDocumentoChancela(chancela.portaria),
                 operador: logged ? (logged.nome || logged.email) : 'Operador Escolar',
                 operadorPerfil: sigeDB.getRole() || 'Secretaria',
                 dataHora: now.toISOString(),
@@ -1630,7 +1824,9 @@
                     </td>
                     <td style="padding:10px 12px;">
                         <span style="font-weight:700; color:#1e293b;">${d.signatarioNome}</span>
-                        <div style="font-size:0.75rem; color:#64748b;">${d.signatarioCargo || ''}</div>
+                        <div style="font-size:0.75rem; color:${d.signatarioCargo === 'Institucional' ? '#059669' : '#64748b'}; font-weight:${d.signatarioCargo === 'Institucional' ? '700' : 'normal'};">
+                            ${d.signatarioCargo === 'Institucional' ? '🏛️ Carimbo da Escola' : (d.signatarioCargo || '')}
+                        </div>
                     </td>
                     <td style="padding:10px 12px;">${canalBadge}</td>
                     <td style="padding:10px 12px; font-weight:600; color:#334155;">${d.destinatario || '-'}</td>
@@ -1765,9 +1961,11 @@
                         </div>
 
                         <div>
-                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">Signatário Oficial:</span>
+                            <span style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:#64748b; display:block;">${doc.signatarioCargo === 'Institucional' ? 'Chancela / Carimbo Oficial:' : 'Signatário Oficial:'}</span>
                             <strong style="color:#0f172a;">${doc.signatarioNome}</strong>
-                            <div style="font-size:0.75rem; color:#64748b;">${doc.signatarioCargo || 'Gabinete / Secretaria'} ${doc.signatarioDoc ? `• ${doc.signatarioDoc}` : ''}</div>
+                            <div style="font-size:0.75rem; color:${doc.signatarioCargo === 'Institucional' ? '#059669' : '#64748b'}; font-weight:${doc.signatarioCargo === 'Institucional' ? '700' : 'normal'};">
+                                ${doc.signatarioCargo === 'Institucional' ? '🏛️ Carimbo Institucional da Escola' : `${doc.signatarioCargo || 'Gabinete / Secretaria'} ${doc.signatarioDoc ? `• ${doc.signatarioDoc}` : ''}`}
+                            </div>
                         </div>
 
                         <div>

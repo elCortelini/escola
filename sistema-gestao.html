@@ -18,7 +18,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Verificador e Atualizador Automático de Versão de Cache -->
-    <script src="js/version-checker.js?v=20261016_v55"></script>
+    <script src="js/version-checker.js?v=20261020_v56"></script>
 
     <!-- Firebase Cloud Database SDK (v10 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -885,27 +885,30 @@
                                             Chancela Oficial
                                         </div>
                                         
-                                        <!-- Rubrica / Assinatura manuscrita -->
-                                        <div style="height:55px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:0px; pointer-events:none;">
+                                        <!-- Rubrica / Assinatura manuscrita / Carimbo -->
+                                        <div id="overlayImgWrapper" style="height:55px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:0px; pointer-events:none;">
                                             <img id="overlayChancelaImg" src="" alt="Assinatura" style="max-width:100%; max-height:100%; object-fit:contain;">
                                         </div>
 
                                         <!-- Linha divisória horizontal (bem próxima da assinatura) -->
-                                        <div style="height:1.5px; background:#334155; width:92%; margin:1px auto 3px auto; pointer-events:none;"></div>
+                                        <div id="overlayLinhaAssinatura" style="height:1.5px; background:#334155; width:92%; margin:1px auto 3px auto; pointer-events:none;"></div>
 
-                                        <!-- Nome do Signatário -->
-                                        <div id="overlayNomeDisplay" style="font-size:10.5px; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; pointer-events:none;">
-                                            Nome do Signatário
-                                        </div>
+                                        <!-- Informações do Signatário (Nome, Cargo, CPF/Portaria) -->
+                                        <div id="overlaySignatarioInfo" style="pointer-events:none;">
+                                            <!-- Nome do Signatário -->
+                                            <div id="overlayNomeDisplay" style="font-size:10.5px; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; pointer-events:none;">
+                                                Nome do Signatário
+                                            </div>
 
-                                        <!-- Cargo -->
-                                        <div id="overlayCargoDisplay" style="font-size:9px; font-weight:600; color:#334155; line-height:1.2; pointer-events:none;">
-                                            Cargo
-                                        </div>
+                                            <!-- Cargo -->
+                                            <div id="overlayCargoDisplay" style="font-size:9px; font-weight:600; color:#334155; line-height:1.2; pointer-events:none;">
+                                                Cargo
+                                            </div>
 
-                                        <!-- CPF / Portaria / Ato -->
-                                        <div id="overlayPortariaDisplay" style="font-size:8px; color:#475569; font-weight:600; line-height:1.2; margin-top:1px; pointer-events:none;">
-                                            CPF / Portaria
+                                            <!-- CPF / Portaria / Ato -->
+                                            <div id="overlayPortariaDisplay" style="font-size:8px; color:#475569; font-weight:600; line-height:1.2; margin-top:1px; pointer-events:none;">
+                                                CPF / Portaria
+                                            </div>
                                         </div>
 
                                         <!-- Autenticação Eletrônica (2 Linhas) -->
@@ -5156,18 +5159,18 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.10.16_v54</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.10.20_v56</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files -->
-    <script src="js/calendario-oficial-data.js?v=20261016_v55"></script>
-    <script src="js/evolution-client.js?v=20261016_v55"></script>
-    <script src="js/gestao-data.js?v=20261016_v55"></script>
-    <script src="js/gestao-app.js?v=20261016_v55"></script>
-    <script src="js/pdf-importer.js?v=20261016_v55"></script>
-    <script src="js/assinatura-docs.js?v=20261016_v55"></script>
+    <script src="js/calendario-oficial-data.js?v=20261020_v56"></script>
+    <script src="js/evolution-client.js?v=20261020_v56"></script>
+    <script src="js/gestao-data.js?v=20261020_v56"></script>
+    <script src="js/gestao-app.js?v=20261020_v56"></script>
+    <script src="js/pdf-importer.js?v=20261020_v56"></script>
+    <script src="js/assinatura-docs.js?v=20261020_v56"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
@@ -5279,15 +5282,33 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
             <form id="formNovaChancela" onsubmit="salvarNovaChancela(event)" style="display:flex; flex-direction:column; gap:12px;">
                 <input type="hidden" id="chancelaInputEditId" value="">
 
+                <!-- Seletor do Tipo de Chancela -->
                 <div>
-                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo do Signatário:</label>
-                    <input type="text" id="chancelaInputNome" placeholder="Ex: Profa. Maria da Silva" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:6px;">Tipo de Chancela / Finalidade:</label>
+                    <div style="background:#f1f5f9; padding:4px; border-radius:10px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                        <label id="lblChancelaTipoPessoal" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:700; background:white; color:#0f172a; box-shadow:0 1px 3px rgba(0,0,0,0.1); border:1px solid #cbd5e1;">
+                            <input type="radio" id="chancelaTipo_assinatura_pessoal" name="chancelaTipo" value="assinatura_pessoal" checked onchange="toggleChancelaTipoForm(this.value)" style="accent-color:#059669; cursor:pointer;">
+                            <span>🖊️ Assinatura de Signatário</span>
+                        </label>
+                        <label id="lblChancelaTipoInstitucional" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:700; background:transparent; color:#64748b; border:1px solid transparent;">
+                            <input type="radio" id="chancelaTipo_apenas_carimbo" name="chancelaTipo" value="apenas_carimbo" onchange="toggleChancelaTipoForm(this.value)" style="accent-color:#059669; cursor:pointer;">
+                            <span>🏛️ Apenas Carimbo da Escola</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <!-- Banner explicativo para modo apenas carimbo -->
+                <div id="chancelaApenasCarimboBanner" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:10px 14px; font-size:0.78rem; color:#065f46; line-height:1.4;">
+                    <div style="font-weight:800; display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                        <i class="fa-solid fa-stamp" style="color:#059669;"></i> Modo Apenas Carimbo Institucional
+                    </div>
+                    Aplica <strong>somente a imagem do carimbo</strong> e os dados de autenticação eletrônica do IntegraRizzi (se ativados). <strong>Sem linha de assinatura, nome, cargo ou CPF</strong> no documento.
+                </div>
+
+                <div id="containerNomeSetor" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função:</label>
-                        <input type="text" id="chancelaInputCargo" placeholder="Ex: Diretora Geral" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                        <label id="lblChancelaNome" style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo do Signatário:</label>
+                        <input type="text" id="chancelaInputNome" placeholder="Ex: Profa. Maria da Silva" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
                     </div>
                     <div>
                         <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Setor de Origem:</label>
@@ -5300,14 +5321,22 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                     </div>
                 </div>
 
-                <div>
-                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">CPF, Portaria ou Matrícula Funcional (Opcional):</label>
-                    <input type="text" id="chancelaInputPortaria" placeholder="Ex: CPF: 000.000.000-00, Portaria Nº 108/2024 ou Matr. 123.456" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
-                    <div style="font-size:0.73rem; color:#64748b; margin-top:2px;">Se digitar apenas os 11 números do CPF, o sistema formata automaticamente.</div>
+                <!-- Informações Pessoais do Signatário (ocultas no modo Apenas Carimbo) -->
+                <div id="containerCamposSignatarioPessoal" style="display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função:</label>
+                        <input type="text" id="chancelaInputCargo" placeholder="Ex: Diretora Geral" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">CPF, Portaria ou Matrícula Funcional (Opcional):</label>
+                        <input type="text" id="chancelaInputPortaria" placeholder="Ex: CPF: 000.000.000-00, Portaria Nº 108/2024 ou Matr. 123.456" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
+                        <div style="font-size:0.73rem; color:#64748b; margin-top:2px;">Se digitar apenas os 11 números do CPF, o sistema formata automaticamente.</div>
+                    </div>
                 </div>
 
                 <div>
-                    <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Arquivo da Imagem (Assinatura com Carimbo):</label>
+                    <label id="lblChancelaArquivo" style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Arquivo da Imagem (Assinatura com Carimbo):</label>
                     <input type="file" id="chancelaInputFile" accept="image/png, image/jpeg, image/webp" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;" onchange="
                         if (this.files[0]) {
                             const reader = new FileReader();

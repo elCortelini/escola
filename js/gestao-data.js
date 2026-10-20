@@ -3890,7 +3890,16 @@ class SigeDatabase {
         }
         const mockIds = ['chancela-direcao-oficial', 'chancela-secretaria-oficial'];
         const delIds = Array.from(new Set([...(this.data.deletedChancelaIds || []), ...mockIds]));
-        return this.data.chancelasAssinaturas.filter(c => c && !delIds.includes(c.id));
+        return this.data.chancelasAssinaturas.filter(c => c && !delIds.includes(c.id)).map(c => {
+            // Auto-normalização para carimbos institucionais cadastrados anteriormente com '..'
+            if (c.nome === '..' && (c.cargo === '..' || !c.cargo)) {
+                c.apenasCarimbo = true;
+                c.tipo = 'apenas_carimbo';
+                c.nome = 'Carimbo Oficial da Escola';
+                c.cargo = 'Institucional';
+            }
+            return c;
+        });
     }
 
     saveChancelaAssinatura(chancela) {
