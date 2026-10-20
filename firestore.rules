@@ -11,7 +11,8 @@ service cloud.firestore {
       allow write: if document in [
         'database', 'mod_op', 'mod_uniformes', 'mod_ocorrencias', 
         'mod_patrimonio', 'mod_protocolo', 'mod_direcao', 
-        'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema'
+        'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema',
+        'mod_supervisao', 'mod_core'
       ];
     }
 

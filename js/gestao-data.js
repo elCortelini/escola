@@ -20,7 +20,7 @@ if (typeof window !== 'undefined') {
 }
 
 const SIGE_STORAGE_KEY = "sige_pedro_rizzi_db_v2";
-const SIGE_SYSTEM_VERSION = "v2026.09.25_v40";
+const SIGE_SYSTEM_VERSION = "v2026.10.20_v58";
 
 if (typeof window !== 'undefined') {
     window.SIGE_SYSTEM_VERSION = SIGE_SYSTEM_VERSION;
@@ -582,6 +582,9 @@ class SigeDatabase {
             this._firestoreUnsubs.push(unsubLegacy);
 
             console.log("🔥 Firebase Firestore inicializado e monitorando nuvem modular...");
+
+            // Força busca ativa imediata na nuvem no startup para carregar dados mais recentes antes de qualquer ação
+            this.forceFetchRemoteData({ silent: true, isStartup: true });
         } catch (e) {
             console.error("Erro ao inicializar Firebase:", e);
             this.cloudStatus = 'error';
@@ -1070,6 +1073,12 @@ class SigeDatabase {
             return;
         }
 
+        // Proteção essencial: nunca sobrescreve a nuvem com dados locais antes de ter carregado os dados remotos
+        if (!this.hasLoadedRemote) {
+            console.warn("⏳ syncToFirebase adiado: aguardando carregamento da nuvem para não sobrescrever dados de outros computadores.");
+            return;
+        }
+
         try {
             this.ensureDevUser();
             const nowIso = new Date().toISOString();
@@ -1087,9 +1096,67 @@ class SigeDatabase {
                         }
                     }
                 });
-                batchPromises.push(
-                    this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true })
-                );
+
+                // Se for mod_uniformes, realiza mesclagem atômica de pedidos e lotes para NUNCA perder pedidos cadastrados em outro computador
+                if (modName === 'mod_uniformes') {
+                    const modPromise = this.firestore.collection("sige_pedro_rizzi").doc(modName).get().then(remoteDoc => {
+                        if (remoteDoc && remoteDoc.exists) {
+                            const rData = remoteDoc.data();
+                            if (rData && Array.isArray(rData.pedidosUniformes)) {
+                                const delIds = new Set(this.data.deletedPedidoUniformeIds || []);
+                                const mapPeds = new Map();
+                                // Mantém todos os pedidos remotos não excluídos
+                                rData.pedidosUniformes.forEach(p => {
+                                    if (p && p.id && !delIds.has(p.id)) mapPeds.set(p.id, p);
+                                });
+                                // Mescla com os pedidos locais (mais recente vence)
+                                (this.data.pedidosUniformes || []).forEach(p => {
+                                    if (p && p.id && !delIds.has(p.id)) {
+                                        if (!mapPeds.has(p.id)) {
+                                            mapPeds.set(p.id, p);
+                                        } else {
+                                            const rP = mapPeds.get(p.id);
+                                            const lTime = new Date(p.atualizadoEm || p.criadoEm || 0).getTime();
+                                            const rTime = new Date(rP.atualizadoEm || rP.criadoEm || 0).getTime();
+                                            mapPeds.set(p.id, lTime >= rTime ? { ...rP, ...p } : { ...p, ...rP });
+                                        }
+                                    }
+                                });
+                                const mergedArr = Array.from(mapPeds.values()).sort((a,b) => new Date(b.criadoEm||0) - new Date(a.criadoEm||0));
+                                modPayload.pedidosUniformes = mergedArr;
+                                this.data.pedidosUniformes = mergedArr;
+                            }
+                            if (rData && Array.isArray(rData.lotesSME)) {
+                                const mapLotes = new Map();
+                                rData.lotesSME.forEach(l => { if (l && l.id) mapLotes.set(l.id, l); });
+                                (this.data.lotesSME || []).forEach(l => {
+                                    if (l && l.id) {
+                                        if (!mapLotes.has(l.id)) {
+                                            mapLotes.set(l.id, l);
+                                        } else {
+                                            const rL = mapLotes.get(l.id);
+                                            const lTime = new Date(l.atualizadoEm || l.criadoEm || 0).getTime();
+                                            const rTime = new Date(rL.atualizadoEm || rL.criadoEm || 0).getTime();
+                                            mapLotes.set(l.id, lTime >= rTime ? { ...rL, ...l } : { ...l, ...rL });
+                                        }
+                                    }
+                                });
+                                const mergedLotes = Array.from(mapLotes.values()).sort((a,b) => new Date(b.criadoEm||0) - new Date(a.criadoEm||0));
+                                modPayload.lotesSME = mergedLotes;
+                                this.data.lotesSME = mergedLotes;
+                            }
+                        }
+                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true });
+                    }).catch(err => {
+                        console.warn("Aviso ao mesclar mod_uniformes na nuvem:", err);
+                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true });
+                    });
+                    batchPromises.push(modPromise);
+                } else {
+                    batchPromises.push(
+                        this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true })
+                    );
+                }
             }
 
             // 2. Grava documento legado para compatibilidade, sem contaminar currentRole global
@@ -1126,47 +1193,66 @@ class SigeDatabase {
         }
     }
 
-    forceFetchRemoteData() {
+    forceFetchRemoteData(options = {}) {
+        const silent = !!options.silent;
+        const targetModule = options.module || null;
+
         if (!this.firestore) {
             this.initFirebase();
             if (!this.firestore) {
-                if (typeof showToast === "function") showToast("⚠️ Conexão com o Firebase não configurada.");
-                return;
+                if (!silent && typeof showToast === "function") showToast("⚠️ Conexão com o Firebase não configurada.");
+                return Promise.resolve(false);
             }
         }
 
-        this.updateCloudSyncBadge(null, "Buscando dados na nuvem...");
-        const modNames = Object.keys(SIGE_MODULE_DOCS);
+        if (!silent) {
+            this.updateCloudSyncBadge(null, "Buscando dados na nuvem...");
+        }
+
+        const modNames = targetModule ? [targetModule] : Object.keys(SIGE_MODULE_DOCS);
         const fetchPromises = modNames.map(m => this.firestore.collection("sige_pedro_rizzi").doc(m).get());
 
-        Promise.all(fetchPromises)
+        return Promise.all(fetchPromises)
             .then(docs => {
                 let foundAny = false;
                 docs.forEach(doc => {
                     if (doc.exists) {
                         foundAny = true;
+                        this.hasLoadedRemote = true;
+                        this.cloudStatus = 'connected';
                         this.smartMergeRemoteData(doc.data());
                     }
                 });
 
                 if (foundAny) {
-                    if (typeof showToast === "function") showToast("☁️ Dados modulares sincronizados com sucesso da Nuvem!");
+                    this.hasLoadedRemote = true;
+                    this.cloudStatus = 'connected';
                     this.updateCloudSyncBadge(true);
+                    if (!silent && typeof showToast === "function") {
+                        if (targetModule === 'mod_uniformes') {
+                            const count = (this.getPedidosUniformes() || []).length;
+                            showToast(`☁️ Uniformes sincronizados: ${count} pedido(s) atualizados da nuvem!`);
+                        } else {
+                            showToast("☁️ Dados modulares sincronizados com sucesso da Nuvem!");
+                        }
+                    }
+                    return true;
                 } else {
                     // Fallback para o documento legado caso a nuvem ainda não tenha os modulares
                     return this.firestore.collection("sige_pedro_rizzi").doc("database").get()
                         .then(legacyDoc => {
                             if (legacyDoc.exists) {
+                                this.hasLoadedRemote = true;
                                 this.smartMergeRemoteData(legacyDoc.data());
-                                if (typeof showToast === "function") showToast("☁️ Dados legados da Nuvem migrados para o padrão modular!");
+                                if (!silent && typeof showToast === "function") showToast("☁️ Dados da Nuvem sincronizados!");
                                 this.updateCloudSyncBadge(true);
-                                this.syncToFirebase(); // Migra imediatamente
+                                this.syncToFirebase();
                             } else {
                                 this.hasLoadedRemote = true;
                                 this.syncToFirebase();
-                                if (typeof showToast === "function") showToast("☁️ Banco na Nuvem inicializado com dados locais!");
                                 this.updateCloudSyncBadge(true);
                             }
+                            return true;
                         });
                 }
             })
@@ -1175,9 +1261,13 @@ class SigeDatabase {
                 if (err.code === 'permission-denied') {
                     this.cloudStatus = 'permission_denied';
                 } else {
-                    if (typeof showToast === "function") showToast("❌ Falha ao buscar dados na nuvem: " + err.message);
-                    this.updateCloudSyncBadge(false);
+                    this.cloudStatus = 'offline';
                 }
+                if (!silent && typeof showToast === "function") {
+                    showToast("❌ Falha ao buscar dados na nuvem: " + err.message);
+                }
+                this.updateCloudSyncBadge(false);
+                return false;
             });
     }
 
@@ -1267,16 +1357,23 @@ class SigeDatabase {
         if (typeof window === "undefined") return;
 
         window.addEventListener("focus", () => {
-            if (this.firestore && this.hasLoadedRemote && this.cloudStatus === 'connected') {
-                this.forceFetchRemoteData();
+            if (this.firestore && this.cloudStatus !== 'permission_denied') {
+                this.forceFetchRemoteData({ silent: true });
             }
         });
 
         document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && this.firestore && this.hasLoadedRemote && this.cloudStatus === 'connected') {
-                this.forceFetchRemoteData();
+            if (!document.hidden && this.firestore && this.cloudStatus !== 'permission_denied') {
+                this.forceFetchRemoteData({ silent: true });
             }
         });
+
+        // Sincronização periódica em segundo plano a cada 30 segundos para manter todos os computadores sincronizados
+        setInterval(() => {
+            if (this.firestore && this.cloudStatus !== 'permission_denied' && !document.hidden) {
+                this.forceFetchRemoteData({ silent: true });
+            }
+        }, 30000);
     }
 
     updateCloudSyncBadge(isSuccess, customMessage = "") {
@@ -4066,6 +4163,7 @@ class SigeDatabase {
     addPedidoUniforme(pedido) {
         pedido.id = generateSecureId("uni");
         pedido.criadoEm = new Date().toISOString();
+        pedido.atualizadoEm = new Date().toISOString();
         if (!pedido.status) pedido.status = "pendente_envio";
         if (pedido.aluno) {
             pedido.aluno = cleanStudentName(pedido.aluno);
@@ -4073,6 +4171,7 @@ class SigeDatabase {
         if (!this.data.pedidosUniformes) this.data.pedidosUniformes = [];
         this.data.pedidosUniformes.unshift(pedido);
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Uniformes Escolares", `Registrado pedido de uniforme para ${pedido.aluno} (${pedido.turma})`, pedido.responsavelPedido || "Secretaria");
         return pedido;
     }
@@ -4080,8 +4179,10 @@ class SigeDatabase {
     updatePedidoUniforme(id, dados) {
         const ped = (this.getPedidosUniformes()).find(p => p.id === id);
         if (ped) {
+            dados.atualizadoEm = new Date().toISOString();
             Object.assign(ped, dados);
             this.saveData(this.data);
+            this.syncToFirebase();
         }
         return ped;
     }
@@ -4090,7 +4191,9 @@ class SigeDatabase {
         const ped = (this.getPedidosUniformes()).find(p => p.id === id);
         if (ped) {
             ped.status = "cancelado";
+            ped.atualizadoEm = new Date().toISOString();
             this.saveData(this.data);
+            this.syncToFirebase();
             this.logAuditEvent("Uniformes Escolares", `Cancelado pedido ID: ${id} (${ped.aluno})`, "Secretaria");
         }
     }
@@ -4151,6 +4254,7 @@ class SigeDatabase {
         });
 
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Uniformes Escolares", `Fechado Lote SME ${codigoLote} com ${pedidosValidados.length} pedidos.`, "Secretaria");
         return lote;
     }
@@ -4159,11 +4263,13 @@ class SigeDatabase {
         const lote = (this.getLotesSME()).find(l => l.id === loteId);
         if (lote) {
             lote.dataChegadaReal = dataChegadaReal || getLocalDateISO();
+            lote.atualizadoEm = new Date().toISOString();
             let temDivergencia = false;
 
             lote.pedidosIds.forEach(id => {
                 const ped = this.data.pedidosUniformes.find(p => p.id === id);
                 if (ped) {
+                    ped.atualizadoEm = new Date().toISOString();
                     const statusConf = mapaConferencia[id] || "recebido"; // "recebido" ou "divergente"
                     if (statusConf === "recebido") {
                         if (ped.status !== "entregue") {
@@ -4185,6 +4291,7 @@ class SigeDatabase {
             if (observacoes) lote.observacoes = (lote.observacoes ? lote.observacoes + " | " : "") + observacoes;
 
             this.saveData(this.data);
+            this.syncToFirebase();
             this.logAuditEvent("Uniformes Escolares", `Registrada chegada do Lote SME ${lote.codigoLote} na escola (${lote.status}).`, "Secretaria");
         }
         return lote;
@@ -4195,7 +4302,9 @@ class SigeDatabase {
         if (ped) {
             ped.status = "pendente_envio";
             ped.loteSmeId = null;
+            ped.atualizadoEm = new Date().toISOString();
             this.saveData(this.data);
+            this.syncToFirebase();
             this.logAuditEvent("Uniformes Escolares", `Pedido ID: ${id} (${ped.aluno}) liberado para novo lote SME.`, "Secretaria");
         }
         return ped;
@@ -4243,6 +4352,7 @@ class SigeDatabase {
         }
 
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Uniformes Escolares", `Ajuste de estoque (${genKey}): ${peca.toUpperCase()} Tam ${tamanho} -> Novo Saldo: ${est[genKey][peca][tamanho]} (${acao})`, "Secretaria");
         return est[genKey][peca][tamanho];
     }
@@ -4254,6 +4364,7 @@ class SigeDatabase {
         ped.status = "entregue";
         ped.dataEntregaAluno = getLocalDateISO();
         ped.entreguePor = entreguePor || this.getRoleFormatted();
+        ped.atualizadoEm = new Date().toISOString();
 
         if (darBaixaEstoque) {
             const tam = ped.tamanho;
@@ -4276,6 +4387,7 @@ class SigeDatabase {
         }
 
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Uniformes Escolares", `Uniforme entregue ao aluno ${ped.aluno} (${ped.turma}) por ${ped.entreguePor}`, ped.entreguePor);
         return ped;
     }

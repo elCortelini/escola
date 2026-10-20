@@ -6163,6 +6163,9 @@ function switchAdminSubTab(subTab) {
     // Ações específicas ao abrir cada sub-aba da Administração
     if (subTab === 'uniformes') {
         if (typeof renderModuleUniformes === "function") renderModuleUniformes();
+        if (window.sigeDB && typeof window.sigeDB.forceFetchRemoteData === "function") {
+            window.sigeDB.forceFetchRemoteData({ silent: true, module: "mod_uniformes" });
+        }
     } else if (subTab === 'turnos') {
         if (typeof renderTurmasAdminTable === "function") renderTurmasAdminTable();
     } else if (subTab === 'alunos_pdf') {
@@ -12030,6 +12033,17 @@ function limparBuscaTextoUniformes() {
     }
     renderTabelaPedidosUniformes();
 }
+
+function forcarSincronizacaoUniformes() {
+    if (window.sigeDB && typeof window.sigeDB.forceFetchRemoteData === "function") {
+        window.sigeDB.forceFetchRemoteData({ silent: false, module: "mod_uniformes" }).then(() => {
+            renderModuleUniformes();
+        });
+    } else {
+        if (typeof showToast === "function") showToast("⚠️ Conexão com o banco de dados não configurada.");
+    }
+}
+window.forcarSincronizacaoUniformes = forcarSincronizacaoUniformes;
 
 function renderModuleUniformes() {
     const inputSearch = document.getElementById("filterUniSearch");

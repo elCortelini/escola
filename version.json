@@ -1,6 +1,6 @@
 {
-  "version": "20261020_v57",
-  "build": 1792512700,
-  "updatedAt": "2026-10-20T13:12:00-03:00",
-  "description": "Correcao da fisica de arrasto 1:1 da chancela no PDF e suporte robusto com deteccao e fallback a expedicao de documentos via WhatsApp"
+  "version": "20261020_v58",
+  "build": 1792515600,
+  "updatedAt": "2026-10-20T14:05:00-03:00",
+  "description": "Sincronizacao bidirecional automatica de uniformes sem sobrescrita, protecao de inicializacao da nuvem e cache-buster continuo para todos os computadores"
 }
