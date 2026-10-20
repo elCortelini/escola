@@ -495,11 +495,24 @@
                         fileName: fileName || 'documento_assinado.pdf',
                         delay: delay
                     })
-                }, 20000);
+                }, 30000);
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    const errMsg = errData?.message || errData?.error || `HTTP ${response.status}`;
+                    let errMsg = '';
+                    if (errData?.response?.message) {
+                        errMsg = Array.isArray(errData.response.message) ? errData.response.message.join('; ') : String(errData.response.message);
+                    } else if (errData?.message) {
+                        errMsg = String(errData.message);
+                    } else if (errData?.error) {
+                        errMsg = String(errData.error);
+                    } else {
+                        errMsg = `HTTP ${response.status}`;
+                    }
+
+                    if (response.status === 404) {
+                        errMsg = `A instância '${inst}' não existe no servidor Evolution API. Verifique a instância selecionada no painel WhatsApp.`;
+                    }
                     return { success: false, error: errMsg, status: response.status };
                 }
 
@@ -512,7 +525,11 @@
                 };
             } catch (err) {
                 console.error(`[EvolutionClient] Erro ao enviar documento para ${cleanPhone}:`, err);
-                return { success: false, error: err.message };
+                const isNetErr = /failed to fetch|networkerror|abort|connection refused/i.test(String(err?.message || err));
+                const friendlyMsg = isNetErr
+                    ? 'A conexão com a API de WhatsApp falhou (Tailscale / Porta 8443). Se você estiver usando o sistema fora da rede interna ou via GitHub Pages, o navegador bloqueia conexões privadas locais. Conecte pelo WhatsApp Web manual ou use o sistema pela rede local.'
+                    : (err?.message || 'Erro inesperado no envio');
+                return { success: false, error: friendlyMsg, isNetworkError: isNetErr };
             }
         }
 

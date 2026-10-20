@@ -1,6 +1,6 @@
 {
-  "version": "20261020_v56",
-  "build": 1792511200,
-  "updatedAt": "2026-10-20T12:45:00-03:00",
-  "description": "Opcao de chancela institucional com apenas carimbo da escola e autenticacao (sem dados pessoais nem linha de assinatura)"
+  "version": "20261020_v57",
+  "build": 1792512700,
+  "updatedAt": "2026-10-20T13:12:00-03:00",
+  "description": "Correcao da fisica de arrasto 1:1 da chancela no PDF e suporte robusto com deteccao e fallback a expedicao de documentos via WhatsApp"
 }

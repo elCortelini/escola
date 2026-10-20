@@ -778,86 +778,136 @@
             ajustarPosicaoOverlayNaTela();
         };
 
-        // 2. Drag and drop do overlay
-        overlay.onmousedown = (e) => {
-            if (e.target === resizeHandle) return;
+        // 2. Drag and drop do overlay com Pointer Events (suporta Mouse, Touch e Stylus com precisão 1:1)
+        const onDragStart = (e) => {
+            if (e.target === resizeHandle || (resizeHandle && resizeHandle.contains(e.target))) return;
             AssinaturaModule.isDragging = true;
-            AssinaturaModule.dragOffset.x = e.clientX - overlay.offsetLeft;
-            AssinaturaModule.dragOffset.y = e.clientY - overlay.offsetTop;
+            
+            // Calcula offset relativo ao topo/esquerda do próprio overlay
+            const overlayRect = overlay.getBoundingClientRect();
+            AssinaturaModule.dragOffset.x = e.clientX - overlayRect.left;
+            AssinaturaModule.dragOffset.y = e.clientY - overlayRect.top;
+            
             overlay.style.cursor = 'grabbing';
+            if (e.pointerId && typeof overlay.setPointerCapture === 'function') {
+                try { overlay.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+            e.stopPropagation();
             e.preventDefault();
         };
 
-        // 3. Redimensionamento pelo canto
-        if (resizeHandle) {
-            resizeHandle.onmousedown = (e) => {
-                AssinaturaModule.isResizing = true;
-                AssinaturaModule.resizeStartX = e.clientX;
-                AssinaturaModule.resizeStartWidth = AssinaturaModule.stampWidth;
-                e.stopPropagation();
-                e.preventDefault();
-            };
-        }
+        const onDragMove = (e) => {
+            if (!AssinaturaModule.isDragging) return;
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const newX = (e.clientX - wrapperRect.left) - AssinaturaModule.dragOffset.x;
+            const newY = (e.clientY - wrapperRect.top) - AssinaturaModule.dragOffset.y;
+            const maxW = canvas.clientWidth || canvas.offsetWidth || wrapperRect.width;
+            const maxH = canvas.clientHeight || canvas.offsetHeight || wrapperRect.height;
 
-        window.onmousemove = (e) => {
-            if (AssinaturaModule.isDragging) {
-                const wrapperRect = wrapper.getBoundingClientRect();
-                const newX = e.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
-                const newY = e.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
-                const maxW = canvas.clientWidth || wrapperRect.width;
-                const maxH = canvas.clientHeight || wrapperRect.height;
+            const limitX = Math.max(0, maxW - AssinaturaModule.stampWidth);
+            const limitH = Math.max(0, maxH - AssinaturaModule.stampHeight);
 
-                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, newX));
-                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - AssinaturaModule.stampHeight, newY));
+            AssinaturaModule.overlayPos.x = Math.max(0, Math.min(limitX, newX));
+            AssinaturaModule.overlayPos.y = Math.max(0, Math.min(limitH, newY));
 
-                ajustarPosicaoOverlayNaTela();
-            } else if (AssinaturaModule.isResizing) {
-                const delta = e.clientX - AssinaturaModule.resizeStartX;
-                const newW = Math.max(140, Math.min(420, AssinaturaModule.resizeStartWidth + delta));
-                setTamanhoAssinatura(newW);
-            }
+            ajustarPosicaoOverlayNaTela();
+            e.preventDefault();
         };
 
-        window.onmouseup = () => {
+        const onDragEnd = (e) => {
             if (AssinaturaModule.isDragging) {
                 AssinaturaModule.isDragging = false;
                 overlay.style.cursor = 'move';
-            }
-            if (AssinaturaModule.isResizing) {
-                AssinaturaModule.isResizing = false;
+                if (e && e.pointerId && typeof overlay.releasePointerCapture === 'function') {
+                    try { overlay.releasePointerCapture(e.pointerId); } catch (_) {}
+                }
             }
         };
 
-        // Suporte para Dispositivos Touch / Tablets
+        // Eventos de Ponteiro (Moderno / Recomendado)
+        overlay.onpointerdown = onDragStart;
+        overlay.onpointermove = onDragMove;
+        overlay.onpointerup = onDragEnd;
+        overlay.onpointercancel = onDragEnd;
+
+        // Fallbacks adicionais de Mouse e Touch para navegadores legados
+        overlay.onmousedown = onDragStart;
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+
         overlay.ontouchstart = (e) => {
             if (e.touches && e.touches[0]) {
                 const touch = e.touches[0];
+                const overlayRect = overlay.getBoundingClientRect();
                 AssinaturaModule.isDragging = true;
-                AssinaturaModule.dragOffset.x = touch.clientX - overlay.offsetLeft;
-                AssinaturaModule.dragOffset.y = touch.clientY - overlay.offsetTop;
+                AssinaturaModule.dragOffset.x = touch.clientX - overlayRect.left;
+                AssinaturaModule.dragOffset.y = touch.clientY - overlayRect.top;
             }
         };
 
-        window.ontouchmove = (e) => {
+        window.addEventListener('touchmove', (e) => {
             if (AssinaturaModule.isDragging && e.touches && e.touches[0]) {
                 const touch = e.touches[0];
                 const wrapperRect = wrapper.getBoundingClientRect();
-                const newX = touch.clientX - wrapperRect.left - AssinaturaModule.dragOffset.x;
-                const newY = touch.clientY - wrapperRect.top - AssinaturaModule.dragOffset.y;
-                const maxW = canvas.clientWidth || wrapperRect.width;
-                const maxH = canvas.clientHeight || wrapperRect.height;
+                const newX = (touch.clientX - wrapperRect.left) - AssinaturaModule.dragOffset.x;
+                const newY = (touch.clientY - wrapperRect.top) - AssinaturaModule.dragOffset.y;
+                const maxW = canvas.clientWidth || canvas.offsetWidth || wrapperRect.width;
+                const maxH = canvas.clientHeight || canvas.offsetHeight || wrapperRect.height;
 
-                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, newX));
-                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - AssinaturaModule.stampHeight, newY));
+                const limitX = Math.max(0, maxW - AssinaturaModule.stampWidth);
+                const limitH = Math.max(0, maxH - AssinaturaModule.stampHeight);
+
+                AssinaturaModule.overlayPos.x = Math.max(0, Math.min(limitX, newX));
+                AssinaturaModule.overlayPos.y = Math.max(0, Math.min(limitH, newY));
 
                 ajustarPosicaoOverlayNaTela();
                 e.preventDefault();
             }
-        };
+        }, { passive: false });
 
-        window.ontouchend = () => {
+        window.addEventListener('touchend', () => {
             AssinaturaModule.isDragging = false;
-        };
+        });
+
+        // 3. Redimensionamento pelo canto
+        if (resizeHandle) {
+            const onResizeStart = (e) => {
+                AssinaturaModule.isResizing = true;
+                AssinaturaModule.resizeStartX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                AssinaturaModule.resizeStartWidth = AssinaturaModule.stampWidth;
+                if (e.pointerId && typeof resizeHandle.setPointerCapture === 'function') {
+                    try { resizeHandle.setPointerCapture(e.pointerId); } catch (_) {}
+                }
+                e.stopPropagation();
+                e.preventDefault();
+            };
+
+            const onResizeMove = (e) => {
+                if (!AssinaturaModule.isResizing) return;
+                const curX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const delta = curX - AssinaturaModule.resizeStartX;
+                const newW = Math.max(140, Math.min(420, AssinaturaModule.resizeStartWidth + delta));
+                setTamanhoAssinatura(newW);
+                e.preventDefault();
+            };
+
+            const onResizeEnd = (e) => {
+                if (AssinaturaModule.isResizing) {
+                    AssinaturaModule.isResizing = false;
+                    if (e && e.pointerId && typeof resizeHandle.releasePointerCapture === 'function') {
+                        try { resizeHandle.releasePointerCapture(e.pointerId); } catch (_) {}
+                    }
+                }
+            };
+
+            resizeHandle.onpointerdown = onResizeStart;
+            resizeHandle.onpointermove = onResizeMove;
+            resizeHandle.onpointerup = onResizeEnd;
+            resizeHandle.onpointercancel = onResizeEnd;
+            resizeHandle.onmousedown = onResizeStart;
+            window.addEventListener('mousemove', onResizeMove);
+            window.addEventListener('mouseup', onResizeEnd);
+        }
 
         // Posição padrão inicial: Canto inferior direito da página
         posicionarAssinaturaPreset('rodape_direita');
@@ -866,19 +916,23 @@
     function ajustarPosicaoOverlayNaTela() {
         const overlay = document.getElementById('signatureOverlayBox');
         const canvas = document.getElementById('pdfViewerCanvas');
+        const wrapper = document.getElementById('pdfCanvasWrapper');
         if (!overlay) return;
 
-        const maxW = canvas ? (canvas.clientWidth || canvas.offsetWidth) : 800;
-        const maxH = canvas ? (canvas.clientHeight || canvas.offsetHeight) : 1000;
+        const maxW = (canvas && (canvas.clientWidth || canvas.offsetWidth || canvas.width)) || (wrapper && (wrapper.clientWidth || wrapper.offsetWidth)) || 800;
+        const maxH = (canvas && (canvas.clientHeight || canvas.offsetHeight || canvas.height)) || (wrapper && (wrapper.clientHeight || wrapper.offsetHeight)) || 1100;
 
         overlay.style.width = `${AssinaturaModule.stampWidth}px`;
         overlay.style.height = 'auto';
 
-        const actualH = overlay.offsetHeight || AssinaturaModule.stampHeight;
+        const actualH = overlay.offsetHeight || AssinaturaModule.stampHeight || 90;
         AssinaturaModule.stampHeight = actualH;
 
-        AssinaturaModule.overlayPos.x = Math.max(0, Math.min(maxW - AssinaturaModule.stampWidth, AssinaturaModule.overlayPos.x));
-        AssinaturaModule.overlayPos.y = Math.max(0, Math.min(maxH - actualH, AssinaturaModule.overlayPos.y));
+        const limitX = Math.max(0, maxW - AssinaturaModule.stampWidth);
+        const limitY = Math.max(0, maxH - actualH);
+
+        AssinaturaModule.overlayPos.x = Math.max(0, Math.min(limitX, AssinaturaModule.overlayPos.x));
+        AssinaturaModule.overlayPos.y = Math.max(0, Math.min(limitY, AssinaturaModule.overlayPos.y));
 
         overlay.style.left = `${AssinaturaModule.overlayPos.x}px`;
         overlay.style.top = `${AssinaturaModule.overlayPos.y}px`;
@@ -888,6 +942,7 @@
             coordDisplay.textContent = `X: ${Math.round(AssinaturaModule.overlayPos.x)}px | Y: ${Math.round(AssinaturaModule.overlayPos.y)}px (Pág. ${AssinaturaModule.currentPageNum})`;
         }
     }
+    window.ajustarPosicaoOverlayNaTela = ajustarPosicaoOverlayNaTela;
 
     function setTamanhoAssinatura(larguraPx) {
         AssinaturaModule.stampWidth = Number(larguraPx);
@@ -1331,6 +1386,18 @@
     }
     window.baixarDocumentoAssinado = baixarDocumentoAssinado;
 
+    // Converte Uint8Array para base64 em blocos de 32KB (alta performance, não trava thread)
+    function uint8ArrayToBase64(bytes) {
+        if (!bytes) return '';
+        let binary = '';
+        const len = bytes.byteLength;
+        const chunkSize = 32768;
+        for (let i = 0; i < len; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+        }
+        return window.btoa(binary);
+    }
+
     // 6.2 Envio via WhatsApp
     function openModalEnviarWhatsApp() {
         if (!AssinaturaModule.signedPdfBytes && !AssinaturaModule.currentPdfBytes) {
@@ -1343,11 +1410,47 @@
 
         // Pré-preenche instâncias ativas
         const selectInst = document.getElementById('sendWpInstanciaSelect');
+        const activeInst = (typeof sigeDB !== 'undefined' && typeof sigeDB.getActiveWhatsappInstance === 'function')
+            ? sigeDB.getActiveWhatsappInstance()
+            : 'sige_orientacao';
+
+        const cloudStates = (typeof sigeDB !== 'undefined' && sigeDB.data?.whatsappConfig?.cloudInstanceStates)
+            ? sigeDB.data.whatsappConfig.cloudInstanceStates
+            : {};
+
         if (selectInst && window.evolutionClient) {
-            selectInst.innerHTML = window.evolutionClient.defaultInstances.map(inst => `
-                <option value="${inst.instanceName}">${inst.label}</option>
-            `).join('');
-            selectInst.value = 'sige_secretaria';
+            selectInst.innerHTML = window.evolutionClient.defaultInstances.map(inst => {
+                const st = cloudStates[inst.instanceName];
+                const isConn = st ? Boolean(st.connected) : (inst.instanceName === 'sige_orientacao');
+                const badge = isConn ? '🟢 Conectado' : '⚪ Desconectado';
+                return `<option value="${inst.instanceName}" ${inst.instanceName === activeInst ? 'selected' : ''}>${inst.label} (${badge})</option>`;
+            }).join('');
+
+            // Se a instância ativa configurada não estiver conectada mas houver outra conectada, prefere a conectada
+            if (!cloudStates[activeInst]?.connected) {
+                const connInst = window.evolutionClient.defaultInstances.find(i => cloudStates[i.instanceName]?.connected);
+                if (connInst) {
+                    selectInst.value = connInst.instanceName;
+                }
+            }
+        }
+
+        // Atualiza status das instâncias em segundo plano
+        if (window.evolutionClient && typeof window.evolutionClient.checkConnectionState === 'function') {
+            setTimeout(async () => {
+                try {
+                    const currentVal = selectInst ? selectInst.value : activeInst;
+                    for (const inst of window.evolutionClient.defaultInstances) {
+                        const check = await window.evolutionClient.checkConnectionState(inst.instanceName);
+                        const opt = selectInst ? selectInst.querySelector(`option[value="${inst.instanceName}"]`) : null;
+                        if (opt) {
+                            const badge = check.connected ? '🟢 Conectado' : '⚪ Desconectado';
+                            opt.textContent = `${inst.label} (${badge})`;
+                        }
+                    }
+                    if (selectInst && currentVal) selectInst.value = currentVal;
+                } catch (_) {}
+            }, 50);
         }
 
         // Pré-carrega mensagem padrão
@@ -1367,9 +1470,41 @@
     }
     window.closeModalEnviarWhatsApp = closeModalEnviarWhatsApp;
 
+    // Dispara envio manual direto via WhatsApp Web (sem depender da Evolution API)
+    function enviarDocViaWhatsAppWebManual() {
+        baixarDocumentoAssinado();
+        const phone = document.getElementById('sendWpTelefoneInput')?.value.trim() || '';
+        const caption = document.getElementById('sendWpMensagemCaption')?.value.trim() || '';
+        const destinatarioNome = document.getElementById('sendWpDestinatarioNome')?.value.trim() || 'Destinatário';
+        const clean = phone.replace(/\D/g, '');
+        const phoneParam = clean ? (clean.startsWith('55') ? clean : '55' + clean) : '';
+        const msg = encodeURIComponent(caption + "\n\n*(Em anexo o documento oficial baixado)*");
+        const url = phoneParam ? `https://wa.me/${phoneParam}?text=${msg}` : `https://web.whatsapp.com/`;
+        window.open(url, '_blank');
+        closeModalEnviarWhatsApp();
+
+        // Registra histórico de expedição manual
+        const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
+        const bytesParaEnvio = AssinaturaModule.signedPdfBytes || AssinaturaModule.currentPdfBytes;
+        sigeDB.addDocumentoExpedido({
+            titulo: AssinaturaModule.signedFileName || AssinaturaModule.currentFileName,
+            nomeArquivo: AssinaturaModule.signedFileName || 'documento.pdf',
+            signatarioId: chancela?.id || '',
+            signatarioNome: chancela?.nome || 'Direção/Secretaria',
+            signatarioCargo: chancela?.cargo || '',
+            canal: 'whatsapp_web',
+            destinatario: `${destinatarioNome} (${phone || 'Manual'})`,
+            status: 'enviado',
+            tamanhoBytes: bytesParaEnvio ? bytesParaEnvio.byteLength : 0
+        });
+        renderHistorialExpedicoes();
+        atualizarContadoresAssinatura();
+    }
+    window.enviarDocViaWhatsAppWebManual = enviarDocViaWhatsAppWebManual;
+
     async function dispararEnvioWhatsAppDoc() {
         const phone = document.getElementById('sendWpTelefoneInput').value.trim();
-        const instanceName = document.getElementById('sendWpInstanciaSelect')?.value || 'sige_secretaria';
+        const instanceName = document.getElementById('sendWpInstanciaSelect')?.value || 'sige_orientacao';
         const caption = document.getElementById('sendWpMensagemCaption')?.value.trim();
         const destinatarioNome = document.getElementById('sendWpDestinatarioNome')?.value.trim() || 'Destinatário';
 
@@ -1385,16 +1520,38 @@
             return;
         }
 
+        // Verifica estado da instância antes de disparar
+        if (window.evolutionClient) {
+            try {
+                const stateCheck = await window.evolutionClient.checkConnectionState(instanceName);
+                if (!stateCheck.connected) {
+                    const cloudStates = sigeDB.data?.whatsappConfig?.cloudInstanceStates || {};
+                    const altInstance = window.evolutionClient.defaultInstances.find(i => i.instanceName !== instanceName && cloudStates[i.instanceName]?.connected);
+
+                    let confirmMsg = `A instância selecionada (${instanceName}) não está conectada ao WhatsApp no momento.`;
+                    if (altInstance) {
+                        confirmMsg += `\n\nDeseja enviar pela instância ativa e conectada '${altInstance.label}'?`;
+                        if (confirm(confirmMsg)) {
+                            const sel = document.getElementById('sendWpInstanciaSelect');
+                            if (sel) sel.value = altInstance.instanceName;
+                            return dispararEnvioWhatsAppDoc();
+                        }
+                    } else {
+                        confirmMsg += `\n\nDeseja abrir o WhatsApp Web para enviar o documento manualmente agora?`;
+                        if (confirm(confirmMsg)) {
+                            return enviarDocViaWhatsAppWebManual();
+                        }
+                        return;
+                    }
+                }
+            } catch (_) {}
+        }
+
         try {
             showToast('Enviando documento via WhatsApp em segundo plano...');
             
-            // Converte Uint8Array para base64
-            let binary = '';
-            const len = bytesParaEnvio.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytesParaEnvio[i]);
-            }
-            const base64Str = window.btoa(binary);
+            // Converte Uint8Array para base64 em blocos otimizados
+            const base64Str = uint8ArrayToBase64(bytesParaEnvio);
 
             const chancela = sigeDB.getChancelasAssinaturas().find(c => c.id === AssinaturaModule.selectedChancelaId);
 
@@ -1436,12 +1593,10 @@
                 atualizarContadoresAssinatura();
             } else {
                 console.warn('Falha no envio via Evolution API:', result);
-                // Fallback amigável: oferece abrir o WhatsApp Web diretamente
-                if (confirm(`A API de WhatsApp retornou: "${result.error}". Deseja abrir o WhatsApp Web para enviar manualmente?`)) {
-                    baixarDocumentoAssinado();
-                    const clean = phone.replace(/\D/g, '');
-                    const url = `https://wa.me/55${clean}?text=${encodeURIComponent(caption + "\n\n*(Em anexo o documento oficial baixado)*")}`;
-                    window.open(url, '_blank');
+                const motivo = result.error || 'Erro na comunicação com o servidor WhatsApp';
+                const confirmMsg = `Não foi possível enviar via Evolution API diretamente:\n"${motivo}"\n\nDeseja abrir o WhatsApp Web com o documento baixado para envio imediato?`;
+                if (confirm(confirmMsg)) {
+                    enviarDocViaWhatsAppWebManual();
                 }
             }
         } catch (err) {
