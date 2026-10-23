@@ -8195,10 +8195,13 @@ function aplicarTemplateWhatsAppDirecao() {
 // ==========================================
 // GERADOR INTELIGENTE DE COMUNICADOS COM IA
 // ==========================================
-function abrirModalGeradorIA() {
+let iaTargetTextareaId = "dirWpInputMensagem";
+
+function abrirModalGeradorIA(targetId = "dirWpInputMensagem") {
+    iaTargetTextareaId = targetId || "dirWpInputMensagem";
     const modal = document.getElementById("modalGeradorIA");
     const inputPrompt = document.getElementById("iaInputPrompt");
-    const mainMsg = document.getElementById("dirWpInputMensagem");
+    const targetEl = document.getElementById(iaTargetTextareaId) || document.getElementById("dirWpInputMensagem");
     const geminiInput = document.getElementById("iaGeminiApiKeyInput");
 
     if (geminiInput) {
@@ -8210,8 +8213,8 @@ function abrirModalGeradorIA() {
         };
     }
 
-    if (inputPrompt && mainMsg) {
-        inputPrompt.value = mainMsg.value.trim();
+    if (inputPrompt && targetEl) {
+        inputPrompt.value = targetEl.value.trim();
     }
 
     if (modal) modal.style.display = "flex";
@@ -8229,11 +8232,11 @@ async function executarGeradorIA() {
     const tomSelect = document.getElementById("iaTomSelect");
     const statusMsg = document.getElementById("iaStatusMsg");
     const btnExecutar = document.getElementById("btnExecutarGeradorIA");
-    const mainMsgInput = document.getElementById("dirWpInputMensagem");
+    const targetEl = document.getElementById(iaTargetTextareaId) || document.getElementById("dirWpInputMensagem");
 
     let draftText = promptInput ? promptInput.value.trim() : "";
-    if (!draftText && mainMsgInput) {
-        draftText = mainMsgInput.value.trim();
+    if (!draftText && targetEl) {
+        draftText = targetEl.value.trim();
     }
 
     if (!draftText) {
@@ -8312,9 +8315,9 @@ Regras fundamentais:
             generatedText = generatedText.slice(1, -1).trim();
         }
 
-        if (mainMsgInput) {
-            mainMsgInput.value = generatedText;
-            if (typeof atualizarPreviewMensagemWhatsApp === "function") {
+        if (targetEl) {
+            targetEl.value = generatedText;
+            if (targetEl.id === "dirWpInputMensagem" && typeof atualizarPreviewMensagemWhatsApp === "function") {
                 atualizarPreviewMensagemWhatsApp();
             }
         }
@@ -8329,9 +8332,9 @@ Regras fundamentais:
             draftText.split('\n').map(l => l.trim() ? `• ${l.trim()}` : '').filter(Boolean).join('\n') +
             `\n\nContamos com a atenção e colaboração de todos.\nAtenciosamente,\nDireção Escolar — {escola}`;
         
-        if (mainMsgInput) {
-            mainMsgInput.value = fallbackText;
-            if (typeof atualizarPreviewMensagemWhatsApp === "function") {
+        if (targetEl) {
+            targetEl.value = fallbackText;
+            if (targetEl.id === "dirWpInputMensagem" && typeof atualizarPreviewMensagemWhatsApp === "function") {
                 atualizarPreviewMensagemWhatsApp();
             }
         }
@@ -11074,22 +11077,6 @@ function updateAllDynamicSelects() {
             selectProjLider.value = curVal;
         }
     }
-
-    // Equipe Escolar (Comunicação WhatsApp)
-    const equipe = sigeDB.getEquipeEscolar();
-    const selectAviso = document.getElementById("avisoSelectDestinatario");
-    if (selectAviso) {
-        const curVal = selectAviso.value;
-        let html = `<option value="todos">📢 Toda a Equipe Escolar (${equipe.length} colaboradores)</option>`;
-        equipe.forEach(p => {
-            const setorLabel = p.setor ? p.setor.toUpperCase() : "DOCENTE";
-            html += `<option value="${p.id}">👤 ${escapeHtml(p.nome)} - [${setorLabel}] ${escapeHtml(p.cargoFuncao || p.disciplina || '')} (${escapeHtml(p.telefone || '')})</option>`;
-        });
-        selectAviso.innerHTML = html;
-        if (curVal && Array.from(selectAviso.options).some(opt => opt.value === curVal)) {
-            selectAviso.value = curVal;
-        }
-    }
 }
 
 function setAllProfissionalModulos(checked = true) {
@@ -11691,103 +11678,327 @@ window.getListaDestinatariosUnificada = getListaDestinatariosUnificada;
 
 function openDisparoAvisoProfessorModal(profId = "todos") {
     const modal = document.getElementById("modalDisparoAvisoProfessor");
-    const selectDest = document.getElementById("avisoSelectDestinatario");
-    const inputAssunto = document.getElementById("avisoInputAssunto");
-    const inputMsg = document.getElementById("avisoInputMensagem");
-
     if (!modal) return;
 
-    const listaUnificada = getListaDestinatariosUnificada();
+    const cardDest = document.getElementById("avisoDestinatarioCard");
+    const geralWrapper = document.getElementById("avisoDestinatarioGeralWrapper");
+    const elNome = document.getElementById("avisoDestinatarioNome");
+    const elInfo = document.getElementById("avisoDestinatarioInfo");
+    const elTelefone = document.getElementById("avisoDestinatarioTelefone");
+    const geralTexto = document.getElementById("avisoDestinatarioGeralTexto");
+    const inputAssunto = document.getElementById("avisoInputAssunto");
+    const inputMsg = document.getElementById("avisoInputMensagem");
+    const hiddenId = document.getElementById("avisoSelectedDestId");
+    const hiddenPhone = document.getElementById("avisoSelectedDestPhone");
+    const hiddenNome = document.getElementById("avisoSelectedDestNome");
+    const selectRemetente = document.getElementById("avisoSelectRemetente");
 
-    if (selectDest) {
-        let opts = `<option value="todos">📢 Toda a Equipe Escolar & Contatos (${listaUnificada.length} destinatários)</option>`;
-        listaUnificada.forEach(p => {
-            const foneExib = p.telefone ? `(${formatTelefoneDisplay(p.telefone)})` : '(sem telefone)';
-            opts += `<option value="${p.id}" ${p.id === profId ? 'selected' : ''}>👤 ${escapeHtml(p.nome)} - [${p.setorLabel}] ${escapeHtml(p.cargoFuncao)} ${foneExib}</option>`;
-        });
-        selectDest.innerHTML = opts;
+    if (selectRemetente) {
+        selectRemetente.value = "sistema_auto";
     }
 
-    if (profId === "todos") {
-        if (selectDest) selectDest.value = "todos";
-        if (inputAssunto) inputAssunto.value = "Comunicado Oficial da Direção Escolar";
-        if (inputMsg) inputMsg.value = "Prezados Colaboradores,\n\nSolicitamos a atenção de todos para os alinhamentos e diretrizes da unidade nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
-    } else {
-        const p = listaUnificada.find(item => item.id === profId);
-        if (p) {
-            if (inputAssunto) inputAssunto.value = `Comunicado para ${p.nome}`;
-            if (inputMsg) inputMsg.value = `Olá, ${p.nome}!\n\nEntramos em contato referente às demandas do Centro Educacional Pedro Rizzi.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
+    if (profId && profId !== "todos") {
+        const contatos = (typeof sigeDB !== 'undefined' && sigeDB.getContatosWhatsApp) ? sigeDB.getContatosWhatsApp() : [];
+        const equipe = (typeof sigeDB !== 'undefined' && sigeDB.getEquipeEscolar) ? sigeDB.getEquipeEscolar() : [];
+
+        let c = contatos.find(item => item && item.id === profId);
+        let tagOrCargo = "";
+        if (c) {
+            tagOrCargo = c.cargo || (Array.isArray(c.tags) ? c.tags.join(', ') : (c.tag || 'Contato da Escola'));
+        } else {
+            const p = equipe.find(item => item && item.id === profId);
+            if (p) {
+                c = {
+                    id: p.id,
+                    nome: p.nome,
+                    telefone: p.telefone || p.whatsapp || '',
+                    cargo: p.cargoFuncao || p.disciplina || p.setor || 'Colaborador Escolar'
+                };
+                tagOrCargo = c.cargo;
+            }
         }
+
+        if (!c) {
+            const cleanProfId = String(profId).replace(/\D/g, '');
+            if (cleanProfId.length >= 8) {
+                c = contatos.find(item => item.telefone && item.telefone.replace(/\D/g, '').includes(cleanProfId)) ||
+                    equipe.find(item => item.telefone && item.telefone.replace(/\D/g, '').includes(cleanProfId));
+            }
+        }
+
+        if (cardDest) cardDest.style.display = "flex";
+        if (geralWrapper) geralWrapper.style.display = "none";
+
+        if (c) {
+            const foneFormatado = formatTelefoneDisplay(c.telefone);
+            const hasPhone = c.telefone && c.telefone.replace(/\D/g, '').length >= 10;
+
+            if (elNome) elNome.innerText = c.nome || "Contato";
+            if (elInfo) elInfo.innerText = tagOrCargo || "Equipe / Contato";
+            if (elTelefone) {
+                elTelefone.innerHTML = hasPhone
+                    ? `<i class="fa-solid fa-phone" style="font-size:0.8rem; margin-right:3px;"></i>${escapeHtml(foneFormatado)}`
+                    : `<span style="color:#ef4444; font-size:0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Sem telefone</span>`;
+            }
+
+            if (hiddenId) hiddenId.value = c.id || profId;
+            if (hiddenPhone) hiddenPhone.value = c.telefone || '';
+            if (hiddenNome) hiddenNome.value = c.nome || '';
+
+            const primeiroNome = (c.nome || "Colaborador").trim().split(" ")[0];
+            if (inputAssunto) inputAssunto.value = `Recado Oficial para ${primeiroNome}`;
+            if (inputMsg) inputMsg.value = `Olá, ${primeiroNome}!\n\nEntramos em contato referente aos comunicados do Centro Educacional Pedro Rizzi.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi`;
+        } else {
+            if (elNome) elNome.innerText = "Contato";
+            if (elInfo) elInfo.innerText = "ID: " + profId;
+            if (elTelefone) elTelefone.innerText = formatTelefoneDisplay(profId);
+            if (hiddenId) hiddenId.value = profId;
+            if (hiddenPhone) hiddenPhone.value = profId;
+            if (hiddenNome) hiddenNome.value = "Contato";
+            if (inputAssunto) inputAssunto.value = "Comunicado Oficial";
+            if (inputMsg) inputMsg.value = "Olá!\n\nEntramos em contato pelo Centro Educacional Pedro Rizzi.\n\nAtenciosamente,\nEquipe Gestora";
+        }
+    } else {
+        if (cardDest) cardDest.style.display = "none";
+        if (geralWrapper) geralWrapper.style.display = "block";
+        if (hiddenId) hiddenId.value = "todos";
+        if (hiddenPhone) hiddenPhone.value = "";
+        if (hiddenNome) hiddenNome.value = "Todos";
+
+        const selCount = (typeof selectedWpContactIds !== 'undefined' && selectedWpContactIds.size > 0) ? selectedWpContactIds.size : 0;
+        if (selCount > 0) {
+            if (geralTexto) geralTexto.innerText = `Disparo Direto para os ${selCount} contato(s) selecionado(s) na tabela`;
+            if (inputAssunto) inputAssunto.value = "Comunicado aos Colaboradores Selecionados";
+        } else {
+            const lista = (typeof getListaDestinatariosUnificada === 'function') ? getListaDestinatariosUnificada() : [];
+            if (geralTexto) geralTexto.innerText = `Disparo Geral para toda a equipe escolar e contatos (${lista.length} destinatários)`;
+            if (inputAssunto) inputAssunto.value = "Comunicado Geral da Direção Escolar";
+        }
+
+        if (inputMsg) inputMsg.value = "Prezados Colaboradores,\n\nSolicitamos a atenção de todos para os alinhamentos e diretrizes da unidade escolar nesta semana.\n\nAtenciosamente,\nEquipe Gestora - C.E. Pedro Rizzi";
     }
 
     modal.style.display = "flex";
 }
+window.openDisparoAvisoProfessorModal = openDisparoAvisoProfessorModal;
 
 function closeDisparoAvisoProfessorModal() {
     const modal = document.getElementById("modalDisparoAvisoProfessor");
     if (modal) modal.style.display = "none";
 }
+window.closeDisparoAvisoProfessorModal = closeDisparoAvisoProfessorModal;
 
-function submitDisparoAvisoProfessor(e) {
-    e.preventDefault();
-    const destId = document.getElementById("avisoSelectDestinatario")?.value;
+async function submitDisparoAvisoProfessor(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const destId = document.getElementById("avisoSelectedDestId")?.value || "todos";
+    const destPhone = document.getElementById("avisoSelectedDestPhone")?.value || "";
+    const destNome = document.getElementById("avisoSelectedDestNome")?.value || "Contato";
+    const remetenteOpt = document.getElementById("avisoSelectRemetente")?.value || "sistema_auto";
     const assunto = document.getElementById("avisoInputAssunto")?.value.trim();
     const mensagem = document.getElementById("avisoInputMensagem")?.value.trim();
 
-    if (!assunto || !mensagem) {
-        showToast("⚠️ Preencha o assunto e a mensagem do comunicado!");
+    if (!mensagem) {
+        showToast("⚠️ Escreva a mensagem do comunicado antes de disparar!", "warning");
         return;
     }
 
-    const listaUnificada = getListaDestinatariosUnificada();
+    const fullMsg = assunto ? `*${assunto}*\n\n${mensagem}` : mensagem;
 
-    if (destId === "todos") {
-        let disparosCount = 0;
-        listaUnificada.forEach(p => {
-            if (p.telefone) {
-                const cleanPhone = p.telefone.replace(/\D/g, "");
-                const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
-                const fullMsg = `*${assunto}*\n\n${mensagem}`;
-                
-                sigeDB.logWhatsappDispatch("aviso-geral-equipe", {
-                    tipo: "Aviso Geral Equipe",
-                    mensagem: fullMsg,
-                    destinatario: p.nome,
-                    telefone: p.telefone,
-                    modo: "manual",
-                    status: "sucesso"
-                });
-                disparosCount++;
-            }
-        });
-
-        const fullMsg = `*${assunto}*\n\n${mensagem}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
-        showToast(`📲 Comunicado registrado para ${disparosCount} colaboradores! Janela do WhatsApp aberta.`);
-    } else {
-        const p = listaUnificada.find(item => item.id === destId);
-        if (p) {
-            const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
-            const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
-            const fullMsg = `*${assunto}*\n\n${mensagem}`;
-            
-            sigeDB.logWhatsappDispatch("aviso-individual-equipe", {
-                tipo: "Aviso Individual Colaborador",
-                mensagem: fullMsg,
-                destinatario: p.nome,
-                telefone: p.telefone,
-                modo: "manual",
-                status: "sucesso"
-            });
-
-            const phoneParam = waPhone ? `phone=${waPhone}&` : "";
-            window.open(`https://api.whatsapp.com/send?${phoneParam}text=${encodeURIComponent(fullMsg)}`, "_blank");
-            showToast(`📲 Comunicado direcionado para ${p.nome} enviado via WhatsApp!`);
-        }
+    if (remetenteOpt === "whatsapp_web") {
+        enviarAvisoViaWhatsAppWebManual();
+        return;
     }
 
+    let instanceName = remetenteOpt;
+    if (instanceName === "sistema_auto") {
+        instanceName = (typeof sigeDB !== 'undefined' && sigeDB.getActiveWhatsappInstance)
+            ? (sigeDB.getActiveWhatsappInstance() || "sige_orientacao")
+            : "sige_orientacao";
+    }
+
+    const btnSubmit = document.getElementById("btnSubmitDisparoAviso");
+
+    // ENVIO INDIVIDUAL
+    if (destId !== "todos") {
+        let cleanPhone = (destPhone || '').replace(/\D/g, "");
+        if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+            cleanPhone = "55" + cleanPhone;
+        }
+
+        if (cleanPhone.length < 10) {
+            showToast("⚠️ Este contato não possui um número de WhatsApp válido cadastrado.", "error");
+            if (confirm("Deseja abrir o WhatsApp Web para selecionar o contato manualmente no navegador?")) {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
+                closeDisparoAvisoProfessorModal();
+            }
+            return;
+        }
+
+        if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+            }
+
+            try {
+                showToast(`⏳ Enviando mensagem direta para ${destNome}...`, "info");
+                const check = await evolutionClient.checkConnectionState(instanceName);
+                if (!check.connected) {
+                    if (typeof openModalQrCodeWhatsApp === 'function') openModalQrCodeWhatsApp(instanceName);
+                    showToast(`📱 Conecte o WhatsApp da escola (${instanceName}) escaneando o QR Code.`, "warning");
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Disparar Comunicado`;
+                    }
+                    return;
+                }
+
+                const res = await evolutionClient.sendText(cleanPhone, fullMsg, { instanceName });
+                if (res.success) {
+                    if (typeof sigeDB !== 'undefined' && sigeDB.addMensagemWhatsAppLog) {
+                        sigeDB.addMensagemWhatsAppLog({
+                            contatoNome: destNome,
+                            telefone: cleanPhone,
+                            tag: 'Recado Rápido',
+                            mensagem: fullMsg,
+                            status: 'enviado',
+                            instancia: instanceName
+                        });
+                    }
+                    if (typeof renderDirWhatsAppLogs === 'function') renderDirWhatsAppLogs();
+                    showToast(`✅ Recado enviado com sucesso para ${destNome}!`, "success");
+                    closeDisparoAvisoProfessorModal();
+                } else {
+                    showToast(`⚠️ Falha no envio automático: ${res.error}`, "error");
+                    if (confirm(`Não foi possível enviar diretamente pelo sistema (${res.error}). Deseja abrir a conversa no WhatsApp Web?`)) {
+                        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(fullMsg)}`, "_blank");
+                        closeDisparoAvisoProfessorModal();
+                    }
+                }
+            } catch (err) {
+                console.error("Erro no envio:", err);
+                showToast(`Erro ao enviar mensagem: ${err.message}`, "error");
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Disparar Comunicado`;
+                }
+            }
+        } else {
+            window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(fullMsg)}`, "_blank");
+            showToast(`📲 Abrindo conversa do WhatsApp com ${destNome}...`);
+            closeDisparoAvisoProfessorModal();
+        }
+    } else {
+        // ENVIO EM LOTE (TODOS OU SELECIONADOS NA TABELA)
+        const listaUnificada = (typeof getListaDestinatariosUnificada === 'function') ? getListaDestinatariosUnificada() : [];
+        let targets = [];
+        if (typeof selectedWpContactIds !== 'undefined' && selectedWpContactIds.size > 0) {
+            targets = listaUnificada.filter(p => selectedWpContactIds.has(p.id));
+        } else {
+            targets = listaUnificada;
+        }
+
+        const validTargets = targets.filter(p => p.telefone && p.telefone.replace(/\D/g, '').length >= 10);
+        if (validTargets.length === 0) {
+            showToast("⚠️ Nenhum dos contatos selecionados possui número de WhatsApp válido.", "warning");
+            return;
+        }
+
+        if (typeof evolutionClient !== 'undefined' && evolutionClient.isConfigured()) {
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Disparando...`;
+            }
+
+            try {
+                const check = await evolutionClient.checkConnectionState(instanceName);
+                if (!check.connected) {
+                    if (typeof openModalQrCodeWhatsApp === 'function') openModalQrCodeWhatsApp(instanceName);
+                    showToast(`📱 Conecte o WhatsApp da escola (${instanceName}) escaneando o QR Code.`, "warning");
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Disparar Comunicado`;
+                    }
+                    return;
+                }
+
+                showToast(`🚀 Iniciando envio automático para ${validTargets.length} contatos...`, "info");
+                let enviados = 0;
+                for (const t of validTargets) {
+                    let fone = t.telefone.replace(/\D/g, '');
+                    if (fone.length === 10 || fone.length === 11) fone = "55" + fone;
+                    const msgIndividual = fullMsg.replace(/{nome}/gi, (t.nome || '').split(' ')[0]);
+
+                    try {
+                        const r = await evolutionClient.sendText(fone, msgIndividual, { instanceName });
+                        if (r.success) {
+                            enviados++;
+                            if (typeof sigeDB !== 'undefined' && sigeDB.addMensagemWhatsAppLog) {
+                                sigeDB.addMensagemWhatsAppLog({
+                                    contatoNome: t.nome,
+                                    telefone: fone,
+                                    tag: 'Aviso Geral',
+                                    mensagem: msgIndividual,
+                                    status: 'enviado',
+                                    instancia: instanceName
+                                });
+                            }
+                        }
+                    } catch(e) {
+                        console.warn(`Erro no envio para ${t.nome}:`, e);
+                    }
+                }
+
+                if (typeof renderDirWhatsAppLogs === 'function') renderDirWhatsAppLogs();
+                showToast(`✅ Disparo concluído com sucesso! ${enviados} de ${validTargets.length} mensagens enviadas!`, "success");
+                closeDisparoAvisoProfessorModal();
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Disparar Comunicado`;
+                }
+            }
+        } else {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullMsg)}`, "_blank");
+            showToast(`📲 Janela do WhatsApp Web aberta com a mensagem para ${validTargets.length} contatos.`);
+            closeDisparoAvisoProfessorModal();
+        }
+    }
+}
+window.submitDisparoAvisoProfessor = submitDisparoAvisoProfessor;
+
+function enviarAvisoViaWhatsAppWebManual() {
+    const destPhone = document.getElementById("avisoSelectedDestPhone")?.value || "";
+    const destNome = document.getElementById("avisoSelectedDestNome")?.value || "";
+    const assunto = document.getElementById("avisoInputAssunto")?.value.trim();
+    const mensagem = document.getElementById("avisoInputMensagem")?.value.trim();
+
+    if (!mensagem) {
+        showToast("⚠️ Digite a mensagem antes de abrir o WhatsApp!", "warning");
+        return;
+    }
+
+    const fullMsg = assunto ? `*${assunto}*\n\n${mensagem}` : mensagem;
+    let cleanPhone = (destPhone || '').replace(/\D/g, "");
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = "55" + cleanPhone;
+    }
+
+    const phoneParam = cleanPhone.length >= 10 ? `phone=${cleanPhone}&` : "";
+    window.open(`https://api.whatsapp.com/send?${phoneParam}text=${encodeURIComponent(fullMsg)}`, "_blank");
+    showToast(`📲 Abrindo conversa no WhatsApp Web com ${destNome || 'destinatário'}...`);
     closeDisparoAvisoProfessorModal();
 }
+window.enviarAvisoViaWhatsAppWebManual = enviarAvisoViaWhatsAppWebManual;
+
+function gerarMensagemParaAvisoModalIA() {
+    if (typeof abrirModalGeradorIA === 'function') {
+        abrirModalGeradorIA('avisoInputMensagem');
+    }
+}
+window.gerarMensagemParaAvisoModalIA = gerarMensagemParaAvisoModalIA;
 
 // ==========================================
 // CONFIGURAÇÃO E PAINEL DO FIREBASE CLOUD

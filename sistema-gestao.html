@@ -3420,40 +3420,94 @@
     <!-- MODAL 6: DISPARO DE AVISO WHATSAPP -->
     <!-- ========================================== -->
     <div id="modalDisparoAvisoProfessor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-        <div style="background:white; padding:2rem; border-radius:18px; max-width:580px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+        <div style="background:white; padding:1.8rem; border-radius:18px; max-width:580px; width:92%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-brands fa-whatsapp" style="color:#16a34a; font-size:1.4rem;"></i> Disparar Comunicado via WhatsApp
+                <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="fa-brands fa-whatsapp" style="color:#16a34a; font-size:1.4rem;"></i> Enviar Recado via WhatsApp
                 </h3>
-                <button onclick="closeDisparoAvisoProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeDisparoAvisoProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form onsubmit="submitDisparoAvisoProfessor(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- 1. DESTINATÁRIO -->
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Destinatário(s):</label>
-                    <select id="avisoSelectDestinatario" class="search-input" style="width:100%; font-weight:700;">
-                        <!-- Opções preenchidas dinamicamente (Todos ou individual) -->
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a; display:block; margin-bottom:4px;">Destinatário:</label>
+                    
+                    <!-- Card quando um contato individual está selecionado -->
+                    <div id="avisoDestinatarioCard" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <div style="width:38px; height:38px; border-radius:50%; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                            <div style="min-width:0;">
+                                <div id="avisoDestinatarioNome" style="font-weight:800; font-size:0.95rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Contato</div>
+                                <div id="avisoDestinatarioInfo" style="font-size:0.75rem; color:#64748b;">Função / Tag</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right; flex-shrink:0;">
+                            <div style="font-size:0.68rem; color:#64748b; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Número de Destino</div>
+                            <div id="avisoDestinatarioTelefone" style="font-weight:900; font-size:1rem; color:#15803d; letter-spacing:0.4px; font-variant-numeric:tabular-nums;">(00) 00000-0000</div>
+                        </div>
+                    </div>
+
+                    <!-- Banner quando for disparo geral (todos ou selecionados em lote) -->
+                    <div id="avisoDestinatarioGeralWrapper" style="display:none;">
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:10px; font-size:0.88rem; color:#166534; font-weight:700;">
+                            <i class="fa-solid fa-users" style="font-size:1.2rem; color:#16a34a;"></i>
+                            <span id="avisoDestinatarioGeralTexto">Toda a Equipe Escolar</span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="avisoSelectedDestId" value="">
+                    <input type="hidden" id="avisoSelectedDestPhone" value="">
+                    <input type="hidden" id="avisoSelectedDestNome" value="">
+                </div>
+
+                <!-- 2. REMETENTE / LINHA DE ENVIO -->
+                <div>
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <i class="fa-solid fa-tower-broadcast" style="color:#0284c7;"></i> Enviar a partir de (WhatsApp Remetente):
+                    </label>
+                    <select id="avisoSelectRemetente" class="search-input" style="width:100%; font-weight:700; background:#f0fdf4; border-color:#86efac; color:#166534;">
+                        <option value="sistema_auto">🚀 WhatsApp Oficial da Escola (Envio Direto pelo Sistema / Sem Abrir WhatsApp Web)</option>
+                        <option value="sige_orientacao">💛 WhatsApp da Orientação Educacional</option>
+                        <option value="sige_direcao">🏛️ WhatsApp do Gabinete da Direção</option>
+                        <option value="sige_secretaria">📋 WhatsApp da Secretaria Escolar</option>
+                        <option value="whatsapp_web">💬 Meu WhatsApp Web Pessoal (Abrir Conversa no Navegador)</option>
                     </select>
                 </div>
 
+                <!-- 3. ASSUNTO / CATEGORIA -->
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Assunto / Categoria do Comunicado:</label>
-                    <input type="text" id="avisoInputAssunto" required placeholder="Ex: Lembrete de Reunião de Conselho de Classe" class="search-input" style="width:100%;">
+                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a; display:block; margin-bottom:4px;">Assunto do Comunicado:</label>
+                    <input type="text" id="avisoInputAssunto" required placeholder="Ex: Comunicado Oficial / Recado Importante" class="search-input" style="width:100%;">
                 </div>
 
+                <!-- 4. MENSAGEM DO COMUNICADO -->
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Mensagem do Comunicado:</label>
-                    <textarea id="avisoInputMensagem" rows="5" required placeholder="Escreva a mensagem oficial que será transmitida ao professor..." class="search-input" style="width:100%; font-family:inherit; font-size:0.88rem; line-height:1.4;"></textarea>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Mensagem:</label>
+                        <button type="button" onclick="gerarMensagemParaAvisoModalIA()" style="background:linear-gradient(135deg, #7c3aed, #4f46e5); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" title="Aprimorar ou criar mensagem com Inteligência Artificial">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Melhorar com IA
+                        </button>
+                    </div>
+                    <textarea id="avisoInputMensagem" rows="5" required placeholder="Escreva a mensagem que será transmitida..." class="search-input" style="width:100%; font-family:inherit; font-size:0.88rem; line-height:1.4;"></textarea>
                 </div>
 
-                <div style="background:#f0fdf4; padding:10px; border-radius:10px; border:1px solid #bbf7d0; font-size:0.8rem; color:#166534;">
-                    <i class="fa-solid fa-circle-info"></i> O sistema registrará este disparo na Central de Registros e abrirá a conversa direta do WhatsApp Web/App com o destinatário.
+                <!-- 5. BANNER INFORMATIVO -->
+                <div style="background:#f0fdf4; padding:10px 12px; border-radius:10px; border:1px solid #bbf7d0; font-size:0.8rem; color:#166534; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-circle-check" style="font-size:1.1rem; color:#16a34a; flex-shrink:0;"></i>
+                    <span>Envio automatizado e direto pelo sistema, sem precisar abrir janelas extras do WhatsApp Web!</span>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:0.8rem;">
+                <!-- 6. BOTÕES DE AÇÃO -->
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:0.6rem; flex-wrap:wrap;">
                     <button type="button" onclick="closeDisparoAvisoProfessorModal()" class="btn btn-secondary" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto; background:#16a34a; color:white;">
-                        <i class="fa-brands fa-whatsapp"></i> Disparar Comunicado
+                    <button type="button" onclick="enviarAvisoViaWhatsAppWebManual()" class="btn" style="width:auto; background:#f8fafc; color:#334155; border:1px solid #cbd5e1; font-weight:700; font-size:0.85rem;" title="Abrir conversa no WhatsApp Web manualmente">
+                        <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> WhatsApp Web
+                    </button>
+                    <button type="submit" id="btnSubmitDisparoAviso" class="btn btn-primary" style="width:auto; background:#16a34a; color:white; font-weight:800; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-paper-plane"></i> Disparar Comunicado
                     </button>
                 </div>
             </form>
@@ -5170,8 +5224,8 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- JS Files -->
     <script src="js/calendario-oficial-data.js?v=20261023_v59"></script>
     <script src="js/evolution-client.js?v=20261023_v59"></script>
-    <script src="js/gestao-data.js?v=20261023_v60"></script>
-    <script src="js/gestao-app.js?v=20261023_v60"></script>
+    <script src="js/gestao-data.js?v=20261023_v61"></script>
+    <script src="js/gestao-app.js?v=20261023_v61"></script>
     <script src="js/pdf-importer.js?v=20261023_v59"></script>
     <script src="js/assinatura-docs.js?v=20261023_v59"></script>
 
