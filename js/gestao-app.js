@@ -951,7 +951,7 @@ function getOrientadoraByRole(role) {
     if (!role) return null;
     const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     
-    // 1. Busca prioritária por ID ou nome da role ativa selecionada (ex: orientadora_clarinda, orientadora_daiane, orientadora_prof-jackson)
+    // 1. Busca prioritária por ID ou nome da role ativa selecionada (ex: orientadora_clarinda, orientadora_daiane, orientadora_prof-edevaldo)
     if (role.startsWith("orientadora_")) {
         const idOrName = role.replace("orientadora_", "").toLowerCase();
         const found = orientadoras.find(o => (o.id && o.id.toLowerCase() === idOrName) || (o.nome && o.nome.toLowerCase().includes(idOrName)));
@@ -1005,7 +1005,8 @@ function populateActiveRoleSelectOptions(roleSelect) {
     orientadoras.forEach(o => {
         const valueKey = "orientadora_" + o.id;
         const sub = o.turmasOuSalas || o.cargoFuncao || "OE";
-        const iconPrefix = (o.nome && (o.nome.toLowerCase().includes('jackson') || o.nome.toLowerCase().includes('silvano'))) ? "🧭 Orientador" : "💛 Orientadora";
+        const prefix = (typeof getOrientadorPrefix === 'function') ? getOrientadorPrefix(o.nome, o.cargoFuncao) : 'Orientador(a)';
+        const iconPrefix = prefix === "Orientador" ? "🧭 Orientador" : "💛 Orientadora";
         html += `<option value="${escapeHtml(valueKey)}">${iconPrefix} ${escapeHtml(o.nome)} (${escapeHtml(sub)})</option>`;
     });
 
@@ -4691,6 +4692,12 @@ function openAgendamentoModal(dateIso = "", turno = "", tipo = "", orientadoraNo
     let targetOri = orientadoraNome;
     if (!targetOri && filterVal !== "todas") {
         targetOri = filterVal;
+    }
+    if (!targetOri) {
+        const activeOri = (typeof getOrientadoraByRole === 'function') ? getOrientadoraByRole(sigeDB.getRole()) : null;
+        if (activeOri && activeOri.nome) {
+            targetOri = activeOri.nome;
+        }
     }
 
     if (targetOri) {
@@ -10943,9 +10950,11 @@ function updateAllDynamicSelects() {
 
     if (selectOpFilter) {
         const curVal = selectOpFilter.value;
-        let html = `<option value="todas">👥 Todas as Orientadoras (Geral)</option>`;
+        let html = `<option value="todas">👥 Todos(as) os(as) Orientadores(as) (Geral)</option>`;
         orientadoras.forEach(o => {
-            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
+            const prefix = (typeof getOrientadorPrefix === 'function') ? getOrientadorPrefix(o.nome, o.cargoFuncao) : 'Orientador(a)';
+            const icon = prefix === 'Orientador' ? '🧭' : '💛';
+            html += `<option value="${escapeHtml(o.nome)}">${icon} ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
         });
         selectOpFilter.innerHTML = html;
         if (curVal) selectOpFilter.value = curVal;
@@ -10956,7 +10965,9 @@ function updateAllDynamicSelects() {
         const curVal = selectOpModal.value;
         let html = ``;
         orientadoras.forEach(o => {
-            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
+            const prefix = (typeof getOrientadorPrefix === 'function') ? getOrientadorPrefix(o.nome, o.cargoFuncao) : 'Orientador(a)';
+            const icon = prefix === 'Orientador' ? '🧭' : '💛';
+            html += `<option value="${escapeHtml(o.nome)}">${icon} ${escapeHtml(o.nome)} (${escapeHtml(o.telefone || 'Sem WhatsApp')})</option>`;
         });
         selectOpModal.innerHTML = html;
         if (curVal && Array.from(selectOpModal.options).some(opt => opt.value === curVal)) {
@@ -10968,7 +10979,9 @@ function updateAllDynamicSelects() {
         const curVal = selectOpEditModal.value;
         let html = ``;
         orientadoras.forEach(o => {
-            html += `<option value="${escapeHtml(o.nome)}">💛 ${escapeHtml(o.nome)}</option>`;
+            const prefix = (typeof getOrientadorPrefix === 'function') ? getOrientadorPrefix(o.nome, o.cargoFuncao) : 'Orientador(a)';
+            const icon = prefix === 'Orientador' ? '🧭' : '💛';
+            html += `<option value="${escapeHtml(o.nome)}">${icon} ${escapeHtml(o.nome)}</option>`;
         });
         selectOpEditModal.innerHTML = html;
         if (curVal && Array.from(selectOpEditModal.options).some(opt => opt.value === curVal)) {

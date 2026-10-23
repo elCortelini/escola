@@ -64,13 +64,25 @@ function parseJwt(token) {
     }
 }
 
+function getOrientadorPrefix(name = '', cargo = '') {
+    const c = (cargo || '').toLowerCase();
+    if (c.includes('orientadora')) return 'Orientadora';
+    if (c.includes('orientador')) return 'Orientador';
+    const firstName = (name || '').trim().split(' ')[0].toLowerCase();
+    const maleNames = ['edevaldo', 'jackson', 'joao', 'joão', 'jose', 'josé', 'carlos', 'paulo', 'pedro', 'lucas', 'marcos', 'mateus', 'matheus', 'gabriel', 'rafael', 'bruno', 'rodrigo', 'fernando', 'marcelo', 'ricardo', 'eduardo', 'felipe', 'gustavo', 'andre', 'andré', 'leonardo', 'alexandre', 'daniel', 'fabio', 'fábio', 'marcio', 'márcio', 'tiago', 'thiago', 'samuel', 'jorge', 'diego', 'vitor', 'victor', 'luis', 'luís', 'luiz'];
+    if (maleNames.includes(firstName)) return 'Orientador';
+    if (firstName.endsWith('o') || firstName.endsWith('or')) return 'Orientador';
+    return 'Orientadora';
+}
+if (typeof window !== 'undefined') window.getOrientadorPrefix = getOrientadorPrefix;
+
 function getRoleLabel(role) {
     if (!role) return "Colaborador Escolar";
     if (typeof role === 'string' && role.startsWith("orientadora_")) {
         if (typeof getOrientadoraByRole === 'function') {
             const ori = getOrientadoraByRole(role);
             if (ori) {
-                const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                const prefix = getOrientadorPrefix(ori.nome, ori.cargoFuncao || ori.cargo);
                 return `${prefix} ${ori.nome}`;
             }
         }
@@ -351,7 +363,7 @@ const defaultSigeData = {
         { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senhaHash: "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senhaHash: "sha256_06509416156da6f8d7c808b7d399d07a878c37b35515df57250de94279472a6a", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senhaHash: "sha256_e7d7041793744fb1b58525b6a73c988950d603e91129e71ec13328eb99e3a682", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "direcao@escola.gov.br", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Jackson Silvano (Diretor & Orientador)", role: "direcao", cargo: "Diretor Escolar e Orientador Educacional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "direcao@escola.gov.br", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Edevaldo Junior (Diretor & Orientador)", role: "direcao", cargo: "Diretor Escolar e Orientador Educacional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senhaHash: "sha256_24dbd8d85f37733eb71538092504f30c6b157f6c73428d61d41981240d438d3c", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
@@ -389,7 +401,7 @@ const defaultSigeData = {
     orientadoras: [
         { id: "prof-clarinda", nome: "Clarinda Rosa Pereira", cargoFuncao: "Orientadora Educacional — Séries Iniciais", turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)", turnos: "matutino", telefone: "47999112233", email: "clarinda@escola.gov.br", op_perfil: "executora" },
         { id: "prof-daiane", nome: "Daiane Caetano Costa de Aquino", cargoFuncao: "Orientadora Educacional — Séries Finais", turmasOuSalas: "6º ao 9º Anos (Séries Finais)", turnos: "vespertino", telefone: "47999445566", email: "daiane.aquino04548@edu.itajai.sc.gov.br", op_perfil: "executora" },
-        { id: "prof-jackson", nome: "Jackson Silvano", cargoFuncao: "Diretor Escolar e Orientador Educacional", turmasOuSalas: "Direção & Orientação Geral", turnos: "integral", telefone: "47999881122", email: "direcao@escola.gov.br", op_perfil: "executora" }
+        { id: "prof-edevaldo", nome: "Edevaldo Junior", cargoFuncao: "Diretor Escolar e Orientador Educacional", turmasOuSalas: "Direção & Orientação Geral", turnos: "integral", telefone: "47999881122", email: "direcao@escola.gov.br", op_perfil: "executora" }
     ],
     supervisoras: [],
     professores: [],
@@ -397,7 +409,7 @@ const defaultSigeData = {
         { id: "dev-master", nome: "Elevi Cortelini (Desenvolvedor)", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", setor: "desenvolvedor", cargoFuncao: "Desenvolvedor & Administrador Master do Sistema", disciplina: "TI & Engenharia de Sistemas", telefone: "48996692174", whatsapp: "48996692174", email: "elcortelini@gmail.com", turnos: "integral", turmasOuSalas: "Gabinete & Servidor", permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { id: "prof-clarinda", nome: "Clarinda Rosa Pereira", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", setor: "orientacao", cargoFuncao: "Orientadora Educacional — Séries Iniciais", disciplina: "Orientação Educacional (OE)", telefone: "47999112233", email: "clarinda@escola.gov.br", turnos: "matutino", turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { id: "prof-daiane", nome: "Daiane Caetano Costa de Aquino", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senha: "15051985", setor: "orientacao", cargoFuncao: "Orientadora Educacional — Séries Finais", disciplina: "Orientação Educacional (OE)", telefone: "47999445566", email: "daiane.aquino04548@edu.itajai.sc.gov.br", turnos: "vespertino", turmasOuSalas: "6º ao 9º Anos (Séries Finais)", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { id: "prof-jackson", nome: "Jackson Silvano", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senha: "05081978", setor: "direcao", cargoFuncao: "Diretor Escolar e Orientador Educacional", disciplina: "Gestão Escolar & Orientação Educacional", telefone: "47999881122", email: "direcao@escola.gov.br", turnos: "integral", turmasOuSalas: "Direção & Orientação Geral", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { id: "prof-edevaldo", nome: "Edevaldo Junior", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senha: "05081978", setor: "direcao", cargoFuncao: "Diretor Escolar e Orientador Educacional", disciplina: "Gestão Escolar & Orientação Educacional", telefone: "47999881122", email: "direcao@escola.gov.br", turnos: "integral", turmasOuSalas: "Direção & Orientação Geral", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { id: "prof-secretaria", nome: "Secretaria Escolar", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", setor: "secretaria", cargoFuncao: "Secretaria e Recepção", disciplina: "Secretaria Escolar", telefone: "4733480000", email: "secretaria@escola.gov.br", turnos: "integral", turmasOuSalas: "Secretaria", permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     turmasEscola: [
@@ -1047,14 +1059,15 @@ class SigeDatabase {
             });
         }
 
-        // Garante que Jackson Silvano tenha o perfil Direção Escolar e Orientador Executivo (acumulando funções com CPF 085.471.349-21)
+        // Garante que Edevaldo Junior tenha o perfil Direção Escolar e Orientador Executivo (acumulando funções com CPF 085.471.349-21)
         this.data.usuariosCadastrados.forEach(u => {
             const nomeLower = (u.nome || '').toLowerCase();
             const cleanUCpf = cleanCpf(u.cpf || '');
-            const isJackson = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-            if (isJackson) {
+            const isEdevaldo = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
+            if (isEdevaldo) {
+                u.nome = "Edevaldo Junior (Diretor & Orientador)";
                 u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
-                u.cargo = u.cargo || 'Diretor Escolar e Orientador Educacional';
+                u.cargo = 'Diretor Escolar e Orientador Educacional';
                 u.cpf = '085.471.349-21';
                 u.status = 'aprovado';
                 u.permissoes = {
@@ -1091,10 +1104,12 @@ class SigeDatabase {
                 }
                 const nomeLower = (p.nome || '').toLowerCase();
                 const cleanPCpf = cleanCpf(p.cpf || '');
-                const isJackson = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                if (isJackson) {
+                const isEdevaldo = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                if (isEdevaldo) {
+                    p.nome = "Edevaldo Junior";
+                    p.id = "prof-edevaldo";
                     p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
-                    p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar e Orientador Educacional';
+                    p.cargoFuncao = 'Diretor Escolar e Orientador Educacional';
                     p.cpf = '085.471.349-21';
                     p.permissoes = {
                         ...(p.permissoes || {}),
@@ -1558,7 +1573,7 @@ class SigeDatabase {
                 });
             }
             if (Array.isArray(merged.deletedEquipeIds)) {
-                merged.deletedEquipeIds = merged.deletedEquipeIds.filter(id => id !== 'orient-1' && id !== 'orient-2' && id !== 'prof-clarinda' && id !== 'prof-daiane' && id !== 'prof-jackson');
+                merged.deletedEquipeIds = merged.deletedEquipeIds.filter(id => id !== 'orient-1' && id !== 'orient-2' && id !== 'prof-clarinda' && id !== 'prof-daiane' && id !== 'prof-jackson' && id !== 'prof-edevaldo');
             }
 
             // Normalização estrita de usuários cadastrados e migração de senha para hash
@@ -1610,14 +1625,15 @@ class SigeDatabase {
                 });
             }
 
-            // Garante que Jackson Silvano tenha perfil Direção Escolar e Orientação Executora (acumulando funções com CPF 085.471.349-21)
+            // Garante que Edevaldo Junior tenha perfil Direção Escolar e Orientação Executora (acumulando funções com CPF 085.471.349-21)
             merged.usuariosCadastrados.forEach(u => {
                 const nomeLower = (u.nome || '').toLowerCase();
                 const cleanUCpf = cleanCpf(u.cpf || '');
-                const isJackson = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                if (isJackson) {
+                const isEdevaldo = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                if (isEdevaldo) {
+                    u.nome = "Edevaldo Junior (Diretor & Orientador)";
                     u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
-                    u.cargo = u.cargo || 'Diretor Escolar e Orientador Educacional';
+                    u.cargo = 'Diretor Escolar e Orientador Educacional';
                     u.cpf = '085.471.349-21';
                     u.status = 'aprovado';
                     u.permissoes = {
@@ -1650,10 +1666,12 @@ class SigeDatabase {
                 merged.equipeEscola.forEach(p => {
                     const nomeLower = (p.nome || '').toLowerCase();
                     const cleanPCpf = cleanCpf(p.cpf || '');
-                    const isJackson = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                    if (isJackson) {
+                    const isEdevaldo = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                    if (isEdevaldo) {
+                        p.nome = "Edevaldo Junior";
+                        p.id = "prof-edevaldo";
                         p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
-                        p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar e Orientador Educacional';
+                        p.cargoFuncao = 'Diretor Escolar e Orientador Educacional';
                         p.cpf = '085.471.349-21';
                         p.permissoes = {
                             ...(p.permissoes || {}),
@@ -1937,21 +1955,21 @@ class SigeDatabase {
                 changed = true;
             }
 
-            // 3. Garante Diretor e Orientador Jackson Silvano em usuariosCadastrados
-            let jacksonUser = this.data.usuariosCadastrados.find(u => 
+            // 3. Garante Diretor e Orientador Edevaldo Junior em usuariosCadastrados
+            let edevaldoUser = this.data.usuariosCadastrados.find(u => 
                 (u.cpf && cleanCpf(u.cpf) === '08547134921') || 
                 (u.cpf && cleanCpf(u.cpf) === '44444444444') ||
-                (u.nome && (u.nome.toLowerCase().includes('jackson') || u.nome.toLowerCase().includes('silvano'))) ||
+                (u.nome && (u.nome.toLowerCase().includes('edevaldo') || u.nome.toLowerCase().includes('jackson') || u.nome.toLowerCase().includes('silvano'))) ||
                 (u.email && u.email.toLowerCase().includes('direcao@escola'))
             );
-            if (!jacksonUser) {
+            if (!edevaldoUser) {
                 this.data.usuariosCadastrados.push({
-                    id: "user-jackson",
+                    id: "user-edevaldo",
                     email: "direcao@escola.gov.br",
                     cpf: "085.471.349-21",
                     dataNascimento: "05/08/1978",
                     senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae",
-                    nome: "Jackson Silvano (Diretor & Orientador)",
+                    nome: "Edevaldo Junior (Diretor & Orientador)",
                     role: "direcao",
                     cargo: "Diretor Escolar e Orientador Educacional",
                     status: "aprovado",
@@ -1960,17 +1978,21 @@ class SigeDatabase {
                 });
                 changed = true;
             } else {
-                if (cleanCpf(jacksonUser.cpf || '') !== '08547134921') {
-                    jacksonUser.cpf = "085.471.349-21";
+                if (edevaldoUser.nome !== "Edevaldo Junior (Diretor & Orientador)") {
+                    edevaldoUser.nome = "Edevaldo Junior (Diretor & Orientador)";
                     changed = true;
                 }
-                if (!jacksonUser.cargo || !jacksonUser.cargo.toLowerCase().includes('orientad')) {
-                    jacksonUser.cargo = "Diretor Escolar e Orientador Educacional";
+                if (cleanCpf(edevaldoUser.cpf || '') !== '08547134921') {
+                    edevaldoUser.cpf = "085.471.349-21";
                     changed = true;
                 }
-                if (!jacksonUser.permissoes || jacksonUser.permissoes.op_perfil !== 'executora' || !jacksonUser.permissoes.direcao) {
-                    jacksonUser.permissoes = {
-                        ...(jacksonUser.permissoes || {}),
+                if (!edevaldoUser.cargo || !edevaldoUser.cargo.toLowerCase().includes('orientad')) {
+                    edevaldoUser.cargo = "Diretor Escolar e Orientador Educacional";
+                    changed = true;
+                }
+                if (!edevaldoUser.permissoes || edevaldoUser.permissoes.op_perfil !== 'executora' || !edevaldoUser.permissoes.direcao) {
+                    edevaldoUser.permissoes = {
+                        ...(edevaldoUser.permissoes || {}),
                         direcao: true,
                         mural: true,
                         supervisao: true,
@@ -2514,7 +2536,9 @@ class SigeDatabase {
             if (prof) {
                 if (!found) {
                     let roleKey = prof.setor || "docentes";
-                    if (prof.setor === "orientacao") {
+                    if (prof.permissoes && prof.permissoes.direcao) {
+                        roleKey = "direcao";
+                    } else if (prof.setor === "orientacao" || (prof.permissoes && prof.permissoes.op_perfil === "executora")) {
                         roleKey = "orientadora_" + prof.id;
                     } else if (prof.setor === "supervisao") {
                         roleKey = "supervisora_" + prof.id;
@@ -2541,7 +2565,8 @@ class SigeDatabase {
                         if (prof.permissoes) found.permissoes = { ...(found.permissoes || {}), ...prof.permissoes };
                         if (prof.setor && prof.setor !== 'desenvolvedor') {
                             let r = prof.setor;
-                            if (r === 'orientacao') r = 'orientadora_' + prof.id;
+                            if (prof.permissoes && prof.permissoes.direcao) r = 'direcao';
+                            else if (r === 'orientacao' || (prof.permissoes && prof.permissoes.op_perfil === 'executora')) r = 'orientadora_' + prof.id;
                             else if (r === 'supervisao') r = 'supervisora_' + prof.id;
                             else if (r === 'diretor' || r === 'diretoria' || r === 'gestor') r = 'direcao';
                             found.role = r;
@@ -2672,7 +2697,9 @@ class SigeDatabase {
             });
             if (prof) {
                 let roleKey = prof.setor || "docentes";
-                if (prof.setor === "orientacao") {
+                if (prof.permissoes && prof.permissoes.direcao) {
+                    roleKey = "direcao";
+                } else if (prof.setor === "orientacao" || (prof.permissoes && prof.permissoes.op_perfil === "executora")) {
                     roleKey = "orientadora_" + prof.id;
                 } else if (prof.setor === "supervisao") {
                     roleKey = "supervisora_" + prof.id;
@@ -2932,7 +2959,9 @@ class SigeDatabase {
             );
             if (prof) {
                 let roleKey = prof.setor || "docentes";
-                if (prof.setor === "orientacao") {
+                if (prof.permissoes && prof.permissoes.direcao) {
+                    roleKey = "direcao";
+                } else if (prof.setor === "orientacao" || (prof.permissoes && prof.permissoes.op_perfil === "executora")) {
                     roleKey = "orientadora_" + prof.id;
                 } else if (prof.setor === "supervisao") {
                     roleKey = "supervisora_" + prof.id;
@@ -2979,12 +3008,12 @@ class SigeDatabase {
                     permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
                 };
                 this.addUsuario(user);
-            } else if (cleanInput === "direcao@escola.gov.br" || cleanInput.includes("jackson.silvano") || cleanInput === "08547134921") {
+            } else if (cleanInput === "direcao@escola.gov.br" || cleanInput.includes("edevaldo") || cleanInput.includes("jackson.silvano") || cleanInput === "08547134921") {
                 user = { 
                     email: cleanInput, 
                     cpf: "085.471.349-21",
                     dataNascimento: "05/08/1978",
-                    nome: "Jackson Silvano (Diretor & Orientador)", 
+                    nome: "Edevaldo Junior (Diretor & Orientador)", 
                     role: "direcao", 
                     cargo: "Diretor Escolar e Orientador Educacional",
                     status: "aprovado",
@@ -3408,53 +3437,6 @@ class SigeDatabase {
             };
         });
 
-        // Garantia absoluta: Clarinda, Daiane e Jackson (CPF 08547134921) devem constar na lista de orientadores
-        const nomesPresentes = orientadorasValidas.map(o => (o.nome || "").toLowerCase());
-        
-        if (!nomesPresentes.some(n => n.includes("clarinda"))) {
-            const profCla = equipe.find(p => (p.nome && p.nome.toLowerCase().includes("clarinda")));
-            orientadorasValidas.push({
-                id: profCla ? profCla.id : "prof-clarinda",
-                nome: profCla ? profCla.nome : "Clarinda Rosa Pereira",
-                telefone: profCla ? profCla.telefone : "47999112233",
-                email: profCla ? profCla.email : "clarinda@escola.gov.br",
-                turnos: profCla ? profCla.turnos : "matutino",
-                turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)",
-                cargoFuncao: "Orientadora Educacional — Séries Iniciais",
-                op_perfil: "executora"
-            });
-        }
-        
-        if (!nomesPresentes.some(n => n.includes("daiane"))) {
-            const profDai = equipe.find(p => (p.nome && p.nome.toLowerCase().includes("daiane")));
-            orientadorasValidas.push({
-                id: profDai ? profDai.id : "prof-daiane",
-                nome: profDai ? profDai.nome : "Daiane Caetano Costa de Aquino",
-                telefone: profDai ? profDai.telefone : "47999445566",
-                email: profDai ? profDai.email : "daiane.aquino04548@edu.itajai.sc.gov.br",
-                turnos: profDai ? profDai.turnos : "vespertino",
-                turmasOuSalas: "6º ao 9º Anos (Séries Finais)",
-                cargoFuncao: "Orientadora Educacional — Séries Finais",
-                op_perfil: "executora"
-            });
-        }
-
-        if (!nomesPresentes.some(n => n.includes("jackson") || n.includes("silvano") || cleanCpf(n) === "08547134921")) {
-            const profJack = equipe.find(p => cleanCpf(p.cpf || "") === "08547134921" || (p.nome && (p.nome.toLowerCase().includes("jackson") || p.nome.toLowerCase().includes("silvano"))));
-            if (profJack) {
-                orientadorasValidas.push({
-                    id: profJack.id || "prof-jackson",
-                    nome: profJack.nome || "Jackson Silvano",
-                    telefone: profJack.telefone || "47999881122",
-                    email: profJack.email || "direcao@escola.gov.br",
-                    turnos: profJack.turnos || "integral",
-                    turmasOuSalas: profJack.turmasOuSalas || "Direção & Orientação Geral",
-                    cargoFuncao: profJack.cargoFuncao || "Diretor Escolar e Orientador Educacional",
-                    op_perfil: "executora"
-                });
-            }
-        }
-
         if (!this.data) this.data = {};
         this.data.orientadoras = orientadorasValidas;
         return this.data.orientadoras;
@@ -3661,12 +3643,12 @@ class SigeDatabase {
             }
         }
 
-        // 3. Garante Diretor e Orientador Jackson Silvano (CPF 085.471.349-21) acumulando funções
-        let jacksonProf = this.data.equipeEscola.find(p => (p.cpf && cleanCpf(p.cpf) === '08547134921') || (p.cpf && cleanCpf(p.cpf) === '44444444444') || (p.nome && (p.nome.toLowerCase().includes('jackson') || p.nome.toLowerCase().includes('silvano'))) || (p.email && p.email.toLowerCase().includes('direcao@escola')));
-        if (!jacksonProf) {
+        // 3. Garante Diretor e Orientador Edevaldo Junior (CPF 085.471.349-21) acumulando funções
+        let edevaldoProf = this.data.equipeEscola.find(p => (p.cpf && cleanCpf(p.cpf) === '08547134921') || (p.cpf && cleanCpf(p.cpf) === '44444444444') || (p.nome && (p.nome.toLowerCase().includes('edevaldo') || p.nome.toLowerCase().includes('jackson') || p.nome.toLowerCase().includes('silvano'))) || (p.email && p.email.toLowerCase().includes('direcao@escola')));
+        if (!edevaldoProf) {
             this.data.equipeEscola.push({
-                id: "prof-jackson",
-                nome: "Jackson Silvano",
+                id: "prof-edevaldo",
+                nome: "Edevaldo Junior",
                 cpf: "085.471.349-21",
                 dataNascimento: "05/08/1978",
                 senha: "05081978",
@@ -3681,17 +3663,25 @@ class SigeDatabase {
             });
             saveNeeded = true;
         } else {
-            if (cleanCpf(jacksonProf.cpf || '') !== '08547134921') {
-                jacksonProf.cpf = "085.471.349-21";
+            if (edevaldoProf.nome !== "Edevaldo Junior") {
+                edevaldoProf.nome = "Edevaldo Junior";
                 saveNeeded = true;
             }
-            if (!jacksonProf.cargoFuncao || !jacksonProf.cargoFuncao.toLowerCase().includes('orientad')) {
-                jacksonProf.cargoFuncao = "Diretor Escolar e Orientador Educacional";
+            if (edevaldoProf.id === 'prof-jackson') {
+                edevaldoProf.id = "prof-edevaldo";
                 saveNeeded = true;
             }
-            if (!jacksonProf.permissoes || jacksonProf.permissoes.op_perfil !== 'executora' || !jacksonProf.permissoes.direcao) {
-                jacksonProf.permissoes = {
-                    ...(jacksonProf.permissoes || {}),
+            if (cleanCpf(edevaldoProf.cpf || '') !== '08547134921') {
+                edevaldoProf.cpf = "085.471.349-21";
+                saveNeeded = true;
+            }
+            if (!edevaldoProf.cargoFuncao || !edevaldoProf.cargoFuncao.toLowerCase().includes('orientad')) {
+                edevaldoProf.cargoFuncao = "Diretor Escolar e Orientador Educacional";
+                saveNeeded = true;
+            }
+            if (!edevaldoProf.permissoes || edevaldoProf.permissoes.op_perfil !== 'executora' || !edevaldoProf.permissoes.direcao) {
+                edevaldoProf.permissoes = {
+                    ...(edevaldoProf.permissoes || {}),
                     direcao: true,
                     mural: true,
                     supervisao: true,
@@ -4803,7 +4793,7 @@ class SigeDatabase {
         }
 
         // 1. Orientação Pedagógica
-        if (role === "orientacao" || role === "direcao" || role === "admin") {
+        if (role === "orientacao" || (typeof role === 'string' && role.startsWith("orientadora_")) || role === "direcao" || role === "admin" || role === "desenvolvedor") {
             const emergenciasHoje = this.getAgendamentosOP().filter(a => a.tipo === "emergencial" && a.statusSecretaria === "pendente");
             emergenciasHoje.forEach(e => {
                 list.push({
@@ -4909,7 +4899,7 @@ class SigeDatabase {
             if (typeof getOrientadoraByRole === 'function') {
                 const ori = getOrientadoraByRole(role);
                 if (ori) {
-                    const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                    const prefix = getOrientadorPrefix(ori.nome, ori.cargoFuncao || ori.cargo);
                     return `${prefix} ${ori.nome}`;
                 }
             }
@@ -5197,7 +5187,7 @@ class SigeDatabase {
                 }
             }
 
-            // Sincroniza com usuariosCadastrados se for Jackson Silvano ou membro com login
+            // Sincroniza com usuariosCadastrados se for Edevaldo Junior ou membro com login
             if (Array.isArray(d.usuariosCadastrados)) {
                 const u = d.usuariosCadastrados.find(user => {
                     const uNome = (user.nome || '').toLowerCase().trim();
@@ -5695,7 +5685,7 @@ function getRoleLabel(role) {
         if (typeof getOrientadoraByRole === 'function') {
             const ori = getOrientadoraByRole(role);
             if (ori) {
-                const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                const prefix = getOrientadorPrefix(ori.nome, ori.cargoFuncao || ori.cargo);
                 return `${prefix} ${ori.nome}`;
             }
         }
