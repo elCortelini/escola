@@ -65,6 +65,19 @@ function parseJwt(token) {
 }
 
 function getRoleLabel(role) {
+    if (!role) return "Colaborador Escolar";
+    if (typeof role === 'string' && role.startsWith("orientadora_")) {
+        if (typeof getOrientadoraByRole === 'function') {
+            const ori = getOrientadoraByRole(role);
+            if (ori) {
+                const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                return `${prefix} ${ori.nome}`;
+            }
+        }
+        if (role === "orientadora_clarinda") return "Orientadora Clarinda (Anos Iniciais)";
+        if (role === "orientadora_daiane") return "Orientadora Daiane (Anos Finais)";
+        return "Orientador(a) Educacional";
+    }
     const labels = {
         desenvolvedor: "Elevi Cortelini (Desenvolvedor)",
         admin: "Administrador(a) Escolar",
@@ -335,10 +348,11 @@ const DEFAULT_STAMP_SECRETARIA_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http:/
 const defaultSigeData = {
     currentRole: "desenvolvedor",
     usuariosCadastrados: [
-        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senhaHash: "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "elcortelini@gmail.com", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senhaHash: "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43", nome: "Elevi Cortelini (Desenvolvedor)", role: "desenvolvedor", cargo: "Desenvolvedor do Sistema", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senhaHash: "sha256_06509416156da6f8d7c808b7d399d07a878c37b35515df57250de94279472a6a", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
-        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senhaHash: "sha256_24dbd8d85f37733eb71538092504f30c6b157f6c73428d61d41981240d438d3c", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "direcao@escola.gov.br", cpf: "444.444.444-44", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Direção Escolar", role: "direcao", cargo: "Direção e Gestão Institucional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+        { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senhaHash: "sha256_e7d7041793744fb1b58525b6a73c988950d603e91129e71ec13328eb99e3a682", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { email: "direcao@escola.gov.br", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Jackson Silvano (Diretor & Orientador)", role: "direcao", cargo: "Diretor Escolar e Orientador Educacional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senhaHash: "sha256_24dbd8d85f37733eb71538092504f30c6b157f6c73428d61d41981240d438d3c", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
     lotesSME: [],
@@ -372,10 +386,20 @@ const defaultSigeData = {
         autoSendStatusChange: true,
         autoSendNewTask: false
     },
-    orientadoras: [],
+    orientadoras: [
+        { id: "prof-clarinda", nome: "Clarinda Rosa Pereira", cargoFuncao: "Orientadora Educacional — Séries Iniciais", turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)", turnos: "matutino", telefone: "47999112233", email: "clarinda@escola.gov.br", op_perfil: "executora" },
+        { id: "prof-daiane", nome: "Daiane Caetano Costa de Aquino", cargoFuncao: "Orientadora Educacional — Séries Finais", turmasOuSalas: "6º ao 9º Anos (Séries Finais)", turnos: "vespertino", telefone: "47999445566", email: "daiane.aquino04548@edu.itajai.sc.gov.br", op_perfil: "executora" },
+        { id: "prof-jackson", nome: "Jackson Silvano", cargoFuncao: "Diretor Escolar e Orientador Educacional", turmasOuSalas: "Direção & Orientação Geral", turnos: "integral", telefone: "47999881122", email: "direcao@escola.gov.br", op_perfil: "executora" }
+    ],
     supervisoras: [],
     professores: [],
-    equipeEscola: [],
+    equipeEscola: [
+        { id: "dev-master", nome: "Elevi Cortelini (Desenvolvedor)", cpf: "806.037.420-68", dataNascimento: "30/12/1981", senha: "30121981", setor: "desenvolvedor", cargoFuncao: "Desenvolvedor & Administrador Master do Sistema", disciplina: "TI & Engenharia de Sistemas", telefone: "48996692174", whatsapp: "48996692174", email: "elcortelini@gmail.com", turnos: "integral", turmasOuSalas: "Gabinete & Servidor", permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: true, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { id: "prof-clarinda", nome: "Clarinda Rosa Pereira", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senha: "20101982", setor: "orientacao", cargoFuncao: "Orientadora Educacional — Séries Iniciais", disciplina: "Orientação Educacional (OE)", telefone: "47999112233", email: "clarinda@escola.gov.br", turnos: "matutino", turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { id: "prof-daiane", nome: "Daiane Caetano Costa de Aquino", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senha: "15051985", setor: "orientacao", cargoFuncao: "Orientadora Educacional — Séries Finais", disciplina: "Orientação Educacional (OE)", telefone: "47999445566", email: "daiane.aquino04548@edu.itajai.sc.gov.br", turnos: "vespertino", turmasOuSalas: "6º ao 9º Anos (Séries Finais)", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
+        { id: "prof-jackson", nome: "Jackson Silvano", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senha: "05081978", setor: "direcao", cargoFuncao: "Diretor Escolar e Orientador Educacional", disciplina: "Gestão Escolar & Orientação Educacional", telefone: "47999881122", email: "direcao@escola.gov.br", turnos: "integral", turmasOuSalas: "Direção & Orientação Geral", permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
+        { id: "prof-secretaria", nome: "Secretaria Escolar", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senha: "10031990", setor: "secretaria", cargoFuncao: "Secretaria e Recepção", disciplina: "Secretaria Escolar", telefone: "4733480000", email: "secretaria@escola.gov.br", turnos: "integral", turmasOuSalas: "Secretaria", permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
+    ],
     turmasEscola: [
         { id: "turma-1a", nome: "1º Ano A", turno: "Matutino", segmento: "Anos Iniciais", sala: "Sala 01", capacidade: 25 },
         { id: "turma-1b", nome: "1º Ano B", turno: "Vespertino", segmento: "Anos Iniciais", sala: "Sala 01", capacidade: 25 },
@@ -668,7 +692,7 @@ class SigeDatabase {
         };
 
         // 2. Mesclagem de Equipe Escolar (Equipe & RBAC)
-        const mockOriIds = ['orient-1', 'orient-2'];
+        const mockOriIds = ['orient-carmen-old', 'orient-luciana-old'];
         const combinedDeletedEquipeIdsWithMocks = Array.from(new Set([...combinedDeletedEquipeIds, ...mockOriIds]));
         const mergedEquipe = mergeEntityList(
             (this.data.equipeEscola || []).filter(p => !mockOriIds.includes(p.id)),
@@ -1023,17 +1047,32 @@ class SigeDatabase {
             });
         }
 
-        // Garante que Jackson Silvano tenha o perfil Direção Escolar (preservando permissões customizadas pelo Desenvolvedor)
+        // Garante que Jackson Silvano tenha o perfil Direção Escolar e Orientador Executivo (acumulando funções com CPF 085.471.349-21)
         this.data.usuariosCadastrados.forEach(u => {
             const nomeLower = (u.nome || '').toLowerCase();
-            const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+            const cleanUCpf = cleanCpf(u.cpf || '');
+            const isJackson = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
             if (isJackson) {
                 u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
-                u.cargo = u.cargo || 'Diretor Escolar';
+                u.cargo = u.cargo || 'Diretor Escolar e Orientador Educacional';
+                u.cpf = '085.471.349-21';
                 u.status = 'aprovado';
-                if (!u.permissoes) {
-                    u.permissoes = this.getDefaultPermissoesByRole('direcao');
-                }
+                u.permissoes = {
+                    ...(u.permissoes || {}),
+                    direcao: true,
+                    mural: true,
+                    supervisao: true,
+                    admin: true,
+                    uniformes: true,
+                    op: true,
+                    op_perfil: 'executora',
+                    ext_recursos: true,
+                    ext_dashboard: true,
+                    ext_contabil: true,
+                    ext_biblioteca: true,
+                    ext_patrimonio: true,
+                    dev: false
+                };
             } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
                 u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                 if (!u.permissoes) {
@@ -1051,13 +1090,28 @@ class SigeDatabase {
                     return;
                 }
                 const nomeLower = (p.nome || '').toLowerCase();
-                const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                const cleanPCpf = cleanCpf(p.cpf || '');
+                const isJackson = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
                 if (isJackson) {
                     p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
-                    p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar';
-                    if (!p.permissoes) {
-                        p.permissoes = this.getDefaultPermissoesByRole('direcao');
-                    }
+                    p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar e Orientador Educacional';
+                    p.cpf = '085.471.349-21';
+                    p.permissoes = {
+                        ...(p.permissoes || {}),
+                        direcao: true,
+                        mural: true,
+                        supervisao: true,
+                        admin: true,
+                        uniformes: true,
+                        op: true,
+                        op_perfil: 'executora',
+                        ext_recursos: true,
+                        ext_dashboard: true,
+                        ext_contabil: true,
+                        ext_biblioteca: true,
+                        ext_patrimonio: true,
+                        dev: false
+                    };
                 } else if (p.setor === 'desenvolvedor') {
                     p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                     if (!p.permissoes) {
@@ -1490,17 +1544,21 @@ class SigeDatabase {
                 merged.limpezaTestesUniformes_20261002 = true;
             }
 
-            // Limpeza mandatória: Excluir orientadoras mock/duplicadas antigas (orient-1, orient-2)
-            const mockOriIds = ['orient-1', 'orient-2'];
-            if (!merged.limpezaMockOrientadoras_20261002) {
-                merged.deletedEquipeIds = Array.from(new Set([...(merged.deletedEquipeIds || []), ...mockOriIds]));
-                if (Array.isArray(merged.equipeEscola)) {
-                    merged.equipeEscola = merged.equipeEscola.filter(p => !mockOriIds.includes(p.id));
-                }
-                if (Array.isArray(merged.orientadoras)) {
-                    merged.orientadoras = merged.orientadoras.filter(o => !mockOriIds.includes(o.id));
-                }
-                merged.limpezaMockOrientadoras_20261002 = true;
+            // Migração de orientadoras legadas orient-1 e orient-2 para os IDs definitivos oficiais
+            if (Array.isArray(merged.equipeEscola)) {
+                merged.equipeEscola.forEach(p => {
+                    if (p.id === 'orient-1' || (p.nome && p.nome.toLowerCase().includes('clarinda'))) p.id = 'prof-clarinda';
+                    if (p.id === 'orient-2' || (p.nome && p.nome.toLowerCase().includes('daiane'))) p.id = 'prof-daiane';
+                });
+            }
+            if (Array.isArray(merged.orientadoras)) {
+                merged.orientadoras.forEach(o => {
+                    if (o.id === 'orient-1' || (o.nome && o.nome.toLowerCase().includes('clarinda'))) o.id = 'prof-clarinda';
+                    if (o.id === 'orient-2' || (o.nome && o.nome.toLowerCase().includes('daiane'))) o.id = 'prof-daiane';
+                });
+            }
+            if (Array.isArray(merged.deletedEquipeIds)) {
+                merged.deletedEquipeIds = merged.deletedEquipeIds.filter(id => id !== 'orient-1' && id !== 'orient-2' && id !== 'prof-clarinda' && id !== 'prof-daiane' && id !== 'prof-jackson');
             }
 
             // Normalização estrita de usuários cadastrados e migração de senha para hash
@@ -1552,19 +1610,32 @@ class SigeDatabase {
                 });
             }
 
-            // Garante que Jackson Silvano tenha estritamente o perfil Direção Escolar (e não Desenvolvedor)
+            // Garante que Jackson Silvano tenha perfil Direção Escolar e Orientação Executora (acumulando funções com CPF 085.471.349-21)
             merged.usuariosCadastrados.forEach(u => {
                 const nomeLower = (u.nome || '').toLowerCase();
-                const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                const cleanUCpf = cleanCpf(u.cpf || '');
+                const isJackson = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
                 if (isJackson) {
-                    u.role = 'direcao';
-                    u.cargo = u.cargo || 'Diretor Escolar';
+                    u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
+                    u.cargo = u.cargo || 'Diretor Escolar e Orientador Educacional';
+                    u.cpf = '085.471.349-21';
                     u.status = 'aprovado';
-                    if (!u.permissoes) {
-                        u.permissoes = this.getDefaultPermissoesByRole('direcao');
-                    } else {
-                        u.permissoes.dev = false;
-                    }
+                    u.permissoes = {
+                        ...(u.permissoes || {}),
+                        direcao: true,
+                        mural: true,
+                        supervisao: true,
+                        admin: true,
+                        uniformes: true,
+                        op: true,
+                        op_perfil: 'executora',
+                        ext_recursos: true,
+                        ext_dashboard: true,
+                        ext_contabil: true,
+                        ext_biblioteca: true,
+                        ext_patrimonio: true,
+                        dev: false
+                    };
                 } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
                     u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                     if (!u.permissoes) {
@@ -1578,15 +1649,28 @@ class SigeDatabase {
             if (Array.isArray(merged.equipeEscola)) {
                 merged.equipeEscola.forEach(p => {
                     const nomeLower = (p.nome || '').toLowerCase();
-                    const isJackson = nomeLower.includes('jackson') || nomeLower.includes('silvano');
+                    const cleanPCpf = cleanCpf(p.cpf || '');
+                    const isJackson = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('jackson') || nomeLower.includes('silvano');
                     if (isJackson) {
-                        p.setor = 'direcao';
-                        p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar';
-                        if (!p.permissoes) {
-                            p.permissoes = this.getDefaultPermissoesByRole('direcao');
-                        } else {
-                            p.permissoes.dev = false;
-                        }
+                        p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
+                        p.cargoFuncao = p.cargoFuncao || 'Diretor Escolar e Orientador Educacional';
+                        p.cpf = '085.471.349-21';
+                        p.permissoes = {
+                            ...(p.permissoes || {}),
+                            direcao: true,
+                            mural: true,
+                            supervisao: true,
+                            admin: true,
+                            uniformes: true,
+                            op: true,
+                            op_perfil: 'executora',
+                            ext_recursos: true,
+                            ext_dashboard: true,
+                            ext_contabil: true,
+                            ext_biblioteca: true,
+                            ext_patrimonio: true,
+                            dev: false
+                        };
                     } else if (p.setor === 'desenvolvedor' && p.email !== 'elcortelini@gmail.com' && cleanCpf(p.cpf || '') !== '80603742068') {
                         p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                         if (!p.permissoes) {
@@ -1739,18 +1823,27 @@ class SigeDatabase {
         }
 
         // Inferência inteligente sem gambiarras para compatibilidade com dados existentes
+        const cleanItemCpf = cleanCpf(item.cpf || "");
         const setor = ((item.setor || item.role || "") + "").toLowerCase().trim();
         const cargo = ((item.cargoFuncao || item.cargo || "") + "").toLowerCase().trim();
         const email = ((item.email || "") + "").toLowerCase().trim();
 
-        if (email === "elcortelini@gmail.com" || setor === "desenvolvedor" || setor === "direcao" || setor === "admin") {
+        // Usuário com CPF 08547134921 ou com acúmulo de funções Diretor & Orientador possui perfil executora na OP
+        if (cleanItemCpf === "08547134921" || (cargo.includes("orientad") && cargo.includes("diret"))) {
+            return "executora";
+        }
+
+        if (email === "elcortelini@gmail.com" || setor === "desenvolvedor") {
+            return "gerencial";
+        }
+        if (setor === "orientacao" || setor.startsWith("orientadora") || cargo.includes("orientad")) {
+            return "executora";
+        }
+        if (setor === "direcao" || setor === "admin") {
             return "gerencial";
         }
         if (setor === "secretaria" || cargo.includes("secretar") || cargo.includes("recepc")) {
             return "recepcao";
-        }
-        if (setor === "orientacao" || setor.startsWith("orientadora") || cargo.includes("orientad")) {
-            return "executora";
         }
         if (setor === "supervisao" || setor.startsWith("supervisora") || cargo.includes("supervis")) {
             return "gerencial";
@@ -1796,6 +1889,109 @@ class SigeDatabase {
         if (!this.data.usuariosCadastrados || !Array.isArray(this.data.usuariosCadastrados)) {
             this.data.usuariosCadastrados = JSON.parse(JSON.stringify(defaultSigeData.usuariosCadastrados));
             this.saveData(this.data);
+        } else {
+            let changed = false;
+            // 1. Garante Clarinda em usuariosCadastrados
+            const hasClarinda = this.data.usuariosCadastrados.some(u => 
+                (u.email && u.email.toLowerCase().includes('clarinda')) || 
+                (u.cpf && cleanCpf(u.cpf) === '22222222222') ||
+                (u.role === 'orientadora_clarinda')
+            );
+            if (!hasClarinda) {
+                this.data.usuariosCadastrados.push({
+                    id: "user-clarinda",
+                    email: "clarinda@escola.gov.br",
+                    cpf: "222.222.222-22",
+                    dataNascimento: "20/10/1982",
+                    senhaHash: "sha256_06509416156da6f8d7c808b7d399d07a878c37b35515df57250de94279472a6a",
+                    nome: "Clarinda Rosa Pereira",
+                    role: "orientadora_clarinda",
+                    cargo: "Orientadora Educacional — Séries Iniciais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+                });
+                changed = true;
+            }
+
+            // 2. Garante Daiane em usuariosCadastrados
+            const hasDaiane = this.data.usuariosCadastrados.some(u => 
+                (u.email && (u.email.toLowerCase().includes('daiane.aquino') || u.email.toLowerCase().includes('daiane@escola'))) || 
+                (u.cpf && cleanCpf(u.cpf) === '11111111111') ||
+                (u.role === 'orientadora_daiane')
+            );
+            if (!hasDaiane) {
+                this.data.usuariosCadastrados.push({
+                    id: "user-daiane",
+                    email: "daiane.aquino04548@edu.itajai.sc.gov.br",
+                    cpf: "111.111.111-11",
+                    dataNascimento: "15/05/1985",
+                    senhaHash: "sha256_e7d7041793744fb1b58525b6a73c988950d603e91129e71ec13328eb99e3a682",
+                    nome: "Daiane Caetano Costa de Aquino",
+                    role: "orientadora_daiane",
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+                });
+                changed = true;
+            }
+
+            // 3. Garante Diretor e Orientador Jackson Silvano em usuariosCadastrados
+            let jacksonUser = this.data.usuariosCadastrados.find(u => 
+                (u.cpf && cleanCpf(u.cpf) === '08547134921') || 
+                (u.cpf && cleanCpf(u.cpf) === '44444444444') ||
+                (u.nome && (u.nome.toLowerCase().includes('jackson') || u.nome.toLowerCase().includes('silvano'))) ||
+                (u.email && u.email.toLowerCase().includes('direcao@escola'))
+            );
+            if (!jacksonUser) {
+                this.data.usuariosCadastrados.push({
+                    id: "user-jackson",
+                    email: "direcao@escola.gov.br",
+                    cpf: "085.471.349-21",
+                    dataNascimento: "05/08/1978",
+                    senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae",
+                    nome: "Jackson Silvano (Diretor & Orientador)",
+                    role: "direcao",
+                    cargo: "Diretor Escolar e Orientador Educacional",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+                });
+                changed = true;
+            } else {
+                if (cleanCpf(jacksonUser.cpf || '') !== '08547134921') {
+                    jacksonUser.cpf = "085.471.349-21";
+                    changed = true;
+                }
+                if (!jacksonUser.cargo || !jacksonUser.cargo.toLowerCase().includes('orientad')) {
+                    jacksonUser.cargo = "Diretor Escolar e Orientador Educacional";
+                    changed = true;
+                }
+                if (!jacksonUser.permissoes || jacksonUser.permissoes.op_perfil !== 'executora' || !jacksonUser.permissoes.direcao) {
+                    jacksonUser.permissoes = {
+                        ...(jacksonUser.permissoes || {}),
+                        direcao: true,
+                        mural: true,
+                        supervisao: true,
+                        admin: true,
+                        uniformes: true,
+                        op: true,
+                        op_perfil: 'executora',
+                        ext_recursos: true,
+                        ext_dashboard: true,
+                        ext_contabil: true,
+                        ext_biblioteca: true,
+                        ext_patrimonio: true,
+                        dev: false
+                    };
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                this.saveData(this.data);
+            }
         }
         return this.data.usuariosCadastrados;
     }
@@ -2755,17 +2951,45 @@ class SigeDatabase {
             }
         }
 
-        // Casos de Orientadoras Oficiais
+        // Casos de Orientadoras Oficiais e Direção/Orientação
         if (!user) {
             if (cleanInput === "clarinda@escola.gov.br" || cleanInput.includes("clarinda.pereira")) {
                 user = { 
                     email: cleanInput, 
+                    cpf: "222.222.222-22",
+                    dataNascimento: "20/10/1982",
                     nome: "Clarinda Rosa Pereira", 
                     role: "orientadora_clarinda", 
                     cargo: "Orientadora Educacional — Séries Iniciais",
                     status: "aprovado",
                     cadastroCompleto: true,
-                    permissoes: { op: true, mural: true, supervisao: false, admin: false, direcao: false, uniformes: false }
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+                };
+                this.addUsuario(user);
+            } else if (cleanInput === "daiane.aquino04548@edu.itajai.sc.gov.br" || cleanInput === "daiane@escola.gov.br" || cleanInput.includes("daiane.aquino")) {
+                user = { 
+                    email: cleanInput, 
+                    cpf: "111.111.111-11",
+                    dataNascimento: "15/05/1985",
+                    nome: "Daiane Caetano Costa de Aquino", 
+                    role: "orientadora_daiane", 
+                    cargo: "Orientadora Educacional — Séries Finais",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+                };
+                this.addUsuario(user);
+            } else if (cleanInput === "direcao@escola.gov.br" || cleanInput.includes("jackson.silvano") || cleanInput === "08547134921") {
+                user = { 
+                    email: cleanInput, 
+                    cpf: "085.471.349-21",
+                    dataNascimento: "05/08/1978",
+                    nome: "Jackson Silvano (Diretor & Orientador)", 
+                    role: "direcao", 
+                    cargo: "Diretor Escolar e Orientador Educacional",
+                    status: "aprovado",
+                    cadastroCompleto: true,
+                    permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 };
                 this.addUsuario(user);
             }
@@ -3026,10 +3250,10 @@ class SigeDatabase {
         const role = this.getRole();
         const user = this.getLoggedUser();
         
-        // Se o usuário autenticado for Desenvolvedor Master ou Direção, possui visão global
-        const isMaster = (user && (user.role === 'desenvolvedor' || user.role === 'direcao' || (user.permissoes && user.permissoes.direcao))) || role === 'desenvolvedor' || role === 'direcao';
+        // Se for uma orientadora específica selecionada (via perfil de simulação ou role real)
+        const isSimulatingOrientadora = typeof role === 'string' && role.startsWith('orientadora_');
+        const isMaster = ((user && (user.role === 'desenvolvedor' || user.role === 'direcao' || (user.permissoes && user.permissoes.direcao))) || role === 'desenvolvedor' || role === 'direcao') && !isSimulatingOrientadora;
         
-        // Se for uma orientadora específica (e não estiver em modo Diretor/Master)
         let activeOri = null;
         if (typeof getOrientadoraByRole === 'function') {
             activeOri = getOrientadoraByRole(role);
@@ -3140,13 +3364,11 @@ class SigeDatabase {
 
     getOrientadoras() {
         const equipe = this.getEquipeEscolar();
-        const mockOriIds = ['orient-1', 'orient-2'];
         const deEquipe = equipe.filter(p => {
-            if (mockOriIds.includes(p.id)) return false;
             return this.getOpPerfil(p) === "executora";
         });
         
-        // Deduplica por nome normalizado (case-insensitive e sem acentos) para garantir que cada orientadora apareça estritamente UMA vez
+        // Deduplica por nome normalizado (case-insensitive e sem acentos) para garantir que cada orientador apareça estritamente UMA vez
         const mapPorNome = new Map();
         deEquipe.forEach(p => {
             const rawName = (p.nome || "").trim();
@@ -3168,7 +3390,7 @@ class SigeDatabase {
 
         const dedupList = Array.from(mapPorNome.values());
 
-        // Mantém estritamente apenas as orientadoras cadastradas no quadro da equipe escolar com perfil executora
+        // Mantém estritamente apenas os orientadores cadastrados no quadro da equipe escolar com perfil executora
         const orientadorasValidas = dedupList.map(p => {
             const existente = (this.data && Array.isArray(this.data.orientadoras)) ? this.data.orientadoras.find(o => 
                 o.id === p.id || 
@@ -3181,10 +3403,57 @@ class SigeDatabase {
                 email: p.email || (existente ? existente.email : ""),
                 turnos: p.turnos || "matutino",
                 turmasOuSalas: p.turmasOuSalas || p.cargoFuncao || "Orientação Educacional",
-                cargoFuncao: p.cargoFuncao || "Orientadora Educacional",
+                cargoFuncao: p.cargoFuncao || "Orientador(a) Educacional",
                 op_perfil: "executora"
             };
         });
+
+        // Garantia absoluta: Clarinda, Daiane e Jackson (CPF 08547134921) devem constar na lista de orientadores
+        const nomesPresentes = orientadorasValidas.map(o => (o.nome || "").toLowerCase());
+        
+        if (!nomesPresentes.some(n => n.includes("clarinda"))) {
+            const profCla = equipe.find(p => (p.nome && p.nome.toLowerCase().includes("clarinda")));
+            orientadorasValidas.push({
+                id: profCla ? profCla.id : "prof-clarinda",
+                nome: profCla ? profCla.nome : "Clarinda Rosa Pereira",
+                telefone: profCla ? profCla.telefone : "47999112233",
+                email: profCla ? profCla.email : "clarinda@escola.gov.br",
+                turnos: profCla ? profCla.turnos : "matutino",
+                turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)",
+                cargoFuncao: "Orientadora Educacional — Séries Iniciais",
+                op_perfil: "executora"
+            });
+        }
+        
+        if (!nomesPresentes.some(n => n.includes("daiane"))) {
+            const profDai = equipe.find(p => (p.nome && p.nome.toLowerCase().includes("daiane")));
+            orientadorasValidas.push({
+                id: profDai ? profDai.id : "prof-daiane",
+                nome: profDai ? profDai.nome : "Daiane Caetano Costa de Aquino",
+                telefone: profDai ? profDai.telefone : "47999445566",
+                email: profDai ? profDai.email : "daiane.aquino04548@edu.itajai.sc.gov.br",
+                turnos: profDai ? profDai.turnos : "vespertino",
+                turmasOuSalas: "6º ao 9º Anos (Séries Finais)",
+                cargoFuncao: "Orientadora Educacional — Séries Finais",
+                op_perfil: "executora"
+            });
+        }
+
+        if (!nomesPresentes.some(n => n.includes("jackson") || n.includes("silvano") || cleanCpf(n) === "08547134921")) {
+            const profJack = equipe.find(p => cleanCpf(p.cpf || "") === "08547134921" || (p.nome && (p.nome.toLowerCase().includes("jackson") || p.nome.toLowerCase().includes("silvano"))));
+            if (profJack) {
+                orientadorasValidas.push({
+                    id: profJack.id || "prof-jackson",
+                    nome: profJack.nome || "Jackson Silvano",
+                    telefone: profJack.telefone || "47999881122",
+                    email: profJack.email || "direcao@escola.gov.br",
+                    turnos: profJack.turnos || "integral",
+                    turmasOuSalas: profJack.turmasOuSalas || "Direção & Orientação Geral",
+                    cargoFuncao: profJack.cargoFuncao || "Diretor Escolar e Orientador Educacional",
+                    op_perfil: "executora"
+                });
+            }
+        }
 
         if (!this.data) this.data = {};
         this.data.orientadoras = orientadorasValidas;
@@ -3326,11 +3595,119 @@ class SigeDatabase {
             }
         }
 
-        // Purga orientadoras mock antigas (orient-1, orient-2) caso ainda constem na equipe
-        const mockOriIds = ['orient-1', 'orient-2'];
-        if (this.data.equipeEscola.some(p => mockOriIds.includes(p.id))) {
-            this.data.equipeEscola = this.data.equipeEscola.filter(p => !mockOriIds.includes(p.id));
+        // Migra IDs legados orient-1 e orient-2 para os IDs definitivos oficiais
+        this.data.equipeEscola.forEach(p => {
+            if (p.id === 'orient-1' || (p.nome && p.nome.toLowerCase().includes('clarinda'))) {
+                p.id = 'prof-clarinda';
+                saveNeeded = true;
+            }
+            if (p.id === 'orient-2' || (p.nome && p.nome.toLowerCase().includes('daiane'))) {
+                p.id = 'prof-daiane';
+                saveNeeded = true;
+            }
+        });
+
+        // 1. Garante Clarinda Rosa Pereira no quadro da equipe
+        let clarindaProf = this.data.equipeEscola.find(p => (p.id && p.id === 'prof-clarinda') || (p.cpf && cleanCpf(p.cpf) === '22222222222') || (p.nome && p.nome.toLowerCase().includes('clarinda')) || (p.email && p.email.toLowerCase().includes('clarinda')));
+        if (!clarindaProf) {
+            this.data.equipeEscola.push({
+                id: "prof-clarinda",
+                nome: "Clarinda Rosa Pereira",
+                cpf: "222.222.222-22",
+                dataNascimento: "20/10/1982",
+                senha: "20101982",
+                setor: "orientacao",
+                cargoFuncao: "Orientadora Educacional — Séries Iniciais",
+                disciplina: "Orientação Educacional (OE)",
+                telefone: "47999112233",
+                email: "clarinda@escola.gov.br",
+                turnos: "matutino",
+                turmasOuSalas: "1º ao 5º Anos (Séries Iniciais)",
+                permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+            });
             saveNeeded = true;
+        } else {
+            if (clarindaProf.id !== 'prof-clarinda') { clarindaProf.id = 'prof-clarinda'; saveNeeded = true; }
+            if (!clarindaProf.permissoes || clarindaProf.permissoes.op_perfil !== 'executora') {
+                clarindaProf.permissoes = { ...(clarindaProf.permissoes || {}), op: true, op_perfil: 'executora' };
+                saveNeeded = true;
+            }
+        }
+
+        // 2. Garante Daiane Caetano Costa de Aquino no quadro da equipe
+        let daianeProf = this.data.equipeEscola.find(p => (p.id && p.id === 'prof-daiane') || (p.cpf && cleanCpf(p.cpf) === '11111111111') || (p.nome && p.nome.toLowerCase().includes('daiane')) || (p.email && p.email.toLowerCase().includes('daiane')));
+        if (!daianeProf) {
+            this.data.equipeEscola.push({
+                id: "prof-daiane",
+                nome: "Daiane Caetano Costa de Aquino",
+                cpf: "111.111.111-11",
+                dataNascimento: "15/05/1985",
+                senha: "15051985",
+                setor: "orientacao",
+                cargoFuncao: "Orientadora Educacional — Séries Finais",
+                disciplina: "Orientação Educacional (OE)",
+                telefone: "47999445566",
+                email: "daiane.aquino04548@edu.itajai.sc.gov.br",
+                turnos: "vespertino",
+                turmasOuSalas: "6º ao 9º Anos (Séries Finais)",
+                permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false }
+            });
+            saveNeeded = true;
+        } else {
+            if (daianeProf.id !== 'prof-daiane') { daianeProf.id = 'prof-daiane'; saveNeeded = true; }
+            if (!daianeProf.permissoes || daianeProf.permissoes.op_perfil !== 'executora') {
+                daianeProf.permissoes = { ...(daianeProf.permissoes || {}), op: true, op_perfil: 'executora' };
+                saveNeeded = true;
+            }
+        }
+
+        // 3. Garante Diretor e Orientador Jackson Silvano (CPF 085.471.349-21) acumulando funções
+        let jacksonProf = this.data.equipeEscola.find(p => (p.cpf && cleanCpf(p.cpf) === '08547134921') || (p.cpf && cleanCpf(p.cpf) === '44444444444') || (p.nome && (p.nome.toLowerCase().includes('jackson') || p.nome.toLowerCase().includes('silvano'))) || (p.email && p.email.toLowerCase().includes('direcao@escola')));
+        if (!jacksonProf) {
+            this.data.equipeEscola.push({
+                id: "prof-jackson",
+                nome: "Jackson Silvano",
+                cpf: "085.471.349-21",
+                dataNascimento: "05/08/1978",
+                senha: "05081978",
+                setor: "direcao",
+                cargoFuncao: "Diretor Escolar e Orientador Educacional",
+                disciplina: "Gestão Escolar & Orientação Educacional",
+                telefone: "47999881122",
+                email: "direcao@escola.gov.br",
+                turnos: "integral",
+                turmasOuSalas: "Direção & Orientação Geral",
+                permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
+            });
+            saveNeeded = true;
+        } else {
+            if (cleanCpf(jacksonProf.cpf || '') !== '08547134921') {
+                jacksonProf.cpf = "085.471.349-21";
+                saveNeeded = true;
+            }
+            if (!jacksonProf.cargoFuncao || !jacksonProf.cargoFuncao.toLowerCase().includes('orientad')) {
+                jacksonProf.cargoFuncao = "Diretor Escolar e Orientador Educacional";
+                saveNeeded = true;
+            }
+            if (!jacksonProf.permissoes || jacksonProf.permissoes.op_perfil !== 'executora' || !jacksonProf.permissoes.direcao) {
+                jacksonProf.permissoes = {
+                    ...(jacksonProf.permissoes || {}),
+                    direcao: true,
+                    mural: true,
+                    supervisao: true,
+                    admin: true,
+                    uniformes: true,
+                    op: true,
+                    op_perfil: 'executora',
+                    ext_recursos: true,
+                    ext_dashboard: true,
+                    ext_contabil: true,
+                    ext_biblioteca: true,
+                    ext_patrimonio: true,
+                    dev: false
+                };
+                saveNeeded = true;
+            }
         }
 
         // Garante identificador id e objeto de permissoes em cada membro da equipe
@@ -4528,6 +4905,15 @@ class SigeDatabase {
 
     getRoleFormatted() {
         const role = this.getRole();
+        if (typeof role === 'string' && role.startsWith("orientadora_")) {
+            if (typeof getOrientadoraByRole === 'function') {
+                const ori = getOrientadoraByRole(role);
+                if (ori) {
+                    const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                    return `${prefix} ${ori.nome}`;
+                }
+            }
+        }
         const roleMap = {
             desenvolvedor: 'Desenvolvedor do Sistema',
             direcao: 'Direção Escolar',
@@ -5308,9 +5694,14 @@ function getRoleLabel(role) {
     if (typeof role === 'string' && role.startsWith("orientadora_")) {
         if (typeof getOrientadoraByRole === 'function') {
             const ori = getOrientadoraByRole(role);
-            if (ori) return `Orientadora ${ori.nome}`;
+            if (ori) {
+                const prefix = (ori.nome && (ori.nome.toLowerCase().includes('jackson') || ori.nome.toLowerCase().includes('silvano'))) ? "Orientador" : "Orientadora";
+                return `${prefix} ${ori.nome}`;
+            }
         }
-        return "Orientadora Educacional";
+        if (role === "orientadora_clarinda") return "Orientadora Clarinda (Anos Iniciais)";
+        if (role === "orientadora_daiane") return "Orientadora Daiane (Anos Finais)";
+        return "Orientador(a) Educacional";
     }
     if (typeof role === 'string' && role.startsWith("supervisora_")) {
         if (typeof getSupervisoraByRole === 'function') {

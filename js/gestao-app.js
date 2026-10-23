@@ -951,22 +951,24 @@ function getOrientadoraByRole(role) {
     if (!role) return null;
     const orientadoras = (typeof sigeDB !== 'undefined' && sigeDB.getOrientadoras) ? sigeDB.getOrientadoras() : [];
     
-    // 1. Se estiver logado e for estritamente do perfil executora de atendimento
+    // 1. Busca prioritária por ID ou nome da role ativa selecionada (ex: orientadora_clarinda, orientadora_daiane, orientadora_prof-jackson)
+    if (role.startsWith("orientadora_")) {
+        const idOrName = role.replace("orientadora_", "").toLowerCase();
+        const found = orientadoras.find(o => (o.id && o.id.toLowerCase() === idOrName) || (o.nome && o.nome.toLowerCase().includes(idOrName)));
+        if (found) return found;
+    }
+
+    // 2. Se estiver logado e for estritamente do perfil executora de atendimento
     const logged = (typeof sigeDB !== 'undefined' && sigeDB.getLoggedUser) ? sigeDB.getLoggedUser() : null;
-    if (logged) {
+    if (logged && (!role || role === logged.role || !role.startsWith("orientadora_"))) {
         const perfil = (typeof sigeDB !== 'undefined' && sigeDB.getOpPerfil) ? sigeDB.getOpPerfil(logged) : 'none';
         if (perfil === 'executora') {
             const found = orientadoras.find(o => o.id === logged.id || (o.nome && logged.nome && o.nome.toLowerCase().trim() === logged.nome.toLowerCase().trim()));
             if (found) return found;
-            if (logged.nome) return { id: logged.id || "logged-ori", nome: logged.nome, cargoFuncao: logged.cargo || "Orientadora Educacional" };
+            if (logged.nome) return { id: logged.id || "logged-ori", nome: logged.nome, cargoFuncao: logged.cargo || "Orientador(a) Educacional" };
         }
     }
 
-    // 2. Busca por ID da role ativa
-    if (role.startsWith("orientadora_")) {
-        const idOrName = role.replace("orientadora_", "").toLowerCase();
-        return orientadoras.find(o => (o.id && o.id.toLowerCase() === idOrName) || (o.nome && o.nome.toLowerCase().includes(idOrName))) || null;
-    }
     if (role === "orientacao" && orientadoras.length > 0) {
         return orientadoras[0];
     }
@@ -1003,7 +1005,8 @@ function populateActiveRoleSelectOptions(roleSelect) {
     orientadoras.forEach(o => {
         const valueKey = "orientadora_" + o.id;
         const sub = o.turmasOuSalas || o.cargoFuncao || "OE";
-        html += `<option value="${escapeHtml(valueKey)}">💛 Orientadora ${escapeHtml(o.nome)} (${escapeHtml(sub)})</option>`;
+        const iconPrefix = (o.nome && (o.nome.toLowerCase().includes('jackson') || o.nome.toLowerCase().includes('silvano'))) ? "🧭 Orientador" : "💛 Orientadora";
+        html += `<option value="${escapeHtml(valueKey)}">${iconPrefix} ${escapeHtml(o.nome)} (${escapeHtml(sub)})</option>`;
     });
 
     supervisoras.forEach(s => {
@@ -1029,7 +1032,10 @@ function syncRoleFilters() {
     const activeOri = (typeof getOrientadoraByRole === 'function') ? getOrientadoraByRole(role) : null;
 
     if (opFilter) {
-        if (activeOri && !isMaster) {
+        if (activeOri && role.startsWith("orientadora_")) {
+            opFilter.value = activeOri.nome;
+            opFilter.disabled = true;
+        } else if (activeOri && !isMaster) {
             opFilter.value = activeOri.nome;
             opFilter.disabled = true;
         } else {
