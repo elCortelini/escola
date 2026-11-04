@@ -447,6 +447,8 @@ const defaultSigeData = {
     mensagensWhatsAppLog: [],
     chancelasAssinaturas: [],
     documentosExpedidos: [],
+    diasBloqueados: [],
+    deletedOPIds: [],
     deletedChancelaIds: ['chancela-direcao-oficial', 'chancela-secretaria-oficial'],
     deletedContatosWpIds: [],
     deletedEventoCalendarioIds: [],
@@ -4287,11 +4289,15 @@ class SigeDatabase {
             } else {
                 list.push(turmaData);
             }
+            if (Array.isArray(this.data.deletedTurmaIds)) {
+                this.data.deletedTurmaIds = this.data.deletedTurmaIds.filter(id => id !== turmaData.id);
+            }
         } else {
             turmaData.id = generateSecureId("turma");
             list.push(turmaData);
         }
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Turmas & Turnos", `Salva turma ${turmaData.nome} (${turmaData.turno})`, "Administração");
         return turmaData;
     }
@@ -4303,10 +4309,13 @@ class SigeDatabase {
         if (!Array.isArray(this.data.deletedTurmaIds)) this.data.deletedTurmaIds = [];
         this.data.deletedTurmaIds.push(id);
         this.data.deletedTurmaIds = Array.from(new Set(this.data.deletedTurmaIds));
+        this.pruneDeletedIds('deletedTurmaIds');
         this.saveData(this.data);
+        this.syncToFirebase();
         if (turma) {
             this.logAuditEvent("Turmas & Turnos", `Removida turma ${turma.nome}`, "Administração");
         }
+        return true;
     }
 
     getConfigEscola() {
@@ -4524,10 +4533,61 @@ class SigeDatabase {
         const ag = this.data.agendamentosOP.find(a => a.id === id);
         if (ag) {
             ag.statusSecretaria = status;
+            ag.secretariaStatus = status;
             if (obs) ag.obsSecretaria = obs;
             if (chegadaEm) ag.chegadaEm = chegadaEm;
             this.saveData(this.data);
+            this.syncToFirebase();
+            return true;
         }
+        return false;
+    }
+
+    saveAgendamentoOP(agendamento) {
+        if (agendamento.id) {
+            return this.updateAgendamentoOP(agendamento.id, agendamento);
+        }
+        return this.addAgendamentoOP(agendamento);
+    }
+
+    updateAgendamentoOP(id, updates) {
+        const ag = (this.getAgendamentosOP()).find(a => a.id === id);
+        if (ag) {
+            Object.assign(ag, updates);
+            ag.atualizadoEm = new Date().toISOString();
+            this.saveData(this.data);
+            this.syncToFirebase();
+            return ag;
+        }
+        return null;
+    }
+
+    updateAgendamentoOPStatus(id, status) {
+        return this.updateAgendamentoOP(id, { status });
+    }
+
+    saveProjetoOP(proj) {
+        return this.addProjetoOrientacao(proj);
+    }
+
+    deleteProjetoOP(id) {
+        return this.deleteProjetoOrientacao(id);
+    }
+
+    getProjetosOP() {
+        return this.getProjetosOrientacao();
+    }
+
+    saveProjetoSupervisao(proj) {
+        return this.addProjetoSupervisao(proj);
+    }
+
+    saveReuniaoPedagogicaSupervisao(reun) {
+        return this.addReuniaoPedagogicaSupervisao(reun);
+    }
+
+    saveAtividadeExternaSupervisao(act) {
+        return this.addAtividadeExternaSupervisao(act);
     }
 
     // Demandas Supervisão
@@ -4554,7 +4614,34 @@ class SigeDatabase {
         if (d) {
             d.status = status;
             this.saveData(this.data);
+            this.syncToFirebase();
         }
+    }
+
+    deleteDemandaSupervisao(id) {
+        if (!this.data || !Array.isArray(this.data.demandasSupervisao)) return false;
+        this.data.demandasSupervisao = this.data.demandasSupervisao.filter(item => item.id !== id);
+        if (!Array.isArray(this.data.deletedDemandaSupIds)) this.data.deletedDemandaSupIds = [];
+        this.data.deletedDemandaSupIds.push(id);
+        this.data.deletedDemandaSupIds = Array.from(new Set(this.data.deletedDemandaSupIds));
+        this.pruneDeletedIds('deletedDemandaSupIds');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
+    }
+
+    saveDemandaSupervisao(demanda) {
+        if (demanda.id) {
+            const list = this.getDemandasSupervisao();
+            const idx = list.findIndex(d => d.id === demanda.id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...demanda, atualizadoEm: new Date().toISOString() };
+                this.saveData(this.data);
+                this.syncToFirebase();
+                return list[idx];
+            }
+        }
+        return this.addDemandaSupervisao(demanda);
     }
 
     // Projetos Institucionais da Supervisão
@@ -4636,7 +4723,9 @@ class SigeDatabase {
         let list = this.getProjetosOrientacao();
         this.data.projetosOrientacao = list.filter(p => p.id !== id);
         this.saveData(this.data);
+        this.syncToFirebase();
         this.logAuditEvent("Orientação Pedagógica", `Removido projeto continuado ID: ${id}`, "Orientação");
+        return true;
     }
 
     // Atividades Externas / Aulas Passeio
@@ -4700,7 +4789,34 @@ class SigeDatabase {
         if (d) {
             d.status = status;
             this.saveData(this.data);
+            this.syncToFirebase();
         }
+    }
+
+    deleteDemandaAdmin(id) {
+        if (!this.data || !Array.isArray(this.data.demandasAdmin)) return false;
+        this.data.demandasAdmin = this.data.demandasAdmin.filter(item => item.id !== id);
+        if (!Array.isArray(this.data.deletedDemandaAdmIds)) this.data.deletedDemandaAdmIds = [];
+        this.data.deletedDemandaAdmIds.push(id);
+        this.data.deletedDemandaAdmIds = Array.from(new Set(this.data.deletedDemandaAdmIds));
+        this.pruneDeletedIds('deletedDemandaAdmIds');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
+    }
+
+    saveDemandaAdmin(demanda) {
+        if (demanda.id) {
+            const list = this.getDemandasAdmin();
+            const idx = list.findIndex(d => d.id === demanda.id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...demanda, atualizadoEm: new Date().toISOString() };
+                this.saveData(this.data);
+                this.syncToFirebase();
+                return list[idx];
+            }
+        }
+        return this.addDemandaAdmin(demanda);
     }
 
     // ==========================================
@@ -4857,6 +4973,58 @@ class SigeDatabase {
         return tarefa;
     }
 
+    saveAvisoMural(aviso) {
+        return this.addAviso(aviso);
+    }
+
+    saveAtaGabinete(ata) {
+        if (ata.id) {
+            const list = this.getAtasGabinete();
+            const idx = list.findIndex(a => a.id === ata.id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...ata, atualizadoEm: new Date().toISOString() };
+                this.saveData(this.data);
+                this.syncToFirebase();
+                return list[idx];
+            }
+        }
+        return this.addAtaGabinete(ata);
+    }
+
+    saveEventoCalendario(ev) {
+        if (ev.id) {
+            return this.updateEventoCalendarioEscolar(ev.id, ev);
+        }
+        return this.addEventoCalendarioEscolar(ev);
+    }
+
+    deleteEventoCalendario(id) {
+        return this.deleteEventoCalendarioEscolar(id);
+    }
+
+    saveContatoWhatsAppDirecao(contato) {
+        if (contato.id) {
+            return this.updateContatoWhatsApp(contato.id, contato);
+        }
+        return this.addContatoWhatsApp(contato);
+    }
+
+    deleteContatoWhatsAppDirecao(id) {
+        return this.deleteContatoWhatsApp(id);
+    }
+
+    registrarDocumentoExpedido(doc) {
+        return this.addDocumentoExpedido(doc);
+    }
+
+    aprovarSolicitacaoAcesso(identifier, permissoes = null, role = 'docentes', cargo = '') {
+        return this.aprovarUsuarioPendente(identifier, role, permissoes, cargo);
+    }
+
+    recusarSolicitacaoAcesso(identifier) {
+        return this.recusarUsuarioPendente(identifier);
+    }
+
     toggleStatusTarefa(id) {
         const t = this.data.calendarioTarefas.find(item => item.id === id);
         if (t) {
@@ -4921,6 +5089,43 @@ class SigeDatabase {
             this.syncToFirebase();
             this.logAuditEvent("Uniformes Escolares", `Cancelado pedido ID: ${id} (${ped.aluno})`, "Secretaria");
         }
+    }
+
+    deletePedidoUniforme(id) {
+        if (!this.data || !Array.isArray(this.data.pedidosUniformes)) return false;
+        this.data.pedidosUniformes = this.data.pedidosUniformes.filter(p => p.id !== id);
+        if (!Array.isArray(this.data.deletedPedidoUniformeIds)) this.data.deletedPedidoUniformeIds = [];
+        this.data.deletedPedidoUniformeIds.push(id);
+        this.data.deletedPedidoUniformeIds = Array.from(new Set(this.data.deletedPedidoUniformeIds));
+        this.pruneDeletedIds('deletedPedidoUniformeIds');
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
+    }
+
+    savePedidoUniforme(pedido) {
+        if (pedido.id) {
+            return this.updatePedidoUniforme(pedido.id, pedido);
+        }
+        return this.addPedidoUniforme(pedido);
+    }
+
+    updateStatusPedidoUniforme(id, status) {
+        return this.updatePedidoUniforme(id, { status });
+    }
+
+    entregarPedidoUniforme(id, dados = {}) {
+        return this.darBaixaEntregaUniforme(id, dados.entreguePor || "Secretaria", !!dados.darBaixaEstoque, dados.recebidoPor || "");
+    }
+
+    saveLoteSME(lote) {
+        if (!this.data.lotesSME) this.data.lotesSME = [];
+        if (!lote.id) lote.id = generateSecureId("lote");
+        lote.criadoEm = lote.criadoEm || new Date().toISOString();
+        this.data.lotesSME.unshift(lote);
+        this.saveData(this.data);
+        this.syncToFirebase();
+        return lote;
     }
 
     getLotesSME() {
@@ -5036,7 +5241,7 @@ class SigeDatabase {
     }
 
     getEstoqueUniformes() {
-        if (!this.data.estoqueUniformes || typeof this.data.estoqueUniformes !== "object" || !this.data.estoqueUniformes.masculino) {
+        if (!this.data.estoqueUniformes || typeof this.data.estoqueUniformes !== "object") {
             this.data.estoqueUniformes = defaultSigeData.estoqueUniformes || {
                 masculino: {
                     "camiseta": { "8": 0, "10": 0, "12": 0, "14": 0, "16": 0, "P": 0, "M": 0, "G": 0, "GG": 0, "G1": 0, "G2": 0 },
@@ -5082,13 +5287,40 @@ class SigeDatabase {
         return est[genKey][peca][tamanho];
     }
 
-    darBaixaEntregaUniforme(pedidoId, entreguePor, darBaixaEstoque = false) {
+    salvarEstoqueUniformes(estoque) {
+        if (this.data) {
+            this.data.estoqueUniformes = estoque;
+            this.saveData(this.data);
+            this.syncToFirebase();
+        }
+        return this.data.estoqueUniformes;
+    }
+
+    movimentarEstoqueUniforme(peca, tamanhoOuQtd, quantidadeOuMotivo, acao = "somar", genero = "Masculino") {
+        if (typeof tamanhoOuQtd === 'number' && typeof peca === 'string') {
+            if (!this.data.estoqueUniformes) this.getEstoqueUniformes();
+            const est = this.data.estoqueUniformes;
+            const current = est[peca] || 0;
+            est[peca] = Math.max(0, current + tamanhoOuQtd);
+            this.saveData(this.data);
+            this.syncToFirebase();
+            return est[peca];
+        }
+        return this.ajustarEstoqueUniforme(peca, tamanhoOuQtd, quantidadeOuMotivo, acao, genero);
+    }
+
+    darBaixaEntregaUniforme(pedidoId, entreguePor, darBaixaEstoque = false, recebidoPor = "") {
         const ped = (this.getPedidosUniformes()).find(p => p.id === pedidoId);
         if (!ped) throw new Error("Pedido de uniforme não encontrado!");
 
         ped.status = "entregue";
         ped.dataEntregaAluno = getLocalDateISO();
         ped.entreguePor = entreguePor || this.getRoleFormatted();
+        if (recebidoPor) {
+            ped.recebidoPor = recebidoPor;
+        } else if (!ped.recebidoPor) {
+            ped.recebidoPor = ped.responsavelNome || "Responsável";
+        }
         ped.atualizadoEm = new Date().toISOString();
 
         if (darBaixaEstoque) {
@@ -5374,13 +5606,16 @@ class SigeDatabase {
     }
 
     deleteAtaGabinete(id) {
-        if (!this.data.atasGabineteDirecao) return;
+        if (!this.data.atasGabineteDirecao) return false;
         this.data.atasGabineteDirecao = this.data.atasGabineteDirecao.filter(a => a.id !== id);
         if (!Array.isArray(this.data.deletedAtaIds)) this.data.deletedAtaIds = [];
         this.data.deletedAtaIds.push(id);
         this.data.deletedAtaIds = Array.from(new Set(this.data.deletedAtaIds));
+        this.pruneDeletedIds('deletedAtaIds');
         this.addAuditLog('Exclusão de Ata de Gabinete (ID: ' + id + ')', 'Direção');
         this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
     }
 
     getEventosCalendarioEscolar() {
@@ -5468,16 +5703,19 @@ class SigeDatabase {
     }
 
     deleteEventoCalendarioEscolar(id) {
-        if (!this.data) return;
+        if (!this.data) return false;
         if (!this.data.deletedEventoCalendarioIds) this.data.deletedEventoCalendarioIds = [];
         if (!this.data.deletedEventoCalendarioIds.includes(id)) {
             this.data.deletedEventoCalendarioIds.push(id);
         }
+        this.pruneDeletedIds('deletedEventoCalendarioIds');
         if (Array.isArray(this.data.eventosCalendarioEscolar)) {
             this.data.eventosCalendarioEscolar = this.data.eventosCalendarioEscolar.filter(e => e.id !== id);
         }
         this.addAuditLog('Exclusão de Evento do Calendário (ID: ' + id + ')', 'Direção');
         this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
     }
 
     importarEventosCalendarioLote(eventos, sobrescrever = true) {
@@ -5793,15 +6031,18 @@ class SigeDatabase {
     }
 
     deleteContatoWhatsApp(id) {
-        if (!this.data) return;
+        if (!this.data) return false;
         if (!this.data.deletedContatosWpIds) this.data.deletedContatosWpIds = [];
         if (!this.data.deletedContatosWpIds.includes(id)) {
             this.data.deletedContatosWpIds.push(id);
         }
+        this.pruneDeletedIds('deletedContatosWpIds');
         if (Array.isArray(this.data.contatosWhatsAppDirecao)) {
             this.data.contatosWhatsAppDirecao = this.data.contatosWhatsAppDirecao.filter(c => c.id !== id);
         }
         this.saveData(this.data);
+        this.syncToFirebase();
+        return true;
     }
 
     updateContatoWhatsApp(id, dados) {
@@ -5865,10 +6106,11 @@ class SigeDatabase {
             telefone: log.telefone || '',
             tag: log.tag || '',
             tags: Array.isArray(log.tags) ? log.tags : (log.tag ? [log.tag] : []),
-            mensagem: log.mensagem || '',
-            enviadoEm: new Date().toISOString(),
+            mensagem: log.mensagem || log.mensagemResumo || '',
+            enviadoEm: log.dataHora || new Date().toISOString(),
             status: log.status || 'enviado', // enviado, lido, confirmado, nao_respondeu
-            enviadoPor: this.getUserName() || 'Direção'
+            enviadoPor: this.getUserName() || 'Direção',
+            ...log
         };
         this.data.mensagensWhatsAppLog.unshift(novoLog);
         this.saveData(this.data);
@@ -5892,6 +6134,10 @@ class SigeDatabase {
         this.data.mensagensWhatsAppLog = this.data.mensagensWhatsAppLog.filter(m => m.id !== id);
         this.saveData(this.data);
         return true;
+    }
+
+    registrarDisparoWhatsAppLog(log) {
+        return this.addMensagemWhatsAppLog(log);
     }
 
     salvarPermissoesUsuario(emailOuId, permissoesMap) {
