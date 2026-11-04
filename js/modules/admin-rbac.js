@@ -1846,23 +1846,52 @@ function openCadastroProfissionalModal(id = null) {
     if (!modal) return;
 
     if (id && typeof id === "string") {
+        const cleanId = id.trim();
+        const cleanIdCpf = (typeof cleanCpf === "function") ? cleanCpf(cleanId) : cleanId.replace(/\D/g, "");
+        const cleanIdMail = cleanId.toLowerCase();
         const equipe = sigeDB.getEquipeEscolar();
-        const prof = equipe.find(p => p.id === id);
-        if (prof) {
-            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro & Permissões do Colaborador`;
-            if (inputId) inputId.value = prof.id;
-            if (inputNome) inputNome.value = prof.nome || "";
-            if (inputSetor) inputSetor.value = prof.setor || "docentes";
-            if (inputCargo) inputCargo.value = prof.cargoFuncao || "";
-            if (inputDisc) inputDisc.value = prof.disciplina || "";
-            if (inputTel) inputTel.value = prof.telefone || "";
-            if (inputEmail) inputEmail.value = prof.email || "";
-            if (inputTurno) inputTurno.value = prof.turnos || "matutino";
-            if (inputTurmas) inputTurmas.value = prof.turmasOuSalas || "";
-            if (inputCpf) inputCpf.value = prof.cpf || "";
-            if (inputDataNasc) inputDataNasc.value = prof.dataNascimento || "";
+        const users = sigeDB.getUsuarios();
 
-            const perms = prof.permissoes || sigeDB.getDefaultPermissoesByRole(prof.setor);
+        const prof = equipe.find(p => 
+            (p.id && p.id === cleanId) ||
+            (cleanIdCpf && cleanCpf(p.cpf || "") === cleanIdCpf) ||
+            (cleanIdMail && p.email && p.email.toLowerCase().trim() === cleanIdMail)
+        );
+
+        const u = users.find(user => 
+            (user.id && user.id === cleanId) ||
+            (cleanIdCpf && cleanCpf(user.cpf || "") === cleanIdCpf) ||
+            (cleanIdMail && user.email && user.email.toLowerCase().trim() === cleanIdMail)
+        );
+
+        const record = prof || u;
+        if (record) {
+            const resolvedId = (prof && prof.id) || (u && u.id) || cleanId;
+            const nome = (prof && prof.nome) || (u && u.nome) || "";
+            const setor = (prof && prof.setor) || (u && u.role && u.role !== "desenvolvedor" ? u.role : "docentes");
+            const cargo = (prof && prof.cargoFuncao) || (u && u.cargo) || "";
+            const disc = (prof && prof.disciplina) || "";
+            const tel = (prof && prof.telefone) || (u && (u.whatsapp || u.telefone)) || "";
+            const email = (prof && prof.email) || (u && u.email) || "";
+            const turno = (prof && prof.turnos) || (u && u.turno) || "matutino";
+            const turmas = (prof && prof.turmasOuSalas) || "";
+            const cpf = (prof && prof.cpf) || (u && u.cpf) || "";
+            const dataNasc = (prof && prof.dataNascimento) || (u && u.dataNascimento) || "";
+
+            if (title) title.innerHTML = `<i class="fa-solid fa-user-pen" style="color:#1e3a8a;"></i> Editar Cadastro & Permissões: ${typeof escapeHtml === "function" ? escapeHtml(nome) : nome}`;
+            if (inputId) inputId.value = resolvedId;
+            if (inputNome) inputNome.value = nome;
+            if (inputSetor) inputSetor.value = setor;
+            if (inputCargo) inputCargo.value = cargo;
+            if (inputDisc) inputDisc.value = disc;
+            if (inputTel) inputTel.value = tel;
+            if (inputEmail) inputEmail.value = email;
+            if (inputTurno) inputTurno.value = turno;
+            if (inputTurmas) inputTurmas.value = turmas;
+            if (inputCpf) inputCpf.value = cpf;
+            if (inputDataNasc) inputDataNasc.value = dataNasc;
+
+            const perms = (prof && prof.permissoes) || (u && u.permissoes) || sigeDB.getDefaultPermissoesByRole(setor);
             allKeys.forEach(k => {
                 const chk = document.getElementById(`proChk_${k}`);
                 if (chk) chk.checked = !!perms[k];
@@ -1871,7 +1900,7 @@ function openCadastroProfissionalModal(id = null) {
             const selOpPerfil = document.getElementById("proSelect_op_perfil");
             const wrapperOpPerfil = document.getElementById("proOpPerfilWrapper");
             if (selOpPerfil) {
-                selOpPerfil.value = perms.op_perfil || sigeDB.getOpPerfil(prof);
+                selOpPerfil.value = perms.op_perfil || sigeDB.getOpPerfil(record);
             }
             if (wrapperOpPerfil) {
                 wrapperOpPerfil.style.display = perms.op ? "block" : "none";
@@ -1965,7 +1994,15 @@ function submitCadastroProfissional(e) {
         } else if (typeof renderModuleOrientacaoPedagogica === "function") {
             renderModuleOrientacaoPedagogica();
         }
-        renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        if (typeof renderEquipeEscolarTable === "function") {
+            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        }
+        if (typeof renderAdminPermissoesUsuarios === "function") {
+            renderAdminPermissoesUsuarios();
+        }
+        if (typeof renderDevUsersList === "function") {
+            renderDevUsersList();
+        }
         showToast(id ? "✅ Cadastro e permissões do colaborador atualizados!" : "✅ Novo colaborador e credenciais registrados com sucesso!");
     } catch (err) {
         console.error("Erro ao salvar colaborador:", err);
@@ -1999,7 +2036,15 @@ function excluirProfissional(id) {
         } else if (typeof renderModuleOrientacaoPedagogica === "function") {
             renderModuleOrientacaoPedagogica();
         }
-        renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        if (typeof renderEquipeEscolarTable === "function") {
+            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+        }
+        if (typeof renderAdminPermissoesUsuarios === "function") {
+            renderAdminPermissoesUsuarios();
+        }
+        if (typeof renderDevUsersList === "function") {
+            renderDevUsersList();
+        }
         showToast("🗑️ Colaborador e acessos removidos com sucesso.");
     }
 }
@@ -2964,6 +3009,8 @@ window.editarProfissional = editarProfissional;
 window.excluirProfissional = excluirProfissional;
 window.setAllProfissionalModulos = setAllProfissionalModulos;
 window.autoSuggestModulosPorSetor = autoSuggestModulosPorSetor;
+window.getCurrentSetorFilter = () => currentSetorFilter;
+window.getEquipeBuscaTexto = () => equipeBuscaTexto;
 
 // Funções de Conexão e QR Code do WhatsApp (Painel Admin)
 window.openModalQrCodeWhatsApp = openModalQrCodeWhatsApp;

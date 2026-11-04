@@ -678,6 +678,9 @@ function aplicarPresetPermissoesUsuario(userIdentifier, preset) {
 let currentEditingRbacUserKey = null;
 
 function openModalNovoUsuarioRBAC(identificadorParaEditar) {
+    if (typeof openCadastroProfissionalModal === "function") {
+        return openCadastroProfissionalModal(identificadorParaEditar);
+    }
     const modal = document.getElementById("modalAdminNovoUsuario");
     if (!modal) return;
 
@@ -903,9 +906,9 @@ function deleteDevUser(userIdentifier) {
     if (confirm(`Tem certeza que deseja remover as permissões deste usuário (${userIdentifier})?`)) {
         if (sigeDB.removeUsuario(userIdentifier)) {
             showToast("Usuário removido com sucesso!");
-            renderDevUsersList();
-            renderAdminPermissoesUsuarios();
-            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+            if (typeof renderDevUsersList === "function") renderDevUsersList();
+            if (typeof renderAdminPermissoesUsuarios === "function") renderAdminPermissoesUsuarios();
+            if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
         } else {
             alert("Não é possível remover o desenvolvedor principal.");
         }
