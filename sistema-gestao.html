@@ -703,14 +703,14 @@
 
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Filtrar por Turma</label>
-                                <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <select id="filterUniTurma" onchange="renderTabelaPedidosUniformes()" class="search-input" class="sige-input-full">
                                     <option value="todas">Todas as Turmas</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status do Pedido</label>
-                                <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <select id="filterUniStatus" onchange="renderTabelaPedidosUniformes()" class="search-input" class="sige-input-full">
                                     <option value="todos">Todos os Status</option>
                                     <option value="pendente_envio">⏳ Pendente de Envio à SME</option>
                                     <option value="enviado_sme">🚛 Em Remessa / Lote SME</option>
@@ -722,7 +722,7 @@
 
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Motivo da Solicitação</label>
-                                <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <select id="filterUniMotivo" onchange="renderTabelaPedidosUniformes()" class="search-input" class="sige-input-full">
                                     <option value="todos">Todos os Motivos</option>
                                     <option value="aluno_novo">Aluno Novo</option>
                                     <option value="troca_tamanho">Troca de Tamanho</option>
@@ -734,12 +734,12 @@
 
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Inicial (Solicitação)</label>
-                                <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <input type="date" id="filterUniDataInicio" onchange="renderTabelaPedidosUniformes()" class="search-input" class="sige-input-full">
                             </div>
 
                             <div>
                                 <label style="font-size:0.78rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Data Final (Solicitação)</label>
-                                <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" style="width:100%; box-sizing:border-box;">
+                                <input type="date" id="filterUniDataFim" onchange="renderTabelaPedidosUniformes()" class="search-input" class="sige-input-full">
                             </div>
                         </div>
 
@@ -893,7 +893,7 @@
                             <input type="text" id="cfgNomeEscola" required class="search-input" style="width:100%; font-size:0.85rem;">
                         </div>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div class="sige-grid-2col">
                             <div>
                                 <label style="font-size:0.8rem; font-weight:700; color:#334155;">Cidade / UF:</label>
                                 <input type="text" id="cfgCidadeUf" required class="search-input" style="width:100%; font-size:0.85rem;">
@@ -904,7 +904,7 @@
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div class="sige-grid-2col">
                             <div>
                                 <label style="font-size:0.8rem; font-weight:700; color:#334155;">Período Letivo Atual:</label>
                                 <input type="text" id="cfgPeriodoAtual" required class="search-input" style="width:100%; font-size:0.85rem;">
@@ -2335,7 +2335,7 @@
     <!-- ========================================== -->
     <!-- MODAL DE VISÃO DETALHADA DO DIA (OE) -->
     <!-- ========================================== -->
-    <div id="modalVisaoDetalhadaDia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalVisaoDetalhadaDia" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:850px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <div>
@@ -2348,7 +2348,7 @@
                     <button id="btnModalDiaImprimir" type="button" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 12px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer;">
                         <i class="fa-solid fa-print"></i> Imprimir Este Dia
                     </button>
-                    <button type="button" onclick="closeVisaoDetalhadaDiaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" onclick="closeVisaoDetalhadaDiaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -2362,35 +2362,35 @@
     <!-- ========================================== -->
     <!-- MODAL 1: NOVO AGENDAMENTO OE -->
     <!-- ========================================== -->
-    <div id="modalAgendamentoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalAgendamentoOP" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-heart-pulse" style="color:var(--op-color);"></i> Novo Agendamento - Orientação Educacional (OE)
                 </h3>
-                <button onclick="closeAgendamentoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeAgendamentoModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formAgendamentoOP" onsubmit="submitAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formAgendamentoOP" onsubmit="submitAgendamentoOP(event)" class="sige-flex-col-gap">
                 <div>
-                    <label id="opLabelAluno" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno / Atendido:</label>
+                    <label id="opLabelAluno" class="sige-text-main">Nome do Aluno / Atendido:</label>
                     <input type="text" id="opInputAluno" list="datalistAlunosImportados" oninput="autoCompleteAlunoData(this.value)" onchange="autoCompleteAlunoData(this.value)" onblur="autoCompleteAlunoData(this.value)" required placeholder="Digite para buscar aluno cadastrado..." class="search-input" style="width:100%;">
                     <datalist id="datalistAlunosImportados"></datalist>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 110px 1fr; gap:10px;">
                     <div>
-                        <label id="opLabelTurma" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
+                        <label id="opLabelTurma" class="sige-text-main">Turma:</label>
                         <input type="text" id="opInputTurma" required placeholder="Ex: 101" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label id="opLabelResponsavel" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
+                        <label id="opLabelResponsavel" class="sige-text-main">Nome do Responsável:</label>
                         <input type="text" id="opInputResponsavel" required placeholder="Ex: Ana Souza (Mãe)" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label id="opLabelTelefone" style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp de Contato (Adicional ou Padrão):</label>
+                    <label id="opLabelTelefone" class="sige-text-main">Telefone / WhatsApp de Contato (Adicional ou Padrão):</label>
                     <div style="display:flex; gap:8px; align-items:center; margin-top:2px;">
                         <input type="tel" id="opInputTelefone" oninput="onTelefoneInputChange()" required placeholder="Digite o número (DDD + Telefone)..." class="search-input" style="flex:1;">
                         <button type="button" onclick="openDirectCustomWhatsApp()" class="btn" style="background:linear-gradient(135deg, #10b981, #059669); color:white; font-weight:800; font-size:0.82rem; padding:8px 14px; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(16,185,129,0.3); white-space:nowrap;" title="Chamar o número digitado no WhatsApp">
@@ -2401,13 +2401,13 @@
                     <div id="alunoPhoneBadgesContainer" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
+                        <label class="sige-text-main">Data:</label>
                         <input type="date" id="opInputData" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
+                        <label class="sige-text-main">Horário:</label>
                         <input type="time" id="opInputHorario" onchange="autoSelectTurnoByHorario()" oninput="autoSelectTurnoByHorario()" required class="search-input" style="width:100%;">
                     </div>
                 </div>
@@ -2417,13 +2417,13 @@
                 <input type="hidden" id="opInputTipo" value="agendado">
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Responsável:</label>
+                    <label class="sige-text-main">Orientador Educacional Responsável:</label>
                     <select id="opInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
                     </select>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo / O que vai ser tratado:</label>
+                    <label class="sige-text-main">Motivo / O que vai ser tratado:</label>
                     <textarea id="opInputMotivo" required rows="3" placeholder="Descreva sucintamente o motivo do agendamento..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -2439,7 +2439,7 @@
     <!-- ========================================== -->
     <!-- MODAL DE SELEÇÃO E DISPARO DE LEMBRETES DO DIA -->
     <!-- ========================================== -->
-    <div id="modalDispararLembretesHoje" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDispararLembretesHoje" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:720px; width:94%; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0; flex-shrink:0;">
                 <div>
@@ -2495,13 +2495,13 @@
     <!-- ========================================== -->
     <!-- MODAL DE REAGENDAMENTO DE ATENDIMENTO OE -->
     <!-- ========================================== -->
-    <div id="modalReagendarOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalReagendarOP" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:500px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-calendar-days" style="color:#4f46e5;"></i> Reagendar Atendimento
                 </h3>
-                <button type="button" onclick="closeReagendarModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeReagendarModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div style="background:#eff6ff; padding:12px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:14px;">
@@ -2510,7 +2510,7 @@
                 <div id="reagendarInfoOri" style="font-size:0.78rem; color:#475569; margin-top:2px;">-</div>
             </div>
 
-            <form id="formReagendarOP" onsubmit="submitReagendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formReagendarOP" onsubmit="submitReagendamentoOP(event)" class="sige-flex-col-gap">
                 <div>
                     <label style="font-weight:800; font-size:0.85rem; color:#0f172a;">Nova Data:</label>
                     <input type="date" id="reagendarInputData" required class="search-input" style="width:100%;">
@@ -2542,16 +2542,16 @@
     <!-- ========================================== -->
     <!-- MODAL DE EDIÇÃO DE DADOS DO AGENDAMENTO (OE) -->
     <!-- ========================================== -->
-    <div id="modalEditarOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalEditarOP" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-pen-to-square" style="color:#2563eb;"></i> Editar Dados do Agendamento
                 </h3>
-                <button type="button" onclick="closeEditarModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeEditarModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formEditarOP" novalidate onsubmit="submitEditarAgendamentoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formEditarOP" novalidate onsubmit="submitEditarAgendamentoOP(event)" class="sige-flex-col-gap">
                 <div style="background:#eff6ff; padding:10px 14px; border-radius:12px; border:1px solid #bfdbfe;">
                     <label style="font-weight:800; font-size:0.85rem; color:#1e3a8a;"><i class="fa-solid fa-users-viewfinder"></i> Público do Atendimento:</label>
                     <select id="editInputPublico" class="search-input" style="width:100%; font-weight:700; color:#1e3a8a; margin-top:4px;">
@@ -2561,45 +2561,45 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Aluno / Atendido:</label>
+                    <label class="sige-text-main">Nome do Aluno / Atendido:</label>
                     <input type="text" id="editInputAluno" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma:</label>
+                        <label class="sige-text-main">Turma:</label>
                         <input type="text" id="editInputTurma" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome do Responsável:</label>
+                        <label class="sige-text-main">Nome do Responsável:</label>
                         <input type="text" id="editInputResponsavel" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Telefone / WhatsApp:</label>
+                    <label class="sige-text-main">Telefone / WhatsApp:</label>
                     <input type="tel" id="editInputTelefone" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
+                        <label class="sige-text-main">Data:</label>
                         <input type="date" id="editInputData" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
+                        <label class="sige-text-main">Horário:</label>
                         <input type="time" id="editInputHorario" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientadora Educacional:</label>
+                        <label class="sige-text-main">Orientadora Educacional:</label>
                         <select id="editInputOrientadora" class="search-input" style="width:100%;">
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Status do Atendimento:</label>
+                        <label class="sige-text-main">Status do Atendimento:</label>
                         <select id="editInputStatus" class="search-input" style="width:100%;">
                             <option value="agendado">🔵 Agendado</option>
                             <option value="realizado">🟢 Realizado</option>
@@ -2611,7 +2611,7 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Motivo do Atendimento:</label>
+                    <label class="sige-text-main">Motivo do Atendimento:</label>
                     <textarea id="editInputMotivo" rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -2628,13 +2628,13 @@
     <!-- ========================================== -->
     <!-- MODAL DE RELATÓRIO DE ATENDIMENTOS POR DATA (OE) -->
     <!-- ========================================== -->
-    <div id="modalRelatorioOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalRelatorioOP" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:850px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-chart-column" style="color:#0284c7;"></i> Relatório de Atendimentos por Período
                 </h3>
-                <button type="button" onclick="closeRelatorioModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeRelatorioModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- Filtros de Seleção do Relatório -->
@@ -2673,7 +2673,7 @@
     <!-- ========================================== -->
     <!-- MODAL DETALHES DO AGENDAMENTO OP -->
     <!-- ========================================== -->
-    <div id="modalDetalhesOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDetalhesOP" class="sige-modal-backdrop" style="display:none; z-index:2600;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
                 <div>
@@ -2861,7 +2861,7 @@
     <!-- ========================================== -->
     <!-- MODAL PRONTUÁRIO COMPLETO DO ALUNO -->
     <!-- ========================================== -->
-    <div id="modalProntuarioAluno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalProntuarioAluno" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:700px; width:92%; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
                 <div>
@@ -2889,7 +2889,7 @@
     <!-- ========================================== -->
     <!-- MODAL: CADASTRO DE WHATSAPPS DAS ORIENTADORAS -->
     <!-- ========================================== -->
-    <div id="modalCadastroOrientadoras" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalCadastroOrientadoras" class="sige-modal-backdrop" style="display:none; z-index:2600;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:550px; width:92%; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1.2rem;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
@@ -2921,28 +2921,28 @@
     <!-- ========================================== -->
     <!-- MODAL 2: NOVA DEMANDA SUPERVISÃO -->
     <!-- ========================================== -->
-    <div id="modalDemandaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDemandaSupervisao" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-clipboard-check" style="color:var(--supervisao-color);"></i> Nova Demanda - Supervisão Pedagógica
                 </h3>
-                <button onclick="closeDemandaSupervisaoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeDemandaSupervisaoModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitDemandaSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitDemandaSupervisao(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título do Evento ou Demanda:</label>
+                    <label class="sige-text-main">Título do Evento ou Demanda:</label>
                     <input type="text" id="supInputTitulo" required placeholder="Ex: Conselho de Classe Intermediário / Observação de Aula" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turma ou Professor Envolvido:</label>
+                        <label class="sige-text-main">Turma ou Professor Envolvido:</label>
                         <input type="text" id="supInputAlvo" required placeholder="Ex: Prof. Ricardo / 7º Anos" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria Pedagógica:</label>
+                        <label class="sige-text-main">Categoria Pedagógica:</label>
                         <select id="supInputCategoria" class="search-input" style="width:100%;">
                             <option value="Planejamento Pedagógico">📝 Planejamento Pedagógico</option>
                             <option value="Observação de Sala">👁️ Observação de Sala</option>
@@ -2957,7 +2957,7 @@
 
                 <!-- Campo de Pessoas / Equipe Envolvida -->
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">
+                    <label class="sige-text-main">
                         <i class="fa-solid fa-users" style="color:var(--supervisao-color);"></i> Pessoas / Equipe Envolvida:
                     </label>
                     <input type="text" id="supInputEnvolvidos" placeholder="Ex: Orientação (Carmen), Direção, Profª Ana" class="search-input" style="width:100%;">
@@ -2973,7 +2973,7 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno:</label>
+                        <label class="sige-text-main">Turno:</label>
                         <select id="supInputTurno" class="search-input" style="width:100%;">
                             <option value="matutino">🌅 Matutino (Manhã)</option>
                             <option value="vespertino">🌇 Vespertino (Tarde)</option>
@@ -2981,18 +2981,18 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data Início:</label>
+                        <label class="sige-text-main">Data Início:</label>
                         <input type="date" id="supInputDataInicio" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data Término (Multi-dias):</label>
+                        <label class="sige-text-main">Data Término (Multi-dias):</label>
                         <input type="date" id="supInputDataFim" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prioridade:</label>
+                        <label class="sige-text-main">Prioridade:</label>
                         <select id="supInputPrioridade" class="search-input" style="width:100%;">
                             <option value="alta">🔴 Alta Prioridade</option>
                             <option value="media" selected>🟡 Média Prioridade</option>
@@ -3000,7 +3000,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisora Responsável:</label>
+                        <label class="sige-text-main">Supervisora Responsável:</label>
                         <select id="supInputResponsavel" class="search-input" style="width:100%; font-weight:700; color:#1e293b;">
                             <option value="Supervisora 1">💙 Supervisora 1</option>
                             <option value="Supervisora 2">💙 Supervisora 2</option>
@@ -3010,7 +3010,7 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição & Objetivos:</label>
+                    <label class="sige-text-main">Descrição & Objetivos:</label>
                     <textarea id="supInputDescricao" required rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -3025,7 +3025,7 @@
     <!-- ========================================== -->
     <!-- MODAL DETALHES DA DEMANDA / EVENTO DA SUPERVISÃO -->
     <!-- ========================================== -->
-    <div id="modalDetalhesDemandaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDetalhesDemandaSupervisao" class="sige-modal-backdrop" style="display:none; z-index:2600;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:580px; width:92%; box-shadow:0 20px 50px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:1rem;">
                 <div>
@@ -3105,24 +3105,24 @@
     <!-- ========================================== -->
     <!-- MODAL: CRIAR NOVO PROJETO INSTITUCIONAL -->
     <!-- ========================================== -->
-    <div id="modalNovoProjetoSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovoProjetoSupervisao" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-rocket" style="color:#7c3aed;"></i> Cadastrar Projeto Institucional
                 </h3>
-                <button onclick="closeNovoProjetoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovoProjetoModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitNovoProjetoSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitNovoProjetoSupervisao(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome / Título do Projeto:</label>
+                    <label class="sige-text-main">Nome / Título do Projeto:</label>
                     <input type="text" id="projInputTitulo" required placeholder="Ex: 1ª Feira de Ciências e Robótica" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria / Tipo:</label>
+                        <label class="sige-text-main">Categoria / Tipo:</label>
                         <select id="projInputCategoria" class="search-input" style="width:100%;">
                             <option value="Feira de Ciências">🔬 Feira de Ciências / Tecnologia</option>
                             <option value="Projeto Leitura">📖 Projeto Leitura / Literatura</option>
@@ -3133,7 +3133,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Supervisora Líder:</label>
+                        <label class="sige-text-main">Supervisora Líder:</label>
                         <select id="projInputLider" class="search-input" style="width:100%; font-weight:700;">
                             <option value="Supervisora 1">💙 Supervisora 1</option>
                             <option value="Supervisora 2">💙 Supervisora 2</option>
@@ -3142,24 +3142,24 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Início:</label>
+                        <label class="sige-text-main">Data de Início:</label>
                         <input type="date" id="projInputDataInicio" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data do Evento Final / Entrega:</label>
+                        <label class="sige-text-main">Data do Evento Final / Entrega:</label>
                         <input type="date" id="projInputDataFim" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores Envolvidos (Separados por vírgula):</label>
+                    <label class="sige-text-main">Professores Envolvidos (Separados por vírgula):</label>
                     <input type="text" id="projInputProfessores" required placeholder="Ex: Prof. Ricardo (Ciências), Profª Maria (Artes)" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Objetivo & Descrição Geral:</label>
+                    <label class="sige-text-main">Objetivo & Descrição Geral:</label>
                     <textarea id="projInputDescricao" required rows="3" placeholder="Descreva os objetivos principais do projeto..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -3175,59 +3175,59 @@
     <!-- ========================================== -->
     <!-- MODAL: CADASTRAR NOVA ATIVIDADE EXTERNA / SAÍDA DE CAMPO -->
     <!-- ========================================== -->
-    <div id="modalNovaAtividadeExternaSupervisao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovaAtividadeExternaSupervisao" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:580px; width:92%; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-bus" style="color:#059669;"></i> Nova Saída de Campo / Aula Passeio
                 </h3>
-                <button onclick="closeNovaAtividadeExternaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovaAtividadeExternaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitNovaAtividadeExternaSupervisao(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitNovaAtividadeExternaSupervisao(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome da Atividade Externa:</label>
+                    <label class="sige-text-main">Nome da Atividade Externa:</label>
                     <input type="text" id="extInputTitulo" required placeholder="Ex: Visita ao Museu Oceanográfico" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Destino / Local:</label>
+                    <label class="sige-text-main">Destino / Local:</label>
                     <input type="text" id="extInputDestino" required placeholder="Ex: Museu Oceanográfico Univali - Piçarras" class="search-input" style="width:100%;">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data:</label>
+                        <label class="sige-text-main">Data:</label>
                         <input type="date" id="extInputData" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Saída:</label>
+                        <label class="sige-text-main">Saída:</label>
                         <input type="time" id="extInputHorarioSaida" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Retorno:</label>
+                        <label class="sige-text-main">Retorno:</label>
                         <input type="time" id="extInputHorarioRetorno" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas Envolvidas:</label>
+                        <label class="sige-text-main">Turmas Envolvidas:</label>
                         <input type="text" id="extInputTurmas" required placeholder="Ex: 7º Anos A e B" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Total de Alunos:</label>
+                        <label class="sige-text-main">Total de Alunos:</label>
                         <input type="number" id="extInputTotalAlunos" required placeholder="50" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores Acompanhantes:</label>
+                    <label class="sige-text-main">Professores Acompanhantes:</label>
                     <input type="text" id="extInputProfessores" required placeholder="Ex: Prof. Ricardo, Profª Carla" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Transporte Contratado / Apoio Logístico:</label>
+                    <label class="sige-text-main">Transporte Contratado / Apoio Logístico:</label>
                     <input type="text" id="extInputTransporte" placeholder="Ex: 2 Ônibus de Turismo da Empresa X" class="search-input" style="width:100%;">
                 </div>
 
@@ -3243,24 +3243,24 @@
     <!-- ========================================== -->
     <!-- MODAL: AGENDAR NOVA REUNIÃO PEDAGÓGICA -->
     <!-- ========================================== -->
-    <div id="modalNovaReuniaoPedagogica" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovaReuniaoPedagogica" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:550px; width:92%;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-users-gear" style="color:#2563eb;"></i> Agendar Reunião Pedagógica / HATP
                 </h3>
-                <button onclick="closeNovaReuniaoModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovaReuniaoModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitNovaReuniaoPedagogica(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitNovaReuniaoPedagogica(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Reunião / Pauta Principal:</label>
+                    <label class="sige-text-main">Título da Reunião / Pauta Principal:</label>
                     <input type="text" id="reunInputTitulo" required placeholder="Ex: HATP - Alinhamento Trimestral de Notas" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Tipo de Reunião:</label>
+                        <label class="sige-text-main">Tipo de Reunião:</label>
                         <select id="reunInputTipo" class="search-input" style="width:100%;">
                             <option value="HATP / Formação">HATP / Formação Docente</option>
                             <option value="Reunião de Área">Reunião de Área / Disciplinas</option>
@@ -3269,29 +3269,29 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Local:</label>
+                        <label class="sige-text-main">Local:</label>
                         <input type="text" id="reunInputLocal" required placeholder="Ex: Auditório / Sala de Reuniões" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data da Reunião:</label>
+                        <label class="sige-text-main">Data da Reunião:</label>
                         <input type="date" id="reunInputData" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Horário:</label>
+                        <label class="sige-text-main">Horário:</label>
                         <input type="time" id="reunInputHorario" required class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores / Participantes Convocados:</label>
+                    <label class="sige-text-main">Professores / Participantes Convocados:</label>
                     <input type="text" id="reunInputParticipantes" required placeholder="Ex: Todos os Professores de Ciências e Exatas" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Pauta & Assuntos:</label>
+                    <label class="sige-text-main">Pauta & Assuntos:</label>
                     <textarea id="reunInputPauta" required rows="3" placeholder="Descreva os tópicos que serão abordados..." class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -3307,24 +3307,24 @@
     <!-- ========================================== -->
     <!-- MODAL 3: NOVA DEMANDA ADMINISTRAÇÃO -->
     <!-- ========================================== -->
-    <div id="modalDemandaAdmin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDemandaAdmin" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-gears" style="color:var(--admin-color);"></i> Nova Solicitação - Administração / Infra
                 </h3>
-                <button onclick="closeDemandaAdminModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeDemandaAdminModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitDemandaAdmin(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitDemandaAdmin(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título da Solicitação:</label>
+                    <label class="sige-text-main">Título da Solicitação:</label>
                     <input type="text" id="admInputTitulo" required placeholder="Ex: Conserto do Ar Condicionado Sala 5" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor Responsável:</label>
+                        <label class="sige-text-main">Setor Responsável:</label>
                         <select id="admInputSetor" class="search-input" style="width:100%;">
                             <option value="Manutenção & TI">Manutenção & TI</option>
                             <option value="Suprimentos / Almoxarifado">Suprimentos / Almoxarifado</option>
@@ -3333,7 +3333,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prioridade:</label>
+                        <label class="sige-text-main">Prioridade:</label>
                         <select id="admInputPrioridade" class="search-input" style="width:100%;">
                             <option value="alta">🔴 Urgente</option>
                             <option value="media" selected>🟡 Normal</option>
@@ -3342,19 +3342,19 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Prazo Limite:</label>
+                        <label class="sige-text-main">Prazo Limite:</label>
                         <input type="date" id="admInputPrazo" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Responsável Designado:</label>
+                        <label class="sige-text-main">Responsável Designado:</label>
                         <input type="text" id="admInputResponsavel" required placeholder="Ex: Equipe de Apoio" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Detalhes da Necessidade:</label>
+                    <label class="sige-text-main">Detalhes da Necessidade:</label>
                     <textarea id="admInputDescricao" required rows="3" class="search-input" style="width:100%; font-family:inherit;"></textarea>
                 </div>
 
@@ -3370,33 +3370,33 @@
     <!-- ========================================== -->
     <!-- MODAL 4: NOVA TAREFA NO CALENDÁRIO -->
     <!-- ========================================== -->
-    <div id="modalNovaTarefa" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovaTarefa" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-calendar-plus" style="color:var(--accent);"></i> Adicionar Tarefa ao Calendário Escolar
                 </h3>
-                <button onclick="closeNovaTarefaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovaTarefaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitNovaTarefa(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitNovaTarefa(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">O que deve ser feito (Descrição da Tarefa):</label>
+                    <label class="sige-text-main">O que deve ser feito (Descrição da Tarefa):</label>
                     <input type="text" id="tarInputDesc" required placeholder="Ex: Lançamento de notas do 2º trimestre no sistema" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quem deve fazer (Responsável):</label>
+                    <label class="sige-text-main">Quem deve fazer (Responsável):</label>
                     <input type="text" id="tarInputResponsavel" required placeholder="Ex: Professores do 6º ao 8º ano" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quando fazer (Data Limite):</label>
+                        <label class="sige-text-main">Quando fazer (Data Limite):</label>
                         <input type="date" id="tarInputQuando" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor/Público Alvo:</label>
+                        <label class="sige-text-main">Setor/Público Alvo:</label>
                         <input type="text" id="tarInputDestinatario" required placeholder="Ex: Docentes / Secretaria" class="search-input" style="width:100%;">
                     </div>
                 </div>
@@ -3413,26 +3413,26 @@
     <!-- ========================================== -->
     <!-- MODAL 5: CADASTRO / EDIÇÃO DE PROFISSIONAL (EQUIPE MULTIDISCIPLINAR) -->
     <!-- ========================================== -->
-    <div id="modalCadastroProfissional" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9900; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalCadastroProfissional" class="sige-modal-backdrop" style="display:none; z-index:9900;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:600px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 id="modalCadastroProfissionalTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-user-gear" style="color:#1e3a8a;"></i> Cadastrar Profissional da Escola
                 </h3>
-                <button type="button" onclick="closeCadastroProfissionalModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeCadastroProfissionalModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="event.preventDefault(); submitCadastroProfissional(event); return false;" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="event.preventDefault(); submitCadastroProfissional(event); return false;" class="sige-flex-col-gap">
                 <input type="hidden" id="proInputId">
                 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome Completo do Profissional:</label>
+                    <label class="sige-text-main">Nome Completo do Profissional:</label>
                     <input type="text" id="proInputNome" required placeholder="Ex: Carmen Lucia Santos" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Setor da Escola:</label>
+                        <label class="sige-text-main">Setor da Escola:</label>
                         <select id="proInputSetor" required onchange="if(!document.getElementById('proInputId').value) autoSuggestModulosPorSetor(this.value)" class="search-input" style="width:100%; font-weight:700;">
                             <option value="docentes">👨‍🏫 Corpo Docente (Professor)</option>
                             <option value="admin">🏫 Administração Escolar</option>
@@ -3444,41 +3444,41 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Cargo / Função Oficial:</label>
+                        <label class="sige-text-main">Cargo / Função Oficial:</label>
                         <input type="text" id="proInputCargo" placeholder="Ex: Orientadora Pedagógica" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Especialidade / Disciplina:</label>
+                        <label class="sige-text-main">Especialidade / Disciplina:</label>
                         <input type="text" id="proInputDisciplina" placeholder="Ex: Matemática / Orientação" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">WhatsApp (Com DDD):</label>
+                        <label class="sige-text-main">WhatsApp (Com DDD):</label>
                         <input type="tel" id="proInputTelefone" placeholder="(47) 99999-8888" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">E-mail Institucional:</label>
+                    <label class="sige-text-main">E-mail Institucional:</label>
                     <input type="email" id="proInputEmail" placeholder="profissional@pedrorizzi.sc.gov.br" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">CPF (Login no Sistema):</label>
+                        <label class="sige-text-main">CPF (Login no Sistema):</label>
                         <input type="text" id="proInputCpf" oninput="mascaraCpfInput(this)" placeholder="000.000.000-00" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Nascimento (Senha):</label>
+                        <label class="sige-text-main">Data de Nascimento (Senha):</label>
                         <input type="text" id="proInputDataNasc" oninput="mascaraDataInput(this)" placeholder="DD/MM/AAAA" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno de Atuação:</label>
+                        <label class="sige-text-main">Turno de Atuação:</label>
                         <select id="proInputTurno" class="search-input" style="width:100%;">
                             <option value="matutino">Matutino</option>
                             <option value="vespertino">Vespertino</option>
@@ -3488,7 +3488,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turmas / Salas Atendidas:</label>
+                        <label class="sige-text-main">Turmas / Salas Atendidas:</label>
                         <input type="text" id="proInputTurmas" placeholder="Ex: 6º ao 9º Anos / Bloco A" class="search-input" style="width:100%;">
                     </div>
                 </div>
@@ -3590,32 +3590,32 @@
     <!-- ========================================== -->
     <!-- MODAL 7: CADASTRO / EDIÇÃO DE TURMA -->
     <!-- ========================================== -->
-    <div id="modalCadastroTurma" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9900; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalCadastroTurma" class="sige-modal-backdrop" style="display:none; z-index:9900;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:550px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 id="modalCadastroTurmaTitulo" style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-graduation-cap" style="color:#0284c7;"></i> Cadastrar Nova Turma
                 </h3>
-                <button type="button" onclick="closeCadastroTurmaModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeCadastroTurmaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="event.preventDefault(); submitCadastroTurma(event); return false;" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="event.preventDefault(); submitCadastroTurma(event); return false;" class="sige-flex-col-gap">
                 <input type="hidden" id="turmaInputId">
                 
                 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nome da Turma:</label>
+                        <label class="sige-text-main">Nome da Turma:</label>
                         <input type="text" id="turmaInputNome" required placeholder="Ex: 7º Ano B" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Ano Letivo:</label>
+                        <label class="sige-text-main">Ano Letivo:</label>
                         <input type="text" id="turmaInputAno" required value="2026" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Turno Letivo:</label>
+                        <label class="sige-text-main">Turno Letivo:</label>
                         <select id="turmaInputTurno" class="search-input" style="width:100%; font-weight:700;">
                             <option value="matutino">Matutino (Manhã)</option>
                             <option value="vespertino">Vespertino (Tarde)</option>
@@ -3624,7 +3624,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Nível / Etapa:</label>
+                        <label class="sige-text-main">Nível / Etapa:</label>
                         <select id="turmaInputNivel" class="search-input" style="width:100%;">
                             <option value="Ensino Fundamental II">Ensino Fundamental II</option>
                             <option value="Ensino Fundamental I">Ensino Fundamental I</option>
@@ -3633,19 +3633,19 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Sala Física:</label>
+                        <label class="sige-text-main">Sala Física:</label>
                         <input type="text" id="turmaInputSala" placeholder="Ex: Sala 12" class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Capacidade (Alunos):</label>
+                        <label class="sige-text-main">Capacidade (Alunos):</label>
                         <input type="number" id="turmaInputCapacidade" value="35" class="search-input" style="width:100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Docente Regente / Tutor Responsável:</label>
+                    <label class="sige-text-main">Docente Regente / Tutor Responsável:</label>
                     <input type="text" id="turmaInputRegente" placeholder="Ex: Prof. Ricardo Santos" class="search-input" style="width:100%;">
                 </div>
 
@@ -3661,19 +3661,19 @@
     <!-- ========================================== -->
     <!-- MODAL GERADOR DE MENSAGENS COM IA -->
     <!-- ========================================== -->
-    <div id="modalGeradorIA" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalGeradorIA" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:560px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); border:1px solid #e2e8f0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-wand-magic-sparkles" style="color:#7c3aed; font-size:1.3rem;"></i> Gerador de Comunicados com IA
                 </h3>
-                <button type="button" onclick="fecharModalGeradorIA()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="fecharModalGeradorIA()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <p style="font-size:0.83rem; color:#64748b; margin:0 0 16px 0; line-height:1.5;">
                 A IA aprimorará o texto digitado no campo de mensagem ou criará um novo comunicado oficial para o <strong>C.E. Pedro Rizzi</strong> com as variáveis <code>{nome}</code> e <code>{escola}</code>.
             </p>
 
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="sige-flex-col-gap">
                 <div>
                     <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Objetivo / Tom da Mensagem:</label>
                     <select id="iaTomSelect" class="dir-select" style="width:100%; padding:8px 12px; font-weight:600;">
@@ -3714,16 +3714,16 @@
     <!-- ========================================== -->
     <!-- MODAL 6: DISPARO DE AVISO WHATSAPP -->
     <!-- ========================================== -->
-    <div id="modalDisparoAvisoProfessor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDisparoAvisoProfessor" class="sige-modal-backdrop" style="display:none; z-index:2600;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:580px; width:92%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-brands fa-whatsapp" style="color:#16a34a; font-size:1.4rem;"></i> Enviar Recado via WhatsApp
                 </h3>
-                <button type="button" onclick="closeDisparoAvisoProfessorModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeDisparoAvisoProfessorModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitDisparoAvisoProfessor(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitDisparoAvisoProfessor(event)" class="sige-flex-col-gap">
                 <!-- 1. DESTINATÁRIO -->
                 <div>
                     <label style="font-weight:700; font-size:0.85rem; color:#0f172a; display:block; margin-bottom:4px;">Destinatário:</label>
@@ -3781,7 +3781,7 @@
                 <!-- 4. MENSAGEM DO COMUNICADO -->
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Mensagem:</label>
+                        <label class="sige-text-main">Mensagem:</label>
                         <button type="button" onclick="gerarMensagemParaAvisoModalIA()" style="background:linear-gradient(135deg, #7c3aed, #4f46e5); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" title="Aprimorar ou criar mensagem com Inteligência Artificial">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Melhorar com IA
                         </button>
@@ -3813,24 +3813,24 @@
     <!-- ========================================== -->
     <!-- MODAL NOVO PROJETO CONTINUADO OE -->
     <!-- ========================================== -->
-    <div id="modalNovoProjetoOP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2600; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovoProjetoOP" class="sige-modal-backdrop" style="display:none; z-index:2600;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:650px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-weight:800; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-rocket" style="color:#d97706;"></i> Cadastrar Projeto / Programa OE
                 </h3>
-                <button onclick="closeNovoProjetoOPModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovoProjetoOPModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="submitNovoProjetoOP(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form onsubmit="submitNovoProjetoOP(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Título do Projeto / Programa:</label>
+                    <label class="sige-text-main">Título do Projeto / Programa:</label>
                     <input type="text" id="projOpInputTitulo" required placeholder="Ex: 🧠 Programa de Mediação de Conflitos & Cultura de Paz" class="search-input" style="width:100%;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Categoria / Eixo:</label>
+                        <label class="sige-text-main">Categoria / Eixo:</label>
                         <select id="projOpInputCategoria" class="search-input" style="width:100%; font-weight:700;">
                             <option value="Mediação de Conflitos">Mediação de Conflitos</option>
                             <option value="Acompanhamento Emocional">Acompanhamento Emocional</option>
@@ -3841,7 +3841,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Orientador Educacional Líder:</label>
+                        <label class="sige-text-main">Orientador Educacional Líder:</label>
                         <select id="projOpInputOrientadora" class="search-input" style="width:100%; font-weight:700;">
                             <option value="Equipe Orientação Educacional">Equipe Orientação Educacional</option>
                         </select>
@@ -3850,15 +3850,15 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Início:</label>
+                        <label class="sige-text-main">Data de Início:</label>
                         <input type="date" id="projOpInputDataInicio" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Data de Término:</label>
+                        <label class="sige-text-main">Data de Término:</label>
                         <input type="date" id="projOpInputDataFim" required class="search-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Status Inicial:</label>
+                        <label class="sige-text-main">Status Inicial:</label>
                         <select id="projOpInputStatus" class="search-input" style="width:100%; font-weight:700;">
                             <option value="em_dia">🟢 Em dia</option>
                             <option value="atencao">🟡 Em atenção</option>
@@ -3869,12 +3869,12 @@
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Professores / Atores Envolvidos:</label>
+                    <label class="sige-text-main">Professores / Atores Envolvidos:</label>
                     <input type="text" id="projOpInputEnvolvidos" placeholder="Ex: Regentes de Turma, Psicopedagoga, Famílias" class="search-input" style="width:100%;">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;">Descrição & Objetivos:</label>
+                    <label class="sige-text-main">Descrição & Objetivos:</label>
                     <textarea id="projOpInputDescricao" rows="3" placeholder="Descreva os objetivos, público-alvo e metodologia do projeto..." class="search-input" style="width:100%; font-family:inherit; font-size:0.88rem;"></textarea>
                 </div>
 
@@ -3909,12 +3909,12 @@
 
             <form id="formSigeLogin" onsubmit="submitSigeLogin(event)" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF do Usuário:</label>
+                    <label class="sige-form-label"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF do Usuário:</label>
                     <input type="text" id="loginCpfInput" name="username" autocomplete="username" placeholder="000.000.000-00" required maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
                 </div>
 
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-lock" style="color:#2563eb;"></i> Senha (Data de Nascimento):</label>
+                    <label class="sige-form-label"><i class="fa-solid fa-lock" style="color:#2563eb;"></i> Senha (Data de Nascimento):</label>
                     <input type="password" id="loginSenhaInput" name="password" autocomplete="current-password" placeholder="DD/MM/AAAA" required maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.92rem; font-weight:700; outline:none;">
                     <span style="font-size:0.75rem; color:#64748b; display:block; margin-top:3px;">Sua senha inicial é sua data de nascimento (ex: 15/05/1985).</span>
                 </div>
@@ -3955,27 +3955,27 @@
             <form id="formPrimeiroAcesso" onsubmit="submitPrimeiroAcesso(event)" style="display:flex; flex-direction:column; gap:14px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF: <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF: <span style="color:#ef4444;">*</span></label>
                         <input type="text" id="primeiroAcessoCpf" required placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpfInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
                     </div>
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;"><i class="fa-solid fa-calendar-day" style="color:#10b981;"></i> Data de Nascimento (Sua Senha): <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label"><i class="fa-solid fa-calendar-day" style="color:#10b981;"></i> Data de Nascimento (Sua Senha): <span style="color:#ef4444;">*</span></label>
                         <input type="text" id="primeiroAcessoDataNascimento" required placeholder="DD/MM/AAAA" maxlength="10" oninput="mascaraDataInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo: <span style="color:#ef4444;">*</span></label>
+                    <label class="sige-form-label">Nome Completo: <span style="color:#ef4444;">*</span></label>
                     <input type="text" id="primeiroAcessoNome" required placeholder="Digite seu nome completo" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:600;">
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
                         <input type="text" id="primeiroAcessoCargo" required placeholder="Ex: Docente / Especialista / Apoio" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
                     </div>
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
                         <select id="primeiroAcessoTurno" required style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem; font-weight:700; background:white;">
                             <option value="Matutino">Matutino</option>
                             <option value="Vespertino">Vespertino</option>
@@ -3987,13 +3987,13 @@
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                        <label class="sige-form-label">
                             <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> WhatsApp (com DDD): <span style="color:#ef4444;">*</span>
                         </label>
                         <input type="tel" id="primeiroAcessoWhatsapp" required placeholder="(47) 99999-9999" maxlength="15" oninput="mascaraTelefoneInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:700;">
                     </div>
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                        <label class="sige-form-label">
                             <i class="fa-solid fa-envelope" style="color:#64748b;"></i> E-mail (Opcional):
                         </label>
                         <input type="email" id="primeiroAcessoEmail" placeholder="seu-email@escola.gov.br" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
@@ -4035,22 +4035,22 @@
 
             <form id="formOnboardingCadastro" onsubmit="event.preventDefault(); submitOnboardingCadastro();" style="display:flex; flex-direction:column; gap:14px;">
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">E-mail Institucional Autorizado:</label>
+                    <label class="sige-form-label">E-mail Institucional Autorizado:</label>
                     <input type="email" id="onboardingEmail" readonly style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; font-size:0.9rem; color:#475569; font-weight:700;">
                 </div>
 
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo: <span style="color:#ef4444;">*</span></label>
+                    <label class="sige-form-label">Nome Completo: <span style="color:#ef4444;">*</span></label>
                     <input type="text" id="onboardingNome" required placeholder="Digite seu nome completo" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.92rem; font-weight:600;">
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label">Cargo / Função na Escola: <span style="color:#ef4444;">*</span></label>
                         <input type="text" id="onboardingCargo" required placeholder="Ex: Docente Matemática / Auxiliar" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem;">
                     </div>
                     <div>
-                        <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
+                        <label class="sige-form-label">Turno de Atuação: <span style="color:#ef4444;">*</span></label>
                         <select id="onboardingTurno" required style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.9rem; font-weight:700; background:white;">
                             <option value="Matutino">Matutino</option>
                             <option value="Vespertino">Vespertino</option>
@@ -4061,7 +4061,7 @@
                 </div>
 
                 <div>
-                    <label style="font-size:0.82rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">
+                    <label class="sige-form-label">
                         <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> Telefone de WhatsApp (com DDD): <span style="color:#ef4444;">*</span>
                     </label>
                     <input type="tel" id="onboardingWhatsapp" required placeholder="(47) 99999-9999" maxlength="15" oninput="mascaraTelefoneInput(this)" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #cbd5e1; font-size:0.95rem; font-weight:700; letter-spacing:0.5px;">
@@ -4089,7 +4089,7 @@
     </div>
 
     <!-- MODAL DE SINCRONIZAÇÃO EM NUVEM E FIREBASE MULTI-DISPOSITIVOS -->
-    <div id="modalCloudSync" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9950; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalCloudSync" class="sige-modal-backdrop" style="display:none; z-index:9950;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:760px; width:94%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:12px;">
                 <h3 style="color:#0f172a; font-size:1.3rem; font-weight:900; display:flex; align-items:center; gap:10px; margin:0;">
@@ -4181,19 +4181,19 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Gestão de Usuários (Exclusivo Desenvolvedor) -->
-    <div id="modalDevUserConfig" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalDevUserConfig" class="sige-modal-backdrop" style="display:none; z-index:9000;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:680px; width:94%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
                 <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-user-gear" style="color:#7c3aed;"></i> Painel do Desenvolvedor: Gestão de E-mails & Acessos
                 </h3>
-                <button type="button" onclick="closeDevUserModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeDevUserModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- Formulário de Adicionar Usuário -->
             <form id="formAddDevUser" onsubmit="submitAddDevUser(event)" style="background:#f8fafc; padding:12px 16px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:1.2rem; display:flex; flex-direction:column; gap:10px;">
                 <h4 style="font-size:0.88rem; font-weight:800; color:#1e3a8a; margin:0;"><i class="fa-solid fa-user-plus"></i> Cadastrar / Atualizar E-mail Autorizado</h4>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
                         <label style="font-size:0.75rem; font-weight:700; color:#475569;">E-mail Institucional:</label>
                         <input type="email" id="devUserEmail" placeholder="nome@escola.gov.br" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;">
@@ -4203,7 +4203,7 @@ service cloud.firestore {
                         <input type="text" id="devUserName" placeholder="Nome Completo" required style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;">
                     </div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
                         <label style="font-size:0.75rem; font-weight:700; color:#475569;"><i class="fa-solid fa-id-card" style="color:#2563eb;"></i> CPF (Login no Sistema):</label>
                         <input type="text" id="devUserCpf" oninput="mascaraCpfInput(this)" placeholder="000.000.000-00" maxlength="14" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
@@ -4213,7 +4213,7 @@ service cloud.firestore {
                         <input type="text" id="devUserDataNasc" oninput="mascaraDataInput(this)" placeholder="DD/MM/AAAA" maxlength="10" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
                     </div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
                         <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nível de Acesso (Perfil):</label>
                         <select id="devUserRole" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem; font-weight:700;">
@@ -4282,7 +4282,7 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Cadastro / Edição de Usuário e Permissões Modulares (RBAC) -->
-    <div id="modalAdminNovoUsuario" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalAdminNovoUsuario" class="sige-modal-backdrop" style="display:none; z-index:9000;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:640px; width:94%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
                 <div>
@@ -4291,7 +4291,7 @@ service cloud.firestore {
                     </h3>
                     <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Cadastre ou configure o e-mail e os módulos que o profissional pode acessar.</div>
                 </div>
-                <button type="button" onclick="closeModalNovoUsuarioRBAC()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeModalNovoUsuarioRBAC()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form id="formAdminNovoUsuario" onsubmit="submitNovoUsuarioRBAC(event)" style="display:flex; flex-direction:column; gap:14px;">
@@ -4429,7 +4429,7 @@ service cloud.firestore {
                     </h3>
                     <div style="font-size:0.83rem; color:#64748b; margin-top:2px;">Selecione o relatório oficial em PDF gerado pela Secretaria de Educação.</div>
                 </div>
-                <button type="button" onclick="closeImportPDFAlunosModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeImportPDFAlunosModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- Área de Drop / Seleção do PDF -->
@@ -4487,24 +4487,24 @@ service cloud.firestore {
     <!-- ========================================== -->
 
     <!-- 1. MODAL DE NOVA SOLICITAÇÃO DE UNIFORME -->
-    <div id="modalNovoPedidoUniforme" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovoPedidoUniforme" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:650px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-shirt" style="color:#0284c7;"></i> Nova Solicitação de Uniforme Escolar
                 </h3>
-                <button type="button" onclick="closeNovoPedidoUniformeModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeNovoPedidoUniformeModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formNovoPedidoUniforme" onsubmit="salvarNovoPedidoUniforme(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formNovoPedidoUniforme" onsubmit="salvarNovoPedidoUniforme(event)" class="sige-flex-col-gap">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data da Solicitação *</label>
-                        <input type="date" id="uniInputDataSolicitacao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Data da Solicitação *</label>
+                        <input type="date" id="uniInputDataSolicitacao" required class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Responsável pelo Pedido *</label>
-                        <select id="uniInputResponsavelPedido" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Responsável pelo Pedido *</label>
+                        <select id="uniInputResponsavelPedido" required class="search-input" class="sige-input-full">
                             <option value="secretaria">📝 Secretaria Escolar</option>
                             <option value="direcao">👑 Direção / Gestão Escolar</option>
                             <option value="orientacao">💛 Orientação Educacional</option>
@@ -4516,12 +4516,12 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Nome Completo do Aluno *</label>
-                        <input type="text" id="uniInputAluno" required placeholder="Digite o nome do estudante..." class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Nome Completo do Aluno *</label>
+                        <input type="text" id="uniInputAluno" required placeholder="Digite o nome do estudante..." class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Turma *</label>
-                        <select id="uniInputTurma" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Turma *</label>
+                        <select id="uniInputTurma" required class="search-input" class="sige-input-full">
                             <!-- Preenchido dinamicamente via JS -->
                         </select>
                     </div>
@@ -4529,15 +4529,15 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Gênero / Modelo *</label>
-                        <select id="uniInputGenero" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Gênero / Modelo *</label>
+                        <select id="uniInputGenero" required class="search-input" class="sige-input-full">
                             <option value="Masculino">Masculino</option>
                             <option value="Feminino">Feminino</option>
                             <option value="Unissex">Unissex</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tamanho do Uniforme *</label>
+                        <label class="sige-text-secondary">Tamanho do Uniforme *</label>
                         <select id="uniInputTamanho" required class="search-input" style="width:100%; box-sizing:border-box; font-weight:800; color:#0284c7;">
                             <option value="8">Tamanho 8</option>
                             <option value="10">Tamanho 10</option>
@@ -4553,8 +4553,8 @@ service cloud.firestore {
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Estação / Linha *</label>
-                        <select id="uniInputEstacao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Estação / Linha *</label>
+                        <select id="uniInputEstacao" required class="search-input" class="sige-input-full">
                             <option value="verao">☀️ Verão</option>
                             <option value="inverno">❄️ Inverno</option>
                         </select>
@@ -4563,8 +4563,8 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Motivo da Solicitação *</label>
-                        <select id="uniInputMotivo" onchange="toggleMotivoOutroInput(this.value)" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Motivo da Solicitação *</label>
+                        <select id="uniInputMotivo" onchange="toggleMotivoOutroInput(this.value)" required class="search-input" class="sige-input-full">
                             <option value="aluno_novo">🎒 Aluno Novo na Escola</option>
                             <option value="troca_tamanho">📏 Troca por Motivo de Tamanho</option>
                             <option value="danificado">⚠️ Uniforme Danificado</option>
@@ -4573,8 +4573,8 @@ service cloud.firestore {
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tipo de Composição *</label>
-                        <select id="uniInputTipoItem" onchange="togglePecasAvulsasForm(this.value)" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Tipo de Composição *</label>
+                        <select id="uniInputTipoItem" onchange="togglePecasAvulsasForm(this.value)" required class="search-input" class="sige-input-full">
                             <option value="kit_completo">🎁 Kit Completo</option>
                             <option value="avulso">🧩 Peças Avulsas Específicas</option>
                         </select>
@@ -4582,8 +4582,8 @@ service cloud.firestore {
                 </div>
 
                 <div id="uniContainerMotivoOutro" style="display:none;">
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Especifique o Outro Motivo *</label>
-                    <input type="text" id="uniInputMotivoOutro" placeholder="Descreva o motivo da solicitação..." class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label class="sige-text-secondary">Especifique o Outro Motivo *</label>
+                    <input type="text" id="uniInputMotivoOutro" placeholder="Descreva o motivo da solicitação..." class="search-input" class="sige-input-full">
                 </div>
 
                 <div id="uniContainerPecasAvulsas" style="display:none; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
@@ -4600,7 +4600,7 @@ service cloud.firestore {
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações Internas</label>
+                    <label class="sige-text-secondary">Observações Internas</label>
                     <textarea id="uniInputObservacoes" rows="2" placeholder="Detalhes adicionais do pedido ou situação do estudante..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
                 </div>
 
@@ -4615,16 +4615,16 @@ service cloud.firestore {
     </div>
 
     <!-- 2. MODAL DE FECHAMENTO DE LOTE / REMESSA PARA SME -->
-    <div id="modalFecharLoteSME" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalFecharLoteSME" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:600px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-truck-ramp-box" style="color:#7c3aed;"></i> Fechar Remessa / Lote para a SME
                 </h3>
-                <button type="button" onclick="closeFecharLoteSMEModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeFecharLoteSMEModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formFecharLoteSME" onsubmit="salvarFechamentoLoteSME(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formFecharLoteSME" onsubmit="salvarFechamentoLoteSME(event)" class="sige-flex-col-gap">
                 <div style="background:#f3e8ff; padding:12px; border-radius:10px; border:1px solid #d8b4fe;">
                     <div style="font-weight:800; font-size:0.85rem; color:#6b21a8;" id="lotePedidosCountInfo">
                         <i class="fa-solid fa-list-check"></i> 0 Pedidos Selecionados para esta Remessa
@@ -4636,17 +4636,17 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data de Envio à SME (Data de Corte) *</label>
-                        <input type="date" id="loteInputDataEnvio" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Data de Envio à SME (Data de Corte) *</label>
+                        <input type="date" id="loteInputDataEnvio" required class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Previsão de Recebimento</label>
-                        <input type="date" id="loteInputPrevisao" class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Previsão de Recebimento</label>
+                        <input type="date" id="loteInputPrevisao" class="search-input" class="sige-input-full">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações do Lote / Nº Ofício</label>
+                    <label class="sige-text-secondary">Observações do Lote / Nº Ofício</label>
                     <textarea id="loteInputObservacoes" rows="3" placeholder="Ex: Ofício nº 45/2026 encaminhado à SME via protocolo digital..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
                 </div>
 
@@ -4661,27 +4661,27 @@ service cloud.firestore {
     </div>
 
     <!-- 3. MODAL DE AJUSTE E ENTRADA DE ESTOQUE LOCAL -->
-    <div id="modalAjustarEstoque" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalAjustarEstoque" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:550px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-boxes-stacked" style="color:#059669;"></i> Ajustar Estoque Local da Escola
                 </h3>
-                <button type="button" onclick="closeAjustarEstoqueModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeAjustarEstoqueModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formAjustarEstoque" onsubmit="salvarAjusteEstoque(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formAjustarEstoque" onsubmit="salvarAjusteEstoque(event)" class="sige-flex-col-gap">
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Gênero / Modelo *</label>
-                        <select id="estInputGenero" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Gênero / Modelo *</label>
+                        <select id="estInputGenero" required class="search-input" class="sige-input-full">
                             <option value="Masculino">👨 Masculino</option>
                             <option value="Feminino">👩 Feminino</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Peça de Uniforme *</label>
-                        <select id="estInputPeca" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Peça de Uniforme *</label>
+                        <select id="estInputPeca" required class="search-input" class="sige-input-full">
                             <option value="camiseta">👕 Camiseta / Blusa</option>
                             <option value="bermuda">🩳 Bermuda</option>
                             <option value="calca">👖 Calça</option>
@@ -4690,7 +4690,7 @@ service cloud.firestore {
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tamanho *</label>
+                        <label class="sige-text-secondary">Tamanho *</label>
                         <select id="estInputTamanho" required class="search-input" style="width:100%; box-sizing:border-box; font-weight:800;">
                             <option value="8">Tamanho 8</option>
                             <option value="10">Tamanho 10</option>
@@ -4709,15 +4709,15 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Ação no Saldo *</label>
-                        <select id="estInputAcao" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Ação no Saldo *</label>
+                        <select id="estInputAcao" required class="search-input" class="sige-input-full">
                             <option value="somar">➕ Adicionar Item (Entrada)</option>
                             <option value="subtrair">➖ Dar Baixa (Saída Manual)</option>
                             <option value="definir">🎯 Definir Saldo Exato</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Quantidade *</label>
+                        <label class="sige-text-secondary">Quantidade *</label>
                         <input type="number" id="estInputQuantidade" required min="1" value="1" class="search-input" style="width:100%; box-sizing:border-box; font-weight:800;">
                     </div>
                 </div>
@@ -4733,25 +4733,25 @@ service cloud.firestore {
     </div>
 
     <!-- 4. MODAL DE CONFIRMAÇÃO DE ENTREGA DE UNIFORME -->
-    <div id="modalConfirmarEntregaUniforme" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalConfirmarEntregaUniforme" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:520px; width:94%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <h3 style="color:#0f172a; font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-box-open" style="color:#16a34a;"></i> Registrar Entrega de Uniforme
                 </h3>
-                <button type="button" onclick="closeConfirmarEntregaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeConfirmarEntregaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div id="entregaModalInfoBody" style="margin-bottom:1rem; font-size:0.88rem; color:#334155;">
                 <!-- Preenchido dinamicamente via JS -->
             </div>
 
-            <form id="formConfirmarEntregaUniforme" onsubmit="salvarEntregaUniforme(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formConfirmarEntregaUniforme" onsubmit="salvarEntregaUniforme(event)" class="sige-flex-col-gap">
                 <input type="hidden" id="entregaPedidoId">
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Responsável pela Entrega na Escola *</label>
-                    <input type="text" id="entregaResponsavelNome" required class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label class="sige-text-secondary">Responsável pela Entrega na Escola *</label>
+                    <input type="text" id="entregaResponsavelNome" required class="search-input" class="sige-input-full">
                 </div>
 
                 <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0;">
@@ -4772,7 +4772,7 @@ service cloud.firestore {
     </div>
 
     <!-- 5. MODAL DE RELAÇÃO DE ENTREGA POR TURMA (IMPRESSÃO COM ASSINATURA) -->
-    <div id="modalRelacaoEntregaTurma" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalRelacaoEntregaTurma" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:900px; width:95%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <div>
@@ -4785,7 +4785,7 @@ service cloud.firestore {
                     <button type="button" onclick="imprimirFolhaRelacaoEntrega()" class="btn btn-primary" style="background:#d97706; border-color:#d97706; width:auto; font-size:0.85rem;">
                         <i class="fa-solid fa-print"></i> Imprimir Folha de Assinatura
                     </button>
-                    <button type="button" onclick="closeRelacaoEntregaTurmaModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" onclick="closeRelacaoEntregaTurmaModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -4814,7 +4814,7 @@ service cloud.firestore {
     </div>
 
     <!-- 6. MODAL DE CONFERÊNCIA E DIVERGÊNCIA DE RECEBIMENTO DE LOTE SME -->
-    <div id="modalConferirLoteSME" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2700; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalConferirLoteSME" class="sige-modal-backdrop" style="display:none; z-index:2700;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:750px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
                 <div>
@@ -4823,20 +4823,20 @@ service cloud.firestore {
                     </h3>
                     <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;" id="confLoteSubHeader">Verifique os itens entregues pela SME para registrar a chegada e sinalizar eventuais faltas.</p>
                 </div>
-                <button type="button" onclick="closeConferirLoteSMEModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeConferirLoteSMEModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formConferirLoteSME" onsubmit="salvarConferenciaLoteSME(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formConferirLoteSME" onsubmit="salvarConferenciaLoteSME(event)" class="sige-flex-col-gap">
                 <input type="hidden" id="confLoteId">
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data de Chegada dos Uniformes *</label>
-                        <input type="date" id="confLoteDataChegada" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Data de Chegada dos Uniformes *</label>
+                        <input type="date" id="confLoteDataChegada" required class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Observações de Recebimento</label>
-                        <input type="text" id="confLoteObs" placeholder="Ex: Entregue via guia nº 1234 pela SME..." class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Observações de Recebimento</label>
+                        <input type="text" id="confLoteObs" placeholder="Ex: Entregue via guia nº 1234 pela SME..." class="search-input" class="sige-input-full">
                     </div>
                 </div>
 
@@ -4864,7 +4864,7 @@ service cloud.firestore {
     <!-- ======================================================== -->
 
     <!-- 1. MODAL: NOVA ATA DE GABINETE DA DIREÇÃO -->
-    <div id="modalNovaAtaGabinete" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovaAtaGabinete" class="sige-modal-backdrop" style="display:none; z-index:3000;">
         <div style="background:white; padding:2rem; border-radius:18px; max-width:700px; width:94%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.25);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
                 <div>
@@ -4873,23 +4873,23 @@ service cloud.firestore {
                     </h3>
                     <p style="font-size:0.8rem; color:#64748b; margin:2px 0 0 0;">Documento institucional de registro e alinhamento do Centro Educacional Pedro Rizzi.</p>
                 </div>
-                <button type="button" onclick="closeNovaAtaGabineteModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeNovaAtaGabineteModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formNovaAtaGabinete" onsubmit="salvarNovaAtaGabinete(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formNovaAtaGabinete" onsubmit="salvarNovaAtaGabinete(event)" class="sige-flex-col-gap">
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Título da Reunião / Pauta Central *</label>
-                    <input type="text" id="ataInputTitulo" required placeholder="Ex: Atendimento aos Pais — Aluno João Silva" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label class="sige-text-secondary">Título da Reunião / Pauta Central *</label>
+                    <input type="text" id="ataInputTitulo" required placeholder="Ex: Atendimento aos Pais — Aluno João Silva" class="search-input" class="sige-input-full">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Data e Horário *</label>
-                        <input type="datetime-local" id="ataInputData" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Data e Horário *</label>
+                        <input type="datetime-local" id="ataInputData" required class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Tipo / Esfera de Atendimento *</label>
-                        <select id="ataInputTipo" required class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Tipo / Esfera de Atendimento *</label>
+                        <select id="ataInputTipo" required class="search-input" class="sige-input-full">
                             <option value="pais">👨‍👩‍👦 Atendimento a Pais / Responsáveis</option>
                             <option value="conselho_tutelar">⚖️ Órgãos Externos / Conselho Tutelar</option>
                             <option value="sme">🏛️ Secretaria de Educação (SME)</option>
@@ -4901,27 +4901,27 @@ service cloud.firestore {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Estudante Relacionado (Opcional):</label>
-                        <input type="text" id="ataInputAluno" placeholder="Nome do aluno (se houver)" class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Estudante Relacionado (Opcional):</label>
+                        <input type="text" id="ataInputAluno" placeholder="Nome do aluno (se houver)" class="search-input" class="sige-input-full">
                     </div>
                     <div>
-                        <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Turma Relacionada (Opcional):</label>
-                        <input type="text" id="ataInputTurma" placeholder="Ex: 7º Ano B" class="search-input" style="width:100%; box-sizing:border-box;">
+                        <label class="sige-text-secondary">Turma Relacionada (Opcional):</label>
+                        <input type="text" id="ataInputTurma" placeholder="Ex: 7º Ano B" class="search-input" class="sige-input-full">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Participantes Presentes *</label>
-                    <input type="text" id="ataInputParticipantes" required placeholder="Ex: Direção, Mãe do Aluno (Sra. Maria), Orientadora Responsável" class="search-input" style="width:100%; box-sizing:border-box;">
+                    <label class="sige-text-secondary">Participantes Presentes *</label>
+                    <input type="text" id="ataInputParticipantes" required placeholder="Ex: Direção, Mãe do Aluno (Sra. Maria), Orientadora Responsável" class="search-input" class="sige-input-full">
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Pauta Tratada & Relato dos Fatos *</label>
+                    <label class="sige-text-secondary">Pauta Tratada & Relato dos Fatos *</label>
                     <textarea id="ataInputPauta" required rows="3" placeholder="Descreva os temas debatidos, justificativas e ocorrências apresentadas..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
                 </div>
 
                 <div>
-                    <label style="font-weight:700; font-size:0.83rem; color:#0f172a;">Combinados Firmados & Encaminhamentos *</label>
+                    <label class="sige-text-secondary">Combinados Firmados & Encaminhamentos *</label>
                     <textarea id="ataInputCombinados" required rows="3" placeholder="Compromissos assumidos pelas partes, prazos e responsabilidades..." class="search-input" style="width:100%; box-sizing:border-box; font-family:inherit;"></textarea>
                 </div>
 
@@ -5325,7 +5325,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
             </div>
 
             <!-- Controles e Botões da Fila (Fitts Ergonomics) -->
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="sige-flex-col-gap">
                 <button type="button" id="btnIniciarDisparoAutomatedFila" onclick="iniciarDisparoFilaAutomatico()" class="dir-btn dir-btn-whatsapp" style="padding:14px; font-size:1.05rem; box-shadow:0 4px 14px rgba(22,163,74,0.35); background:linear-gradient(135deg, #16a34a, #15803d);">
                     <i class="fa-solid fa-bolt" style="font-size:1.2rem;"></i> 
                     <span id="btnIniciarDisparoAutomatedFilaText">⚡ Iniciar Disparo 100% Automático (Sem Abrir Abas)</span>
@@ -5552,36 +5552,36 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <script src="js/assinatura-docs.js?v=20261104_v60"></script>
 
     <!-- Config Modal para Links Padrão -->
-    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="configModal" class="sige-modal-backdrop" style="display:none; z-index:2000;">
         <div style="background:white; padding:2.2rem; border-radius:18px; max-width:560px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-size:1.3rem; font-weight:800; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-sliders" style="color:#2563eb;"></i> Configuração de Links dos Sistemas Padrão
                 </h3>
-                <button type="button" onclick="closeConfigModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeConfigModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
             <p style="font-size:0.9rem; color:#64748b; margin-bottom:1.5rem;">Insira os links oficiais dos sistemas padrão da escola (salvo no navegador):</p>
             
             <form id="configForm" onsubmit="event.preventDefault(); salvarLinksConfig();" style="display:flex; flex-direction:column; gap:14px;">
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-file-csv" style="color:#10b981;"></i> Planilha de Respostas (Google Sheets CSV):</label>
+                    <label class="sige-text-main"><i class="fa-solid fa-file-csv" style="color:#10b981;"></i> Planilha de Respostas (Google Sheets CSV):</label>
                     <input type="text" id="url_sheet" placeholder="https://docs.google.com/spreadsheets/d/..." class="search-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil (APMF):</label>
+                    <label class="sige-text-main"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Sistema Contábil (APMF):</label>
                     <input type="text" id="url_contabil" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-calendar-check" style="color:#d97706;"></i> Agendamento de Recursos / Laboratório:</label>
+                    <label class="sige-text-main"><i class="fa-solid fa-calendar-check" style="color:#d97706;"></i> Agendamento de Recursos / Laboratório:</label>
                     <input type="text" id="url_recursos" placeholder="https://elcortelini.github.io/agendamento-cepr/" class="search-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Sistema da Biblioteca:</label>
+                    <label class="sige-text-main"><i class="fa-solid fa-book-bookmark" style="color:#9333ea;"></i> Sistema da Biblioteca:</label>
                     <input type="text" id="url_biblioteca" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
                 </div>
                 <div>
-                    <label style="font-weight:700; font-size:0.85rem; color:#0f172a;"><i class="fa-solid fa-boxes-stacked" style="color:#ea580c;"></i> Sistema de Patrimônio:</label>
+                    <label class="sige-text-main"><i class="fa-solid fa-boxes-stacked" style="color:#ea580c;"></i> Sistema de Patrimônio:</label>
                     <input type="text" id="url_patrimonio" placeholder="https://..." class="search-input" style="width:100%; margin-top:5px;">
                 </div>
                 
@@ -5594,22 +5594,22 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     </div>
 
     <!-- Modal para Adicionar Novo Sistema Customizado -->
-    <div id="modalAddCustomSystem" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.75); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalAddCustomSystem" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:2rem; border-radius:20px; max-width:560px; width:92%; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid #cbd5e1;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
                 <h3 style="color:#0f172a; font-size:1.25rem; font-weight:900; display:flex; align-items:center; gap:8px;">
                     <i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> Cadastrar Novo Sistema / Link Externo
                 </h3>
-                <button type="button" onclick="closeAddCustomSystemModal()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeAddCustomSystemModal()" class="sige-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formAddCustomSystem" onsubmit="submitAddCustomSystem(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formAddCustomSystem" onsubmit="submitAddCustomSystem(event)" class="sige-flex-col-gap">
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome do Sistema / Aplicação:</label>
                     <input type="text" id="customSysTitle" placeholder="Ex: Sistema de Frequência Digital" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
                         <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Categoria / Tag:</label>
                         <input type="text" id="customSysTag" placeholder="Ex: GESTÃO / RH / ALUNOS" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5649,16 +5649,16 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- ========================================== -->
     <!-- MODAL 1: CADASTRAR / EDITAR CHANCELA & CARIMBO -->
     <!-- ========================================== -->
-    <div id="modalNovaChancela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalNovaChancela" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:540px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 id="chancelaModalTitleText" style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-stamp" style="color:#059669;"></i> Cadastrar Chancela / Carimbo Oficial
                 </h3>
                 <button type="button" onclick="closeModalNovaChancela()" style="background:transparent; border:none; font-size:1.2rem; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form id="formNovaChancela" onsubmit="salvarNovaChancela(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="formNovaChancela" onsubmit="salvarNovaChancela(event)" class="sige-flex-col-gap">
                 <input type="hidden" id="chancelaInputEditId" value="">
 
                 <!-- Seletor do Tipo de Chancela -->
@@ -5684,7 +5684,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                     Aplica <strong>somente a imagem do carimbo</strong> e os dados de autenticação eletrônica do IntegraRizzi (se ativados). <strong>Sem linha de assinatura, nome, cargo ou CPF</strong> no documento.
                 </div>
 
-                <div id="containerNomeSetor" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div id="containerNomeSetor" class="sige-grid-2col">
                     <div>
                         <label id="lblChancelaNome" style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome Completo do Signatário:</label>
                         <input type="text" id="chancelaInputNome" placeholder="Ex: Profa. Maria da Silva" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5701,7 +5701,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                 </div>
 
                 <!-- Informações Pessoais do Signatário (ocultas no modo Apenas Carimbo) -->
-                <div id="containerCamposSignatarioPessoal" style="display:flex; flex-direction:column; gap:12px;">
+                <div id="containerCamposSignatarioPessoal" class="sige-flex-col-gap">
                     <div>
                         <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Cargo / Função:</label>
                         <input type="text" id="chancelaInputCargo" placeholder="Ex: Diretora Geral" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5751,16 +5751,16 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- ========================================== -->
     <!-- MODAL 2: GERADOR DE DOCUMENTOS DO SIGE -->
     <!-- ========================================== -->
-    <div id="modalGeradorDocsSIGE" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalGeradorDocsSIGE" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:580px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-file-invoice" style="color:#0284c7;"></i> Gerador de Documentos Oficiais Timbrados
                 </h3>
                 <button type="button" onclick="closeModalGeradorDocumentosSige()" style="background:transparent; border:none; font-size:1.2rem; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="sige-flex-col-gap">
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Modelo de Documento:</label>
                     <select id="sigeDocSelectTipo" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; font-weight:700;">
@@ -5782,7 +5782,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                     <input type="text" id="sigeDocInputNomeAluno" placeholder="Nome completo do estudante" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="sige-grid-2col">
                     <div>
                         <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Turma:</label>
                         <input type="text" id="sigeDocInputTurma" placeholder="Ex: 101, 201, 602..." value="101" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5814,9 +5814,9 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- ========================================== -->
     <!-- MODAL 3: EXPEDIÇÃO VIA WHATSAPP (EVOLUTION) -->
     <!-- ========================================== -->
-    <div id="modalEnviarWhatsAppDoc" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalEnviarWhatsAppDoc" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:540px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> Expedição de Documento via WhatsApp
                 </h3>
@@ -5831,7 +5831,7 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
                 </div>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="sige-flex-col-gap">
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">Nome do Destinatário (Pai, Aluno ou Servidor):</label>
                     <input type="text" id="sendWpDestinatarioNome" placeholder="Ex: Responsável de Pedro Henrique" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5865,16 +5865,16 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- ========================================== -->
     <!-- MODAL 4: EXPEDIÇÃO VIA E-MAIL INSTITUCIONAL -->
     <!-- ========================================== -->
-    <div id="modalEnviarEmailDoc" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalEnviarEmailDoc" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:540px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-envelope" style="color:#0284c7;"></i> Expedição de Documento via E-mail
                 </h3>
                 <button type="button" onclick="closeModalEnviarEmail()" style="background:transparent; border:none; font-size:1.2rem; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="sige-flex-col-gap">
                 <div>
                     <label style="font-size:0.8rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;">E-mail do Destinatário:</label>
                     <input type="email" id="sendEmailDestinatarioInput" placeholder="exemplo@email.com" required style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;">
@@ -5900,9 +5900,9 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
     <!-- ========================================== -->
     <!-- MODAL 5: CONSULTA & VALIDAÇÃO DE AUTENTICIDADE -->
     <!-- ========================================== -->
-    <div id="modalValidarAutenticidade" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:2500; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div id="modalValidarAutenticidade" class="sige-modal-backdrop" style="display:none;">
         <div style="background:white; padding:1.8rem; border-radius:18px; max-width:620px; width:92%; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #cbd5e1; max-height:92vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <div class="sige-modal-header">
                 <h3 style="color:#0f172a; font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
                     <i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> Validador de Autenticidade — IntegraRizzi
                 </h3>
