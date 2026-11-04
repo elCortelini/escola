@@ -43,11 +43,11 @@
                 <i class="fa-solid fa-user-gear" style="color:var(--accent);"></i>
                 <select id="activeRoleSelect">
                     <option value="desenvolvedor">🛠️ Desenvolvedor do Sistema</option>
+                    <option value="admin">🏫 Administrador(a) Escolar</option>
                     <option value="orientacao">💛 Orientação Educacional</option>
                     <option value="secretaria">📝 Secretaria Escolar</option>
                     <option value="direcao">👑 Gestor / Direção Escolar</option>
                     <option value="supervisao">📋 Supervisor Pedagógico</option>
-                    <option value="admin">⚙️ Administrador do Sistema</option>
                     <option value="comunidade">👨‍🏫 Professor / Aluno / Comunidade</option>
                 </select>
             </div>
@@ -69,6 +69,9 @@
                 <button id="btnDevManageUsers" onclick="openDevUserModal()" style="display:none !important; background:#7c3aed; color:white; border:none; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Painel do Desenvolvedor: Gestão de E-mails">
                     <i class="fa-solid fa-user-gear"></i> Gestão E-mails
                 </button>
+                <a href="dashboard.html" target="_blank" rel="noopener noreferrer" style="background:#059669; border:1px solid #10b981; color:white; padding:3px 10px; border-radius:6px; font-size:0.75rem; text-decoration:none; font-weight:800; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 4px rgba(0,0,0,0.15);" title="Abrir Dashboard de Avaliação Escolar em Nova Aba">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard Avaliação
+                </a>
                 <button onclick="handleSigeLogout()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); color:white; padding:3px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:700;" title="Sair da Conta">
                     <i class="fa-solid fa-right-from-bracket"></i> Sair
                 </button>
@@ -972,7 +975,7 @@
                             </p>
                         </div>
                         <div>
-                            <a href="dashboard.html" onclick="openExternalModuleUrlDirect('dashboard', event)" class="btn" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:#059669; color:white; font-weight:800; padding:10px 16px; border-radius:10px; text-decoration:none; box-shadow:0 4px 10px rgba(5,150,105,0.25);">
+                            <a href="dashboard.html" target="_blank" rel="noopener noreferrer" class="btn" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:#059669; color:white; font-weight:800; padding:10px 16px; border-radius:10px; text-decoration:none; box-shadow:0 4px 10px rgba(5,150,105,0.25);">
                                 <span>Acessar Dashboard</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem;"></i>
                             </a>
                         </div>
@@ -1362,7 +1365,7 @@
                         </p>
                     </div>
                     <div>
-                        <a id="btnExtLink_dashboard" href="dashboard.html" onclick="openExternalModuleUrlDirect('dashboard', event)" class="btn" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:#059669; color:white; font-weight:800; padding:10px 16px; border-radius:10px; text-decoration:none; box-shadow:0 4px 10px rgba(5,150,105,0.25);">
+                        <a id="btnExtLink_dashboard" href="dashboard.html" target="_blank" rel="noopener noreferrer" class="btn" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:#059669; color:white; font-weight:800; padding:10px 16px; border-radius:10px; text-decoration:none; box-shadow:0 4px 10px rgba(5,150,105,0.25);">
                             <span>Acessar Dashboard</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem;"></i>
                         </a>
                     </div>

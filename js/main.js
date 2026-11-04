@@ -303,6 +303,16 @@ async function heroLoginWithCpf() {
     const res = await window.sigeDB.loginWithCpf(cpf, senha);
 
     if (!res.success) {
+        if (res.code === 'NOT_FOUND') {
+            if (confirm(res.message + "\n\nDeseja realizar seu Primeiro Acesso / Criar Cadastro agora?")) {
+                abrirModalPrimeiroAcesso();
+                const pCpf = document.getElementById("primeiroAcessoCpf");
+                const pData = document.getElementById("primeiroAcessoDataNascimento");
+                if (pCpf) pCpf.value = formatCpf(cpf);
+                if (pData) pData.value = formatDataNascimento(senha);
+            }
+            return;
+        }
         alert(res.message);
         return;
     }
@@ -369,7 +379,9 @@ async function submitPrimeiroAcesso(e) {
         if (heroNasc) heroNasc.value = formatDataNascimento(dataNascimento);
 
         // Executa login automático imediato
-        if (typeof handlePortalCpfLogin === "function") {
+        if (typeof heroLoginWithCpf === "function") {
+            heroLoginWithCpf();
+        } else if (typeof handlePortalCpfLogin === "function") {
             handlePortalCpfLogin();
         }
     } catch (err) {
@@ -705,6 +717,21 @@ function updateActionPillars() {
             </div>
             <a href="https://elcortelini.github.io/agendamento-cepr/" target="_blank" rel="noopener noreferrer" onclick="openAgendamentoLabDirect(event)" class="pillar-btn btn-lab-primary">
                 <span>Agendar Laboratório</span> <i class="fa-solid fa-calendar-check"></i> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; margin-left:2px;"></i>
+            </a>
+        </div>
+
+        <!-- Pillar 3: Dashboard de Avaliação Institucional -->
+        <div class="pillar-card pillar-dash" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
+            <div>
+                <div class="pillar-badge badge-dash" style="background: rgba(16, 185, 129, 0.2); color: #34d399;"><i class="fa-solid fa-chart-line"></i> AVALIAÇÃO EM TEMPO REAL</div>
+                <div class="pillar-icon-box icon-dash" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <h3>Dashboard de Avaliação</h3>
+                <p>Análise gráfica e diagnóstica em tempo real da pesquisa institucional e satisfação escolar dos estudantes (6º ao 8º Ano).</p>
+            </div>
+            <a href="dashboard.html" target="_blank" rel="noopener noreferrer" class="pillar-btn" style="background: linear-gradient(135deg, #059669, #10b981); color: white;">
+                <span>Ver Avaliação Escolar</span> <i class="fa-solid fa-chart-pie"></i> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; margin-left:2px;"></i>
             </a>
         </div>
     `;

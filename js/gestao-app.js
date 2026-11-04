@@ -163,6 +163,16 @@ async function submitSigeLogin(e) {
     const res = await sigeDB.loginWithCpf(cpf, senha);
 
     if (!res.success) {
+        if (res.code === 'NOT_FOUND') {
+            if (confirm(res.message + "\n\nDeseja preencher seu Primeiro Acesso / Criar Cadastro agora?")) {
+                abrirModalPrimeiroAcesso();
+                const pCpf = document.getElementById("primeiroAcessoCpf");
+                const pData = document.getElementById("primeiroAcessoDataNascimento");
+                if (pCpf) pCpf.value = formatCpf(cpf);
+                if (pData) pData.value = formatDataNascimento(senha);
+            }
+            return;
+        }
         alert(res.message);
         return;
     }
@@ -298,6 +308,16 @@ async function submitPrimeiroAcesso(e) {
     });
 
     if (!res.success) {
+        if (res.code === 'NOT_FOUND') {
+            if (confirm(res.message + "\n\nDeseja preencher seu Primeiro Acesso / Criar Cadastro agora?")) {
+                abrirModalPrimeiroAcesso();
+                const pCpf = document.getElementById("primeiroAcessoCpf");
+                const pData = document.getElementById("primeiroAcessoDataNascimento");
+                if (pCpf) pCpf.value = formatCpf(cpf);
+                if (pData) pData.value = formatDataNascimento(senha);
+            }
+            return;
+        }
         alert(res.message);
         return;
     }
@@ -305,13 +325,22 @@ async function submitPrimeiroAcesso(e) {
     alert(res.message);
     fecharModalPrimeiroAcesso();
 
-    const sigeCpf = document.getElementById("sigeLoginCpf");
-    const sigeNasc = document.getElementById("sigeLoginDataNasc");
+    const sigeCpf = document.getElementById("loginCpfInput") || document.getElementById("sigeLoginCpf");
+    const sigeNasc = document.getElementById("loginSenhaInput") || document.getElementById("sigeLoginDataNasc");
     if (sigeCpf) sigeCpf.value = formatCpf(cpf);
     if (sigeNasc) sigeNasc.value = formatDataNascimento(dataNascimento);
 
-    if (typeof handleSigeCpfLogin === "function") {
-        handleSigeCpfLogin();
+    // Auto-login imediato no SIGE
+    const loginModal = document.getElementById("modalSigeLogin");
+    if (loginModal) loginModal.style.display = "none";
+
+    if (typeof submitSigeLogin === "function") {
+        submitSigeLogin();
+    } else if (window.sigeDB && typeof window.sigeDB.loginWithCpf === "function") {
+        await window.sigeDB.loginWithCpf(cpf, dataNascimento);
+        if (typeof checkSigeAuth === "function") checkSigeAuth();
+        if (typeof setupRoleSelector === "function") setupRoleSelector();
+        if (typeof renderAllModules === "function") renderAllModules(null, true);
     }
 }
 
@@ -800,7 +829,11 @@ function submitNovoUsuarioRBAC(e) {
         return;
     }
 
-    const cleanDt = cleanDataNascimento(dataNascimento);
+    let effectiveDt = dataNascimento;
+    if (!effectiveDt && !currentEditingRbacUserKey) {
+        effectiveDt = "01/01/2000";
+    }
+    const cleanDt = cleanDataNascimento(effectiveDt);
     if (dataNascimento && cleanDt.length !== 8) {
         alert("A Data de Nascimento deve estar no formato DD/MM/AAAA (8 dígitos).");
         return;
@@ -883,7 +916,8 @@ function submitAddDevUser(e) {
         return;
     }
 
-    const cleanDt = cleanDataNascimento(dataNascimento);
+    let effectiveDt = dataNascimento || "01/01/2000";
+    const cleanDt = cleanDataNascimento(effectiveDt);
     const senhaHash = cleanDt ? hashSecretSync(cleanDt) : "";
 
     sigeDB.addUsuario({
@@ -892,7 +926,7 @@ function submitAddDevUser(e) {
         role,
         cargo,
         cpf: cpf ? formatCpf(cpf) : "",
-        dataNascimento: dataNascimento ? formatDataNascimento(dataNascimento) : "",
+        dataNascimento: formatDataNascimento(effectiveDt),
         senhaHash: senhaHash,
         status: "aprovado",
         cadastroCompleto: true

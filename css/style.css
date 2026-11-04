@@ -510,12 +510,12 @@ body {
     line-height: 1.5;
 }
 
-/* Grade dos Pilares Principais (OE vs Central de Modulos) */
+/* Grade dos Pilares Principais (OE vs Central de Modulos vs Dashboard) */
 .action-pillars-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.8rem;
-    max-width: 960px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1.5rem;
+    max-width: 1140px;
     margin: 0 auto;
     text-align: left;
 }
