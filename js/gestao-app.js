@@ -489,46 +489,76 @@ function renderAllModules(targetModule = null, forceAll = false) {
 }
 
 function updateBadgesCounts() {
+    const isHidden = localStorage.getItem("sige_hide_tab_bells") === "true";
+    const btnToggle = document.getElementById("btnToggleTabBells");
+    if (btnToggle) {
+        btnToggle.innerHTML = isHidden 
+            ? `<i class="fa-solid fa-bell-slash" style="color:#fca5a5;"></i> <span id="btnToggleTabBellsText">Sininhos (Off)</span>`
+            : `<i class="fa-solid fa-bell" style="color:#fde047;"></i> <span id="btnToggleTabBellsText">Sininhos (On)</span>`;
+        btnToggle.title = isHidden ? "Clique para reativar os sininhos interativos nas abas" : "Clique para ocultar os sininhos nas abas";
+    }
+
+    const bDirecao = document.getElementById("badgeTabDirecao");
+    const bOp = document.getElementById("badgeTabOP");
+    const bSup = document.getElementById("badgeTabSup");
+    const bAdm = document.getElementById("badgeTabAdm");
+    const bDev = document.getElementById("badgeTabDev");
+    const bUni = document.getElementById("badgeTabUniformes");
+
+    if (isHidden) {
+        if (bDirecao) bDirecao.style.display = "none";
+        if (bOp) bOp.style.display = "none";
+        if (bSup) bSup.style.display = "none";
+        if (bAdm) bAdm.style.display = "none";
+        if (bDev) bDev.style.display = "none";
+        return;
+    }
+
     const role = sigeDB.getRole();
     const filterSelect = document.getElementById("opFilterOrientadora");
     const filterVal = filterSelect ? filterSelect.value : "todas";
 
-    const countOp = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria === "pendente" && matchOrientadora(a, filterVal)).length;
-    const countSup = sigeDB.getDemandasSupervisao().filter(d => d.status === "pendente").length;
-    const countAdm = sigeDB.getDemandasAdmin().filter(d => d.status === "pendente").length;
+    const countOp = (typeof sigeDB.getAgendamentosOP === "function") 
+        ? sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria === "pendente" && matchOrientadora(a, filterVal)).length
+        : 0;
+
+    const countSup = (typeof sigeDB.getDemandasSupervisao === "function")
+        ? sigeDB.getDemandasSupervisao().filter(d => d.status === "pendente" || d.status === "em_atendimento").length
+        : 0;
+
+    const countAdmDemandas = (typeof sigeDB.getDemandasAdmin === "function")
+        ? sigeDB.getDemandasAdmin().filter(d => d.status === "pendente").length
+        : 0;
 
     const countUni = (typeof sigeDB.getPedidosUniformes === "function") 
         ? sigeDB.getPedidosUniformes().filter(p => p.status === "pendente_envio" || p.status === "disponivel_estoque").length 
         : 0;
 
-    const bPed = document.getElementById("badgeTabPed");
-    const bAdm = document.getElementById("badgeTabAdm");
-    const bOp = document.getElementById("badgeTabOP");
-    const bSup = document.getElementById("badgeTabSup");
-    const bUni = document.getElementById("badgeTabUniformes");
+    const totalAdm = countAdmDemandas + countUni;
 
-    const totalPed = countOp + countSup;
-    const totalAdm = countAdm + countUni;
+    const countDevPending = (typeof sigeDB.getUsuarios === "function")
+        ? sigeDB.getUsuarios().filter(u => u.status === "pendente").length
+        : 0;
 
-    if (bPed) {
-        bPed.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${totalPed}`;
-        bPed.title = `${totalPed} pendência(s) pedagógica(s) em aberto`;
-        bPed.style.display = totalPed > 0 ? "inline-flex" : "none";
-    }
-    if (bAdm) {
-        bAdm.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${totalAdm}`;
-        bAdm.title = `${totalAdm} pendência(s) em aberto na Secretaria (Demandas / Uniformes)`;
-        bAdm.style.display = totalAdm > 0 ? "inline-flex" : "none";
-    }
     if (bOp) {
-        bOp.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${countOp}`;
-        bOp.title = `${countOp} atendimento(s) pendente(s) na Orientação`;
+        bOp.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:3px;"></i>${countOp}`;
+        bOp.title = `${countOp} atendimento(s) pendente(s) na Orientação — Clique para abrir e resolver`;
         bOp.style.display = countOp > 0 ? "inline-flex" : "none";
     }
     if (bSup) {
-        bSup.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:2px;"></i>${countSup}`;
-        bSup.title = `${countSup} demanda(s) pendente(s) na Supervisão Pedagógica`;
+        bSup.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:3px;"></i>${countSup}`;
+        bSup.title = `${countSup} demanda(s) pendente(s) na Supervisão — Clique para abrir e resolver`;
         bSup.style.display = countSup > 0 ? "inline-flex" : "none";
+    }
+    if (bAdm) {
+        bAdm.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:3px;"></i>${totalAdm}`;
+        bAdm.title = `${totalAdm} pendência(s) na Secretaria (Demandas / Uniformes) — Clique para abrir e resolver`;
+        bAdm.style.display = totalAdm > 0 ? "inline-flex" : "none";
+    }
+    if (bDev) {
+        bDev.innerHTML = `<i class="fa-solid fa-bell" style="font-size:0.65rem; margin-right:3px;"></i>${countDevPending}`;
+        bDev.title = `${countDevPending} solicitação(ões) de acesso aguardando aprovação — Clique para abrir`;
+        bDev.style.display = countDevPending > 0 ? "inline-flex" : "none";
     }
     if (bUni) {
         bUni.innerText = countUni;
@@ -536,6 +566,413 @@ function updateBadgesCounts() {
         bUni.style.display = countUni > 0 ? "inline-block" : "none";
     }
 }
+
+// ==========================================
+// CENTRAL INTERATIVA DE PENDÊNCIAS DOS SININHOS
+// ==========================================
+let currentPendenciasModulo = null;
+
+function formatDataIsoExibicao(d) {
+    if (!d) return "";
+    const str = String(d).trim();
+    if (str.includes("-")) {
+        const parts = str.split("T")[0].split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return str;
+}
+
+function formatItensUniformeResumo(itens) {
+    if (!itens) return "Nenhum item informado";
+    if (typeof itens === "string") return escapeHtml(itens);
+    if (Array.isArray(itens)) {
+        return itens.map(i => `${i.qtd || 1}x ${escapeHtml(i.tipo || 'Peça')} (${escapeHtml(i.tamanho || '-')})`).join(', ');
+    }
+    if (typeof itens === "object") {
+        return Object.entries(itens).filter(([_, q]) => q > 0).map(([k, q]) => `${q}x ${escapeHtml(k)}`).join(', ');
+    }
+    return "";
+}
+
+function toggleSininhoBadges(forceState = null) {
+    const currentState = localStorage.getItem("sige_hide_tab_bells") === "true";
+    const newState = (forceState !== null) ? !forceState : !currentState;
+    localStorage.setItem("sige_hide_tab_bells", newState ? "true" : "false");
+    updateBadgesCounts();
+    if (newState) {
+        closePendenciasModuloModal();
+        if (typeof showToast === "function") {
+            showToast("🔕 Sininhos ocultados das abas do sistema.");
+        }
+    } else {
+        if (typeof showToast === "function") {
+            showToast("🔔 Sininhos interativos ativados com sucesso nas abas!");
+        }
+    }
+}
+
+function openPendenciasModuloModal(e, moduloKey) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    currentPendenciasModulo = moduloKey;
+
+    const modal = document.getElementById("modalPendenciasModulo");
+    const titulo = document.getElementById("modalPendenciasTitulo");
+    const subtitulo = document.getElementById("modalPendenciasSubtitulo");
+    const iconBox = document.getElementById("modalPendenciasIconBox");
+    const lista = document.getElementById("modalPendenciasLista");
+    const btnToggleModal = document.getElementById("btnToggleOcultarSininhos");
+
+    if (!modal || !lista) return;
+
+    if (btnToggleModal) {
+        btnToggleModal.innerHTML = `<i class="fa-solid fa-bell-slash"></i> Ocultar sininhos de todas as abas`;
+    }
+
+    let itemsHtml = "";
+    let count = 0;
+
+    if (moduloKey === "op") {
+        if (iconBox) {
+            iconBox.style.background = "#fce7f3";
+            iconBox.style.color = "#ec4899";
+            iconBox.innerHTML = `<i class="fa-solid fa-heart-pulse"></i>`;
+        }
+        if (subtitulo) subtitulo.innerText = "Atendimentos e agendamentos aguardando atendimento ou recepção na Orientação.";
+        
+        const filterSelect = document.getElementById("opFilterOrientadora");
+        const filterVal = filterSelect ? filterSelect.value : "todas";
+        const pendentes = sigeDB.getAgendamentosOP().filter(a => a.statusSecretaria === "pendente" && matchOrientadora(a, filterVal));
+        count = pendentes.length;
+        if (titulo) titulo.innerHTML = `<i class="fa-solid fa-heart-pulse" style="color:#ec4899;"></i> Orientação Educacional — ${count} Pendência(s)`;
+
+        if (count === 0) {
+            itemsHtml = `
+                <div style="text-align:center; padding:2.5rem 1rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <strong style="color:#0f172a; font-size:1rem;">Nenhum atendimento pendente!</strong>
+                    <p style="font-size:0.85rem; margin-top:4px;">A agenda da Orientação Educacional está em dia.</p>
+                </div>
+            `;
+        } else {
+            itemsHtml = pendentes.map(p => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #ec4899; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:240px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span style="background:#fce7f3; color:#be185d; font-size:0.72rem; font-weight:800; padding:2px 7px; border-radius:6px;">
+                                <i class="fa-solid fa-clock"></i> Pendente
+                            </span>
+                            <span style="font-size:0.75rem; color:#64748b; font-weight:700;">
+                                <i class="fa-regular fa-calendar"></i> ${formatDataIsoExibicao(p.data)} ${p.horario ? 'às ' + p.horario : ''}
+                            </span>
+                            ${p.turma ? `<span style="background:#e0f2fe; color:#0369a1; font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:6px;">${escapeHtml(p.turma)}</span>` : ''}
+                        </div>
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            👤 ${escapeHtml(p.aluno || 'Estudante')}
+                        </div>
+                        <div style="font-size:0.8rem; color:#475569; margin-top:3px;">
+                            <strong>Motivo:</strong> ${escapeHtml(p.motivo || 'Atendimento agendado')}
+                        </div>
+                        ${p.solicitante ? `<div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Solicitado por: ${escapeHtml(p.solicitante)}</div>` : ''}
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button type="button" onclick="resolverPendenciaOPDireta('${p.id}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem; background:#ec4899; border:none; font-weight:800;" title="Abrir ficha e iniciar atendimento">
+                            <i class="fa-solid fa-play"></i> Atender / Ver
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+    } else if (moduloKey === "supervisao") {
+        if (iconBox) {
+            iconBox.style.background = "#e0f2fe";
+            iconBox.style.color = "#0284c7";
+            iconBox.innerHTML = `<i class="fa-solid fa-clipboard-check"></i>`;
+        }
+        if (subtitulo) subtitulo.innerText = "Demandas pedagógicas e apoio aos professores aguardando resolução.";
+        const demandas = sigeDB.getDemandasSupervisao().filter(d => d.status === "pendente" || d.status === "em_atendimento");
+        count = demandas.length;
+        if (titulo) titulo.innerHTML = `<i class="fa-solid fa-clipboard-check" style="color:#0284c7;"></i> Supervisão Pedagógica — ${count} Demanda(s)`;
+
+        if (count === 0) {
+            itemsHtml = `
+                <div style="text-align:center; padding:2.5rem 1rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <strong style="color:#0f172a; font-size:1rem;">Nenhuma demanda pendente!</strong>
+                    <p style="font-size:0.85rem; margin-top:4px;">Todas as demandas pedagógicas foram atendidas.</p>
+                </div>
+            `;
+        } else {
+            itemsHtml = demandas.map(d => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #0284c7; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:240px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span style="background:#fee2e2; color:#b91c1c; font-size:0.72rem; font-weight:800; padding:2px 7px; border-radius:6px;">
+                                ${d.status === 'em_atendimento' ? '🟡 Em Atendimento' : '🔴 Pendente'}
+                            </span>
+                            <span style="background:#f1f5f9; color:#475569; font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:6px;">
+                                Prioridade: ${(d.prioridade || 'Média').toUpperCase()}
+                            </span>
+                            <span style="font-size:0.75rem; color:#64748b;">
+                                <i class="fa-regular fa-calendar"></i> ${formatDataIsoExibicao(d.dataInicio || d.data)}
+                            </span>
+                        </div>
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            📋 ${escapeHtml(d.titulo)}
+                        </div>
+                        <div style="font-size:0.8rem; color:#475569; margin-top:3px;">
+                            <strong>Alvo:</strong> ${escapeHtml(d.turmaOuProfessor || d.responsavel || 'Equipe')}
+                        </div>
+                        ${d.descricao ? `<div style="font-size:0.75rem; color:#64748b; margin-top:2px; max-height:2.4em; overflow:hidden;">${escapeHtml(d.descricao)}</div>` : ''}
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button type="button" onclick="resolverPendenciaSupDireta('${d.id}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem; background:#0284c7; border:none; font-weight:800;">
+                            <i class="fa-solid fa-folder-open"></i> Abrir Demanda
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+    } else if (moduloKey === "admin") {
+        if (iconBox) {
+            iconBox.style.background = "#e0e7ff";
+            iconBox.style.color = "#4338ca";
+            iconBox.innerHTML = `<i class="fa-solid fa-school"></i>`;
+        }
+        if (subtitulo) subtitulo.innerText = "Demandas administrativas e pedidos de uniforme aguardando ação.";
+        const demandasAdm = sigeDB.getDemandasAdmin().filter(d => d.status === "pendente");
+        const pedidosUni = (typeof sigeDB.getPedidosUniformes === "function")
+            ? sigeDB.getPedidosUniformes().filter(p => p.status === "pendente_envio" || p.status === "disponivel_estoque")
+            : [];
+        count = demandasAdm.length + pedidosUni.length;
+        if (titulo) titulo.innerHTML = `<i class="fa-solid fa-school" style="color:#4338ca;"></i> Secretaria & Operacional — ${count} Pendência(s)`;
+
+        if (count === 0) {
+            itemsHtml = `
+                <div style="text-align:center; padding:2.5rem 1rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <strong style="color:#0f172a; font-size:1rem;">Secretaria em dia!</strong>
+                    <p style="font-size:0.85rem; margin-top:4px;">Nenhuma demanda administrativa ou pedido de uniforme pendente.</p>
+                </div>
+            `;
+        } else {
+            const listDemandas = demandasAdm.map(d => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #4338ca; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                    <div style="flex:1; min-width:240px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span style="background:#fee2e2; color:#b91c1c; font-size:0.72rem; font-weight:800; padding:2px 7px; border-radius:6px;">
+                                📁 Demanda Administrativa
+                            </span>
+                            <span style="font-size:0.75rem; color:#64748b;">
+                                <i class="fa-regular fa-calendar"></i> ${formatDataIsoExibicao(d.dataInicio || d.data)}
+                            </span>
+                        </div>
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            ${escapeHtml(d.titulo)}
+                        </div>
+                        ${d.solicitante ? `<div style="font-size:0.78rem; color:#475569; margin-top:2px;">Solicitante: ${escapeHtml(d.solicitante)}</div>` : ''}
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button type="button" onclick="resolverPendenciaAdmDireta('${d.id}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem; background:#4338ca; border:none; font-weight:800;">
+                            <i class="fa-solid fa-folder-open"></i> Abrir Demanda
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+
+            const listUniformes = pedidosUni.map(u => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #0284c7; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                    <div style="flex:1; min-width:240px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span style="background:#e0f2fe; color:#0369a1; font-size:0.72rem; font-weight:800; padding:2px 7px; border-radius:6px;">
+                                <i class="fa-solid fa-shirt"></i> Pedido Uniforme
+                            </span>
+                            <span style="font-size:0.75rem; color:#64748b; font-weight:700;">
+                                Status: ${u.status === 'disponivel_estoque' ? '📦 Disponível para Entrega' : '⏳ Aguardando Envio'}
+                            </span>
+                        </div>
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            👤 ${escapeHtml(u.aluno || 'Estudante')} ${u.turma ? '(' + escapeHtml(u.turma) + ')' : ''}
+                        </div>
+                        <div style="font-size:0.78rem; color:#475569; margin-top:2px;">
+                            ${formatItensUniformeResumo(u.itens)}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button type="button" onclick="resolverPedidoUniformeDireto('${u.id}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem; background:#0284c7; border:none; font-weight:800;">
+                            <i class="fa-solid fa-box-open"></i> Atender Pedido
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+
+            itemsHtml = listDemandas + listUniformes;
+        }
+
+    } else if (moduloKey === "dev") {
+        if (iconBox) {
+            iconBox.style.background = "#fef3c7";
+            iconBox.style.color = "#d97706";
+            iconBox.innerHTML = `<i class="fa-solid fa-shield-halved"></i>`;
+        }
+        if (subtitulo) subtitulo.innerText = "Solicitações de cadastro aguardando autorização de acesso ao sistema.";
+        const pendentes = sigeDB.getUsuarios().filter(u => u.status === "pendente");
+        count = pendentes.length;
+        if (titulo) titulo.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#d97706;"></i> Desenvolvedor & TI — ${count} Solicitação(ões)`;
+
+        if (count === 0) {
+            itemsHtml = `
+                <div style="text-align:center; padding:2.5rem 1rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <strong style="color:#0f172a; font-size:1rem;">Nenhuma solicitação pendente!</strong>
+                    <p style="font-size:0.85rem; margin-top:4px;">Todos os acessos solicitados foram analisados.</p>
+                </div>
+            `;
+        } else {
+            itemsHtml = pendentes.map(u => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #d97706; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:240px;">
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            👤 ${escapeHtml(u.nome || u.email)}
+                        </div>
+                        <div style="font-size:0.8rem; color:#475569; margin-top:2px;">
+                            <strong>E-mail:</strong> ${escapeHtml(u.email || 'Não informado')} | <strong>CPF:</strong> ${escapeHtml(u.cpf || 'Não informado')}
+                        </div>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                            Perfil Solicitado: <strong>${escapeHtml(u.role || 'Geral')}</strong>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button type="button" onclick="aprovarUsuarioPendenteDireto('${u.id || u.cpf || u.email}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem; background:#16a34a; border:none; font-weight:800;">
+                            <i class="fa-solid fa-check"></i> Aprovar
+                        </button>
+                        <button type="button" onclick="recusarUsuarioPendenteDireto('${u.id || u.cpf || u.email}')" class="btn btn-secondary" style="padding:6px 10px; font-size:0.78rem; color:#dc2626; border-color:#fca5a5;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+    } else if (moduloKey === "direcao") {
+        if (iconBox) {
+            iconBox.style.background = "#fef3c7";
+            iconBox.style.color = "#d97706";
+            iconBox.innerHTML = `<i class="fa-solid fa-crown"></i>`;
+        }
+        if (subtitulo) subtitulo.innerText = "Demandas e encaminhamentos da Direção Escolar.";
+        const pendentes = sigeDB.getDemandasAdmin().filter(d => (d.categoria === "direcao" || (d.responsavel && d.responsavel.toLowerCase().includes("dire"))) && d.status === "pendente");
+        count = pendentes.length;
+        if (titulo) titulo.innerHTML = `<i class="fa-solid fa-crown" style="color:var(--accent-gold);"></i> Gestão & Direção — ${count} Pendência(s)`;
+        if (count === 0) {
+            itemsHtml = `
+                <div style="text-align:center; padding:2.5rem 1rem; color:#64748b;">
+                    <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <strong style="color:#0f172a; font-size:1rem;">Gabinete em dia!</strong>
+                    <p style="font-size:0.85rem; margin-top:4px;">Nenhuma pendência administrativa pendente na Direção.</p>
+                </div>
+            `;
+        } else {
+            itemsHtml = pendentes.map(d => `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #d97706; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <div>
+                        <div style="font-weight:800; color:#0f172a;">${escapeHtml(d.titulo)}</div>
+                        <div style="font-size:0.8rem; color:#475569;">${escapeHtml(d.descricao || '')}</div>
+                    </div>
+                    <button type="button" onclick="resolverPendenciaAdmDireta('${d.id}')" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem;">Abrir</button>
+                </div>
+            `).join("");
+        }
+    }
+
+    lista.innerHTML = itemsHtml;
+    modal.style.display = "flex";
+}
+
+function closePendenciasModuloModal() {
+    const modal = document.getElementById("modalPendenciasModulo");
+    if (modal) modal.style.display = "none";
+}
+
+function irParaModuloFiltrandoPendencias() {
+    if (!currentPendenciasModulo) return;
+    const mod = currentPendenciasModulo;
+    closePendenciasModuloModal();
+    switchTab(mod);
+}
+
+function resolverPendenciaOPDireta(id) {
+    closePendenciasModuloModal();
+    switchTab('op');
+    setTimeout(() => {
+        const itemElem = document.querySelector(`[data-id="${id}"]`) || document.querySelector(`[data-op-id="${id}"]`) || document.getElementById(`card-op-${id}`);
+        if (itemElem) {
+            itemElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            itemElem.style.transition = 'all 0.4s ease';
+            itemElem.style.boxShadow = '0 0 0 3px #ec4899';
+            setTimeout(() => { itemElem.style.boxShadow = ''; }, 3000);
+        }
+    }, 250);
+}
+
+function resolverPendenciaSupDireta(id) {
+    closePendenciasModuloModal();
+    switchTab('supervisao');
+    if (typeof openDemandaSupervisaoModalWithData === 'function') {
+        openDemandaSupervisaoModalWithData(id);
+    }
+}
+
+function resolverPendenciaAdmDireta(id) {
+    closePendenciasModuloModal();
+    switchTab('admin');
+    if (typeof openDemandaAdminModalWithData === 'function') {
+        openDemandaAdminModalWithData(id);
+    }
+}
+
+function resolverPedidoUniformeDireto(id) {
+    closePendenciasModuloModal();
+    switchTab('admin', 'uniformes');
+    if (typeof openModalConfirmarEntrega === 'function') {
+        openModalConfirmarEntrega(id);
+    }
+}
+
+function aprovarUsuarioPendenteDireto(key) {
+    if (typeof aprovarUsuario === 'function') {
+        aprovarUsuario(key);
+    } else {
+        sigeDB.aprovarUsuarioPendente(key);
+    }
+    openPendenciasModuloModal(null, 'dev');
+    updateBadgesCounts();
+}
+
+function recusarUsuarioPendenteDireto(key) {
+    if (typeof recusarUsuario === 'function') {
+        recusarUsuario(key);
+    } else {
+        sigeDB.recusarUsuarioPendente(key);
+    }
+    openPendenciasModuloModal(null, 'dev');
+    updateBadgesCounts();
+}
+
+window.openPendenciasModuloModal = openPendenciasModuloModal;
+window.closePendenciasModuloModal = closePendenciasModuloModal;
+window.toggleSininhoBadges = toggleSininhoBadges;
+window.irParaModuloFiltrandoPendencias = irParaModuloFiltrandoPendencias;
+window.resolverPendenciaOPDireta = resolverPendenciaOPDireta;
+window.resolverPendenciaSupDireta = resolverPendenciaSupDireta;
+window.resolverPendenciaAdmDireta = resolverPendenciaAdmDireta;
+window.resolverPedidoUniformeDireto = resolverPedidoUniformeDireto;
+window.aprovarUsuarioPendenteDireto = aprovarUsuarioPendenteDireto;
+window.recusarUsuarioPendenteDireto = recusarUsuarioPendenteDireto;
 
 // ==========================================
 // MÓDULO PEDAGÓGICO: DOSSIÊ DO ESTUDANTE 360º
