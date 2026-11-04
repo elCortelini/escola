@@ -374,7 +374,6 @@ const defaultSigeData = {
         { email: "clarinda@escola.gov.br", cpf: "222.222.222-22", dataNascimento: "20/10/1982", senhaHash: "sha256_06509416156da6f8d7c808b7d399d07a878c37b35515df57250de94279472a6a", nome: "Clarinda Rosa Pereira", role: "orientadora_clarinda", cargo: "Orientadora Educacional — Séries Iniciais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "daiane.aquino04548@edu.itajai.sc.gov.br", cpf: "111.111.111-11", dataNascimento: "15/05/1985", senhaHash: "sha256_e7d7041793744fb1b58525b6a73c988950d603e91129e71ec13328eb99e3a682", nome: "Daiane Caetano Costa de Aquino", role: "orientadora_daiane", cargo: "Orientadora Educacional — Séries Finais", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false } },
         { email: "direcao@escola.gov.br", cpf: "085.471.349-21", dataNascimento: "05/08/1978", senhaHash: "sha256_f86024016f6bde21efc7095d7d19add1e08946c7fcc0b27c75f44fd29679a9ae", nome: "Edevaldo Junior (Diretor & Orientador)", role: "direcao", cargo: "Diretor Escolar e Orientador Educacional", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
-        { email: "admin.cepr@edu.itajai.sc.gov.br", cpf: "041.409.469-70", dataNascimento: "10/05/1985", senhaHash: "sha256_eaf30273cd06cbe0dd1dbcbcb61a83f7d19303ce66fb723276a59c3684eaf539", nome: "Administrador(a) Escolar", role: "admin", cargo: "Administrador(a) Escolar", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } },
         { email: "secretaria@escola.gov.br", cpf: "333.333.333-33", dataNascimento: "10/03/1990", senhaHash: "sha256_24dbd8d85f37733eb71538092504f30c6b157f6c73428d61d41981240d438d3c", nome: "Secretaria Escolar", role: "secretaria", cargo: "Secretaria e Recepção", status: "aprovado", cadastroCompleto: true, permissoes: { op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true } }
     ],
     pedidosUniformes: [],
@@ -712,8 +711,68 @@ class SigeDatabase {
         });
     }
 
+    unTombstoneEntity(cpf, email, id) {
+        if (!this.data) return;
+        const cCpf = cpf ? cleanCpf(cpf) : "";
+        const fCpf = cpf ? formatCpf(cpf) : "";
+        const cMail = email ? String(email).trim().toLowerCase() : "";
+        const cId = id ? String(id).trim() : "";
+        const cIdLow = cId ? cId.toLowerCase() : "";
+
+        const keysToRemove = new Set([cCpf, fCpf, cMail, cId, cIdLow].filter(Boolean));
+
+        ['deletedEquipeIds', 'deletedUserIds', 'deletedUserEmails'].forEach(arrName => {
+            if (Array.isArray(this.data[arrName])) {
+                this.data[arrName] = this.data[arrName].filter(item => {
+                    if (!item) return false;
+                    const str = String(item).trim();
+                    const strLow = str.toLowerCase();
+                    const itemCpf = cleanCpf(str);
+                    if (keysToRemove.has(str) || keysToRemove.has(strLow)) return false;
+                    if (itemCpf && (itemCpf === cCpf || keysToRemove.has(itemCpf))) return false;
+                    return true;
+                });
+            }
+        });
+    }
+
     isUserOrProfDeleted(itemOrKey) {
         if (!itemOrKey || !this.data) return false;
+
+        // Se a entidade está ativamente presente na equipeEscola ou usuariosCadastrados, NUNCA é deletada
+        const checkIsActive = (val) => {
+            if (!val) return false;
+            const str = String(val).trim();
+            const low = str.toLowerCase();
+            const cpfClean = cleanCpf(str);
+
+            const inEquipe = (this.data.equipeEscola || []).some(p => {
+                if (!p) return false;
+                if (p.id && (String(p.id).trim() === str || String(p.id).trim().toLowerCase() === low)) return true;
+                if (cpfClean && p.cpf && cleanCpf(p.cpf) === cpfClean) return true;
+                if (p.email && String(p.email).trim().toLowerCase() === low) return true;
+                return false;
+            });
+            if (inEquipe) return true;
+
+            const inUsers = (this.data.usuariosCadastrados || []).some(u => {
+                if (!u) return false;
+                if (u.id && (String(u.id).trim() === str || String(u.id).trim().toLowerCase() === low)) return true;
+                if (cpfClean && u.cpf && cleanCpf(u.cpf) === cpfClean) return true;
+                if (u.email && String(u.email).trim().toLowerCase() === low) return true;
+                return false;
+            });
+            return inUsers;
+        };
+
+        if (typeof itemOrKey === 'string' || typeof itemOrKey === 'number') {
+            if (checkIsActive(itemOrKey)) return false;
+        } else if (typeof itemOrKey === 'object') {
+            if (itemOrKey.id && checkIsActive(itemOrKey.id)) return false;
+            if (itemOrKey.cpf && checkIsActive(itemOrKey.cpf)) return false;
+            if (itemOrKey.email && checkIsActive(itemOrKey.email)) return false;
+        }
+
         const delEquipe = this.data.deletedEquipeIds || [];
         const delUserIds = this.data.deletedUserIds || [];
         const delUserEmails = this.data.deletedUserEmails || [];
@@ -1312,34 +1371,9 @@ class SigeDatabase {
             });
         }
 
-        // Garante que Edevaldo Junior tenha o perfil Direção Escolar e Orientador Executivo (acumulando funções com CPF 085.471.349-21)
+        // Garante que apenas o desenvolvedor oficial tenha role e permissões master
         this.data.usuariosCadastrados.forEach(u => {
-            const nomeLower = (u.nome || '').toLowerCase();
-            const cleanUCpf = cleanCpf(u.cpf || '');
-            const isEdevaldo = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-            if (isEdevaldo) {
-                u.nome = "Edevaldo Junior (Diretor & Orientador)";
-                u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
-                u.cargo = 'Diretor Escolar e Orientador Educacional';
-                u.cpf = '085.471.349-21';
-                u.status = 'aprovado';
-                u.permissoes = {
-                    ...(u.permissoes || {}),
-                    direcao: true,
-                    mural: true,
-                    supervisao: true,
-                    admin: true,
-                    uniformes: true,
-                    op: true,
-                    op_perfil: 'executora',
-                    ext_recursos: true,
-                    ext_dashboard: true,
-                    ext_contabil: true,
-                    ext_biblioteca: true,
-                    ext_patrimonio: true,
-                    dev: false
-                };
-            } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
+            if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
                 u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                 if (!u.permissoes) {
                     u.permissoes = this.getDefaultPermissoesByRole(u.role);
@@ -1355,32 +1389,7 @@ class SigeDatabase {
                     p.permissoes = { ...masterPerms };
                     return;
                 }
-                const nomeLower = (p.nome || '').toLowerCase();
-                const cleanPCpf = cleanCpf(p.cpf || '');
-                const isEdevaldo = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                if (isEdevaldo) {
-                    p.nome = "Edevaldo Junior";
-                    p.id = "prof-edevaldo";
-                    p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
-                    p.cargoFuncao = 'Diretor Escolar e Orientador Educacional';
-                    p.cpf = '085.471.349-21';
-                    p.permissoes = {
-                        ...(p.permissoes || {}),
-                        direcao: true,
-                        mural: true,
-                        supervisao: true,
-                        admin: true,
-                        uniformes: true,
-                        op: true,
-                        op_perfil: 'executora',
-                        ext_recursos: true,
-                        ext_dashboard: true,
-                        ext_contabil: true,
-                        ext_biblioteca: true,
-                        ext_patrimonio: true,
-                        dev: false
-                    };
-                } else if (p.setor === 'desenvolvedor') {
+                if (p.setor === 'desenvolvedor') {
                     p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                     if (!p.permissoes) {
                         p.permissoes = this.getDefaultPermissoesByRole(p.setor);
@@ -1846,6 +1855,14 @@ class SigeDatabase {
                 return userObj;
             });
 
+            // Limpeza de mock placeholder: Remove o usuário fictício 'Administrador(a) Escolar' para liberar o CPF 04140946970
+            merged.usuariosCadastrados = merged.usuariosCadastrados.filter(u => {
+                if (!u) return false;
+                const isMock041 = (u.id === 'user-admin-041' || (u.cpf && cleanCpf(u.cpf) === '04140946970')) && 
+                                  (u.nome === 'Administrador(a) Escolar' || (u.email && u.email.includes('admin.cepr@edu.itajai')));
+                return !isMock041;
+            });
+
             // Garante que o Desenvolvedor Master possua o CPF, Data e Hash oficiais
             const devHash = "sha256_b4dbdb7b961d78fd6d356c827c491cee21d0783c140fa3ea8bc842a1c2e6dd43";
             let devUser = merged.usuariosCadastrados.find(u => (u.email && u.email.toLowerCase().trim() === 'elcortelini@gmail.com') || (u.cpf && cleanCpf(u.cpf) === '80603742068'));
@@ -1875,34 +1892,9 @@ class SigeDatabase {
                 });
             }
 
-            // Garante que Edevaldo Junior tenha perfil Direção Escolar e Orientação Executora (acumulando funções com CPF 085.471.349-21)
+            // Garante integridade de permissões de desenvolvedor master
             merged.usuariosCadastrados.forEach(u => {
-                const nomeLower = (u.nome || '').toLowerCase();
-                const cleanUCpf = cleanCpf(u.cpf || '');
-                const isEdevaldo = cleanUCpf === '08547134921' || cleanUCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                if (isEdevaldo) {
-                    u.nome = "Edevaldo Junior (Diretor & Orientador)";
-                    u.role = u.role && u.role !== 'desenvolvedor' ? u.role : 'direcao';
-                    u.cargo = 'Diretor Escolar e Orientador Educacional';
-                    u.cpf = '085.471.349-21';
-                    u.status = 'aprovado';
-                    u.permissoes = {
-                        ...(u.permissoes || {}),
-                        direcao: true,
-                        mural: true,
-                        supervisao: true,
-                        admin: true,
-                        uniformes: true,
-                        op: true,
-                        op_perfil: 'executora',
-                        ext_recursos: true,
-                        ext_dashboard: true,
-                        ext_contabil: true,
-                        ext_biblioteca: true,
-                        ext_patrimonio: true,
-                        dev: false
-                    };
-                } else if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
+                if (u.role === 'desenvolvedor' && u.email !== 'elcortelini@gmail.com' && cleanCpf(u.cpf || '') !== '80603742068') {
                     u.role = (u.cargo && u.cargo.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                     if (!u.permissoes) {
                         u.permissoes = this.getDefaultPermissoesByRole(u.role);
@@ -1914,32 +1906,7 @@ class SigeDatabase {
 
             if (Array.isArray(merged.equipeEscola)) {
                 merged.equipeEscola.forEach(p => {
-                    const nomeLower = (p.nome || '').toLowerCase();
-                    const cleanPCpf = cleanCpf(p.cpf || '');
-                    const isEdevaldo = cleanPCpf === '08547134921' || cleanPCpf === '44444444444' || nomeLower.includes('edevaldo') || nomeLower.includes('jackson') || nomeLower.includes('silvano');
-                    if (isEdevaldo) {
-                        p.nome = "Edevaldo Junior";
-                        p.id = "prof-edevaldo";
-                        p.setor = p.setor && p.setor !== 'desenvolvedor' ? p.setor : 'direcao';
-                        p.cargoFuncao = 'Diretor Escolar e Orientador Educacional';
-                        p.cpf = '085.471.349-21';
-                        p.permissoes = {
-                            ...(p.permissoes || {}),
-                            direcao: true,
-                            mural: true,
-                            supervisao: true,
-                            admin: true,
-                            uniformes: true,
-                            op: true,
-                            op_perfil: 'executora',
-                            ext_recursos: true,
-                            ext_dashboard: true,
-                            ext_contabil: true,
-                            ext_biblioteca: true,
-                            ext_patrimonio: true,
-                            dev: false
-                        };
-                    } else if (p.setor === 'desenvolvedor' && p.email !== 'elcortelini@gmail.com' && cleanCpf(p.cpf || '') !== '80603742068') {
+                    if (p.setor === 'desenvolvedor' && p.email !== 'elcortelini@gmail.com' && cleanCpf(p.cpf || '') !== '80603742068') {
                         p.setor = (p.cargoFuncao && p.cargoFuncao.toLowerCase().includes('diretor')) ? 'direcao' : 'docentes';
                         if (!p.permissoes) {
                             p.permissoes = this.getDefaultPermissoesByRole(p.setor);
@@ -2234,10 +2201,7 @@ class SigeDatabase {
                                       this.isUserOrProfDeleted('08547134921') ||
                                       this.isUserOrProfDeleted('direcao@escola.gov.br');
             let edevaldoUser = this.data.usuariosCadastrados.find(u => 
-                (u.cpf && cleanCpf(u.cpf) === '08547134921') || 
-                (u.cpf && cleanCpf(u.cpf) === '44444444444') ||
-                (u.nome && (u.nome.toLowerCase().includes('edevaldo') || u.nome.toLowerCase().includes('jackson') || u.nome.toLowerCase().includes('silvano'))) ||
-                (u.email && u.email.toLowerCase().includes('direcao@escola'))
+                (u.id === 'user-edevaldo' || (u.cpf && cleanCpf(u.cpf) === '08547134921'))
             );
             if (!edevaldoUser && !isEdevaldoDeleted) {
                 this.data.usuariosCadastrados.push({
@@ -2317,16 +2281,12 @@ class SigeDatabase {
         const cleanUserId = (user.id || "").trim();
         const cleanNome = (user.nome || "").toLowerCase().trim();
 
-        // Limpa tombstones de exclusão prévios para evitar remoção indevida na mesclagem com a nuvem
-        const unDeleteKeys = [cleanUserId, cleanUserCpf, cleanMail].filter(Boolean);
-        if (cleanNome.includes("edevaldo") || cleanMail.includes("direcao") || cleanUserCpf === "08547134921" || user.role === "direcao") {
-            unDeleteKeys.push("user-edevaldo", "prof-edevaldo", "prof-jackson", "08547134921", "direcao@escola.gov.br");
+        // Limpa tombstones de exclusão prévios para permitir reativação de usuários previamente excluídos
+        this.unTombstoneEntity(cleanUserCpf, cleanMail, cleanUserId);
+        if (cleanUserCpf === "08547134921" || user.role === "direcao") {
+            this.unTombstoneEntity("08547134921", "direcao@escola.gov.br", "user-edevaldo");
+            this.unTombstoneEntity("08547134921", "direcao@escola.gov.br", "prof-edevaldo");
         }
-        ['deletedEquipeIds', 'deletedUserIds', 'deletedUserEmails'].forEach(arrName => {
-            if (Array.isArray(this.data[arrName])) {
-                this.data[arrName] = this.data[arrName].filter(item => !unDeleteKeys.includes(item));
-            }
-        });
 
         const existingIndex = list.findIndex(u =>
             (cleanUserId && u.id && u.id === cleanUserId) ||
@@ -3023,43 +2983,7 @@ class SigeDatabase {
             };
         }
 
-        // Tratamento especial para o CPF 041.409.469-70 (Administrador(a) Escolar / Gestão)
-        if (cleanNumbers === "04140946970") {
-            let adminUser = this.getUsuarios().find(u => u.cpf && cleanCpf(u.cpf) === "04140946970");
-            if (!adminUser) {
-                adminUser = {
-                    id: "user-admin-041",
-                    email: "admin.cepr@edu.itajai.sc.gov.br",
-                    cpf: "041.409.469-70",
-                    dataNascimento: formatDataNascimento(cleanDateInput || "10/05/1985"),
-                    senhaHash: inputHashSync || hashSecretSync(cleanDateInput || "10051985"),
-                    nome: "Administrador(a) Escolar",
-                    role: "admin",
-                    cargo: "Administrador(a) Escolar",
-                    status: "aprovado",
-                    cadastroCompleto: true,
-                    permissoes: { op: true, op_perfil: 'gerencial', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
-                };
-                this.addUsuario(adminUser);
-            } else if (cleanDateInput) {
-                const uDt = cleanDataNascimento(adminUser.dataNascimento || '');
-                const isPwMatch = (adminUser.senhaHash && (adminUser.senhaHash === inputHashAsync || adminUser.senhaHash === inputHashSync)) || (uDt && uDt === cleanDateInput);
-                if (!isPwMatch && (!uDt || uDt === "10051985")) {
-                    adminUser.dataNascimento = formatDataNascimento(cleanDateInput);
-                    adminUser.senhaHash = inputHashSync;
-                    this.saveData(this.data);
-                }
-            }
-            localStorage.setItem("sige_logged_cpf", "041.409.469-70");
-            localStorage.setItem("sige_logged_email", adminUser.email || "admin.cepr@edu.itajai.sc.gov.br");
-            this.setRole(adminUser.role || "admin");
-            return {
-                success: true,
-                code: 'SUCCESS',
-                message: 'Acesso como Administrador(a) Escolar concedido com sucesso!',
-                user: adminUser
-            };
-        }
+
 
         // Sincroniza permissões e aprovações mais recentes da nuvem antes de validar o login em outro navegador
         await this.pullAuthFromCloudBeforeLogin();
@@ -4089,7 +4013,7 @@ class SigeDatabase {
                                   this.isUserOrProfDeleted('prof-jackson') || 
                                   this.isUserOrProfDeleted('08547134921') ||
                                   this.isUserOrProfDeleted('direcao@escola.gov.br');
-        let edevaldoProf = this.data.equipeEscola.find(p => (p.cpf && cleanCpf(p.cpf) === '08547134921') || (p.cpf && cleanCpf(p.cpf) === '44444444444') || (p.nome && (p.nome.toLowerCase().includes('edevaldo') || p.nome.toLowerCase().includes('jackson') || p.nome.toLowerCase().includes('silvano'))) || (p.email && p.email.toLowerCase().includes('direcao@escola')));
+        let edevaldoProf = this.data.equipeEscola.find(p => (p.id === 'prof-edevaldo' || (p.cpf && cleanCpf(p.cpf) === '08547134921')));
         if (!edevaldoProf && !isEdevaldoDeleted) {
             this.data.equipeEscola.push({
                 id: "prof-edevaldo",
@@ -4140,6 +4064,43 @@ class SigeDatabase {
             }
         }
 
+        // Espelha usuários aprovados de usuariosCadastrados na equipe escolar caso ainda não constem
+        (this.data.usuariosCadastrados || []).forEach(u => {
+            if (!u || u.status === 'pendente') return;
+            const uCpf = cleanCpf(u.cpf || '');
+            const uMail = (u.email || '').trim().toLowerCase();
+            const uId = (u.id || '').trim();
+            if (!uCpf && !uMail && !uId) return;
+            if (this.isUserOrProfDeleted(u)) return;
+
+            const exists = this.data.equipeEscola.some(p => {
+                if (!p) return false;
+                if (uId && p.id && String(p.id).trim() === uId) return true;
+                if (uCpf && p.cpf && cleanCpf(p.cpf) === uCpf) return true;
+                if (uMail && p.email && p.email.trim().toLowerCase() === uMail) return true;
+                return false;
+            });
+
+            if (!exists && u.nome) {
+                this.data.equipeEscola.push({
+                    id: u.id || generateSecureId("prof"),
+                    nome: u.nome,
+                    cpf: u.cpf ? formatCpf(u.cpf) : "",
+                    dataNascimento: u.dataNascimento ? formatDataNascimento(u.dataNascimento) : "",
+                    telefone: u.whatsapp || u.telefone || "",
+                    email: u.email || "",
+                    cargoFuncao: u.cargo || (typeof getRoleLabel === 'function' ? getRoleLabel(u.role) : u.role),
+                    setor: (u.role && u.role !== "desenvolvedor") ? u.role : "docentes",
+                    turnos: u.turno || "integral",
+                    turmasOuSalas: "",
+                    permissoes: u.permissoes || this.getDefaultPermissoesByRole(u.role),
+                    status: "aprovado",
+                    atualizadoEm: u.atualizadoEm || new Date().toISOString()
+                });
+                saveNeeded = true;
+            }
+        });
+
         // Garante identificador id e objeto de permissoes em cada membro da equipe
         this.data.equipeEscola.forEach((p, idx) => {
             if (!p.id) {
@@ -4174,6 +4135,13 @@ class SigeDatabase {
     }
 
     saveProfissional(profData) {
+        const cleanProfCpf = cleanCpf(profData.cpf || "");
+        const cleanProfEmail = (profData.email || "").toLowerCase().trim();
+        const cleanProfId = (profData.id || "").trim();
+
+        // 0. Purgar tombstones caso esteja reativando/recadastrando profissional previamente excluído
+        this.unTombstoneEntity(cleanProfCpf, cleanProfEmail, cleanProfId);
+
         let list = this.getEquipeEscolar();
         const nowIso = new Date().toISOString();
         profData.atualizadoEm = nowIso;
@@ -4182,10 +4150,6 @@ class SigeDatabase {
         } else if (profData.permissoes.op_perfil === undefined) {
             profData.permissoes.op_perfil = this.getOpPerfil(profData);
         }
-
-        const cleanProfCpf = cleanCpf(profData.cpf || "");
-        const cleanProfEmail = (profData.email || "").toLowerCase().trim();
-        const cleanProfId = (profData.id || "").trim();
 
         // 1. Busca colaborador existente por ID, CPF ou E-mail para atualização precisa sem duplicatas
         let existingIndex = -1;
@@ -4242,7 +4206,7 @@ class SigeDatabase {
                 userList[idx] = {
                     ...u,
                     id: u.id || savedItem.id,
-                    nome: savedItem.nome || u.nome,
+                    nome: savedItem.nome,
                     cpf: savedItem.cpf ? formatCpf(savedItem.cpf) : (u.cpf || ""),
                     dataNascimento: rawDtNasc || u.dataNascimento || "",
                     senhaHash: sHash || u.senhaHash || "",
