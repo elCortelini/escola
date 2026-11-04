@@ -2000,15 +2000,21 @@ function submitCadastroProfissional(e) {
             renderModuleOrientacaoPedagogica();
         }
         if (typeof renderEquipeEscolarTable === "function") {
+            equipeBuscaTexto = "";
+            const searchInput = document.getElementById("equipeBuscaInput");
+            if (searchInput) searchInput.value = "";
+            const searchInputAdmin = document.getElementById("equipeBuscaInputAdmin");
+            if (searchInputAdmin) searchInputAdmin.value = "";
+
             if (currentSetorFilter !== "todos" && currentSetorFilter !== setor) {
                 if (typeof filtrarEquipeEscolar === "function") {
                     filtrarEquipeEscolar("todos");
                 } else {
                     currentSetorFilter = "todos";
-                    renderEquipeEscolarTable("todos", equipeBuscaTexto);
+                    renderEquipeEscolarTable("todos", "");
                 }
             } else {
-                renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+                renderEquipeEscolarTable(currentSetorFilter, "");
             }
         }
         if (typeof renderAdminPermissoesUsuarios === "function") {
@@ -2051,15 +2057,21 @@ function excluirProfissional(id) {
             renderModuleOrientacaoPedagogica();
         }
         if (typeof renderEquipeEscolarTable === "function") {
+            equipeBuscaTexto = "";
+            const searchInput = document.getElementById("equipeBuscaInput");
+            if (searchInput) searchInput.value = "";
+            const searchInputAdmin = document.getElementById("equipeBuscaInputAdmin");
+            if (searchInputAdmin) searchInputAdmin.value = "";
+
             if (currentSetorFilter !== "todos" && currentSetorFilter !== setor) {
                 if (typeof filtrarEquipeEscolar === "function") {
                     filtrarEquipeEscolar("todos");
                 } else {
                     currentSetorFilter = "todos";
-                    renderEquipeEscolarTable("todos", equipeBuscaTexto);
+                    renderEquipeEscolarTable("todos", "");
                 }
             } else {
-                renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+                renderEquipeEscolarTable(currentSetorFilter, "");
             }
         }
         if (typeof renderAdminPermissoesUsuarios === "function") {
