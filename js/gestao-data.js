@@ -649,15 +649,24 @@ class SigeDatabase {
         }
     }
 
+    pruneDeletedIds(list, maxLimit = 200) {
+        if (!Array.isArray(list)) return [];
+        const clean = list.filter(Boolean);
+        if (clean.length <= maxLimit) return clean;
+        // Mantém apenas os maxLimit mais recentes para evitar inchaço do storage e Firestore
+        return clean.slice(clean.length - maxLimit);
+    }
+
     smartMergeRemoteData(remoteData) {
         if (!remoteData || typeof remoteData !== "object") return;
         this.isSyncingFromRemote = true;
 
-        // 1. Tombstones (IDs excluídos combinados para não ressuscitar registros)
+        // 1. Tombstones (IDs excluídos combinados com poda de segurança de até 200 itens)
         const mergeDeletedIds = (key) => {
             const l = this.data[key] || [];
             const r = remoteData[key] || [];
-            return Array.from(new Set([...l, ...r]));
+            const combined = Array.from(new Set([...l, ...r]));
+            return this.pruneDeletedIds(combined, 200);
         };
 
         const combinedDeletedOPIds = mergeDeletedIds('deletedOPIds');
@@ -714,14 +723,12 @@ class SigeDatabase {
             return Array.from(map.values());
         };
 
-        // 2. Mesclagem de Equipe Escolar (Equipe & RBAC)
-        const mockOriIds = ['orient-carmen-old', 'orient-luciana-old'];
-        const combinedDeletedEquipeIdsWithMocks = Array.from(new Set([...combinedDeletedEquipeIds, ...mockOriIds]));
+        // 2. Mesclagem de Equipe Escolar (Equipe & RBAC limpo sem resíduos legados)
         const mergedEquipe = mergeEntityList(
-            (this.data.equipeEscola || []).filter(p => !mockOriIds.includes(p.id)),
-            (remoteData.equipeEscola || []).filter(p => !mockOriIds.includes(p.id)),
+            this.data.equipeEscola || [],
+            remoteData.equipeEscola || [],
             p => (p.cpf ? cleanCpf(p.cpf) : null) || p.id || (p.email ? p.email.toLowerCase().trim() : null),
-            combinedDeletedEquipeIdsWithMocks,
+            combinedDeletedEquipeIds,
             (localProf, remoteProf) => {
                 const lTime = new Date(localProf.atualizadoEm || localProf.criadoEm || 0).getTime();
                 const rTime = new Date(remoteProf.atualizadoEm || remoteProf.criadoEm || 0).getTime();
@@ -817,7 +824,7 @@ class SigeDatabase {
         });
         const mergedUsuarios = deduplicatedUsuarios;
 
-        // Sincronização cruzada de permissões entre mergedUsuarios e mergedEquipe (o timestamp mais recente vence)
+        // Sincronização cruzada bidirecional e harmonização completa (SSOT) entre mergedUsuarios e mergedEquipe
         mergedUsuarios.forEach(u => {
             const uCpf = cleanCpf(u.cpf || '');
             const uMail = (u.email || '').toLowerCase().trim();
@@ -835,6 +842,68 @@ class SigeDatabase {
                     u.permissoes = { ...(u.permissoes || {}), ...prof.permissoes };
                     u.atualizadoEm = prof.atualizadoEm;
                 }
+                // Harmonização de dados essenciais entre as duas coleções
+                if (!prof.cpf && u.cpf) prof.cpf = u.cpf;
+                if (!u.cpf && prof.cpf) u.cpf = prof.cpf;
+                if (!prof.dataNascimento && u.dataNascimento) prof.dataNascimento = u.dataNascimento;
+                if (!u.dataNascimento && prof.dataNascimento) u.dataNascimento = prof.dataNascimento;
+                if (!prof.telefone && (u.whatsapp || u.telefone)) prof.telefone = u.whatsapp || u.telefone;
+                if (!u.whatsapp && prof.telefone) u.whatsapp = prof.telefone;
+                if (u.status === 'aprovado') prof.status = 'aprovado';
+                if (prof.status === 'aprovado') u.status = 'aprovado';
+            } else if (u.status === 'aprovado' && u.nome && u.role !== 'desenvolvedor') {
+                // Usuário aprovado que ainda não constava em equipeEscola é integrado automaticamente
+                mergedEquipe.push({
+                    id: u.id || generateSecureId('prof'),
+                    nome: u.nome,
+                    cpf: u.cpf ? formatCpf(u.cpf) : '',
+                    dataNascimento: u.dataNascimento ? formatDataNascimento(u.dataNascimento) : '',
+                    telefone: u.whatsapp || u.telefone || '',
+                    email: uMail || '',
+                    cargoFuncao: u.cargo || (typeof getRoleLabel === 'function' ? getRoleLabel(u.role) : u.role),
+                    setor: u.role || 'docentes',
+                    turnos: u.turno || 'Matutino',
+                    turmasOuSalas: '',
+                    permissoes: u.permissoes || this.getDefaultPermissoesByRole(u.role),
+                    status: 'aprovado',
+                    atualizadoEm: u.atualizadoEm || new Date().toISOString()
+                });
+            }
+        });
+
+        // Garantir que profissionais da equipe tenham espelho em mergedUsuarios para login imediato por CPF/Email
+        mergedEquipe.forEach(prof => {
+            const pCpf = cleanCpf(prof.cpf || '');
+            const pMail = (prof.email || '').toLowerCase().trim();
+            const existsInUsers = mergedUsuarios.some(u => 
+                (prof.id && u.id && u.id === prof.id) ||
+                (pCpf && cleanCpf(u.cpf || '') === pCpf) ||
+                (pMail && u.email && u.email.toLowerCase().trim() === pMail)
+            );
+            if (!existsInUsers && (pCpf || pMail)) {
+                let roleKey = prof.setor || "docentes";
+                if (prof.permissoes && prof.permissoes.direcao) {
+                    roleKey = "direcao";
+                } else if (prof.setor === "orientacao" || (prof.permissoes && prof.permissoes.op_perfil === "executora")) {
+                    roleKey = "orientadora_" + prof.id;
+                } else if (prof.setor === "supervisao") {
+                    roleKey = "supervisora_" + prof.id;
+                }
+                const dt = cleanDataNascimento(prof.dataNascimento || prof.senha || "");
+                mergedUsuarios.push({
+                    id: prof.id || generateSecureId('user'),
+                    nome: prof.nome,
+                    cpf: prof.cpf ? formatCpf(prof.cpf) : '',
+                    dataNascimento: prof.dataNascimento || '',
+                    senhaHash: dt ? hashSecretSync(dt) : '',
+                    email: pMail || '',
+                    role: roleKey,
+                    cargo: prof.cargoFuncao || prof.setor,
+                    status: prof.status || 'aprovado',
+                    cadastroCompleto: true,
+                    permissoes: prof.permissoes || this.getDefaultPermissoesByRole(prof.setor),
+                    atualizadoEm: prof.atualizadoEm || new Date().toISOString()
+                });
             }
         });
 
@@ -1758,6 +1827,19 @@ class SigeDatabase {
     }
 
     saveData(data) {
+        if (data && typeof data === 'object') {
+            const tombstoneKeys = [
+                'deletedOPIds', 'deletedContatosWpIds', 'deletedEventoCalendarioIds',
+                'deletedEquipeIds', 'deletedPedidoUniformeIds', 'deletedDemandaSupIds',
+                'deletedDemandaAdmIds', 'deletedAtaIds', 'deletedTurmaIds',
+                'deletedUserEmails', 'deletedUserIds', 'deletedChancelaIds'
+            ];
+            tombstoneKeys.forEach(k => {
+                if (Array.isArray(data[k]) && data[k].length > 200) {
+                    data[k] = this.pruneDeletedIds(data[k], 200);
+                }
+            });
+        }
         this.data = data;
         // 1. LocalStorage síncrono para renderização instantânea
         try {

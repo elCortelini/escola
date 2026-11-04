@@ -9,6 +9,31 @@
 (function (window) {
     'use strict';
 
+    // Carregamento sob demanda (Lazy Loading) do PDF-Lib
+    window.ensurePdfLibLoaded = function() {
+        if (typeof window.PDFLib !== 'undefined') {
+            return Promise.resolve(window.PDFLib);
+        }
+        if (window._pdfLibLoadingPromise) {
+            return window._pdfLibLoadingPromise;
+        }
+        window._pdfLibLoadingPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'js/pdf-lib.min.js';
+            script.async = true;
+            script.onload = () => {
+                console.log('✅ [PDF-Lib] Carregado sob demanda com sucesso.');
+                resolve(window.PDFLib);
+            };
+            script.onerror = (err) => {
+                window._pdfLibLoadingPromise = null;
+                reject(new Error('Falha ao carregar js/pdf-lib.min.js: ' + err));
+            };
+            document.head.appendChild(script);
+        });
+        return window._pdfLibLoadingPromise;
+    };
+
     // Estado local do módulo
     const AssinaturaModule = {
         currentPdfBytes: null,
@@ -1215,8 +1240,14 @@
         }
 
         if (typeof PDFLib === 'undefined') {
-            showToast('Biblioteca PDF-Lib não carregada.');
-            return;
+            try {
+                showToast('Inicializando motor de PDF...');
+                await window.ensurePdfLibLoaded();
+            } catch (err) {
+                console.error('Erro ao carregar PDFLib:', err);
+                showToast('Biblioteca PDF-Lib não pôde ser carregada.');
+                return;
+            }
         }
 
         try {
@@ -1726,8 +1757,14 @@
 
     async function gerarDocumentoOficialSige(tipo) {
         if (typeof PDFLib === 'undefined') {
-            showToast('PDF-Lib não carregada.');
-            return;
+            try {
+                showToast('Inicializando motor de PDF...');
+                await window.ensurePdfLibLoaded();
+            } catch (err) {
+                console.error('Erro ao carregar PDFLib:', err);
+                showToast('Biblioteca PDF-Lib não pôde ser carregada.');
+                return;
+            }
         }
 
         const tipoDoc = tipo || document.getElementById('sigeDocSelectTipo').value;
