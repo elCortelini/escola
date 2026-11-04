@@ -304,6 +304,15 @@ async function submitPrimeiroAcesso(e) {
 
     alert(res.message);
     fecharModalPrimeiroAcesso();
+
+    const sigeCpf = document.getElementById("sigeLoginCpf");
+    const sigeNasc = document.getElementById("sigeLoginDataNasc");
+    if (sigeCpf) sigeCpf.value = formatCpf(cpf);
+    if (sigeNasc) sigeNasc.value = formatDataNascimento(dataNascimento);
+
+    if (typeof handleSigeCpfLogin === "function") {
+        handleSigeCpfLogin();
+    }
 }
 
 function handleSigeLogout() {
@@ -6202,7 +6211,8 @@ function submitNovaReuniaoPedagogica(e) {
 let currentAdminSubTab = 'assinaturas_docs';
 
 function switchAdminSubTab(subTab) {
-    if (!subTab || subTab === 'telefones') subTab = 'assinaturas_docs';
+    if (!subTab) subTab = 'equipe';
+    if (subTab === 'telefones') subTab = 'equipe';
     currentAdminSubTab = subTab;
 
     const contents = document.querySelectorAll(".admin-subtab-content");
@@ -6227,7 +6237,9 @@ function switchAdminSubTab(subTab) {
     }
 
     // Ações específicas ao abrir cada sub-aba da Administração
-    if (subTab === 'uniformes') {
+    if (subTab === 'equipe') {
+        if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
+    } else if (subTab === 'uniformes') {
         if (typeof renderModuleUniformes === "function") renderModuleUniformes();
         if (window.sigeDB && typeof window.sigeDB.forceFetchRemoteData === "function") {
             window.sigeDB.forceFetchRemoteData({ silent: true, module: "mod_uniformes" });
@@ -10736,7 +10748,8 @@ function scrollToPendingRequests() {
 function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto = equipeBuscaTexto) {
     renderAdminPendingUsers();
     const tbody = document.getElementById("admEquipeTableBody");
-    if (!tbody) return;
+    const tbodyAdmin = document.getElementById("admEquipeTableBodyAdmin");
+    if (!tbody && !tbodyAdmin) return;
 
     const equipe = sigeDB.getEquipeEscolar();
     if (!equipe || !Array.isArray(equipe)) return;
@@ -10765,10 +10778,10 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
         }
     });
 
-    if (kpiTotal) kpiTotal.innerText = equipe.length;
-    if (kpiAcesso) kpiAcesso.innerText = countAcesso;
-    if (kpiDocentes) kpiDocentes.innerText = countDocentes;
-    if (kpiGestao) kpiGestao.innerText = countGestao;
+    ['equipeKpiTotal', 'equipeKpiTotalAdmin'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = equipe.length; });
+    ['equipeKpiAcessoLiberado', 'equipeKpiAcessoLiberadoAdmin'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = countAcesso; });
+    ['equipeKpiDocentes', 'equipeKpiDocentesAdmin'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = countDocentes; });
+    ['equipeKpiGestao', 'equipeKpiGestaoAdmin'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = countGestao; });
 
     // Aplica Filtro de Setor
     let lista = equipe;
@@ -10791,7 +10804,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
     }
 
     if (lista.length === 0) {
-        tbody.innerHTML = `
+        const emptyHtml = `
             <tr>
                 <td colspan="5" style="padding:2.5rem 1rem; text-align:center; color:#64748b;">
                     <i class="fa-solid fa-user-slash" style="font-size:2rem; margin-bottom:10px; display:block; color:#cbd5e1;"></i>
@@ -10800,6 +10813,8 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
                 </td>
             </tr>
         `;
+        if (tbody) tbody.innerHTML = emptyHtml;
+        if (tbodyAdmin) tbodyAdmin.innerHTML = emptyHtml;
         return;
     }
 
@@ -13754,3 +13769,10 @@ if (document.readyState === "loading") {
 }
 
 
+
+function filtrarEquipeEscolarTextoAdmin() {
+    const input = document.getElementById("equipeSearchInputAdmin");
+    equipeBuscaTexto = input ? input.value.trim() : "";
+    renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+}
+window.filtrarEquipeEscolarTextoAdmin = filtrarEquipeEscolarTextoAdmin;

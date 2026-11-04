@@ -244,10 +244,10 @@ function renderPortalAuthBar() {
                         </label>
                         <select id="topDevViewSelector" onchange="switchDevView(this.value)" style="background:#1e293b; color:#f8fafc; border:1px solid #475569; border-radius:6px; padding:3px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; outline:none;">
                             <option value="desenvolvedor" ${activeRole === 'desenvolvedor' ? 'selected' : ''}>👑 Desenvolvedor (Total)</option>
+                            <option value="admin" ${activeRole === 'admin' ? 'selected' : ''}>🏫 Administrador(a) Escolar</option>
+                            <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Direção Escolar</option>
                             <option value="orientacao" ${activeRole === 'orientacao' || activeRole.startsWith('orientadora_') ? 'selected' : ''}>💜 Orientação Educacional</option>
                             <option value="supervisao" ${activeRole === 'supervisao' ? 'selected' : ''}>📚 Supervisão Escolar</option>
-                            <option value="direcao" ${activeRole === 'direcao' ? 'selected' : ''}>🏛️ Direção Escolar</option>
-                            <option value="uniformes" ${activeRole === 'uniformes' ? 'selected' : ''}>👕 Uniformes</option>
                             <option value="secretaria" ${activeRole === 'secretaria' ? 'selected' : ''}>📋 Secretaria</option>
                             <option value="docentes" ${activeRole === 'docentes' ? 'selected' : ''}>👨‍🏫 Docentes</option>
                             <option value="visitante" ${activeRole === 'visitante' ? 'selected' : ''}>🔒 Visitante</option>
@@ -361,6 +361,17 @@ async function submitPrimeiroAcesso(e) {
 
         alert(res.message);
         fecharModalPrimeiroAcesso();
+
+        // Preenche automaticamente os campos de login na tela principal
+        const heroCpf = document.getElementById("heroLoginCpfInput");
+        const heroNasc = document.getElementById("heroLoginDataNascInput");
+        if (heroCpf) heroCpf.value = formatCpf(cpf);
+        if (heroNasc) heroNasc.value = formatDataNascimento(dataNascimento);
+
+        // Executa login automático imediato
+        if (typeof handlePortalCpfLogin === "function") {
+            handlePortalCpfLogin();
+        }
     } catch (err) {
         console.error("Erro no envio do primeiro acesso:", err);
         alert("Ocorreu um erro ao processar o seu cadastro: " + (err?.message || err));

@@ -443,6 +443,12 @@
         <section id="tab-admin" class="tab-content-section">
             <!-- CARDS DE NAVEGAÇÃO INTERNA DA ADMINISTRAÇÃO -->
             <div class="dir-nav-cards-container" style="margin-bottom:1.5rem;">
+                <button type="button" class="dir-nav-card admin-subtab-btn" data-adminsub="equipe" onclick="switchAdminSubTab('equipe')">
+                    <div class="dir-nav-card-icon" style="background:#dbeafe; color:#1d4ed8;">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div class="dir-nav-card-title">Equipe & Telefones</div>
+                </button>
                 <button type="button" class="dir-nav-card admin-subtab-btn active" data-adminsub="assinaturas_docs" onclick="switchAdminSubTab('assinaturas_docs')">
                     <div class="dir-nav-card-icon" style="background:#e0e7ff; color:#4338ca;">
                         <i class="fa-solid fa-file-signature"></i>
@@ -479,6 +485,132 @@
                     </div>
                     <div class="dir-nav-card-title">Sistemas Conectados</div>
                 </button>
+            </div>
+
+            <!-- SUB-ABA: EQUIPE ESCOLAR & TELEFONES (ADMINISTRAÇÃO) -->
+            <div id="adminSubTab_equipe" class="admin-subtab-content" style="display:none;">
+                <div class="rbac-card" style="padding: 1.5rem; border-radius: 18px; border: 1px solid #cbd5e1; margin-bottom: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.04); background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+                        <div>
+                            <h4 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0;">
+                                <i class="fa-solid fa-users-gear" style="color: #2563eb; font-size: 1.4rem;"></i> Quadro da Equipe Escolar & Telefones dos Profissionais
+                            </h4>
+                            <p style="font-size: 0.84rem; color: #64748b; margin-top: 4px;">
+                                Gestão dos professores e equipe escolar: telefones WhatsApp, turnos, funções e controle de acessos modulares.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(37,99,235,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador & Acesso
+                            </button>
+                            <button type="button" onclick="openModalNovoUsuarioRBAC()" class="btn" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: #7c3aed; color:white; border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(124,58,237,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-user-shield"></i> + Novo Usuário RBAC
+                            </button>
+                            <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width: auto; font-size: 0.85rem; padding: 8px 14px; background: #16a34a; color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPIs Rápidos da Equipe & Acessos -->
+                    <div class="rbac-stats-grid" style="margin-bottom: 1.2rem;">
+                        <div class="rbac-stat-box">
+                            <div class="rbac-stat-icon" style="background:#eff6ff; color:#1d4ed8;">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="rbac-stat-value" id="equipeKpiTotalAdmin">0</div>
+                                <div class="rbac-stat-label">Total de Colaboradores</div>
+                            </div>
+                        </div>
+
+                        <div class="rbac-stat-box">
+                            <div class="rbac-stat-icon" style="background:#dcfce7; color:#15803d;">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div>
+                                <div class="rbac-stat-value" id="equipeKpiAcessoLiberadoAdmin">0</div>
+                                <div class="rbac-stat-label">Com Acesso ao Sistema</div>
+                            </div>
+                        </div>
+
+                        <div class="rbac-stat-box">
+                            <div class="rbac-stat-icon" style="background:#e0f2fe; color:#0369a1;">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div>
+                                <div class="rbac-stat-value" id="equipeKpiDocentesAdmin">0</div>
+                                <div class="rbac-stat-label">Corpo Docente</div>
+                            </div>
+                        </div>
+
+                        <div class="rbac-stat-box">
+                            <div class="rbac-stat-icon" style="background:#fef3c7; color:#b45309;">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <div class="rbac-stat-value" id="equipeKpiGestaoAdmin">0</div>
+                                <div class="rbac-stat-label">Equipe Gestora & Apoio</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Busca e Filtros Rápidos -->
+                    <div class="rbac-filter-toolbar" style="margin-bottom: 1rem;">
+                        <div class="rbac-search-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="equipeSearchInputAdmin" oninput="filtrarEquipeEscolarTextoAdmin()" placeholder="Buscar colaborador por nome, e-mail, cargo ou disciplina..." class="rbac-search-input">
+                        </div>
+
+                        <div class="rbac-filter-chips">
+                            <button type="button" onclick="filtrarEquipeEscolar('todos')" class="rbac-filter-btn active">Todos</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('docentes')" class="rbac-filter-btn">👨‍🏫 Docentes</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('orientacao')" class="rbac-filter-btn">🧭 Orientação</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('supervisao')" class="rbac-filter-btn">📋 Supervisão</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('direcao')" class="rbac-filter-btn">👑 Direção</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('secretaria')" class="rbac-filter-btn">📑 Secretaria</button>
+                            <button type="button" onclick="filtrarEquipeEscolar('apoio')" class="rbac-filter-btn">🔧 Apoio & TI</button>
+                        </div>
+                    </div>
+
+                    <!-- Legenda Rápida dos Módulos & Sistemas Externos -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; font-size:0.75rem; color:#64748b;">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="font-weight:700; color:#334155;"><i class="fa-solid fa-circle-info"></i> Clique no módulo para ativar/desativar em 1 clique:</span>
+                            <span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:800;">🧭 OE</span>
+                            <span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-weight:800;">📢 Mural</span>
+                            <span style="background:#f5f3ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-weight:800;">📋 Supervisão</span>
+                            <span style="background:#eff6ff; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:800;">⚙️ ADM</span>
+                            <span style="background:#ecfdf5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:800;">👑 Direção</span>
+                            <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:800;">👕 Uniformes</span>
+                            <span style="background:#fed7aa; color:#9a3412; padding:2px 6px; border-radius:4px; font-weight:800;">💻 Lab</span>
+                            <span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800;">📊 Dash</span>
+                            <span style="background:#dbeafe; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:800;">💰 Contábil</span>
+                            <span style="background:#fce7f3; color:#be185d; padding:2px 6px; border-radius:4px; font-weight:800;">📚 Biblio</span>
+                            <span style="background:#fef9c3; color:#a16207; padding:2px 6px; border-radius:4px; font-weight:800;">📦 Patrimônio</span>
+                        </div>
+                        <div>
+                            <span style="font-size:0.74rem; color:#94a3b8;"><i class="fa-solid fa-cloud-arrow-up"></i> Alterações salvas instantaneamente</span>
+                        </div>
+                    </div>
+
+                    <div class="rbac-table-container">
+                        <table class="rbac-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:28%;">Profissional / Identificação</th>
+                                    <th style="width:18%;">Setor & Cargo</th>
+                                    <th style="width:14%;">WhatsApp</th>
+                                    <th style="width:28%;">Módulos com Acesso Liberado</th>
+                                    <th style="width:12%; text-align:right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admEquipeTableBodyAdmin">
+                                <!-- Inserido dinamicamente via renderEquipeEscolarTable() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- SUB-ABA: UNIFORMES ESCOLARES -->
@@ -1406,6 +1538,9 @@
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button type="button" onclick="openCadastroProfissionalModal()" class="btn btn-primary" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(37,99,235,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
                             <i class="fa-solid fa-user-plus"></i> + Cadastrar Colaborador & Acesso
+                        </button>
+                        <button type="button" onclick="openModalNovoUsuarioRBAC()" class="btn" style="width: auto; font-size: 0.85rem; padding: 8px 16px; background: #7c3aed; color:white; border: none; font-weight: 800; box-shadow: 0 4px 12px rgba(124,58,237,0.3); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-user-shield"></i> + Novo Usuário RBAC
                         </button>
                         <button type="button" onclick="openDisparoAvisoProfessorModal('todos')" class="btn btn-secondary" style="width: auto; font-size: 0.85rem; padding: 8px 14px; background: #16a34a; color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                             <i class="fa-brands fa-whatsapp"></i> 📲 Disparar Comunicado
