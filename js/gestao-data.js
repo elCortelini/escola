@@ -2136,16 +2136,12 @@ class SigeDatabase {
                     permissoes: { op: true, op_perfil: 'executora', mural: true, supervisao: true, admin: true, direcao: true, uniformes: true, dev: false, ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true }
                 });
                 changed = true;
-            } else {
-                if (edevaldoUser.nome !== "Edevaldo Junior (Diretor & Orientador)") {
+            } else if (edevaldoUser) {
+                if (!edevaldoUser.nome) {
                     edevaldoUser.nome = "Edevaldo Junior (Diretor & Orientador)";
                     changed = true;
                 }
-                if (cleanCpf(edevaldoUser.cpf || '') !== '08547134921') {
-                    edevaldoUser.cpf = "085.471.349-21";
-                    changed = true;
-                }
-                if (!edevaldoUser.cargo || !edevaldoUser.cargo.toLowerCase().includes('orientad')) {
+                if (!edevaldoUser.cargo) {
                     edevaldoUser.cargo = "Diretor Escolar e Orientador Educacional";
                     changed = true;
                 }
@@ -2202,9 +2198,13 @@ class SigeDatabase {
         const cleanMail = (user.email || "").toLowerCase().trim();
         const cleanUserCpf = cleanCpf(user.cpf || "");
         const cleanUserId = (user.id || "").trim();
+        const cleanNome = (user.nome || "").toLowerCase().trim();
 
         // Limpa tombstones de exclusão prévios para evitar remoção indevida na mesclagem com a nuvem
         const unDeleteKeys = [cleanUserId, cleanUserCpf, cleanMail].filter(Boolean);
+        if (cleanNome.includes("edevaldo") || cleanMail.includes("direcao") || cleanUserCpf === "08547134921" || user.role === "direcao") {
+            unDeleteKeys.push("user-edevaldo", "prof-edevaldo", "prof-jackson", "08547134921", "direcao@escola.gov.br");
+        }
         ['deletedEquipeIds', 'deletedUserIds', 'deletedUserEmails'].forEach(arrName => {
             if (Array.isArray(this.data[arrName])) {
                 this.data[arrName] = this.data[arrName].filter(item => !unDeleteKeys.includes(item));
@@ -3990,7 +3990,7 @@ class SigeDatabase {
             });
             saveNeeded = true;
         } else if (edevaldoProf) {
-            if (edevaldoProf.nome !== "Edevaldo Junior") {
+            if (!edevaldoProf.nome) {
                 edevaldoProf.nome = "Edevaldo Junior";
                 saveNeeded = true;
             }
@@ -3998,11 +3998,7 @@ class SigeDatabase {
                 edevaldoProf.id = "prof-edevaldo";
                 saveNeeded = true;
             }
-            if (cleanCpf(edevaldoProf.cpf || '') !== '08547134921') {
-                edevaldoProf.cpf = "085.471.349-21";
-                saveNeeded = true;
-            }
-            if (!edevaldoProf.cargoFuncao || !edevaldoProf.cargoFuncao.toLowerCase().includes('orientad')) {
+            if (!edevaldoProf.cargoFuncao) {
                 edevaldoProf.cargoFuncao = "Diretor Escolar e Orientador Educacional";
                 saveNeeded = true;
             }
@@ -4105,7 +4101,11 @@ class SigeDatabase {
         const sHash = cleanDtNasc ? hashSecretSync(cleanDtNasc) : "";
 
         // Limpa tombstones prévios para permitir reativação/atualização plena sem conflito com Firestore
+        const cleanProfNome = (savedItem.nome || "").toLowerCase().trim();
         const unDeleteKeys = [cleanProfId, cleanProfCpf, cleanProfEmail].filter(Boolean);
+        if (cleanProfNome.includes("edevaldo") || cleanProfEmail.includes("direcao") || cleanProfCpf === "08547134921" || savedItem.setor === "direcao") {
+            unDeleteKeys.push("prof-edevaldo", "user-edevaldo", "prof-jackson", "08547134921", "direcao@escola.gov.br");
+        }
         ['deletedEquipeIds', 'deletedUserIds', 'deletedUserEmails'].forEach(arrName => {
             if (Array.isArray(this.data[arrName])) {
                 this.data[arrName] = this.data[arrName].filter(item => !unDeleteKeys.includes(item));

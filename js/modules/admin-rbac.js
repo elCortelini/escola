@@ -1195,20 +1195,22 @@ function filtrarEquipeEscolar(setor) {
     
     const setores = ["todos", "docentes", "orientacao", "supervisao", "direcao", "secretaria", "apoio"];
     setores.forEach(s => {
-        const btn = document.getElementById(`btnFilterSetor_${s}`);
-        if (btn) {
-            if (s === currentSetorFilter) {
-                btn.classList.add("active");
-                btn.style.background = "#1e293b";
-                btn.style.color = "#ffffff";
-                btn.style.fontWeight = "700";
-            } else {
-                btn.classList.remove("active");
-                btn.style.background = "#f1f5f9";
-                btn.style.color = "#334155";
-                btn.style.fontWeight = "normal";
+        ['btnFilterSetor_', 'btnFilterSetorAdmin_'].forEach(prefix => {
+            const btn = document.getElementById(`${prefix}${s}`);
+            if (btn) {
+                if (s === currentSetorFilter) {
+                    btn.classList.add("active");
+                    btn.style.background = "#1e293b";
+                    btn.style.color = "#ffffff";
+                    btn.style.fontWeight = "700";
+                } else {
+                    btn.classList.remove("active");
+                    btn.style.background = "#f1f5f9";
+                    btn.style.color = "#334155";
+                    btn.style.fontWeight = "normal";
+                }
             }
-        }
+        });
     });
 
     renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
@@ -1495,7 +1497,7 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
         { key: 'ext_patrimonio', label: 'Patrimônio', fullLabel: 'Sistema de Patrimônio', icon: 'fa-boxes-stacked', colorClass: 'mod-ext-patrimonio' }
     ];
 
-    tbody.innerHTML = lista.map(p => {
+    const rowsHtml = lista.map(p => {
         const isMasterDev = (p.email && p.email.toLowerCase().trim() === "elcortelini@gmail.com");
         const cleanPhone = p.telefone ? p.telefone.replace(/\D/g, "") : "";
         const waPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? "55" + cleanPhone : cleanPhone;
@@ -1604,6 +1606,9 @@ function renderEquipeEscolarTable(setorFiltro = currentSetorFilter, buscaTexto =
             </tr>
         `;
     }).join('');
+
+    if (tbody) tbody.innerHTML = rowsHtml;
+    if (tbodyAdmin) tbodyAdmin.innerHTML = rowsHtml;
 }
 
 function toggleProfissionalModuloChip(id, moduloKey) {
@@ -1995,7 +2000,16 @@ function submitCadastroProfissional(e) {
             renderModuleOrientacaoPedagogica();
         }
         if (typeof renderEquipeEscolarTable === "function") {
-            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+            if (currentSetorFilter !== "todos" && currentSetorFilter !== setor) {
+                if (typeof filtrarEquipeEscolar === "function") {
+                    filtrarEquipeEscolar("todos");
+                } else {
+                    currentSetorFilter = "todos";
+                    renderEquipeEscolarTable("todos", equipeBuscaTexto);
+                }
+            } else {
+                renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+            }
         }
         if (typeof renderAdminPermissoesUsuarios === "function") {
             renderAdminPermissoesUsuarios();
@@ -2037,7 +2051,16 @@ function excluirProfissional(id) {
             renderModuleOrientacaoPedagogica();
         }
         if (typeof renderEquipeEscolarTable === "function") {
-            renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+            if (currentSetorFilter !== "todos" && currentSetorFilter !== setor) {
+                if (typeof filtrarEquipeEscolar === "function") {
+                    filtrarEquipeEscolar("todos");
+                } else {
+                    currentSetorFilter = "todos";
+                    renderEquipeEscolarTable("todos", equipeBuscaTexto);
+                }
+            } else {
+                renderEquipeEscolarTable(currentSetorFilter, equipeBuscaTexto);
+            }
         }
         if (typeof renderAdminPermissoesUsuarios === "function") {
             renderAdminPermissoesUsuarios();

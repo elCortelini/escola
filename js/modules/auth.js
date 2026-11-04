@@ -814,24 +814,29 @@ function submitNovoUsuarioRBAC(e) {
     const existingUser = currentEditingRbacUserKey ? findUserByIdentifier(sigeDB.getUsuarios(), currentEditingRbacUserKey) : null;
     const sHash = cleanDt ? hashSecretSync(cleanDt) : (existingUser?.senhaHash || '');
 
-    sigeDB.addUsuario({
-        id: existingUser?.id,
-        cpf: cpf ? formatCpf(cpf) : (existingUser?.cpf || ''),
-        dataNascimento: dataNascimento ? formatDataNascimento(dataNascimento) : (existingUser?.dataNascimento || ''),
-        senhaHash: sHash,
-        email: email || existingUser?.email || '',
-        nome,
-        role,
-        cargo,
-        status: 'aprovado',
-        cadastroCompleto: true,
-        permissoes
-    });
-    showToast(`✅ Usuário ${nome} salvo com sucesso! Já pode realizar login.`);
-    closeModalNovoUsuarioRBAC();
-    renderAdminPermissoesUsuarios();
-    if (typeof renderDevUsersList === "function") renderDevUsersList();
-    if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
+    try {
+        sigeDB.addUsuario({
+            id: existingUser?.id,
+            cpf: cpf ? formatCpf(cpf) : (existingUser?.cpf || ''),
+            dataNascimento: dataNascimento ? formatDataNascimento(dataNascimento) : (existingUser?.dataNascimento || ''),
+            senhaHash: sHash,
+            email: email || existingUser?.email || '',
+            nome,
+            role,
+            cargo,
+            status: 'aprovado',
+            cadastroCompleto: true,
+            permissoes
+        });
+        showToast(`✅ Usuário ${nome} salvo com sucesso! Já pode realizar login.`);
+        closeModalNovoUsuarioRBAC();
+        renderAdminPermissoesUsuarios();
+        if (typeof renderDevUsersList === "function") renderDevUsersList();
+        if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
+    } catch (err) {
+        console.error("Erro ao salvar usuário RBAC:", err);
+        alert("Erro ao salvar usuário: " + err.message);
+    }
 }
 
 function sincronizarUsuariosComEquipeUI() {
