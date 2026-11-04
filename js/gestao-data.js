@@ -1777,7 +1777,7 @@ class SigeDatabase {
     getDefaultPermissoesByRole(role) {
         const base = {
             op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
-            ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
+            ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: true, ext_patrimonio: false
         };
         if (!role) return base;
         if (role === "desenvolvedor") {
@@ -1812,7 +1812,7 @@ class SigeDatabase {
             return {
                 ...base,
                 op: true, op_perfil: 'recepcao', mural: true, supervisao: false, admin: true, direcao: false, uniformes: true, dev: false,
-                ext_recursos: true, ext_dashboard: false, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
+                ext_recursos: true, ext_dashboard: true, ext_contabil: true, ext_biblioteca: true, ext_patrimonio: true
             };
         }
         if (role === "docentes" || role === "comunidade") {
@@ -1826,7 +1826,7 @@ class SigeDatabase {
             return {
                 ...base,
                 op: false, op_perfil: 'none', mural: true, supervisao: false, admin: false, direcao: false, uniformes: false, dev: false,
-                ext_recursos: true, ext_dashboard: false, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true
+                ext_recursos: true, ext_dashboard: true, ext_contabil: false, ext_biblioteca: false, ext_patrimonio: true
             };
         }
         return base;
@@ -2026,6 +2026,16 @@ class SigeDatabase {
         }
         user.atualizadoEm = nowIso;
         if (!user.status) user.status = "aprovado";
+        if (user.cadastroCompleto === undefined) user.cadastroCompleto = true;
+
+        if (user.cpf) user.cpf = formatCpf(user.cpf);
+        if (user.dataNascimento) {
+            const cleanDt = cleanDataNascimento(user.dataNascimento);
+            if (cleanDt && !user.senhaHash) {
+                user.senhaHash = hashSecretSync(cleanDt);
+            }
+            user.dataNascimento = formatDataNascimento(user.dataNascimento);
+        }
 
         const cleanMail = (user.email || "").toLowerCase().trim();
         const cleanUserCpf = cleanCpf(user.cpf || "");
@@ -3774,6 +3784,7 @@ class SigeDatabase {
         const cleanProfEmail = (savedItem.email || "").toLowerCase().trim();
         const rawDtNasc = savedItem.dataNascimento || "";
         const cleanDtNasc = cleanDataNascimento(rawDtNasc);
+        const sHash = cleanDtNasc ? hashSecretSync(cleanDtNasc) : "";
 
         let userList = this.getUsuarios();
         let matchedAny = false;
@@ -3789,7 +3800,7 @@ class SigeDatabase {
                     nome: savedItem.nome || u.nome,
                     cpf: savedItem.cpf ? formatCpf(savedItem.cpf) : (u.cpf || ""),
                     dataNascimento: rawDtNasc || u.dataNascimento || "",
-                    senha: cleanDtNasc || u.senha || "",
+                    senhaHash: sHash || u.senhaHash || "",
                     email: cleanProfEmail || u.email || "",
                     role: (u.role === "desenvolvedor") ? "desenvolvedor" : roleKey,
                     cargo: savedItem.cargoFuncao || savedItem.setor || u.cargo,
@@ -3807,7 +3818,7 @@ class SigeDatabase {
                 nome: savedItem.nome,
                 cpf: savedItem.cpf ? formatCpf(savedItem.cpf) : "",
                 dataNascimento: rawDtNasc,
-                senha: cleanDtNasc,
+                senhaHash: sHash,
                 email: cleanProfEmail,
                 role: roleKey,
                 cargo: savedItem.cargoFuncao || savedItem.setor,

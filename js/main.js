@@ -119,11 +119,11 @@ const defaultSystems = [
     {
         id: "dashboard",
         moduloKey: "ext_dashboard",
-        title: "Dashboard de Avaliação",
+        title: "Dashboard de Avaliação Institucional",
         iconClass: "fa-solid fa-chart-line",
         bgClass: "theme-emerald",
-        tag: "PESQUISA & DIAGNÓSTICO",
-        description: "Análise gráfica e estatística em tempo real da pesquisa de avaliação dos estudantes (6º ao 8º Ano).",
+        tag: "AVALIAÇÃO INSTITUCIONAL",
+        description: "Análise gráfica e estatística em tempo real da pesquisa de avaliação institucional e satisfação da comunidade escolar.",
         url: "dashboard.html",
         status: "online",
         badge: "TEMPO REAL",
@@ -329,7 +329,7 @@ function fecharModalPrimeiroAcesso() {
     if (modal) modal.style.display = "none";
 }
 
-function submitPrimeiroAcesso(e) {
+async function submitPrimeiroAcesso(e) {
     if (e && e.preventDefault) e.preventDefault();
     const cpf = document.getElementById("primeiroAcessoCpf")?.value.trim() || "";
     const dataNascimento = document.getElementById("primeiroAcessoDataNascimento")?.value.trim() || "";
@@ -342,24 +342,29 @@ function submitPrimeiroAcesso(e) {
 
     if (!window.sigeDB) return;
 
-    const res = window.sigeDB.cadastrarPrimeiroAcesso({
-        cpf,
-        dataNascimento,
-        nome,
-        cargo,
-        turno,
-        whatsapp,
-        email,
-        autorizaWhatsApp
-    });
+    try {
+        const res = await window.sigeDB.cadastrarPrimeiroAcesso({
+            cpf,
+            dataNascimento,
+            nome,
+            cargo,
+            turno,
+            whatsapp,
+            email,
+            autorizaWhatsApp
+        });
 
-    if (!res.success) {
+        if (!res || !res.success) {
+            alert(res?.message || "Não foi possível registrar o cadastro. Verifique os dados digitados.");
+            return;
+        }
+
         alert(res.message);
-        return;
+        fecharModalPrimeiroAcesso();
+    } catch (err) {
+        console.error("Erro no envio do primeiro acesso:", err);
+        alert("Ocorreu um erro ao processar o seu cadastro: " + (err?.message || err));
     }
-
-    alert(res.message);
-    fecharModalPrimeiroAcesso();
 }
 
 // 2. Painel Central Hero (Apenas quando NÃO logado)
@@ -747,9 +752,10 @@ function loadSystems(force = false) {
         let isAllowed = true;
         if (sys.moduloKey) {
             if (!loggedUser) {
-                isAllowed = false;
+                // Dashboard de Avaliação é aberto institucionalmente
+                isAllowed = (sys.id === 'dashboard');
             } else {
-                isAllowed = window.sigeDB ? window.sigeDB.temPermissaoModulo(sys.moduloKey) : false;
+                isAllowed = (sys.id === 'dashboard') || (window.sigeDB ? window.sigeDB.temPermissaoModulo(sys.moduloKey) : false);
             }
         }
 

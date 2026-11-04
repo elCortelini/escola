@@ -691,6 +691,8 @@ function openModalNovoUsuarioRBAC(identificadorParaEditar) {
     const titleElem = document.getElementById("modalAdminNovoUsuarioTitle");
     const inputEmail = document.getElementById("rbacInputEmail");
     const inputNome = document.getElementById("rbacInputNome");
+    const inputCpf = document.getElementById("rbacInputCpf");
+    const inputDataNasc = document.getElementById("rbacInputDataNasc");
     const selectRole = document.getElementById("rbacInputRole");
     const inputCargo = document.getElementById("rbacInputCargo");
 
@@ -707,6 +709,8 @@ function openModalNovoUsuarioRBAC(identificadorParaEditar) {
                 inputEmail.disabled = (u.email && u.email.toLowerCase().trim() === "elcortelini@gmail.com");
             }
             if (inputNome) inputNome.value = u.nome || '';
+            if (inputCpf) inputCpf.value = u.cpf || '';
+            if (inputDataNasc) inputDataNasc.value = u.dataNascimento || '';
             if (selectRole) selectRole.value = u.role || 'orientacao';
             if (inputCargo) inputCargo.value = u.cargo || '';
 
@@ -723,6 +727,8 @@ function openModalNovoUsuarioRBAC(identificadorParaEditar) {
             inputEmail.disabled = false;
         }
         if (inputNome) inputNome.value = '';
+        if (inputCpf) inputCpf.value = '';
+        if (inputDataNasc) inputDataNasc.value = '';
         if (selectRole) selectRole.value = 'orientacao';
         if (inputCargo) inputCargo.value = 'Orientadora Educacional';
         autoSelectRbacRoleDefaults('orientacao');
@@ -764,11 +770,30 @@ function submitNovoUsuarioRBAC(e) {
     if (e && e.preventDefault) e.preventDefault();
     const email = (document.getElementById("rbacInputEmail")?.value || '').trim();
     const nome = (document.getElementById("rbacInputNome")?.value || '').trim();
+    const cpf = (document.getElementById("rbacInputCpf")?.value || '').trim();
+    const dataNascimento = (document.getElementById("rbacInputDataNasc")?.value || '').trim();
     const role = document.getElementById("rbacInputRole")?.value;
     const cargo = (document.getElementById("rbacInputCargo")?.value || '').trim();
 
-    if ((!email && !currentEditingRbacUserKey) || !nome || !role || !cargo) {
-        alert("Preencha todos os campos obrigatórios.");
+    if (!nome || !role || !cargo) {
+        alert("Preencha todos os campos obrigatórios (Nome, Perfil e Cargo).");
+        return;
+    }
+
+    if (!currentEditingRbacUserKey && !email && !cpf) {
+        alert("Por favor, informe pelo menos o CPF ou E-mail para permitir o login do usuário.");
+        return;
+    }
+
+    const cleanCpfNum = cleanCpf(cpf);
+    if (cpf && cleanCpfNum.length !== 11) {
+        alert("O número de CPF informado deve conter 11 dígitos.");
+        return;
+    }
+
+    const cleanDt = cleanDataNascimento(dataNascimento);
+    if (dataNascimento && cleanDt.length !== 8) {
+        alert("A Data de Nascimento deve estar no formato DD/MM/AAAA (8 dígitos).");
         return;
     }
 
@@ -787,19 +812,26 @@ function submitNovoUsuarioRBAC(e) {
     };
 
     const existingUser = currentEditingRbacUserKey ? findUserByIdentifier(sigeDB.getUsuarios(), currentEditingRbacUserKey) : null;
+    const sHash = cleanDt ? hashSecretSync(cleanDt) : (existingUser?.senhaHash || '');
+
     sigeDB.addUsuario({
         id: existingUser?.id,
-        cpf: existingUser?.cpf,
+        cpf: cpf ? formatCpf(cpf) : (existingUser?.cpf || ''),
+        dataNascimento: dataNascimento ? formatDataNascimento(dataNascimento) : (existingUser?.dataNascimento || ''),
+        senhaHash: sHash,
         email: email || existingUser?.email || '',
         nome,
         role,
         cargo,
+        status: 'aprovado',
+        cadastroCompleto: true,
         permissoes
     });
-    showToast(`✅ Usuário ${nome} salvo com permissões personalizadas!`);
+    showToast(`✅ Usuário ${nome} salvo com sucesso! Já pode realizar login.`);
     closeModalNovoUsuarioRBAC();
     renderAdminPermissoesUsuarios();
     if (typeof renderDevUsersList === "function") renderDevUsersList();
+    if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
 }
 
 function sincronizarUsuariosComEquipeUI() {
@@ -830,22 +862,43 @@ function toggleUserModuloPermissao(userIdentifier, moduloKey, isChecked) {
 
 function submitAddDevUser(e) {
     if (e && e.preventDefault) e.preventDefault();
-    const email = document.getElementById("devUserEmail")?.value.trim();
-    const nome = document.getElementById("devUserName")?.value.trim();
+    const email = document.getElementById("devUserEmail")?.value.trim() || "";
+    const nome = document.getElementById("devUserName")?.value.trim() || "";
     const role = document.getElementById("devUserRole")?.value;
-    const cargo = document.getElementById("devUserCargo")?.value.trim();
+    const cargo = document.getElementById("devUserCargo")?.value.trim() || "";
+    const cpf = document.getElementById("devUserCpf")?.value.trim() || "";
+    const dataNascimento = document.getElementById("devUserDataNasc")?.value.trim() || "";
 
-    if (!email || !nome || !role || !cargo) return;
+    if (!nome || !role || !cargo || (!email && !cpf)) {
+        alert("Preencha Nome, Perfil, Cargo e pelo menos E-mail ou CPF.");
+        return;
+    }
 
-    sigeDB.addUsuario({ email, nome, role, cargo });
-    showToast(`Usuário ${nome} (${email}) salvo com sucesso!`);
+    const cleanDt = cleanDataNascimento(dataNascimento);
+    const senhaHash = cleanDt ? hashSecretSync(cleanDt) : "";
+
+    sigeDB.addUsuario({
+        email: email || "",
+        nome,
+        role,
+        cargo,
+        cpf: cpf ? formatCpf(cpf) : "",
+        dataNascimento: dataNascimento ? formatDataNascimento(dataNascimento) : "",
+        senhaHash: senhaHash,
+        status: "aprovado",
+        cadastroCompleto: true
+    });
+    showToast(`Usuário ${nome} salvo com sucesso! Já pode realizar login.`);
     
     if (document.getElementById("devUserEmail")) document.getElementById("devUserEmail").value = "";
     if (document.getElementById("devUserName")) document.getElementById("devUserName").value = "";
     if (document.getElementById("devUserCargo")) document.getElementById("devUserCargo").value = "";
+    if (document.getElementById("devUserCpf")) document.getElementById("devUserCpf").value = "";
+    if (document.getElementById("devUserDataNasc")) document.getElementById("devUserDataNasc").value = "";
 
     renderDevUsersList();
     renderAdminPermissoesUsuarios();
+    if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
 }
 
 function deleteDevUser(userIdentifier) {
