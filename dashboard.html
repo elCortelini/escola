@@ -521,10 +521,115 @@
             </div>
         </div>
 
+        <!-- Seção 6: Painel Comparativo e Evolução entre Trimestres -->
+        <div class="evolution-panel-card" style="background:white; border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.8rem; box-shadow:var(--shadow-md); margin-bottom:2.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.2rem; border-bottom:2px solid var(--border-color); padding-bottom:0.8rem;">
+                <div>
+                    <h4 style="color:var(--primary-dark); font-size:1.25rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-arrow-trend-up" style="color:#0284c7;"></i> 6. Painel Comparativo e Evolução entre Trimestres (2º Tri vs 3º Tri)
+                    </h4>
+                    <div style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                        Métricas comparadas em tempo real demonstrando a evolução do desempenho, pontos de avanço e alertas de defasagem entre os períodos:
+                    </div>
+                </div>
+                <span class="active-tag" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.82rem; font-weight:700;">
+                    <i class="fa-solid fa-code-compare"></i> Comparativo Dinâmico (274 vs 267 Respondentes)
+                </span>
+            </div>
+
+            <!-- 4 KPIs de Evolução -->
+            <div class="kpi-grid" style="margin-bottom:1.5rem;">
+                <div class="kpi-card" style="border-left:4px solid #0284c7;">
+                    <div class="kpi-card-header">
+                        <span class="kpi-title">Variação Global (Δ)</span>
+                        <div class="kpi-icon icon-blue"><i class="fa-solid fa-chart-line"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiEvolGlobal" style="font-size:1.6rem; color:#be123c;">-2.6%</div>
+                    <div class="kpi-sub" id="kpiEvolGlobalSub">De 68.7% (2º Tri) para 66.1% (3º Tri)</div>
+                </div>
+
+                <div class="kpi-card" style="border-left:4px solid #059669;">
+                    <div class="kpi-card-header">
+                        <span class="kpi-title">🟢 Maior Evolução</span>
+                        <div class="kpi-icon icon-green"><i class="fa-solid fa-circle-arrow-up"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiEvolBest" style="font-size:1.25rem; color:#047857;">Merenda (+2.0%)</div>
+                    <div class="kpi-sub" id="kpiEvolBestSub">Subiu de 63.2% para 65.2%</div>
+                </div>
+
+                <div class="kpi-card" style="border-left:4px solid #be123c;">
+                    <div class="kpi-card-header">
+                        <span class="kpi-title">🔴 Maior Queda</span>
+                        <div class="kpi-icon icon-red"><i class="fa-solid fa-circle-arrow-down"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiEvolWorst" style="font-size:1.25rem; color:#9f1239;">Recomendação (-8.1%)</div>
+                    <div class="kpi-sub" id="kpiEvolWorstSub">Q25: de 71.5% para 63.4%</div>
+                </div>
+
+                <div class="kpi-card" style="border-left:4px solid #d97706;">
+                    <div class="kpi-card-header">
+                        <span class="kpi-title">Paridade Amostral</span>
+                        <div class="kpi-icon icon-amber"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiEvolSample" style="font-size:1.35rem; color:#b45309;">274 vs 267</div>
+                    <div class="kpi-sub">97.4% de correspondência amostral</div>
+                </div>
+            </div>
+
+            <!-- 2 Gráficos de Evolução Lado a Lado -->
+            <div class="charts-grid-3" style="grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); margin-bottom:1.8rem;">
+                <div class="chart-card">
+                    <h4><i class="fa-solid fa-chart-column" style="color:#0284c7;"></i> Comparativo por Categoria Temática (2º Tri vs 3º Tri)</h4>
+                    <div style="height: 320px;">
+                        <canvas id="chartEvolutionCat"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h4><i class="fa-solid fa-people-group" style="color:#d97706;"></i> Comparativo por Segmento (Turno & Séries)</h4>
+                    <div style="height: 320px;">
+                        <canvas id="chartEvolutionSegment"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Interativa de Evolução com Filtro Rápido -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
+                    <h5 style="color:var(--primary-dark); font-size:1.05rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Tabela de Variação Detalhada por Pergunta
+                    </h5>
+                    <div class="tri-buttons-wrap">
+                        <button id="btnEvolFilter_ALL" class="btn-tri active" onclick="setEvolutionTableFilter('ALL')"><i class="fa-solid fa-list"></i> Todas (23)</button>
+                        <button id="btnEvolFilter_UP" class="btn-tri" onclick="setEvolutionTableFilter('UP')"><i class="fa-solid fa-arrow-trend-up" style="color:#059669;"></i> 🟢 O que Melhorou</button>
+                        <button id="btnEvolFilter_DOWN" class="btn-tri" onclick="setEvolutionTableFilter('DOWN')"><i class="fa-solid fa-arrow-trend-down" style="color:#be123c;"></i> 🔴 O que Piorou</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:2px solid var(--border-color); text-align:left;">
+                                <th style="padding:10px 14px;">Código</th>
+                                <th style="padding:10px 14px;">Aspecto Avaliado</th>
+                                <th style="padding:10px 14px;">Categoria</th>
+                                <th style="padding:10px 14px; text-align:center;">2º Trimestre</th>
+                                <th style="padding:10px 14px; text-align:center;">3º Trimestre</th>
+                                <th style="padding:10px 14px; text-align:center;">Variação (Δ)</th>
+                                <th style="padding:10px 14px; text-align:center;">Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evolutionTableBody">
+                            <!-- Preenchido dinamicamente via dashboard.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Ranking Comparativo por Série (6º, 7º e 8º Ano) -->
         <div style="margin-bottom: 2.2rem;">
             <h4 style="color:var(--primary-dark); font-size:1.2rem; font-weight:800; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-trophy" style="color:var(--accent-gold);"></i> 6. Destaques e Pontos Críticos por Série (Raio-X de Turmas)
+                <i class="fa-solid fa-trophy" style="color:var(--accent-gold);"></i> 7. Destaques e Pontos Críticos por Série (Raio-X de Turmas)
             </h4>
             <div class="grade-ranking-grid" id="gradeRankingGrid">
                 <!-- Populated dynamically via dashboard.js -->
@@ -551,7 +656,7 @@
         <div class="table-card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.4rem;">
                 <h4 style="color:var(--primary-dark); font-size:1.2rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-table-list" style="color:var(--primary-light);"></i> 7. Desempenho Detalhado por Pergunta (25 Aspectos)
+                    <i class="fa-solid fa-table-list" style="color:var(--primary-light);"></i> 8. Desempenho Detalhado por Pergunta (25 Aspectos)
                 </h4>
                 
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -612,7 +717,7 @@
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
-    <script src="js/data-fallback.js?v=20261125_v59"></script>
-    <script src="js/dashboard.js?v=20261125_v59"></script>
+    <script src="js/data-fallback.js?v=20261125_v60"></script>
+    <script src="js/dashboard.js?v=20261125_v60"></script>
 </body>
 </html>

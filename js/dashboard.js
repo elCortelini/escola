@@ -3,6 +3,10 @@ let chartRadarInstance = null;
 let chartTurmasInstance = null;
 let chartTurnoInstance = null;
 let chartTimelineInstance = null;
+let chartEvolutionCatInstance = null;
+let chartEvolutionSegmentInstance = null;
+let evolutionDataQuestions = [];
+let currentEvolutionFilter = 'ALL';
 
 let currentQuestionsData = [];
 let rawCsvRows = [];
@@ -204,6 +208,7 @@ function setTrimesterFilter(triKey) {
 
     if (rawCsvRows.length > 0) {
         processFilteredRows();
+    renderEvolutionAnalysis();
     } else {
         useFallbackData();
     }
@@ -214,6 +219,7 @@ function setTurmaFilter(turmaKey) {
     updateActiveFilterBadges();
     if (rawCsvRows.length > 0) {
         processFilteredRows();
+    renderEvolutionAnalysis();
     } else {
         useFallbackData();
     }
@@ -224,6 +230,7 @@ function setTurnoFilter(turnoKey) {
     updateActiveFilterBadges();
     if (rawCsvRows.length > 0) {
         processFilteredRows();
+    renderEvolutionAnalysis();
     } else {
         useFallbackData();
     }
@@ -299,6 +306,7 @@ function parseCSVData(csvText) {
     rawCsvRows = rows.slice(1);
 
     processFilteredRows();
+    renderEvolutionAnalysis();
 }
 
 function parseDateStr(str) {
@@ -1135,6 +1143,248 @@ function renderTable(questions) {
             <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
         `;
 
+        tbody.appendChild(tr);
+    });
+}
+
+/* ========================================================
+   EVOLUÇÃO E COMPARATIVO ENTRE TRIMESTRES (2º Tri vs 3º Tri)
+   ======================================================== */
+function renderEvolutionAnalysis() {
+    if (!rawCsvRows || rawCsvRows.length === 0) return;
+
+    const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
+    if (dateColIdx === -1) return;
+
+    const t2Range = trimesterRanges['T2'];
+    const t3Range = trimesterRanges['T3'];
+
+    const t2Rows = rawCsvRows.filter(r => {
+        const d = parseDateStr(r[dateColIdx]);
+        if (!d) return true;
+        return d >= t2Range.start && d <= t2Range.end;
+    });
+
+    const t3Rows = rawCsvRows.filter(r => {
+        const d = parseDateStr(r[dateColIdx]);
+        if (!d) return false;
+        return d >= t3Range.start && d <= t3Range.end;
+    });
+
+    if (t2Rows.length === 0 || t3Rows.length === 0) return;
+
+    // Calcular notas por pergunta em T2 e T3
+    evolutionDataQuestions = fallbackQuestions.map((q, qIndex) => {
+        const qNum = parseInt(q.id.replace('Q', ''), 10);
+        let colIdx = rawCsvHeaders.findIndex(h => {
+            const hLower = h.toLowerCase();
+            return h.includes(q.id) || 
+                   hLower.startsWith(`${qNum}.`) || 
+                   hLower.startsWith(`${qNum} -`) || 
+                   hLower.includes(` ${qNum}.`) ||
+                   hLower.includes(q.title.substring(3, 15).toLowerCase());
+        });
+        if (colIdx === -1 && (qIndex + 2) < rawCsvHeaders.length) colIdx = qIndex + 2;
+
+        let scoresT2 = [];
+        let scoresT3 = [];
+
+        if (colIdx !== -1 && colIdx < rawCsvHeaders.length) {
+            t2Rows.forEach(r => scoresT2.push(mapTextToScore(r[colIdx] || '')));
+            t3Rows.forEach(r => scoresT3.push(mapTextToScore(r[colIdx] || '')));
+        }
+
+        const avgT2 = scoresT2.length > 0 ? parseFloat((scoresT2.reduce((a, b) => a + b, 0) / scoresT2.length).toFixed(1)) : 0;
+        const avgT3 = scoresT3.length > 0 ? parseFloat((scoresT3.reduce((a, b) => a + b, 0) / scoresT3.length).toFixed(1)) : 0;
+        const diff = parseFloat((avgT3 - avgT2).toFixed(1));
+
+        return {
+            ...q,
+            t2: avgT2,
+            t3: avgT3,
+            diff: diff,
+            status: diff > 0 ? 'UP' : (diff < 0 ? 'DOWN' : 'EQUAL')
+        };
+    });
+
+    // Médias Globais
+    const activeEvol = evolutionDataQuestions.filter(q => q.t2 > 0 && q.t3 > 0);
+    const globalT2 = activeEvol.length > 0 ? parseFloat((activeEvol.reduce((a, b) => a + b.t2, 0) / activeEvol.length).toFixed(1)) : 0;
+    const globalT3 = activeEvol.length > 0 ? parseFloat((activeEvol.reduce((a, b) => a + b.t3, 0) / activeEvol.length).toFixed(1)) : 0;
+    const globalDiff = parseFloat((globalT3 - globalT2).toFixed(1));
+
+    // Ordenar para destaques
+    const sortedDiff = [...activeEvol].sort((a, b) => b.diff - a.diff);
+    const best = sortedDiff[0];
+    const worst = sortedDiff[sortedDiff.length - 1];
+
+    // Atualizar KPIs
+    const elGlobal = document.getElementById('kpiEvolGlobal');
+    const elGlobalSub = document.getElementById('kpiEvolGlobalSub');
+    if (elGlobal) {
+        elGlobal.innerText = `${globalDiff > 0 ? '+' : ''}${globalDiff}%`;
+        elGlobal.style.color = globalDiff >= 0 ? '#047857' : '#be123c';
+    }
+    if (elGlobalSub) elGlobalSub.innerText = `De ${globalT2}% (2º Tri) para ${globalT3}% (3º Tri)`;
+
+    const elBest = document.getElementById('kpiEvolBest');
+    const elBestSub = document.getElementById('kpiEvolBestSub');
+    if (elBest && best) {
+        const cleanTitle = best.title.split('.')[1] || best.title;
+        elBest.innerText = `${cleanTitle} (+${best.diff}%)`;
+    }
+    if (elBestSub && best) elBestSub.innerText = `Subiu de ${best.t2}% para ${best.t3}%`;
+
+    const elWorst = document.getElementById('kpiEvolWorst');
+    const elWorstSub = document.getElementById('kpiEvolWorstSub');
+    if (elWorst && worst) {
+        const cleanTitle = worst.title.split('.')[1] || worst.title;
+        elWorst.innerText = `${cleanTitle} (${worst.diff}%)`;
+    }
+    if (elWorstSub && worst) elWorstSub.innerText = `Queda de ${worst.t2}% para ${worst.t3}%`;
+
+    const elSample = document.getElementById('kpiEvolSample');
+    if (elSample) elSample.innerText = `${t2Rows.length} vs ${t3Rows.length}`;
+
+    // Gráfico 1: Categorias (Bar Chart Agrupado)
+    const cats = ['Ensino', 'Professores', 'Convivência', 'Estrutura', 'Segurança', 'Gestão', 'Alimentação', 'Geral'];
+    const catMeansT2 = cats.map(cat => {
+        const match = activeEvol.filter(q => q.cat === cat);
+        return match.length > 0 ? parseFloat((match.reduce((a, b) => a + b.t2, 0) / match.length).toFixed(1)) : 0;
+    });
+    const catMeansT3 = cats.map(cat => {
+        const match = activeEvol.filter(q => q.cat === cat);
+        return match.length > 0 ? parseFloat((match.reduce((a, b) => a + b.t3, 0) / match.length).toFixed(1)) : 0;
+    });
+
+    const ctxCat = document.getElementById('chartEvolutionCat');
+    if (ctxCat) {
+        if (chartEvolutionCatInstance) chartEvolutionCatInstance.destroy();
+        chartEvolutionCatInstance = new Chart(ctxCat.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: cats,
+                datasets: [
+                    { label: '2º Trimestre', data: catMeansT2, backgroundColor: '#0284c7', borderRadius: 6 },
+                    { label: '3º Trimestre', data: catMeansT3, backgroundColor: '#2563eb', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+    }
+
+    // Gráfico 2: Segmentos (Turno & Turmas)
+    let anoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('ano') || h.toLowerCase().includes('turma'));
+    let turnoIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('turno') || h.toLowerCase().includes('manhã') || h.toLowerCase().includes('tarde'));
+
+    const segments = [
+        { label: 'Matutino (Manhã)', filter: r => ((turnoIdx !== -1 ? r[turnoIdx] : '') || '').toLowerCase().includes('mat') },
+        { label: 'Vespertino (Tarde)', filter: r => ((turnoIdx !== -1 ? r[turnoIdx] : '') || '').toLowerCase().includes('vesp') },
+        { label: '6º Ano', filter: r => ((anoIdx !== -1 ? r[anoIdx] : '') || '').includes('6') },
+        { label: '7º Ano', filter: r => ((anoIdx !== -1 ? r[anoIdx] : '') || '').includes('7') },
+        { label: '8º Ano', filter: r => ((anoIdx !== -1 ? r[anoIdx] : '') || '').includes('8') }
+    ];
+
+    const segMeansT2 = [];
+    const segMeansT3 = [];
+
+    segments.forEach(seg => {
+        const subT2 = t2Rows.filter(seg.filter);
+        const subT3 = t3Rows.filter(seg.filter);
+
+        let sumT2 = [];
+        let sumT3 = [];
+
+        fallbackQuestions.forEach((q, qIndex) => {
+            const qNum = parseInt(q.id.replace('Q', ''), 10);
+            let col = rawCsvHeaders.findIndex(h => h.includes(q.id) || h.toLowerCase().startsWith(`${qNum}.`));
+            if (col !== -1) {
+                subT2.forEach(r => sumT2.push(mapTextToScore(r[col] || '')));
+                subT3.forEach(r => sumT3.push(mapTextToScore(r[col] || '')));
+            }
+        });
+
+        segMeansT2.push(sumT2.length > 0 ? parseFloat((sumT2.reduce((a, b) => a + b, 0) / sumT2.length).toFixed(1)) : 0);
+        segMeansT3.push(sumT3.length > 0 ? parseFloat((sumT3.reduce((a, b) => a + b, 0) / sumT3.length).toFixed(1)) : 0);
+    });
+
+    const ctxSeg = document.getElementById('chartEvolutionSegment');
+    if (ctxSeg) {
+        if (chartEvolutionSegmentInstance) chartEvolutionSegmentInstance.destroy();
+        chartEvolutionSegmentInstance = new Chart(ctxSeg.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: segments.map(s => s.label),
+                datasets: [
+                    { label: '2º Trimestre', data: segMeansT2, backgroundColor: '#d97706', borderRadius: 6 },
+                    { label: '3º Trimestre', data: segMeansT3, backgroundColor: '#059669', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+    }
+
+    renderEvolutionTable();
+}
+
+function setEvolutionTableFilter(filterKey) {
+    currentEvolutionFilter = filterKey;
+    ['ALL', 'UP', 'DOWN'].forEach(k => {
+        const btn = document.getElementById(`btnEvolFilter_${k}`);
+        if (btn) {
+            if (k === filterKey) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    });
+    renderEvolutionTable();
+}
+
+function renderEvolutionTable() {
+    const tbody = document.getElementById('evolutionTableBody');
+    if (!tbody || !evolutionDataQuestions || evolutionDataQuestions.length === 0) return;
+
+    tbody.innerHTML = '';
+    let filtered = [...evolutionDataQuestions];
+    if (currentEvolutionFilter === 'UP') filtered = filtered.filter(q => q.diff > 0);
+    else if (currentEvolutionFilter === 'DOWN') filtered = filtered.filter(q => q.diff < 0);
+
+    if (currentEvolutionFilter === 'UP') filtered.sort((a, b) => b.diff - a.diff);
+    else if (currentEvolutionFilter === 'DOWN') filtered.sort((a, b) => a.diff - b.diff);
+
+    filtered.forEach(q => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border-color)';
+
+        const isPositive = q.diff > 0;
+        const isNegative = q.diff < 0;
+        const badgeColor = isPositive ? '#d1fae5' : (isNegative ? '#ffe4e6' : '#f1f5f9');
+        const textColor = isPositive ? '#065f46' : (isNegative ? '#9f1239' : '#475569');
+        const icon = isPositive ? '▲' : (isNegative ? '▼' : '▬');
+        const statusText = isPositive ? '🟢 MELHOROU' : (isNegative ? '🔴 PIOROU' : '⚪ ESTÁVEL');
+
+        tr.innerHTML = `
+            <td style="padding:10px 14px;"><strong>${q.id}</strong></td>
+            <td style="padding:10px 14px;">${q.title}</td>
+            <td style="padding:10px 14px;"><span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.78rem; color:#475569;">${q.cat}</span></td>
+            <td style="padding:10px 14px; text-align:center;"><strong>${q.t2}%</strong></td>
+            <td style="padding:10px 14px; text-align:center;"><strong>${q.t3}%</strong></td>
+            <td style="padding:10px 14px; text-align:center;">
+                <span style="background:${badgeColor}; color:${textColor}; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.82rem;">
+                    ${icon} ${q.diff > 0 ? '+' : ''}${q.diff}%
+                </span>
+            </td>
+            <td style="padding:10px 14px; text-align:center; font-weight:700; font-size:0.82rem; color:${textColor};">
+                ${statusText}
+            </td>
+        `;
         tbody.appendChild(tr);
     });
 }
