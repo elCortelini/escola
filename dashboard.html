@@ -318,47 +318,7 @@
             </div>
         </div>
 
-        <!-- Painel Executivo: Cruzamento Preciso por Série + Turno (Antes do Painel de Controle) -->
-        <div class="top-worst-panel-card">
-            <div class="panel-header-title">
-                <i class="fa-solid fa-trophy" style="color:var(--accent);"></i> PAINEL EXECUTIVO — RAIO-X CRUZADO (SÉRIE + TURNO)
-            </div>
-            <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
-                Cruzamento direto entre <strong>Série/Turma e Turno Escolar (Manhã vs Tarde)</strong> identificando a combinação exata de maior satisfação e maior defasagem da escola:
-            </div>
-
-            <div class="top-worst-grid">
-                <!-- Turma + Turno Mais Satisfeito -->
-                <div class="turma-highlight-box box-satisfied">
-                    <div class="turma-box-header">
-                        <div class="turma-box-badge badge-green"><i class="fa-solid fa-crown"></i> COMBINAÇÃO MAIS SATISFEITA</div>
-                        <h4 id="topTurmaTitle">🎓 6º Ano — Matutino (Manhã) (79.6% Satisfação)</h4>
-                    </div>
-                    <div class="turma-box-sub">3 Principais Indicadores de Sucesso Cruzados:</div>
-                    <ul class="turma-indices-list" id="topTurmaIndices">
-                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Avaliação dos Professores (Q05):</strong> 92.6% de aprovação</li>
-                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Qualidade das Aulas (Q01):</strong> 88.6% de aprovação</li>
-                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Merenda Escolar (Q18):</strong> 84.2% de aprovação</li>
-                    </ul>
-                </div>
-
-                <!-- Turma + Turno Mais Insatisfeito -->
-                <div class="turma-highlight-box box-unsatisfied">
-                    <div class="turma-box-header">
-                        <div class="turma-box-badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> COMBINAÇÃO COM MAIOR DEFASAGEM</div>
-                        <h4 id="worstTurmaTitle">🎓 8º Ano — Vespertino (Tarde) (56.1% Satisfação)</h4>
-                    </div>
-                    <div class="turma-box-sub">3 Principais Pontos Críticos de Atenção Cruzados:</div>
-                    <ul class="turma-indices-list" id="worstTurmaIndices">
-                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Estado dos Banheiros (Q16):</strong> 24.7% de satisfação</li>
-                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Limpeza Geral (Q14):</strong> 32.2% de satisfação</li>
-                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Atuação contra Bullying (Q10):</strong> 35.3% de satisfação</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Painel de Destaque para Seleção de Parâmetros e Filtros -->
+        <!-- Painel de Destaque para Seleção de Parâmetros e Filtros (Posicionado no Topo) -->
         <div class="filter-panel-card">
             <div class="filter-panel-header">
                 <div class="filter-panel-title">
@@ -416,6 +376,47 @@
                 <span id="activeFilterBadge_Tri" class="active-tag">Geral / Ano Completo</span>
                 <span id="activeFilterBadge_Turno" class="active-tag tag-amber">Todos os Turnos</span>
                 <span id="activeFilterBadge_Turma" class="active-tag tag-blue">Todas as Turmas</span>
+            </div>
+        </div>
+
+        <!-- Painel Executivo: Cruzamento Preciso por Série + Turno (Avaliado por Trimestre) -->
+        <div class="top-worst-panel-card">
+            <div class="panel-header-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div><i class="fa-solid fa-trophy" style="color:var(--accent);"></i> PAINEL EXECUTIVO — RAIO-X CRUZADO (SÉRIE + TURNO)</div>
+                <span id="execPanelTrimesterBadge" class="active-tag" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.82rem; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> Trimestre: Geral</span>
+            </div>
+            <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
+                Cruzamento direto entre <strong>Série/Turma e Turno Escolar (Manhã vs Tarde)</strong> identificando a combinação exata de maior satisfação e maior defasagem no período selecionado:
+            </div>
+
+            <div class="top-worst-grid">
+                <!-- Turma + Turno Mais Satisfeito -->
+                <div class="turma-highlight-box box-satisfied">
+                    <div class="turma-box-header">
+                        <div class="turma-box-badge badge-green"><i class="fa-solid fa-crown"></i> COMBINAÇÃO MAIS SATISFEITA</div>
+                        <h4 id="topTurmaTitle">🎓 6º Ano — Matutino (Manhã) (79.6% Satisfação)</h4>
+                    </div>
+                    <div class="turma-box-sub">3 Principais Indicadores de Sucesso Cruzados:</div>
+                    <ul class="turma-indices-list" id="topTurmaIndices">
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Avaliação dos Professores (Q05):</strong> 92.6% de aprovação</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Qualidade das Aulas (Q01):</strong> 88.6% de aprovação</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:#059669;"></i> <strong>Merenda Escolar (Q18):</strong> 84.2% de aprovação</li>
+                    </ul>
+                </div>
+
+                <!-- Turma + Turno Mais Insatisfeito -->
+                <div class="turma-highlight-box box-unsatisfied">
+                    <div class="turma-box-header">
+                        <div class="turma-box-badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> COMBINAÇÃO COM MAIOR DEFASAGEM</div>
+                        <h4 id="worstTurmaTitle">🎓 8º Ano — Vespertino (Tarde) (56.1% Satisfação)</h4>
+                    </div>
+                    <div class="turma-box-sub">3 Principais Pontos Críticos de Atenção Cruzados:</div>
+                    <ul class="turma-indices-list" id="worstTurmaIndices">
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Estado dos Banheiros (Q16):</strong> 24.7% de satisfação</li>
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Limpeza Geral (Q14):</strong> 32.2% de satisfação</li>
+                        <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>Atuação contra Bullying (Q10):</strong> 35.3% de satisfação</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -611,7 +612,7 @@
         <div class="footer-author"><i class="fa-solid fa-code"></i> Desenvolvido por Elevi Cortelini - 2026</div>
     </footer>
 
-    <script src="js/data-fallback.js?v=20261020_v58"></script>
-    <script src="js/dashboard.js?v=20261020_v58"></script>
+    <script src="js/data-fallback.js?v=20261125_v59"></script>
+    <script src="js/dashboard.js?v=20261125_v59"></script>
 </body>
 </html>

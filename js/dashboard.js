@@ -173,6 +173,11 @@ function updateActiveFilterBadges() {
     if (turnoBadge) turnoBadge.innerText = turnoMap[currentTurnoFilter] || 'Todos os Turnos';
     if (turmaBadge) turmaBadge.innerText = turmaMap[currentTurmaFilter] || 'Todas as Turmas';
 
+    const execTriBadge = document.getElementById('execPanelTrimesterBadge');
+    if (execTriBadge) {
+        execTriBadge.innerHTML = `<i class="fa-solid fa-calendar-check"></i> Trimestre: ${triMap[currentTrimesterFilter] || 'Geral'}`;
+    }
+
     const printSummaryEl = document.getElementById('printFilterSummary');
     if (printSummaryEl) {
         printSummaryEl.innerText = `${triMap[currentTrimesterFilter] || 'Geral'} | ${turnoMap[currentTurnoFilter] || 'Todos os Turnos'} | ${turmaMap[currentTurmaFilter] || 'Todas as Turmas'}`;
@@ -301,6 +306,9 @@ function parseDateStr(str) {
     if (str.includes('/')) {
         const parts = str.split(' ')[0].split('/');
         if (parts.length === 3) {
+            if (parts[0].length === 4) {
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }
     }
@@ -308,21 +316,22 @@ function parseDateStr(str) {
     return isNaN(d.getTime()) ? null : d;
 }
 
-function processFilteredRows() {
-    let filteredRows = [...rawCsvRows];
-
-    // 1. Filter by Trimester Date Range
-    if (currentTrimesterFilter !== 'ALL' && trimesterRanges[currentTrimesterFilter]) {
-        const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
-        if (dateColIdx !== -1) {
-            const range = trimesterRanges[currentTrimesterFilter];
-            filteredRows = filteredRows.filter(row => {
-                const dateVal = parseDateStr(row[dateColIdx]);
-                if (!dateVal) return currentTrimesterFilter === 'T2';
-                return dateVal >= range.start && dateVal <= range.end;
-            });
-        }
+function getRowsFilteredByTrimester() {
+    if (currentTrimesterFilter === 'ALL' || !trimesterRanges[currentTrimesterFilter]) {
+        return [...rawCsvRows];
     }
+    const dateColIdx = rawCsvHeaders.findIndex(h => h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('data') || h.toLowerCase().includes('timestamp'));
+    if (dateColIdx === -1) return [...rawCsvRows];
+    const range = trimesterRanges[currentTrimesterFilter];
+    return rawCsvRows.filter(row => {
+        const dateVal = parseDateStr(row[dateColIdx]);
+        if (!dateVal) return currentTrimesterFilter === 'T2';
+        return dateVal >= range.start && dateVal <= range.end;
+    });
+}
+
+function processFilteredRows() {
+    let filteredRows = getRowsFilteredByTrimester();
 
     // 2. Filter by Turma
     if (currentTurmaFilter !== 'ALL') {
@@ -509,9 +518,11 @@ function renderTurmaHighlights(questions) {
             { key: 'VESPERTINO', label: 'Vespertino (Tarde)', kw: ['vespertino', 'tarde', 'vesp'] }
         ];
 
+        const triRows = getRowsFilteredByTrimester();
+
         gradesList.forEach(g => {
             shiftsList.forEach(s => {
-                let cRows = rawCsvRows.filter(r => {
+                let cRows = triRows.filter(r => {
                     let anoVal = anoIdx !== -1 ? (r[anoIdx] || '') : '';
                     let turnoVal = turnoColIdx !== -1 ? (r[turnoColIdx] || '') : '';
 
@@ -594,7 +605,6 @@ function renderTurmaHighlights(questions) {
     const worstComb = activeCombs[activeCombs.length - 1];
 
     topTitle.innerText = `🎓 ${topComb.name} (${topComb.mean}% Satisfação)`;
-    worstTitle.innerText = `🎓 ${worstComb.name} (${worstComb.mean}% Satisfação)`;
 
     const topQs = [...topComb.questions].filter(q => q.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
     if (topIndices) {
@@ -607,15 +617,23 @@ function renderTurmaHighlights(questions) {
         });
     }
 
-    const worstQs = [...worstComb.questions].filter(q => q.score > 0).sort((a, b) => a.score - b.score).slice(0, 3);
-    if (worstIndices) {
-        worstIndices.innerHTML = '';
-        worstQs.forEach(q => {
-            const titleClean = q.title.split('.')[1] || q.title;
-            worstIndices.innerHTML += `
-                <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>${titleClean} (${q.id}):</strong> ${q.score}% de satisfação</li>
-            `;
-        });
+    if (activeCombs.length > 1) {
+        worstTitle.innerText = `🎓 ${worstComb.name} (${worstComb.mean}% Satisfação)`;
+        const worstQs = [...worstComb.questions].filter(q => q.score > 0).sort((a, b) => a.score - b.score).slice(0, 3);
+        if (worstIndices) {
+            worstIndices.innerHTML = '';
+            worstQs.forEach(q => {
+                const titleClean = q.title.split('.')[1] || q.title;
+                worstIndices.innerHTML += `
+                    <li><i class="fa-solid fa-circle-exclamation" style="color:#be123c;"></i> <strong>${titleClean} (${q.id}):</strong> ${q.score}% de satisfação</li>
+                `;
+            });
+        }
+    } else {
+        worstTitle.innerText = `🎓 Apenas uma combinação avaliada neste período`;
+        if (worstIndices) {
+            worstIndices.innerHTML = '<li><em>Aguardando novas respostas de outras séries/turnos para cruzamento</em></li>';
+        }
     }
 }
 
@@ -879,18 +897,19 @@ function renderAllCharts(questions) {
     }
 
     if (turnoColIdx !== -1 && rawCsvRows.length > 0) {
-        let mRows = rawCsvRows.filter(r => {
+        const turnoSourceRows = getRowsFilteredByTrimester();
+        let mRows = turnoSourceRows.filter(r => {
             const val = (r[turnoColIdx] || '').toLowerCase();
             return val.includes('matutino') || val.includes('manhã') || val.includes('mat');
         });
-        let vRows = rawCsvRows.filter(r => {
+        let vRows = turnoSourceRows.filter(r => {
             const val = (r[turnoColIdx] || '').toLowerCase();
             return val.includes('vespertino') || val.includes('tarde') || val.includes('vesp');
         });
 
-        if (vRows.length === 0) {
-            vRows = rawCsvRows.filter(r => r.some(cell => (cell||'').toLowerCase().includes('vesp') || (cell||'').toLowerCase().includes('tarde')));
-            mRows = rawCsvRows.filter(r => !vRows.includes(r));
+        if (vRows.length === 0 && turnoSourceRows.length > 0) {
+            vRows = turnoSourceRows.filter(r => r.some(cell => (cell||'').toLowerCase().includes('vesp') || (cell||'').toLowerCase().includes('tarde')));
+            mRows = turnoSourceRows.filter(r => !vRows.includes(r));
         }
 
         matutinoCount = mRows.length;
@@ -984,7 +1003,11 @@ function renderAllCharts(questions) {
             datasets: [{
                 label: 'Total de Respostas Enviadas',
                 data: [countT1, countT2, countT3],
-                backgroundColor: ['#cbd5e1', '#2563eb', '#cbd5e1'],
+                backgroundColor: [
+                    currentTrimesterFilter === 'T1' ? '#2563eb' : (currentTrimesterFilter === 'ALL' && countT1 > 0 ? '#3b82f6' : '#cbd5e1'),
+                    currentTrimesterFilter === 'T2' ? '#2563eb' : (currentTrimesterFilter === 'ALL' && countT2 > 0 ? '#3b82f6' : '#cbd5e1'),
+                    currentTrimesterFilter === 'T3' ? '#2563eb' : (currentTrimesterFilter === 'ALL' && countT3 > 0 ? '#3b82f6' : '#cbd5e1')
+                ],
                 borderRadius: 8
             }]
         },
