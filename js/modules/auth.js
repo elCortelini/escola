@@ -115,6 +115,10 @@ async function submitSigeLogin(e) {
         return;
     }
 
+    if (window.sigeDB && typeof window.sigeDB.ensureFirebaseAuth === "function") {
+        await window.sigeDB.ensureFirebaseAuth();
+    }
+
     const res = await sigeDB.loginWithCpf(cpf, senha);
 
     if (!res.success) {
@@ -250,6 +254,10 @@ async function submitPrimeiroAcesso(e) {
     const autorizaWhatsApp = document.getElementById("primeiroAcessoAutorizacaoWhatsApp")?.checked || false;
 
     if (!window.sigeDB) return;
+
+    if (typeof window.sigeDB.ensureFirebaseAuth === "function") {
+        await window.sigeDB.ensureFirebaseAuth();
+    }
 
     const res = await window.sigeDB.cadastrarPrimeiroAcesso({
         cpf,

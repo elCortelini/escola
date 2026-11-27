@@ -18,17 +18,14 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
 
     <!-- Verificador e Atualizador Automático de Versão de Cache -->
-    <script src="js/version-checker.js?v=20261020_v58"></script>
+    <script src="js/version-checker.js?v=20261127_v67"></script>
 
-    <!-- Firebase Cloud Database SDK (v10 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Cloud Database SDK (v10 Compat) - Carregamento Não-Bloqueante com defer -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     
-    
-    <!-- PDF.js API para Importação de Relatórios em PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <!-- PDF-Lib carregado sob demanda (lazy loading assíncrono via ensurePdfLibLoaded) liberando 525 KB no LCP -->
+    <!-- PDF.js e PDF-Lib carregados sob demanda via js/sige-lazy-loader.js (Onda 2) -->
 </head>
 <body>
 
@@ -1786,7 +1783,7 @@
 
                     <div>
                         <label style="font-size:0.8rem; font-weight:700; color:#334155;">Chave de Autenticação (Global API Key):</label>
-                        <input type="password" id="waConfigApiToken" autocomplete="new-password" onchange="salvarConfiguracoesWhatsapp()" value="B6D711FCDE4D4FD5936544120E713976" placeholder="Chave de API configurada no .env..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
+                        <input type="password" id="waConfigApiToken" autocomplete="new-password" onchange="salvarConfiguracoesWhatsapp()" value="" placeholder="Informe a Global API Key (sincronizada na nuvem protegida)..." class="search-input" style="width:100%; margin-top:4px; font-size:0.83rem;">
                     </div>
                 </div>
 
@@ -4110,24 +4107,20 @@
                             Abrir Regras do Firestore <i class="fa-solid fa-arrow-up-right-from-square"></i>
                         </a>
                     </li>
-                    <li>Substitua o conteúdo da aba <strong>Regras (Rules)</strong> pelo código abaixo:</li>
+                    <li>Substitua o conteúdo da aba <strong>Regras (Rules)</strong> pelo código oficial do arquivo <code>firestore.rules</code> (também copiado pelo botão abaixo):</li>
                 </ol>
 
                 <div style="position:relative;">
-                    <pre style="background:#0f172a; color:#38bdf8; padding:12px 14px; border-radius:10px; font-size:0.78rem; overflow-x:auto; font-family:monospace; line-height:1.4; margin:0;">rules_version = '2';
+                    <pre style="background:#0f172a; color:#38bdf8; padding:12px 14px; border-radius:10px; font-size:0.78rem; overflow-x:auto; font-family:monospace; line-height:1.4; margin:0; max-height:220px;">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /sige_pedro_rizzi/{document=**} {
-      allow read, write: if true;
-    }
-    match /confirmacoes_op/{tokenId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
-    }
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    function isSignedIn() { return request.auth != null; }
+    function isNonEmptyData() { return request.resource.data.size() &gt; 0; }
+    function isValidTokenId(id) { return id is string &amp;&amp; id.size() &gt;= 6 &amp;&amp; id.size() &lt;= 128; }
+    // ... coleções internas exigem isSignedIn() + validação de schema;
+    // confirmacoes_op/{tokenId} e paie_tokens/{tokenId} permitem get por tokenId
+    // e update restrito por affectedKeys().hasOnly(...); delete bloqueado.
+    // Use o botão "Copiar Código" ao lado para copiar o arquivo completo.
   }
 }</pre>
                     <button onclick="copyFirestoreRulesAction()" style="position:absolute; top:8px; right:8px; background:#ea580c; color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
@@ -5570,24 +5563,25 @@ Prof. Ricardo	47997665544	Equipe Docente, Matemática	Representante Docente" cla
         <div class="footer-system-version" style="margin-top:6px; font-size:0.8rem; font-weight:700; color:#cbd5e1; display:flex; align-items:center; justify-content:center; gap:6px;">
             <i class="fa-solid fa-code-commit" style="color:#38bdf8;"></i>
             <span>Versão:</span>
-            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.11.04_v65</span>
+            <span class="system-version-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:2px 8px; border-radius:6px; font-family:monospace; font-weight:800; font-size:0.82rem;">v2026.11.27_v67</span>
             <span style="font-size:0.75rem; color:#94a3b8;">(Build Oficial Homologada)</span>
         </div>
     </footer>
 
     <!-- JS Files: Orquestrador e Módulos Especialistas -->
-    <script src="js/calendario-oficial-data.js?v=20261104_v65"></script>
-    <script src="js/evolution-client.js?v=20261104_v65"></script>
-    <script src="js/gestao-data.js?v=20261104_v65"></script>
-    <script src="js/gestao-app.js?v=20261104_v65"></script>
-    <script src="js/modules/auth.js?v=20261104_v65"></script>
-    <script src="js/modules/admin-rbac.js?v=20261104_v65"></script>
-    <script src="js/modules/op.js?v=20261104_v65"></script>
-    <script src="js/modules/supervisao.js?v=20261104_v65"></script>
-    <script src="js/modules/direcao.js?v=20261104_v65"></script>
-    <script src="js/modules/uniformes.js?v=20261104_v65"></script>
-    <script src="js/pdf-importer.js?v=20261104_v65"></script>
-    <script src="js/assinatura-docs.js?v=20261104_v65"></script>
+    <script src="js/calendario-oficial-data.js?v=20261127_v67"></script>
+    <script src="js/evolution-client.js?v=20261127_v67"></script>
+    <script src="js/gestao-data.js?v=20261127_v67"></script>
+    <script src="js/gestao-app.js?v=20261127_v67"></script>
+    <script src="js/modules/auth.js?v=20261127_v67"></script>
+    <script src="js/modules/admin-rbac.js?v=20261127_v67"></script>
+    <script src="js/modules/op.js?v=20261127_v67"></script>
+    <script src="js/modules/supervisao.js?v=20261127_v67"></script>
+    <script src="js/modules/direcao.js?v=20261127_v67"></script>
+    <script src="js/modules/uniformes.js?v=20261127_v67"></script>
+    <script src="js/modules/a11y-helper.js?v=20261127_v67"></script>
+    <script src="js/sige-collections.js?v=20261127_v67"></script>
+    <script src="js/sige-lazy-loader.js?v=20261127_v67"></script>
 
     <!-- Config Modal para Links Padrão -->
     <div id="configModal" class="sige-modal-backdrop" style="display:none; z-index:2000;">

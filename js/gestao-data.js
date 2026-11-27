@@ -476,11 +476,22 @@ class SigeDatabase {
         this.data = this.loadLocalOnly();
         this.fbApp = null;
         this.firestore = null;
+        this.fbAuth = null;
+        this.firebaseUser = null;
+        this.firebaseAuthState = 'idle'; // 'idle' | 'authenticating' | 'authenticated' | 'disabled' | 'unavailable' | 'error'
+        this._authPromise = null;
+        this._authDisabledAt = 0;
+        this._initSeq = 0;
+        this._pendingConfirmacoesTokens = [];
         this.cloudStatus = 'connecting'; // 'connecting' | 'connected' | 'permission_denied' | 'offline' | 'error'
         this.cloudErrorDetails = '';
         this.isSyncingFromRemote = false;
         this.hasLoadedRemote = false;
         this._syncTimeout = null;
+        this._lastSyncedModuleFingerprints = {};
+        this._pendingSyncModules = new Set();
+        this._uiRefreshTimeout = null;
+        this._startupFallbackTimer = null;
         this.sanitizeStudentNames();
         this.initFirebase();
         this.setupAutoSyncListeners();
@@ -491,14 +502,80 @@ class SigeDatabase {
         return this;
     }
 
+    _buildModulePayload(modName) {
+        const keys = SIGE_MODULE_DOCS[modName];
+        if (!Array.isArray(keys)) return {};
+        const payload = {};
+        keys.forEach(k => {
+            if (this.data && this.data[k] !== undefined) {
+                if (k === 'usuariosCadastrados' && Array.isArray(this.data[k])) {
+                    payload[k] = this.data[k].map(sanitizeUserForCloud);
+                } else {
+                    payload[k] = this.data[k];
+                }
+            }
+        });
+        return payload;
+    }
+
+    _getModuleFingerprint(modName, payloadObj = null) {
+        try {
+            return JSON.stringify(payloadObj || this._buildModulePayload(modName));
+        } catch (_) {
+            return null;
+        }
+    }
+
+    _captureModuleFingerprints(modNames = null) {
+        const list = Array.isArray(modNames) && modNames.length > 0 ? modNames : Object.keys(SIGE_MODULE_DOCS);
+        list.forEach(m => {
+            if (SIGE_MODULE_DOCS[m]) {
+                const fp = this._getModuleFingerprint(m);
+                if (fp !== null) {
+                    this._lastSyncedModuleFingerprints[m] = fp;
+                }
+            }
+        });
+    }
+
+    scheduleRemoteUIRefresh() {
+        if (this._uiRefreshTimeout) clearTimeout(this._uiRefreshTimeout);
+        this._uiRefreshTimeout = setTimeout(() => {
+            this._uiRefreshTimeout = null;
+            const safeCall = (fn) => {
+                if (typeof fn === "function") {
+                    try { fn(); } catch (e) { console.warn("Aviso em atualização de UI:", e); }
+                }
+            };
+
+            safeCall(typeof checkSigeAuth === "function" ? checkSigeAuth : null);
+            safeCall(typeof updateAllDynamicSelects === "function" ? updateAllDynamicSelects : null);
+            safeCall(typeof renderPortalAuthBar === "function" ? renderPortalAuthBar : null);
+            safeCall(typeof renderAllModules === "function" ? renderAllModules : null);
+
+            const activeBtn = (typeof document !== "undefined") ? document.querySelector(".sige-tab-btn.active") : null;
+            const activeTab = activeBtn ? activeBtn.getAttribute("data-tab") : "";
+
+            if (activeTab === "admin" || activeTab === "uniformes") {
+                safeCall(typeof renderAdminPermissoesUsuarios === "function" ? renderAdminPermissoesUsuarios : null);
+                safeCall(typeof renderEquipeEscolarTable === "function" ? renderEquipeEscolarTable : null);
+                safeCall(typeof renderTabelaPedidosUniformes === "function" ? renderTabelaPedidosUniformes : null);
+                safeCall(typeof renderChancelasCards === "function" ? renderChancelasCards : null);
+            } else if (activeTab === "direcao") {
+                safeCall(typeof updateActionPillars === "function" ? updateActionPillars : null);
+                safeCall(typeof renderChancelasCards === "function" ? renderChancelasCards : null);
+            } else if (activeTab === "dev") {
+                safeCall(typeof renderDevUsersList === "function" ? renderDevUsersList : null);
+                safeCall(typeof renderAdminPermissoesUsuarios === "function" ? renderAdminPermissoesUsuarios : null);
+            }
+        }, 120);
+    }
+
     initIndexedDBSync() {
         if (typeof SigeIDB !== 'undefined') {
             SigeIDB.get('sige_database_data').then(idbData => {
                 if (idbData && typeof idbData === 'object' && Object.keys(idbData).length > 0) {
-                    this.smartMergeRemoteData(idbData);
-                    if (typeof renderAllModules === 'function') {
-                        renderAllModules();
-                    }
+                    this.smartMergeRemoteData(idbData, { isLocalHydration: true });
                 }
             }).catch(e => console.warn('Aviso IndexedDB inicialização:', e));
         }
@@ -554,11 +631,133 @@ class SigeDatabase {
         return !!(this.firestore && this.data.firebaseConfig && this.data.firebaseConfig.projectId && this.cloudStatus === 'connected');
     }
 
+    async ensureFirebaseAuth(options = {}) {
+        if (typeof firebase === "undefined" || typeof firebase.auth !== "function") {
+            this.firebaseAuthState = 'unavailable';
+            return { ok: false, reason: 'sdk_unavailable', user: null };
+        }
+
+        const config = this.getFirebaseConfig();
+        if (!firebase.apps.length && config && config.projectId && config.apiKey) {
+            this.fbApp = firebase.initializeApp(config);
+        } else if (firebase.apps.length) {
+            this.fbApp = firebase.app();
+        }
+
+        const auth = firebase.auth();
+        this.fbAuth = auth;
+
+        if (auth.currentUser) {
+            this.firebaseUser = auth.currentUser;
+            this.firebaseAuthState = 'authenticated';
+            return { ok: true, user: auth.currentUser };
+        }
+
+        if (!options.forceRetry && this.firebaseAuthState === 'disabled' && (Date.now() - this._authDisabledAt) < 30000) {
+            return { ok: false, reason: 'provider_disabled', user: null };
+        }
+
+        if (this._authPromise) {
+            return this._authPromise;
+        }
+
+        this.firebaseAuthState = 'authenticating';
+        this._authPromise = (async () => {
+            try {
+                const persistedUser = await new Promise((resolve) => {
+                    let settled = false;
+                    let unsub = null;
+                    const timer = setTimeout(() => {
+                        if (settled) return;
+                        settled = true;
+                        if (typeof unsub === 'function') {
+                            try { unsub(); } catch (_) {}
+                        }
+                        resolve(auth.currentUser || null);
+                    }, 2500);
+
+                    try {
+                        unsub = auth.onAuthStateChanged((user) => {
+                            if (settled) return;
+                            settled = true;
+                            clearTimeout(timer);
+                            if (typeof unsub === 'function') {
+                                try { unsub(); } catch (_) {}
+                            }
+                            resolve(user || null);
+                        }, () => {
+                            if (settled) return;
+                            settled = true;
+                            clearTimeout(timer);
+                            if (typeof unsub === 'function') {
+                                try { unsub(); } catch (_) {}
+                            }
+                            resolve(null);
+                        });
+                    } catch (_) {
+                        clearTimeout(timer);
+                        resolve(auth.currentUser || null);
+                    }
+                });
+
+                if (persistedUser) {
+                    this.firebaseUser = persistedUser;
+                    this.firebaseAuthState = 'authenticated';
+                    return { ok: true, user: persistedUser };
+                }
+
+                try {
+                    const localPersistence = firebase.auth && firebase.auth.Auth && firebase.auth.Auth.Persistence && firebase.auth.Auth.Persistence.LOCAL;
+                    if (localPersistence && typeof auth.setPersistence === 'function') {
+                        await auth.setPersistence(localPersistence).catch(() => {});
+                    }
+                } catch (_) {}
+
+                const cred = await Promise.race([
+                    auth.signInAnonymously(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('auth_timeout')), 6000))
+                ]);
+
+                if (cred && cred.user) {
+                    this.firebaseUser = cred.user;
+                    this.firebaseAuthState = 'authenticated';
+                    return { ok: true, user: cred.user };
+                }
+
+                this.firebaseAuthState = 'error';
+                return { ok: false, reason: 'empty_user', user: null };
+            } catch (err) {
+                const code = (err && err.code) ? String(err.code) : 'unknown';
+                if (code === 'auth/admin-restricted-operation' || code === 'auth/operation-not-allowed') {
+                    this.firebaseAuthState = 'disabled';
+                    this._authDisabledAt = Date.now();
+                    console.warn("🔐 Firebase Auth Anônimo ainda não habilitado no Console (sas-cepr). Operando em modo compatibilidade até a ativação.");
+                    return { ok: false, reason: 'provider_disabled', code, user: null };
+                }
+                this.firebaseAuthState = 'error';
+                console.warn("⚠️ Aviso Firebase Auth silencioso:", (err && err.message) || err);
+                return { ok: false, reason: 'auth_error', code, user: null };
+            } finally {
+                this._authPromise = null;
+            }
+        })();
+
+        return this._authPromise;
+    }
+
     initFirebase() {
         const config = this.getFirebaseConfig();
         if (!config || !config.projectId || !config.apiKey || typeof firebase === "undefined") {
             this.cloudStatus = 'offline';
             this.updateCloudSyncBadge(false, "Modo Local");
+            if (typeof firebase === "undefined" && typeof document !== "undefined" && document.readyState === "loading" && !this._firebaseDeferredHooked) {
+                this._firebaseDeferredHooked = true;
+                document.addEventListener("DOMContentLoaded", () => {
+                    if (!this.firestore && typeof firebase !== "undefined") {
+                        this.initFirebase();
+                    }
+                }, { once: true });
+            }
             return;
         }
 
@@ -572,73 +771,170 @@ class SigeDatabase {
             this.firestore = firebase.firestore();
 
             // Desinscrever listeners anteriores para prevenir memory leaks
-            if (this._firestoreUnsubs && Array.isArray(this._firestoreUnsubs)) {
-                this._firestoreUnsubs.forEach(unsub => {
-                    try { if (typeof unsub === 'function') unsub(); } catch(e) { console.debug('[Unsub Listener]:', e); }
-                });
+            this.detachFirestoreListeners();
+            if (this._startupFallbackTimer) {
+                clearTimeout(this._startupFallbackTimer);
+                this._startupFallbackTimer = null;
             }
-            this._firestoreUnsubs = [];
 
-            // Real-Time Cloud Listeners Modulares (Superação do limite de 1 MB)
-            const modNames = Object.keys(SIGE_MODULE_DOCS);
-            let hasAnyDoc = false;
-
-            modNames.forEach(modName => {
-                const unsub = this.firestore.collection("sige_pedro_rizzi").doc(modName).onSnapshot((doc) => {
-                    if (doc.exists) {
-                        hasAnyDoc = true;
-                        this.hasLoadedRemote = true;
-                        this.cloudStatus = 'connected';
-                        const modData = doc.data();
-                        if (modData && typeof modData === "object" && Object.keys(modData).length > 0) {
-                            this.smartMergeRemoteData(modData);
-                            this.updateCloudSyncBadge(true);
-                        }
-                    }
-                }, (error) => {
-                    console.warn(`⚠️ Aviso Firebase Sync (${modName}):`, error.message);
-                    if (error.code === 'permission-denied') {
-                        this.cloudStatus = 'permission_denied';
-                        this.cloudErrorDetails = error.message;
-                        this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
-                    } else {
-                        this.cloudStatus = 'offline';
-                        this.cloudErrorDetails = error.message;
-                        this.updateCloudSyncBadge(false, "Modo Off-line");
-                    }
-                });
-                this._firestoreUnsubs.push(unsub);
+            const seq = ++this._initSeq;
+            this.ensureFirebaseAuth().then(() => {
+                if (seq !== this._initSeq || !this.firestore) return;
+                this._attachFirestoreListeners();
             });
-
-            // Listener de Compatibilidade / Legado (Snapshot da Nuvem)
-            const unsubLegacy = this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
-                if (doc.exists) {
-                    const remoteData = doc.data();
-                    if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
-                        this.smartMergeRemoteData(remoteData);
-                        this.updateCloudSyncBadge(true);
-                    }
-                } else if (!hasAnyDoc) {
-                    this.hasLoadedRemote = true;
-                    this.cloudStatus = 'connected';
-                    this.syncToFirebase();
-                    this.updateCloudSyncBadge(true);
-                }
-            }, (error) => {
-                console.debug('[Firestore Legacy Snapshot Notice]:', error?.message || error);
-            });
-            this._firestoreUnsubs.push(unsubLegacy);
-
-            console.log("🔥 Firebase Firestore inicializado e monitorando nuvem modular...");
-
-            // Força busca ativa imediata na nuvem no startup para carregar dados mais recentes antes de qualquer ação
-            this.forceFetchRemoteData({ silent: true, isStartup: true });
         } catch (e) {
             console.error("Erro ao inicializar Firebase:", e);
             this.cloudStatus = 'error';
             this.cloudErrorDetails = e.message;
             this.updateCloudSyncBadge(false, "Erro de Conexão");
         }
+    }
+
+    _attachFirestoreListeners() {
+        if (!this.firestore) return;
+
+        // Desinscrever listeners anteriores para prevenir memory leaks
+        this.detachFirestoreListeners();
+        if (this._startupFallbackTimer) {
+            clearTimeout(this._startupFallbackTimer);
+            this._startupFallbackTimer = null;
+        }
+
+        this._firestoreUnsubs = [];
+
+        // Real-Time Cloud Listeners Modulares (Superação do limite de 1 MB)
+        const modNames = Object.keys(SIGE_MODULE_DOCS);
+        let hasAnyDoc = false;
+
+        modNames.forEach(modName => {
+            const unsub = this.firestore.collection("sige_pedro_rizzi").doc(modName).onSnapshot((doc) => {
+                if (doc.exists) {
+                    hasAnyDoc = true;
+                    this.hasLoadedRemote = true;
+                    this.cloudStatus = 'connected';
+                    const modData = doc.data();
+                    if (modData && typeof modData === "object" && Object.keys(modData).length > 0) {
+                        this.smartMergeRemoteData(modData, { sourceModule: modName });
+                        if (modName === 'mod_op') {
+                            this._reconcileConfirmacoesOp();
+                        }
+                        this.updateCloudSyncBadge(true);
+                    }
+                }
+            }, (error) => {
+                console.warn(`⚠️ Aviso Firebase Sync (${modName}):`, error.message);
+                if (error.code === 'permission-denied') {
+                    this.cloudStatus = 'permission_denied';
+                    this.cloudErrorDetails = this.firebaseAuthState === 'disabled'
+                        ? `${error.message} (Verifique se o provedor Anônimo do Firebase Auth está ativo no Console sas-cepr)`
+                        : error.message;
+                    this.updateCloudSyncBadge(false, "Nuvem Bloqueada (Permissão Negada)");
+                } else {
+                    this.cloudStatus = 'offline';
+                    this.cloudErrorDetails = error.message;
+                    this.updateCloudSyncBadge(false, "Modo Off-line");
+                }
+            });
+            this._firestoreUnsubs.push(unsub);
+        });
+
+        // Listener de Compatibilidade / Legado (apenas quando não há docs modulares)
+        const unsubLegacy = this.firestore.collection("sige_pedro_rizzi").doc("database").onSnapshot((doc) => {
+            if (hasAnyDoc) return;
+            if (doc.exists) {
+                const remoteData = doc.data();
+                if (remoteData && typeof remoteData === "object" && Object.keys(remoteData).length > 0) {
+                    this.smartMergeRemoteData(remoteData, { skipFingerprintCapture: true });
+                    this.updateCloudSyncBadge(true);
+                }
+            } else {
+                this.hasLoadedRemote = true;
+                this.cloudStatus = 'connected';
+                this.syncToFirebase(null, { forceAll: true });
+                this.updateCloudSyncBadge(true);
+            }
+        }, (error) => {
+            console.debug('[Firestore Legacy Snapshot Notice]:', error?.message || error);
+        });
+        this._firestoreUnsubs.push(unsubLegacy);
+
+        // Ponte segura: espelha confirmações/cancelamentos de tokens públicos para mod_op
+        this._attachConfirmacoesOpListener();
+
+        console.log("🔥 Firebase Firestore inicializado e monitorando nuvem modular...");
+
+        // Fallback seguro caso os listeners ainda não tenham respondido no startup
+        this._startupFallbackTimer = setTimeout(() => {
+            this._startupFallbackTimer = null;
+            if (!this.hasLoadedRemote && this.firestore) {
+                this.forceFetchRemoteData({ silent: true, isStartup: true });
+            }
+        }, 3500);
+    }
+
+    _attachConfirmacoesOpListener() {
+        if (!this.firestore) return;
+        try {
+            const unsubTokens = this.firestore
+                .collection("confirmacoes_op")
+                .where("status", "in", ["confirmado_whatsapp", "cancelado"])
+                .onSnapshot((snap) => {
+                    const tokens = [];
+                    if (snap && Array.isArray(snap.docs)) {
+                        snap.docs.forEach(doc => {
+                            tokens.push({ tokenId: doc.id, ...(doc.data() || {}) });
+                        });
+                    }
+                    this._pendingConfirmacoesTokens = tokens;
+                    this._reconcileConfirmacoesOp(tokens);
+                }, (err) => {
+                    console.debug('[Firestore confirmacoes_op Notice]:', err?.message || err);
+                });
+            if (!Array.isArray(this._firestoreUnsubs)) this._firestoreUnsubs = [];
+            this._firestoreUnsubs.push(unsubTokens);
+        } catch (err) {
+            console.debug('[Firestore confirmacoes_op Setup]:', err?.message || err);
+        }
+    }
+
+    _reconcileConfirmacoesOp(tokens = null) {
+        const list = Array.isArray(tokens) ? tokens : this._pendingConfirmacoesTokens;
+        if (!Array.isArray(list) || list.length === 0) return false;
+        if (!this.data || !Array.isArray(this.data.agendamentosOP) || this.data.agendamentosOP.length === 0) return false;
+
+        let changed = false;
+        const nowIso = new Date().toISOString();
+
+        list.forEach(tok => {
+            if (!tok || !tok.agendamentoId) return;
+            if (tok.status !== 'confirmado_whatsapp' && tok.status !== 'cancelado') return;
+
+            const ag = this.data.agendamentosOP.find(a =>
+                a && (String(a.id) === String(tok.agendamentoId) || (a.agendamentoId && String(a.agendamentoId) === String(tok.agendamentoId)))
+            );
+            if (!ag) return;
+            if (ag.statusSecretaria === 'realizado') return;
+            if (ag.statusSecretaria === tok.status) return;
+
+            ag.statusSecretaria = tok.status;
+            if (tok.status === 'confirmado_whatsapp') {
+                ag.obsSecretaria = '🟢 Presença confirmada pelo responsável via token WhatsApp';
+                ag.confirmadoEm = tok.confirmadoEm || nowIso;
+            } else {
+                const motivo = tok.motivoCancelamento ? String(tok.motivoCancelamento) : 'Não informado';
+                ag.obsSecretaria = 'Responsável informou via WhatsApp que não poderá comparecer. Motivo: ' + motivo;
+                ag.canceladoViaLinkEm = tok.canceladoEm || nowIso;
+            }
+            ag.atualizadoEm = nowIso;
+            changed = true;
+        });
+
+        if (changed) {
+            this.saveLocal();
+            this.scheduleRemoteUIRefresh();
+            this.syncToFirebase('mod_op');
+        }
+        return changed;
     }
 
     detachFirestoreListeners() {
@@ -800,9 +1096,10 @@ class SigeDatabase {
         return false;
     }
 
-    smartMergeRemoteData(remoteData) {
+    smartMergeRemoteData(remoteData, options = {}) {
         if (!remoteData || typeof remoteData !== "object") return;
         this.isSyncingFromRemote = true;
+        try {
 
         // 1. Tombstones (IDs excluídos combinados com poda de segurança de até 200 itens)
         const mergeDeletedIds = (key) => {
@@ -1314,27 +1611,25 @@ class SigeDatabase {
         // Purga tombstones de entidades ativas e garante integridade do desenvolvedor master
         this.cleanActiveEntitiesFromTombstones();
 
-        // Garante integridade do desenvolvedor master
-        this.ensureDevUser();
-        this.resolvePendingTreatedUsers();
+            // Garante integridade do desenvolvedor master
+            this.ensureDevUser();
+            this.resolvePendingTreatedUsers();
 
-        this.sanitizeStudentNames();
-        localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
-        this.isSyncingFromRemote = false;
-        this.hasLoadedRemote = true;
-        this.cloudStatus = 'connected';
+            this.sanitizeStudentNames();
+            this.saveLocal();
+            if (!options.isLocalHydration) {
+                this.hasLoadedRemote = true;
+                this.cloudStatus = 'connected';
+                if (!options.skipFingerprintCapture) {
+                    this._captureModuleFingerprints(options.sourceModule ? [options.sourceModule] : null);
+                }
+            }
+        } finally {
+            this.isSyncingFromRemote = false;
+        }
 
-        // Dispara re-renderização em cascata de permissões, abas, tabelas e módulos abertos (sem loop)
-        if (typeof checkSigeAuth === "function") checkSigeAuth();
-        if (typeof updateAllDynamicSelects === "function") updateAllDynamicSelects();
-        if (typeof renderAllModules === "function") renderAllModules();
-        if (typeof renderAdminPermissoesUsuarios === "function") renderAdminPermissoesUsuarios();
-        if (typeof renderDevUsersList === "function") renderDevUsersList();
-        if (typeof renderEquipeEscolarTable === "function") renderEquipeEscolarTable();
-        if (typeof renderTabelaPedidosUniformes === "function") renderTabelaPedidosUniformes();
-        if (typeof renderPortalAuthBar === "function") renderPortalAuthBar();
-        if (typeof updateActionPillars === "function") updateActionPillars();
-        if (typeof renderChancelasCards === "function") renderChancelasCards();
+        // Dispara atualização coalescida e restrita à aba ativa
+        this.scheduleRemoteUIRefresh();
     }
 
     ensureDevUser() {
@@ -1399,13 +1694,24 @@ class SigeDatabase {
         }
     }
 
-    syncToFirebase() {
+    syncToFirebase(targetModule = null, options = {}) {
+        if (this._syncTimeout) {
+            clearTimeout(this._syncTimeout);
+            this._syncTimeout = null;
+        }
         if (this.isSyncingFromRemote || !this.firestore || !this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
             return;
         }
 
+        if (this._authPromise && (!this.fbAuth || !this.fbAuth.currentUser) && !options._afterAuth) {
+            this._authPromise.then(() => {
+                this.syncToFirebase(targetModule, { ...options, _afterAuth: true });
+            });
+            return;
+        }
+
         // Proteção essencial: nunca sobrescreve a nuvem com dados locais antes de ter carregado os dados remotos
-        if (!this.hasLoadedRemote) {
+        if (!this.hasLoadedRemote && !options.force) {
             console.warn("⏳ syncToFirebase adiado: aguardando carregamento da nuvem para não sobrescrever dados de outros computadores.");
             return;
         }
@@ -1414,19 +1720,29 @@ class SigeDatabase {
             this.ensureDevUser();
             const nowIso = new Date().toISOString();
             const batchPromises = [];
+            const forceAll = !!(options.forceAll || options.force);
 
-            // 1. Grava os documentos modulares independentes (Superação do limite de 1 MB)
-            for (const [modName, keys] of Object.entries(SIGE_MODULE_DOCS)) {
-                const modPayload = { lastSyncAt: nowIso };
-                keys.forEach(k => {
-                    if (this.data[k] !== undefined) {
-                        if (k === 'usuariosCadastrados' && Array.isArray(this.data[k])) {
-                            modPayload[k] = this.data[k].map(sanitizeUserForCloud);
-                        } else {
-                            modPayload[k] = this.data[k];
-                        }
-                    }
-                });
+            let candidates;
+            if (typeof targetModule === 'string' && SIGE_MODULE_DOCS[targetModule]) {
+                candidates = [targetModule];
+            } else if (Array.isArray(targetModule) && targetModule.length > 0) {
+                candidates = targetModule.filter(m => !!SIGE_MODULE_DOCS[m]);
+            } else {
+                candidates = Object.keys(SIGE_MODULE_DOCS);
+            }
+            if (this._pendingSyncModules) {
+                this._pendingSyncModules.clear();
+            }
+
+            // 1. Grava apenas os módulos realmente alterados (Dirty-Module Sync)
+            for (const modName of candidates) {
+                const rawPayload = this._buildModulePayload(modName);
+                const fp = this._getModuleFingerprint(modName, rawPayload);
+                if (!forceAll && fp !== null && this._lastSyncedModuleFingerprints && this._lastSyncedModuleFingerprints[modName] === fp) {
+                    continue;
+                }
+
+                const modPayload = { ...rawPayload, lastSyncAt: nowIso };
 
                 // Se for mod_uniformes, realiza mesclagem atômica de pedidos e lotes para NUNCA perder pedidos cadastrados em outro computador
                 if (modName === 'mod_uniformes') {
@@ -1477,31 +1793,49 @@ class SigeDatabase {
                                 this.data.lotesSME = mergedLotes;
                             }
                         }
-                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true });
+                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true }).then(() => {
+                            const updatedFp = this._getModuleFingerprint(modName);
+                            if (updatedFp !== null && this._lastSyncedModuleFingerprints) {
+                                this._lastSyncedModuleFingerprints[modName] = updatedFp;
+                            }
+                        });
                     }).catch(err => {
                         console.warn("Aviso ao mesclar mod_uniformes na nuvem:", err);
-                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true });
+                        return this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true }).then(() => {
+                            if (fp !== null && this._lastSyncedModuleFingerprints) {
+                                this._lastSyncedModuleFingerprints[modName] = fp;
+                            }
+                        });
                     });
                     batchPromises.push(modPromise);
                 } else {
-                    batchPromises.push(
-                        this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true })
-                    );
+                    const modWrite = this.firestore.collection("sige_pedro_rizzi").doc(modName).set(modPayload, { merge: true }).then(() => {
+                        if (fp !== null && this._lastSyncedModuleFingerprints) {
+                            this._lastSyncedModuleFingerprints[modName] = fp;
+                        }
+                    });
+                    batchPromises.push(modWrite);
                 }
             }
 
-            // 2. Grava documento legado para compatibilidade, sem contaminar currentRole global
-            const legacySafeData = { ...this.data, lastSyncAt: nowIso };
-            delete legacySafeData.currentRole;
-            if (Array.isArray(legacySafeData.usuariosCadastrados)) {
-                legacySafeData.usuariosCadastrados = legacySafeData.usuariosCadastrados.map(sanitizeUserForCloud);
+            // 2. Grava documento legado apenas quando solicitado explicitamente
+            if (options.includeLegacyDatabase === true) {
+                const legacySafeData = { ...this.data, lastSyncAt: nowIso };
+                delete legacySafeData.currentRole;
+                if (Array.isArray(legacySafeData.usuariosCadastrados)) {
+                    legacySafeData.usuariosCadastrados = legacySafeData.usuariosCadastrados.map(sanitizeUserForCloud);
+                }
+                batchPromises.push(
+                    this.firestore.collection("sige_pedro_rizzi").doc("database").set(legacySafeData, { merge: true })
+                        .catch(e => {
+                            console.warn("Aviso: Documento consolidado 'database' protegido contra excedente de tamanho:", e.message);
+                        })
+                );
             }
-            batchPromises.push(
-                this.firestore.collection("sige_pedro_rizzi").doc("database").set(legacySafeData, { merge: true })
-                    .catch(e => {
-                        console.warn("Aviso: Documento consolidado 'database' protegido contra excedente de tamanho:", e.message);
-                    })
-            );
+
+            if (batchPromises.length === 0) {
+                return;
+            }
 
             Promise.all(batchPromises)
                 .then(() => {
@@ -1541,17 +1875,19 @@ class SigeDatabase {
         }
 
         const modNames = targetModule ? [targetModule] : Object.keys(SIGE_MODULE_DOCS);
-        const fetchPromises = modNames.map(m => this.firestore.collection("sige_pedro_rizzi").doc(m).get());
 
-        return Promise.all(fetchPromises)
+        return this.ensureFirebaseAuth().then(() => {
+            const fetchPromises = modNames.map(m => this.firestore.collection("sige_pedro_rizzi").doc(m).get());
+            return Promise.all(fetchPromises);
+        })
             .then(docs => {
                 let foundAny = false;
-                docs.forEach(doc => {
+                docs.forEach((doc, idx) => {
                     if (doc.exists) {
                         foundAny = true;
                         this.hasLoadedRemote = true;
                         this.cloudStatus = 'connected';
-                        this.smartMergeRemoteData(doc.data());
+                        this.smartMergeRemoteData(doc.data(), { sourceModule: modNames[idx] });
                     }
                 });
 
@@ -1574,13 +1910,13 @@ class SigeDatabase {
                         .then(legacyDoc => {
                             if (legacyDoc.exists) {
                                 this.hasLoadedRemote = true;
-                                this.smartMergeRemoteData(legacyDoc.data());
+                                this.smartMergeRemoteData(legacyDoc.data(), { skipFingerprintCapture: true });
                                 if (!silent && typeof showToast === "function") showToast("☁️ Dados da Nuvem sincronizados!");
                                 this.updateCloudSyncBadge(true);
-                                this.syncToFirebase();
+                                this.syncToFirebase(null, { forceAll: true });
                             } else {
                                 this.hasLoadedRemote = true;
-                                this.syncToFirebase();
+                                this.syncToFirebase(null, { forceAll: true });
                                 this.updateCloudSyncBadge(true);
                             }
                             return true;
@@ -1616,17 +1952,19 @@ class SigeDatabase {
                 return { success: false, message: "Não foi possível instanciar o Firestore." };
             }
 
+            await this.ensureFirebaseAuth({ forceRetry: true });
+
             // Testa leitura do documento modular ou principal
             const docRef = this.firestore.collection("sige_pedro_rizzi").doc("mod_op");
             const doc = await docRef.get();
             if (doc.exists) {
-                this.smartMergeRemoteData(doc.data());
+                this.smartMergeRemoteData(doc.data(), { sourceModule: 'mod_op' });
             } else {
                 const legacyDoc = await this.firestore.collection("sige_pedro_rizzi").doc("database").get();
                 if (legacyDoc.exists) {
-                    this.smartMergeRemoteData(legacyDoc.data());
+                    this.smartMergeRemoteData(legacyDoc.data(), { skipFingerprintCapture: true });
                 }
-                this.syncToFirebase();
+                this.syncToFirebase(null, { forceAll: true });
                 this.hasLoadedRemote = true;
             }
 
@@ -1671,9 +2009,9 @@ class SigeDatabase {
             try {
                 const parsed = JSON.parse(e.target.result);
                 if (!parsed || typeof parsed !== 'object') throw new Error('Arquivo JSON inválido.');
-                this.smartMergeRemoteData(parsed);
+                this.smartMergeRemoteData(parsed, { skipFingerprintCapture: true });
                 if (this.firestore && this.cloudStatus === 'connected') {
-                    this.syncToFirebase();
+                    this.syncToFirebase(null, { forceAll: true });
                 }
                 if (typeof onComplete === 'function') onComplete(true, "Base de dados importada e mesclada com sucesso!");
             } catch (err) {
@@ -1950,20 +2288,40 @@ class SigeDatabase {
         return this.loadLocalOnly();
     }
 
-    debouncedSyncToFirebase() {
+    debouncedSyncToFirebase(targetModule = null) {
+        if (targetModule && this._pendingSyncModules) {
+            if (Array.isArray(targetModule)) {
+                targetModule.forEach(m => { if (SIGE_MODULE_DOCS[m]) this._pendingSyncModules.add(m); });
+            } else if (SIGE_MODULE_DOCS[targetModule]) {
+                this._pendingSyncModules.add(targetModule);
+            }
+        }
         if (this._syncTimeout) clearTimeout(this._syncTimeout);
         this._syncTimeout = setTimeout(() => {
-            this.syncToFirebase();
-        }, 400);
+            this._syncTimeout = null;
+            const targets = (this._pendingSyncModules && this._pendingSyncModules.size > 0)
+                ? Array.from(this._pendingSyncModules)
+                : null;
+            this.syncToFirebase(targets);
+        }, 450);
     }
 
     saveLocal() {
         try {
             localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(this.data));
-        } catch (_) {}
+        } catch (e) {
+            if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+                console.warn('⚠️ Limite de 5MB do LocalStorage excedido em saveLocal(). Preservando no IndexedDB.');
+            } else {
+                console.warn('Aviso ao salvar localmente no LocalStorage:', e);
+            }
+        }
+        if (typeof SigeIDB !== 'undefined') {
+            SigeIDB.set('sige_database_data', this.data).catch(err => console.warn('Aviso ao persistir no IndexedDB:', err));
+        }
     }
 
-    saveData(data) {
+    saveData(data, targetModule = null) {
         if (data && typeof data === 'object') {
             const tombstoneKeys = [
                 'deletedOPIds', 'deletedContatosWpIds', 'deletedEventoCalendarioIds',
@@ -1978,24 +2336,11 @@ class SigeDatabase {
             });
         }
         this.data = data;
-        // 1. LocalStorage síncrono para renderização instantânea
-        try {
-            localStorage.setItem(SIGE_STORAGE_KEY, JSON.stringify(data));
-        } catch (e) {
-            if (e.name === 'QuotaExceededError' || e.code === 22) {
-                console.warn('⚠️ Limite de 5MB do LocalStorage excedido. Os dados estão preservados no IndexedDB e Nuvem.');
-            } else {
-                console.error('Erro ao salvar localmente no LocalStorage:', e);
-            }
-        }
+        // 1. LocalStorage síncrono para renderização instantânea + fallback seguro para IndexedDB
+        this.saveLocal();
 
-        // 2. IndexedDB assíncrono de alta capacidade (50MB - 1GB+)
-        if (typeof SigeIDB !== 'undefined') {
-            SigeIDB.set('sige_database_data', data).catch(err => console.warn('Erro ao persistir no IndexedDB:', err));
-        }
-
-        // 3. Nuvem Firestore com debounce para alta performance
-        this.debouncedSyncToFirebase();
+        // 2. Nuvem Firestore com debounce e escopo por módulo alterado
+        this.debouncedSyncToFirebase(targetModule);
     }
 
     resetToDefault() {
@@ -2897,6 +3242,7 @@ class SigeDatabase {
     async pullAuthFromCloudBeforeLogin() {
         if (!this.firestore) return;
         try {
+            await this.ensureFirebaseAuth();
             const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3500));
             const fetchPromise = Promise.all([
                 this.firestore.collection("sige_pedro_rizzi").doc("mod_auth").get(),
@@ -3456,6 +3802,7 @@ class SigeDatabase {
     }
 
     logout() {
+        // Sessão Firebase Auth anônima permanece ativa intencionalmente para que o próximo servidor na máquina consiga ler mod_auth
         localStorage.removeItem("sige_logged_email");
         localStorage.removeItem("sige_logged_cpf");
         if (typeof sessionStorage !== "undefined") {
@@ -4462,15 +4809,14 @@ class SigeDatabase {
 
     getWhatsappConfig() {
         const defaultUrl = "https://pc28.taild665db.ts.net:8443";
-        const defaultKey = "B6D711FCDE4D4FD5936544120E713976";
         if (!this.data.whatsappConfig) {
             this.data.whatsappConfig = {
                 enabled: true,
                 provider: "evolution_api",
                 apiUrl: defaultUrl,
-                apiToken: defaultKey,
+                apiToken: "",
                 evolutionApiUrl: defaultUrl,
-                evolutionApiKey: defaultKey,
+                evolutionApiKey: "",
                 activeInstance: "sige_orientacao",
                 antiBanDelayMin: 5,
                 antiBanDelayMax: 12,
@@ -4483,14 +4829,16 @@ class SigeDatabase {
             const curUrl = (this.data.whatsappConfig.evolutionApiUrl || this.data.whatsappConfig.apiUrl || "").trim();
             const curKey = (this.data.whatsappConfig.evolutionApiKey || this.data.whatsappConfig.apiToken || "").trim();
             const isStaleUrl = !curUrl || curUrl.includes("localhost") || curUrl.includes("127.0.0.1") || curUrl.includes("100.80.27.103") || curUrl.startsWith("http://");
-            const isStaleKey = !curKey || curKey === "SIGE_EVO_SECRET_KEY_98374291834_PEDRO_RIZZI";
             if (isStaleUrl) {
                 this.data.whatsappConfig.evolutionApiUrl = defaultUrl;
                 this.data.whatsappConfig.apiUrl = defaultUrl;
             }
-            if (isStaleKey) {
-                this.data.whatsappConfig.evolutionApiKey = defaultKey;
-                this.data.whatsappConfig.apiToken = defaultKey;
+            if (curKey) {
+                if (!this.data.whatsappConfig.evolutionApiKey) this.data.whatsappConfig.evolutionApiKey = curKey;
+                if (!this.data.whatsappConfig.apiToken) this.data.whatsappConfig.apiToken = curKey;
+            } else {
+                this.data.whatsappConfig.evolutionApiKey = "";
+                this.data.whatsappConfig.apiToken = "";
             }
             this.data.whatsappConfig.provider = "evolution_api";
             if (!this.data.whatsappConfig.activeInstance) {
@@ -4509,7 +4857,7 @@ class SigeDatabase {
     saveWhatsappConfig(config) {
         this.data.whatsappConfig = { ...this.getWhatsappConfig(), ...config, provider: "evolution_api" };
         this.saveData(this.data);
-        this.syncToFirebase();
+        this.syncToFirebase('mod_core');
     }
 
     getActiveWhatsappInstance() {
@@ -5610,6 +5958,7 @@ class SigeDatabase {
         };
         if (this.firestore) {
             try {
+                await this.ensureFirebaseAuth();
                 await this.firestore.collection('confirmacoes_op').doc(token).set(docData);
             } catch (e) {
                 console.warn('Aviso ao sincronizar token no firestore:', e);

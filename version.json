@@ -1,6 +1,6 @@
 {
-  "version": "20261020_v58",
-  "build": 1792515600,
-  "updatedAt": "2026-10-20T14:05:00-03:00",
-  "description": "Sincronizacao bidirecional automatica de uniformes sem sobrescrita, protecao de inicializacao da nuvem e cache-buster continuo para todos os computadores"
+  "version": "20261127_v67",
+  "build": 1795782400,
+  "updatedAt": "2026-11-27T09:26:00-03:00",
+  "description": "Ondas 1-3: Dirty-Module Sync, base PAIE escalável (SigeCollections/SigeLiteBoot/LazyLoader), Firebase Auth silencioso e higiene de credenciais Evolution API"
 }

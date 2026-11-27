@@ -2,30 +2,242 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // BANCO PRINCIPAL SIGE - Documentos modulares e sincronização central
-    match /sige_pedro_rizzi/{document} {
-      // Leitura permitida para funcionamento do app web
-      allow read: if true;
-      
-      // Escrita restrita a documentos modulares oficiais e base central
-      allow write: if document in [
-        'database', 'mod_op', 'mod_uniformes', 'mod_ocorrencias', 
-        'mod_patrimonio', 'mod_protocolo', 'mod_direcao', 
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: sige_pedro_rizzi
+    // Document ID: Whitelisted module ID ('database', 'mod_op', 'mod_uniformes',
+    //   'mod_ocorrencias', 'mod_patrimonio', 'mod_protocolo', 'mod_direcao',
+    //   'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema',
+    //   'mod_supervisao', 'mod_core')
+    // Access: Authenticated school users only (read, create, update). Delete denied.
+    // Constraints: Non-empty map, max 100 top-level keys.
+    //
+    // Collection: confirmacoes_op
+    // Document ID: tokenId (string, 6..128 chars — unguessable WhatsApp OE token)
+    // Fields:
+    //   - status: string (required; create: ['aguardando', 'pendente', 'ativo'];
+    //     public update: ['confirmado_whatsapp', 'cancelado'])
+    //   - agendamentoId: string (optional, <= 120 chars)
+    //   - aluno: string (optional, <= 200 chars)
+    //   - responsavel: string (optional, <= 200 chars)
+    //   - turma: string (optional, <= 80 chars)
+    //   - orientadora: string (optional, <= 200 chars)
+    //   - confirmadoEm: string (optional, <= 40 chars)
+    //   - canceladoEm: string (optional, <= 40 chars)
+    //   - motivoCancelamento: string (optional, <= 500 chars)
+    // Access: Public get by exact tokenId (no public list); authenticated list/create;
+    //   public single-transition update restricted to status/timestamps/motivo.
+    //
+    // Collection: paie_tokens
+    // Document ID: tokenId (string, 6..128 chars — isolated PAIE family portal token)
+    // Fields:
+    //   - status: string (required; create: ['aguardando', 'pendente', 'ativo'];
+    //     public update: ['ciente', 'confirmado', 'confirmado_whatsapp', 'agendado', 'cancelado'])
+    //   - ocorrenciaId: string (optional, <= 120 chars)
+    //   - aluno: string (optional, <= 200 chars)
+    //   - observacaoFamilia: string (optional, <= 500 chars)
+    //   - slotId: string (optional, <= 120 chars)
+    //   - confirmadoEm / cienteEm / canceladoEm / atualizadoEm: string (optional, <= 40 chars)
+    // Access: Public get by exact tokenId (no public list); authenticated list/create;
+    //   public single-transition update restricted to allowed response fields.
+    //
+    // Collections: paie_ocorrencias, paie_eventos
+    // Document ID: docId (1 doc = 1 record via SigeCollections)
+    // Fields:
+    //   - id: string (required on create, == docId, immutable on update)
+    //   - criadoEm: string (optional, <= 40 chars, immutable on update)
+    //   - atualizadoEm: string (optional, <= 40 chars)
+    // Access: Authenticated users only (read, create, update). Max 40 fields. Delete denied.
+    //
+    // Collection: paie_slots
+    // Document ID: slotId (atomic slot reservation via claimAtomicSlot)
+    // Fields:
+    //   - id: string (required on create, == slotId, immutable on update)
+    //   - status: string (create: ['disponivel', 'reservado'];
+    //     update: ['disponivel', 'reservado', 'cancelado', 'concluido'])
+    //   - reservadoEm: string (optional, <= 40 chars; protected against overwrite when already reservado)
+    // Access: Authenticated users only (read, create, update). Max 25 fields. Delete denied.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isNonEmptyData() {
+      return request.resource.data.size() > 0;
+    }
+
+    function isValidTokenId(id) {
+      return id is string && id.size() >= 6 && id.size() <= 128;
+    }
+
+    function hasValidOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    // ===============================================================
+    // Domain Validators (Validator Function Pattern)
+    // ===============================================================
+
+    function isAllowedSigeDocument(docName) {
+      return docName in [
+        'database', 'mod_op', 'mod_uniformes', 'mod_ocorrencias',
+        'mod_patrimonio', 'mod_protocolo', 'mod_direcao',
         'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema',
         'mod_supervisao', 'mod_core'
       ];
     }
 
-    // TOKENS DE CONFIRMAÇÃO OP - Acesso público controlado via link do WhatsApp
-    match /confirmacoes_op/{tokenId} {
-      allow read: if true;
-      allow create: if request.resource.data.status == 'pendente' 
-                    || request.resource.data.status == 'ativo';
-      allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
-      allow delete: if false; // Proíbe exclusão pública de histórico de tokens
+    function isValidSigeModuleWrite(docName, data) {
+      return isAllowedSigeDocument(docName) &&
+             isNonEmptyData() &&
+             data.size() <= 100;
     }
 
-    // Bloqueio default para todas as demais coleções não mapeadas
+    function isValidConfirmacaoOpCreate(tokenId, data) {
+      return isValidTokenId(tokenId) &&
+             isNonEmptyData() &&
+             data.size() <= 20 &&
+             data.status in ['aguardando', 'pendente', 'ativo'] &&
+             hasValidOptionalString(data, 'agendamentoId', 120) &&
+             hasValidOptionalString(data, 'aluno', 200) &&
+             hasValidOptionalString(data, 'responsavel', 200) &&
+             hasValidOptionalString(data, 'turma', 80) &&
+             hasValidOptionalString(data, 'orientadora', 200);
+    }
+
+    function isValidConfirmacaoOpUpdate(tokenId, data, existing) {
+      return isValidTokenId(tokenId) &&
+             existing.status in ['aguardando', 'pendente', 'ativo'] &&
+             data.diff(existing).affectedKeys().hasOnly([
+               'status', 'confirmadoEm', 'canceladoEm', 'motivoCancelamento'
+             ]) &&
+             data.status in ['confirmado_whatsapp', 'cancelado'] &&
+             hasValidOptionalString(data, 'confirmadoEm', 40) &&
+             hasValidOptionalString(data, 'canceladoEm', 40) &&
+             hasValidOptionalString(data, 'motivoCancelamento', 500);
+    }
+
+    function isValidPaieTokenCreate(tokenId, data) {
+      return isValidTokenId(tokenId) &&
+             isNonEmptyData() &&
+             data.size() <= 25 &&
+             data.status in ['aguardando', 'pendente', 'ativo'] &&
+             hasValidOptionalString(data, 'ocorrenciaId', 120) &&
+             hasValidOptionalString(data, 'aluno', 200);
+    }
+
+    function isValidPaieTokenUpdate(tokenId, data, existing) {
+      return isValidTokenId(tokenId) &&
+             existing.status in ['aguardando', 'pendente', 'ativo'] &&
+             data.diff(existing).affectedKeys().hasOnly([
+               'status', 'confirmadoEm', 'cienteEm', 'canceladoEm',
+               'observacaoFamilia', 'slotId', 'atualizadoEm'
+             ]) &&
+             data.status in ['ciente', 'confirmado', 'confirmado_whatsapp', 'agendado', 'cancelado'] &&
+             hasValidOptionalString(data, 'observacaoFamilia', 500) &&
+             hasValidOptionalString(data, 'slotId', 120) &&
+             hasValidOptionalString(data, 'confirmadoEm', 40) &&
+             hasValidOptionalString(data, 'cienteEm', 40) &&
+             hasValidOptionalString(data, 'canceladoEm', 40) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieRecordCreate(docId, data) {
+      return isNonEmptyData() &&
+             data.size() <= 40 &&
+             data.id is string &&
+             data.id == docId &&
+             hasValidOptionalString(data, 'criadoEm', 40) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieRecordUpdate(data, existing) {
+      return isNonEmptyData() &&
+             data.size() <= 40 &&
+             (!('id' in existing) || ('id' in data && data.id == existing.id)) &&
+             (!('criadoEm' in existing) || ('criadoEm' in data && data.criadoEm == existing.criadoEm)) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieSlotCreate(slotId, data) {
+      return isNonEmptyData() &&
+             data.size() <= 25 &&
+             data.id is string &&
+             data.id == slotId &&
+             data.status in ['disponivel', 'reservado'] &&
+             hasValidOptionalString(data, 'reservadoEm', 40);
+    }
+
+    function isValidPaieSlotUpdate(data, existing) {
+      return isNonEmptyData() &&
+             data.size() <= 25 &&
+             (!('id' in existing) || ('id' in data && data.id == existing.id)) &&
+             data.status in ['disponivel', 'reservado', 'cancelado', 'concluido'] &&
+             !(existing.status == 'reservado' && data.status == 'reservado' && existing.reservadoEm != data.reservadoEm) &&
+             hasValidOptionalString(data, 'reservadoEm', 40);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // BANCO PRINCIPAL SIGE - Documentos modulares e sincronização central
+    match /sige_pedro_rizzi/{document} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidSigeModuleWrite(document, request.resource.data);
+      allow delete: if false;
+    }
+
+    // TOKENS DE CONFIRMAÇÃO OP - Tokens públicos isolados do WhatsApp OE
+    match /confirmacoes_op/{tokenId} {
+      allow get: if isValidTokenId(tokenId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidConfirmacaoOpCreate(tokenId, request.resource.data);
+      allow update: if isValidConfirmacaoOpUpdate(tokenId, request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    // TOKENS PORTAL FAMÍLIA PAIE - Padrão isolado equivalente
+    match /paie_tokens/{tokenId} {
+      allow get: if isValidTokenId(tokenId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieTokenCreate(tokenId, request.resource.data);
+      allow update: if isValidPaieTokenUpdate(tokenId, request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    // COLEÇÕES PAIE (1 doc = 1 registro via SigeCollections)
+    match /paie_ocorrencias/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieRecordCreate(docId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieRecordUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /paie_eventos/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieRecordCreate(docId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieRecordUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    // RESERVA ATÔMICA DE SLOTS PAIE (claimAtomicSlot)
+    match /paie_slots/{slotId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieSlotCreate(slotId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieSlotUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    // Bloqueio default restritivo para todas as demais coleções não mapeadas
     match /{document=**} {
       allow read, write: if false;
     }

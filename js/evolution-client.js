@@ -26,7 +26,7 @@
             }
             return {
                 apiUrl: (cfg.evolutionApiUrl || cfg.apiUrl || 'https://pc28.taild665db.ts.net:8443').trim().replace(/\/+$/, ''),
-                apiKey: (cfg.evolutionApiKey || cfg.apiToken || 'B6D711FCDE4D4FD5936544120E713976').trim(),
+                apiKey: (cfg.evolutionApiKey || cfg.apiToken || '').trim(),
                 provider: cfg.provider || 'evolution_api',
                 activeInstance: cfg.activeInstance || 'sige_orientacao',
                 antiBanDelayMin: cfg.antiBanDelayMin || 5, // segundos
@@ -51,13 +51,11 @@
                         updatedAt: new Date().toISOString()
                     };
                     if (changed) {
-                        if (typeof window.sigeDB.saveData === 'function') {
-                            window.sigeDB.saveData(window.sigeDB.data);
-                        } else if (typeof window.sigeDB.saveLocal === 'function') {
+                        if (typeof window.sigeDB.saveLocal === 'function') {
                             window.sigeDB.saveLocal();
                         }
                         if (typeof window.sigeDB.syncToFirebase === 'function') {
-                            window.sigeDB.syncToFirebase();
+                            window.sigeDB.syncToFirebase('mod_core');
                         }
                     }
                 }
@@ -419,7 +417,7 @@
         // Envia mensagem de texto simples silenciosamente (1 clique)
         async sendText(phone, message, options = {}) {
             if (!this.isConfigured()) {
-                return { success: false, error: 'Evolution API não configurada no sistema', isConfigError: true };
+                return { success: false, error: 'Evolution API sem Global API Key configurada na nuvem (Configure em Configurações WhatsApp).', isConfigError: true };
             }
 
             const cleanPhone = this.normalizePhone(phone);
@@ -463,7 +461,7 @@
         // Envia documento em anexo (ex: PDF assinado) via Evolution API v2
         async sendDocument(phone, base64Pdf, fileName = 'documento.pdf', caption = '', options = {}) {
             if (!this.isConfigured()) {
-                return { success: false, error: 'Evolution API não configurada no sistema', isConfigError: true };
+                return { success: false, error: 'Evolution API sem Global API Key configurada na nuvem (Configure em Configurações WhatsApp).', isConfigError: true };
             }
 
             const cleanPhone = this.normalizePhone(phone);

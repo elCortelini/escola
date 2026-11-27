@@ -399,7 +399,7 @@ function salvarConfiguracoesWhatsapp() {
 
     // Só atualiza com o valor digitado se o campo existir e não estiver vazio
     const apiUrl = (inputUrl && inputUrl.value.trim()) ? inputUrl.value.trim().replace(/\/+$/, '') : (existing.evolutionApiUrl || existing.apiUrl || "https://pc28.taild665db.ts.net:8443");
-    const apiToken = (inputToken && inputToken.value.trim()) ? inputToken.value.trim() : (existing.evolutionApiKey || existing.apiToken || "B6D711FCDE4D4FD5936544120E713976");
+    const apiToken = (inputToken && inputToken.value.trim()) ? inputToken.value.trim() : (existing.evolutionApiKey || existing.apiToken || "");
     const activeInstance = "sige_orientacao";
     const antiBanDelayMin = parseInt(document.getElementById("waConfigDelayMin")?.value, 10) || existing.antiBanDelayMin || 5;
     const antiBanDelayMax = parseInt(document.getElementById("waConfigDelayMax")?.value, 10) || existing.antiBanDelayMax || 12;
@@ -2808,16 +2808,162 @@ const FIRESTORE_OFFICIAL_RULES = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // BANCO PRINCIPAL SIGE - Acesso central da escola
-    match /sige_pedro_rizzi/{document=**} {
-      allow read, write: if true;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // TOKENS DE CONFIRMACAO - acesso publico controlado via WhatsApp
+    function isNonEmptyData() {
+      return request.resource.data.size() > 0;
+    }
+
+    function isValidTokenId(id) {
+      return id is string && id.size() >= 6 && id.size() <= 128;
+    }
+
+    function hasValidOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isAllowedSigeDocument(docName) {
+      return docName in [
+        'database', 'mod_op', 'mod_uniformes', 'mod_ocorrencias',
+        'mod_patrimonio', 'mod_protocolo', 'mod_direcao',
+        'mod_professores', 'mod_equipe', 'mod_auth', 'mod_sistema',
+        'mod_supervisao', 'mod_core'
+      ];
+    }
+
+    function isValidSigeModuleWrite(docName, data) {
+      return isAllowedSigeDocument(docName) &&
+             isNonEmptyData() &&
+             data.size() <= 100;
+    }
+
+    function isValidConfirmacaoOpCreate(tokenId, data) {
+      return isValidTokenId(tokenId) &&
+             isNonEmptyData() &&
+             data.size() <= 20 &&
+             data.status in ['aguardando', 'pendente', 'ativo'] &&
+             hasValidOptionalString(data, 'agendamentoId', 120) &&
+             hasValidOptionalString(data, 'aluno', 200) &&
+             hasValidOptionalString(data, 'responsavel', 200) &&
+             hasValidOptionalString(data, 'turma', 80) &&
+             hasValidOptionalString(data, 'orientadora', 200);
+    }
+
+    function isValidConfirmacaoOpUpdate(tokenId, data, existing) {
+      return isValidTokenId(tokenId) &&
+             existing.status in ['aguardando', 'pendente', 'ativo'] &&
+             data.diff(existing).affectedKeys().hasOnly([
+               'status', 'confirmadoEm', 'canceladoEm', 'motivoCancelamento'
+             ]) &&
+             data.status in ['confirmado_whatsapp', 'cancelado'] &&
+             hasValidOptionalString(data, 'confirmadoEm', 40) &&
+             hasValidOptionalString(data, 'canceladoEm', 40) &&
+             hasValidOptionalString(data, 'motivoCancelamento', 500);
+    }
+
+    function isValidPaieTokenCreate(tokenId, data) {
+      return isValidTokenId(tokenId) &&
+             isNonEmptyData() &&
+             data.size() <= 25 &&
+             data.status in ['aguardando', 'pendente', 'ativo'] &&
+             hasValidOptionalString(data, 'ocorrenciaId', 120) &&
+             hasValidOptionalString(data, 'aluno', 200);
+    }
+
+    function isValidPaieTokenUpdate(tokenId, data, existing) {
+      return isValidTokenId(tokenId) &&
+             existing.status in ['aguardando', 'pendente', 'ativo'] &&
+             data.diff(existing).affectedKeys().hasOnly([
+               'status', 'confirmadoEm', 'cienteEm', 'canceladoEm',
+               'observacaoFamilia', 'slotId', 'atualizadoEm'
+             ]) &&
+             data.status in ['ciente', 'confirmado', 'confirmado_whatsapp', 'agendado', 'cancelado'] &&
+             hasValidOptionalString(data, 'observacaoFamilia', 500) &&
+             hasValidOptionalString(data, 'slotId', 120) &&
+             hasValidOptionalString(data, 'confirmadoEm', 40) &&
+             hasValidOptionalString(data, 'cienteEm', 40) &&
+             hasValidOptionalString(data, 'canceladoEm', 40) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieRecordCreate(docId, data) {
+      return isNonEmptyData() &&
+             data.size() <= 40 &&
+             data.id is string &&
+             data.id == docId &&
+             hasValidOptionalString(data, 'criadoEm', 40) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieRecordUpdate(data, existing) {
+      return isNonEmptyData() &&
+             data.size() <= 40 &&
+             (!('id' in existing) || ('id' in data && data.id == existing.id)) &&
+             (!('criadoEm' in existing) || ('criadoEm' in data && data.criadoEm == existing.criadoEm)) &&
+             hasValidOptionalString(data, 'atualizadoEm', 40);
+    }
+
+    function isValidPaieSlotCreate(slotId, data) {
+      return isNonEmptyData() &&
+             data.size() <= 25 &&
+             data.id is string &&
+             data.id == slotId &&
+             data.status in ['disponivel', 'reservado'] &&
+             hasValidOptionalString(data, 'reservadoEm', 40);
+    }
+
+    function isValidPaieSlotUpdate(data, existing) {
+      return isNonEmptyData() &&
+             data.size() <= 25 &&
+             (!('id' in existing) || ('id' in data && data.id == existing.id)) &&
+             data.status in ['disponivel', 'reservado', 'cancelado', 'concluido'] &&
+             !(existing.status == 'reservado' && data.status == 'reservado' && existing.reservadoEm != data.reservadoEm) &&
+             hasValidOptionalString(data, 'reservadoEm', 40);
+    }
+
+    match /sige_pedro_rizzi/{document} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidSigeModuleWrite(document, request.resource.data);
+      allow delete: if false;
+    }
+
     match /confirmacoes_op/{tokenId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if request.resource.data.status in ['confirmado_whatsapp', 'cancelado'];
+      allow get: if isValidTokenId(tokenId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidConfirmacaoOpCreate(tokenId, request.resource.data);
+      allow update: if isValidConfirmacaoOpUpdate(tokenId, request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /paie_tokens/{tokenId} {
+      allow get: if isValidTokenId(tokenId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieTokenCreate(tokenId, request.resource.data);
+      allow update: if isValidPaieTokenUpdate(tokenId, request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /paie_ocorrencias/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieRecordCreate(docId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieRecordUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /paie_eventos/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieRecordCreate(docId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieRecordUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /paie_slots/{slotId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPaieSlotCreate(slotId, request.resource.data);
+      allow update: if isSignedIn() && isValidPaieSlotUpdate(request.resource.data, resource.data);
+      allow delete: if false;
     }
 
     match /{document=**} {

@@ -306,7 +306,11 @@
                             }
                         }
                     } catch (syncErr) {
-                        console.warn("Atualizado no token com sucesso (sincronização central em background):", syncErr);
+                        if (syncErr && syncErr.code === 'permission-denied') {
+                            console.debug("Token registrado; atualização em mod_op ocorrerá via listener autenticado.");
+                        } else {
+                            console.warn("Atualizado no token com sucesso (sincronização central em background):", syncErr);
+                        }
                     }
                 }
 
@@ -382,7 +386,11 @@
                             }
                         }
                     } catch (syncErr) {
-                        console.warn("Registrado no token (sincronização central em background):", syncErr);
+                        if (syncErr && syncErr.code === 'permission-denied') {
+                            console.debug("Cancelamento registrado no token; atualização em mod_op ocorrerá via listener autenticado.");
+                        } else {
+                            console.warn("Registrado no token (sincronização central em background):", syncErr);
+                        }
                     }
                 }
 
