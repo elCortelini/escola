@@ -1,6 +1,6 @@
 {
-  "version": "20261127_v67",
-  "build": 1795782400,
-  "updatedAt": "2026-11-27T09:26:00-03:00",
-  "description": "Ondas 1-3: Dirty-Module Sync, base PAIE escalável (SigeCollections/SigeLiteBoot/LazyLoader), Firebase Auth silencioso e higiene de credenciais Evolution API"
+  "version": "20261127_v68",
+  "build": 1795784400,
+  "updatedAt": "2026-11-27T09:50:00-03:00",
+  "description": "Correção da Web API Key oficial do Firebase sas-cepr para autenticação anônima silenciosa (Ondas 1-3)"
 }

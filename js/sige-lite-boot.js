@@ -6,7 +6,7 @@
     'use strict';
 
     const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
+        apiKey: "AIzaSyCXlbIA46DkG2UQcANT_HuNnERN0pp3cgs",
         authDomain: "sas-cepr.firebaseapp.com",
         projectId: "sas-cepr",
         storageBucket: "sas-cepr.firebasestorage.app",

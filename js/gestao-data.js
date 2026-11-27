@@ -461,7 +461,7 @@ const defaultSigeData = {
     deletedUserIds: [],
     firebaseConfig: {
         enabled: true,
-        apiKey: "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs",
+        apiKey: "AIzaSyCXlbIA46DkG2UQcANT_HuNnERN0pp3cgs",
         authDomain: "sas-cepr.firebaseapp.com",
         projectId: "sas-cepr",
         storageBucket: "sas-cepr.firebasestorage.app",
@@ -617,6 +617,12 @@ class SigeDatabase {
     getFirebaseConfig() {
         if (!this.data.firebaseConfig || !this.data.firebaseConfig.projectId) {
             this.data.firebaseConfig = defaultSigeData.firebaseConfig;
+        } else if (
+            this.data.firebaseConfig.projectId === "sas-cepr" &&
+            this.data.firebaseConfig.apiKey === "AIzaSyCXLbIA46DkG2UQcANT_HuNnERN0pp3cgs"
+        ) {
+            this.data.firebaseConfig.apiKey = defaultSigeData.firebaseConfig.apiKey;
+            this.saveLocal();
         }
         return this.data.firebaseConfig;
     }
